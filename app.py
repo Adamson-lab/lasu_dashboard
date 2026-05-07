@@ -671,46 +671,25 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        # 1. Search across both Database Silos
+        # 1. ADMIN BYPASS
         user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            session['logged_in'] = True
+            session['user_id'] = user.id
+            session['user_name'] = "Dr. Adebayo"
+            session['role'] = 'admin'
+            return redirect(url_for('dashboard'))
+
+        # 2. LECTURER BYPASS 
         lecturer = Lecturer.query.filter_by(email=username).first()
-        
-        # Determine who is trying to enter
-        target = user or lecturer
-        role = 'admin' if user else 'lecturer'
+        if lecturer and lecturer.check_password(password):
+            session['logged_in'] = True
+            session['user_id'] = lecturer.id
+            session['user_name'] = f"{lecturer.title} {lecturer.name}"
+            session['role'] = 'lecturer'
+            return redirect(url_for('dashboard'))
 
-        if target and target.check_password(password):
-            # 🔐 GENERATE 6-DIGIT OTP
-            otp_code = str(random.randint(100000, 999999))
-            expiry_time = datetime.utcnow() + timedelta(minutes=10)
-            
-            # 🧠 BRAIN: Store identity in a "Holding Room" (Session)
-            session['pre_2fa_user_id'] = target.id
-            session['pre_2fa_role'] = role
-            # If Admin, send to your Gmail. If Lecturer, send to their registered email.
-            session['pre_2fa_email'] = "favouradamson803@gmail.com" if role == 'admin' else target.email
-            session['2fa_code'] = otp_code
-            session['2fa_expiry'] = expiry_time.timestamp()
-
-            # 📧 DISPATCH THE SECURITY CODE
-            email_body = f"""Hello {getattr(target, 'name', 'Admin')},
-
-Your LASU Matrix access code is: {otp_code}
-
-This code expires in 10 minutes. If you did not request this, please secure your account immediately.
-
-System Location: Railway Production Node"""
-
-            try:
-                send_email_notification(session['pre_2fa_email'], "Secure Login Verification", email_body)
-                flash(f"✉️ Verification code sent to {session['pre_2fa_email']}", "info")
-                return redirect(url_for('verify_otp'))
-            except Exception as e:
-                print(f"🔥 SMTP FAILURE: {e}")
-                flash("❌ Email System Error. Check your App Password in Railway.", "danger")
-                return redirect(url_for('login'))
-
-        flash('❌ Invalid Username or Password', 'danger')
+        flash('❌ Invalid Username or Password')
         
     return render_template('lecturer_login.html')
 
