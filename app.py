@@ -835,40 +835,52 @@ def dashboard():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
         
-    # 🟢 NEW: If it's a Lecturer, show them the Master UI, but ONLY with their data
-    if session.get('role') == 'lecturer':
-        lecturer = Lecturer.query.get(session['user_id'])
+    role = session.get('role')
+    user_id = session.get('user_id')
+
+    if role == 'lecturer':
+        lecturer = Lecturer.query.get(user_id)
         my_courses = Course.query.filter_by(lecturer_id=lecturer.id).all()
         my_course_ids = [c.id for c in my_courses]
         
-        # If they have courses, count their specific students
         if my_course_ids:
-            total_students = Student.query.filter(Student.registered_courses.any(Course.id.in_(my_course_ids))).count()
+            # 1. Count students in my courses
+            my_students = Student.query.filter(Student.registered_courses.any(Course.id.in_(my_course_ids))).all()
+            total_students = len(my_students)
+            
+            # 2. Count at-risk students
             at_risk_count = Student.query.filter(Student.registered_courses.any(Course.id.in_(my_course_ids)), Student.attendance_pct < 70).count()
-            # 🟢 REAL DATA: Fetch schedules only for this lecturer's courses
+            
+            # 3. Calculate Lecturer-Specific Attendance Rate 🟢
+            if total_students > 0:
+                avg_attendance = sum([s.attendance_pct for s in my_students]) / total_students
+                attendance_rate = round(avg_attendance, 1)
+            else:
+                attendance_rate = 0
+                
             upcoming_schedules = ClassSchedule.query.filter(ClassSchedule.course_id.in_(my_course_ids)).order_by(ClassSchedule.day, ClassSchedule.start_time).limit(3).all()
         else:
-            # If they are a brand new lecturer with no courses, show 0
             total_students = 0
             at_risk_count = 0
+            attendance_rate = 0
             upcoming_schedules = []
             
         announcements = Announcement.query.order_by(Announcement.date_posted.desc()).all()
         pending_count = Complaint.query.filter_by(status='Pending').count()
-        
-        # 🟢 REAL DATA: Fetch activity logs only for this specific lecturer
         recent_activities = AuditLog.query.filter_by(user=session.get('user_name')).order_by(AuditLog.timestamp.desc()).limit(4).all()
         
-        # They inherit the exact same V-Infinity Admin Dashboard layout
         return render_template(
             'dashboard.html',
             total=total_students,
             risk=at_risk_count,
+            attendance_rate=attendance_rate, # 🟢 Passed to HTML!
             announcements=announcements,
             pending_count=pending_count,
-            upcoming_schedules=upcoming_schedules, # 👈 ADDED HERE
-            recent_activities=recent_activities    # 👈 ADDED HERE
+            upcoming_schedules=upcoming_schedules,
+            recent_activities=recent_activities
         )
+
+    # (Keep your Admin logic below this...)
 
     # 🟢 If it's the Master Admin, show Global Campus Data
     total_students = my_data(Student).count()
@@ -1568,18 +1580,31 @@ def grade_data():
     if not session.get('logged_in'):
         return jsonify({})
 
-    grades = Grade.query.all()
+    # 🟢 ARCHITECT FIX: Multi-Silo Grade Filtering
+    role = session.get('role')
+    user_id = session.get('user_id')
+    
+    if role == 'lecturer':
+        # Find this lecturer's courses
+        my_courses = Course.query.filter_by(lecturer_id=user_id).all()
+        my_course_codes = [c.code for c in my_courses]
+        
+        if not my_course_codes:
+            return jsonify({"A": 0, "B": 0, "C": 0, "F": 0})
+            
+        # Only get grades for THIS lecturer's specific courses
+        grades = Grade.query.filter(Grade.course_code.in_(my_course_codes)).all()
+    else:
+        # Admin sees everything
+        grades = Grade.query.all()
+
     grade_distribution = {"A": 0, "B": 0, "C": 0, "F": 0}
 
     for g in grades:
-        if g.score >= 70:
-            grade_distribution["A"] += 1
-        elif g.score >= 60:
-            grade_distribution["B"] += 1
-        elif g.score >= 50:
-            grade_distribution["C"] += 1
-        else:
-            grade_distribution["F"] += 1
+        if g.score >= 70: grade_distribution["A"] += 1
+        elif g.score >= 60: grade_distribution["B"] += 1
+        elif g.score >= 50: grade_distribution["C"] += 1
+        else: grade_distribution["F"] += 1
 
     return jsonify(grade_distribution)
 
