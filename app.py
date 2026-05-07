@@ -731,7 +731,7 @@ def login():
         # If neither found
         flash('❌ Invalid Username or Password')
         
-    return render_template('login.html', site_key=RECAPTCHA_SITE_KEY)
+    return render_template('lecturer_login.html', site_key=RECAPTCHA_SITE_KEY)
 
 
 # ==========================================
