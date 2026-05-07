@@ -1079,16 +1079,16 @@
 
             <div class="col-xl-3 col-md-6">
                 <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-success) !important;">
-                    <div class="stat-label">Attendance Rate</div>
-                    <div style="display: flex; gap: 20px; align-items: center;">
-                        <div class="circular-gauge">
-                        <div class="gauge-inner text-success">{{ attendance_rate | default(0) }}%</div>
-                        </div>
-                        <div style="color: var(--v8-muted); font-size: 0.8rem; line-height: 1.5;">
-                            Average attendance across all registered courses this semester.
-                        </div>
-                    </div>
-                </div>
+    <div class="stat-label">Attendance Rate</div>
+    <div style="display: flex; gap: 20px; align-items: center;">
+        <div class="circular-gauge">
+            <div class="gauge-inner text-success">{{ attendance_rate | default(0) }}%</div>
+        </div>
+        <div style="color: var(--v8-muted); font-size: 0.8rem; line-height: 1.5;">
+            Average attendance across all registered courses this semester.
+        </div>
+    </div>
+</div>
             </div>
 
             <div class="col-xl-3 col-md-6">
@@ -2249,7 +2249,7 @@
             setInterval(syncCampusWeather, 1800000); // 30 minutes
 
             // Integrated v8Fetch into Charts for absolute resilience
-            v8Fetch('/api/grades?role={{ session.role }}&user_id={{ session.user_id }}', 'v8_cache_grades')
+            v8Fetch('/api/grades?role={{ session.role }}&cache_bust=' + Date.now(), 'v8_cache_grades')
     .then(data => {
         var countA = data.A || 0; 
         var countB = data.B || 0; 

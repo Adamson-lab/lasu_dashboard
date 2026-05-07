@@ -844,41 +844,41 @@ def dashboard():
         my_course_ids = [c.id for c in my_courses]
         
         if my_course_ids:
-            # 1. Count students in my courses
             my_students = Student.query.filter(Student.registered_courses.any(Course.id.in_(my_course_ids))).all()
             total_students = len(my_students)
-            
-            # 2. Count at-risk students
             at_risk_count = Student.query.filter(Student.registered_courses.any(Course.id.in_(my_course_ids)), Student.attendance_pct < 70).count()
-            
-            # 3. Calculate Lecturer-Specific Attendance Rate 🟢
-            if total_students > 0:
-                avg_attendance = sum([s.attendance_pct for s in my_students]) / total_students
-                attendance_rate = round(avg_attendance, 1)
-            else:
-                attendance_rate = 0
-                
-            upcoming_schedules = ClassSchedule.query.filter(ClassSchedule.course_id.in_(my_course_ids)).order_by(ClassSchedule.day, ClassSchedule.start_time).limit(3).all()
+            # 🟢 Lecturer Math
+            attendance_rate = round(sum([s.attendance_pct for s in my_students]) / total_students, 1) if total_students > 0 else 0
+            upcoming_schedules = ClassSchedule.query.filter(ClassSchedule.course_id.in_(my_course_ids)).limit(3).all()
         else:
-            total_students = 0
-            at_risk_count = 0
-            attendance_rate = 0
+            total_students = at_risk_count = attendance_rate = 0
             upcoming_schedules = []
             
-        announcements = Announcement.query.order_by(Announcement.date_posted.desc()).all()
-        pending_count = Complaint.query.filter_by(status='Pending').count()
         recent_activities = AuditLog.query.filter_by(user=session.get('user_name')).order_by(AuditLog.timestamp.desc()).limit(4).all()
-        
-        return render_template(
-            'dashboard.html',
-            total=total_students,
-            risk=at_risk_count,
-            attendance_rate=attendance_rate, # 🟢 Passed to HTML!
-            announcements=announcements,
-            pending_count=pending_count,
-            upcoming_schedules=upcoming_schedules,
-            recent_activities=recent_activities
-        )
+
+    else:
+        # 👑 Admin Logic
+        total_students = Student.query.count()
+        at_risk_count = Student.query.filter(Student.attendance_pct < 70).count()
+        # 🟢 Admin Math: Global Average across all students
+        global_avg = db.session.query(func.avg(Student.attendance_pct)).scalar()
+        attendance_rate = round(global_avg, 1) if global_avg else 0
+        upcoming_schedules = ClassSchedule.query.limit(3).all()
+        recent_activities = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(4).all()
+
+    announcements = Announcement.query.order_by(Announcement.date_posted.desc()).all()
+    pending_count = Complaint.query.filter_by(status='Pending').count()
+    
+    return render_template(
+        'dashboard.html',
+        total=total_students,
+        risk=at_risk_count,
+        attendance_rate=attendance_rate, # 👈 THE KEY
+        announcements=announcements,
+        pending_count=pending_count,
+        upcoming_schedules=upcoming_schedules,
+        recent_activities=recent_activities
+    )
 
     # (Keep your Admin logic below this...)
 
