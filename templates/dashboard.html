@@ -1082,11 +1082,7 @@
                     <div class="stat-label">Attendance Rate</div>
                     <div style="display: flex; gap: 20px; align-items: center;">
                         <div class="circular-gauge">
-                            {% if session.role == 'admin' %}
-    <div class="gauge-inner text-success">82%</div>
-{% else %}
-    <div class="gauge-inner text-success">0%</div>
-{% endif %}
+                        <div class="gauge-inner text-success">{{ attendance_rate | default(0) }}%</div>
                         </div>
                         <div style="color: var(--v8-muted); font-size: 0.8rem; line-height: 1.5;">
                             Average attendance across all registered courses this semester.
@@ -2253,30 +2249,34 @@
             setInterval(syncCampusWeather, 1800000); // 30 minutes
 
             // Integrated v8Fetch into Charts for absolute resilience
-            v8Fetch('/api/grades', 'v8_cache_grades')
-                .then(data => {
-                    var countA = data.A || 0; var countB = data.B || 0; var countC = data.C || 0; var countF = data.F || 0;
-                    var totalGrades = countA + countB + countC + countF;
-                    if (totalGrades === 0) {
-                        document.getElementById('gradeChart').style.display = 'none';
-                        document.getElementById('gradeChartWrapper').innerHTML = `
-                            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; border: 1px dashed var(--v8-primary); border-radius: 12px; background: rgba(14, 165, 233, 0.05);">
-                                <i class="fas fa-database fa-3x mb-3" style="color: var(--v8-primary); animation: pulse 2s infinite;"></i>
-                                <h5 style="margin:0; font-weight:900; color:var(--v8-primary); letter-spacing:1px;">AWAITING RESULT UPLOADS</h5>
-                                <p style="margin:5px 0 0 0; font-size:0.8rem; color:var(--v8-muted);">Upload a CSV to instantly render this chart.</p>
-                            </div>
-                        `;
-                    } else {
-                        new Chart(document.getElementById('gradeChart').getContext('2d'), {
-                            type: 'doughnut',
-                            data: { 
-                                labels: ['A', 'B', 'C', 'F'], 
-                                datasets: [{ data: [countA, countB, countC, countF], backgroundColor: ['#10b981', '#0ea5e9', '#f59e0b', '#ef4444'], borderWidth: 0 }] 
-                            },
-                            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right' } } }
-                        });
-                    }
-                }).catch(e => console.error(e));
+            v8Fetch('/api/grades?role={{ session.role }}&user_id={{ session.user_id }}', 'v8_cache_grades')
+    .then(data => {
+        var countA = data.A || 0; 
+        var countB = data.B || 0; 
+        var countC = data.C || 0; 
+        var countF = data.F || 0;
+        var totalGrades = countA + countB + countC + countF;
+        
+        if (totalGrades === 0) {
+            document.getElementById('gradeChart').style.display = 'none';
+            document.getElementById('gradeChartWrapper').innerHTML = `
+                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; border: 1px dashed var(--v8-primary); border-radius: 12px; background: rgba(14, 165, 233, 0.05);">
+                    <i class="fas fa-database fa-3x mb-3" style="color: var(--v8-primary); animation: pulse 2s infinite;"></i>
+                    <h5 style="margin:0; font-weight:900; color:var(--v8-primary); letter-spacing:1px;">NO DATA FOR THIS ACCOUNT</h5>
+                    <p style="margin:5px 0 0 0; font-size:0.8rem; color:var(--v8-muted);">Upload results for your courses to see analytics.</p>
+                </div>`;
+        } else {
+            document.getElementById('gradeChart').style.display = 'block';
+            new Chart(document.getElementById('gradeChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { 
+                    labels: ['A', 'B', 'C', 'F'], 
+                    datasets: [{ data: [countA, countB, countC, countF], backgroundColor: ['#10b981', '#0ea5e9', '#f59e0b', '#ef4444'], borderWidth: 0 }] 
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right' } } }
+            });
+        }
+    }).catch(e => console.error(e));
 
             v8Fetch('/api/departments', 'v8_cache_departments')
                 .then(data => {
