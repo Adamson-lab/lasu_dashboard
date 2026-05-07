@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Splitter | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <style>
+        :root {
+            --brand-primary: #10b981;
+            --brand-danger: #dc3545;
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #f1f5f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragover {
+            border-color: var(--brand-danger);
+            background: rgba(220, 53, 69, 0.05);
+        }
+        .file-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8fafc;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .extraction-panel {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none; /* Hidden until file is loaded */
+        }
+        .btn-action {
+            background: var(--brand-danger);
+            color: white;
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+            transition: 0.2s;
+        }
+        .btn-action:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .btn-action:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(220, 53, 69, 0.3);
+        }
+        .range-input {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 15px;
+            width: 100%;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+        .range-input:focus {
+            border-color: var(--brand-danger);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-file-export text-danger me-2"></i> PDF Splitter</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <p class="text-muted mb-4">Securely extract specific pages from a PDF. Processing happens entirely in your browser.</p>
+
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('pdfInput').click()">
+            <i class="fas fa-file-pdf fa-3x mb-3 text-secondary" id="dropIcon"></i>
+            <h5 class="fw-bold" id="dropText">Click to browse or drop a PDF here</h5>
+            <p class="text-muted small m-0">Supports single .pdf file ingestion</p>
+            <input type="file" id="pdfInput" accept=".pdf" style="display: none;" onchange="handleFile(this.files[0])">
+        </div>
+
+        <div id="fileDetails" class="file-card" style="display: none;">
+            <i class="fas fa-file-pdf text-danger fs-1 me-3"></i>
+            <div class="flex-grow-1">
+                <h6 class="fw-bold mb-1" id="fileName">document.pdf</h6>
+                <div class="text-muted small">
+                    <span id="fileSize">0 MB</span> &bull; <span id="pageCount" class="fw-bold text-primary">0 Pages</span>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" onclick="resetTool()"><i class="fas fa-trash"></i> Remove</button>
+        </div>
+
+        <div id="extractionPanel" class="extraction-panel">
+            <label class="fw-bold mb-2">Pages to Extract:</label>
+            <input type="text" id="pageRange" class="range-input" placeholder="e.g. 1-3, 5, 8-10" oninput="validateRange()">
+            <small class="text-muted d-block mt-2"><i class="fas fa-info-circle"></i> Enter page numbers separated by commas, or ranges using a hyphen.</small>
+        </div>
+
+        <button class="btn-action" id="splitBtn" disabled onclick="extractPages()">
+            <i class="fas fa-cut me-2"></i> Extract Pages
+        </button>
+
+        <div id="statusText" class="text-center mt-3 small fw-bold text-success" style="display: none;"></div>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let pdfBytes = null;
+        let totalPages = 0;
+
+        const dropZone = document.getElementById('dropZone');
+        const splitBtn = document.getElementById('splitBtn');
+        const statusText = document.getElementById('statusText');
+        const pageRangeInput = document.getElementById('pageRange');
+
+        // --- Drag and Drop Events ---
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+            document.getElementById('dropIcon').classList.replace('text-secondary', 'text-danger');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+            document.getElementById('dropIcon').classList.replace('text-danger', 'text-secondary');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            document.getElementById('dropIcon').classList.replace('text-danger', 'text-secondary');
+            if(e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+        });
+
+        // --- File Ingestion & PDF-Lib Parsing ---
+        async function handleFile(file) {
+            if (file.type !== 'application/pdf') {
+                showError("Security Reject: Invalid file type. Please upload a PDF.");
+                return;
+            }
+
+            statusText.style.display = 'block';
+            statusText.className = "text-center mt-3 small fw-bold text-primary";
+            statusText.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Analyzing Document Metadata...';
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                // Enterprise bypass for read-only flags
+                const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+                
+                currentFile = file;
+                pdfBytes = arrayBuffer;
+                totalPages = pdfDoc.getPageCount();
+
+                // Update UI
+                document.getElementById('dropZone').style.display = 'none';
+                document.getElementById('fileDetails').style.display = 'flex';
+                document.getElementById('extractionPanel').style.display = 'block';
+                
+                document.getElementById('fileName').innerText = file.name;
+                document.getElementById('fileSize').innerText = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+                document.getElementById('pageCount').innerText = totalPages + (totalPages === 1 ? " Page" : " Pages");
+                
+                statusText.style.display = 'none';
+                pageRangeInput.focus();
+
+            } catch (error) {
+                console.error("[L.I.S.A Core] Read Error:", error);
+                showError("Failed to read PDF. It may be heavily encrypted or corrupted.");
+                resetTool();
+            }
+        }
+
+        // --- Smart Range Validation ---
+        function validateRange() {
+            const val = pageRangeInput.value.trim();
+            // Enable button if there is text. The actual extraction logic will do the strict math validation.
+            splitBtn.disabled = val.length === 0;
+            statusText.style.display = 'none';
+        }
+
+        // --- Core Extraction Engine ---
+        async function extractPages() {
+            const rangeStr = pageRangeInput.value.trim();
+            if(!rangeStr) return;
+
+            splitBtn.disabled = true;
+            statusText.className = "text-center mt-3 small fw-bold text-primary";
+            statusText.innerHTML = '<i class="fas fa-cog fa-spin me-2"></i> Extracting Target Pages...';
+            statusText.style.display = 'block';
+
+            try {
+                // 1. Parse the user's string into a unique array of 0-indexed page numbers
+                const pagesToExtract = parseRangeString(rangeStr, totalPages);
+                
+                if (pagesToExtract.length === 0) {
+                    throw new Error("Invalid range. Please enter valid page numbers within document bounds.");
+                }
+
+                // 2. Load the original and create a new blank PDF
+                const sourcePdf = await PDFLib.PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+                const newPdf = await PDFLib.PDFDocument.create();
+
+                // 3. Copy the specific pages
+                const copiedPages = await newPdf.copyPages(sourcePdf, pagesToExtract);
+                copiedPages.forEach((page) => newPdf.addPage(page));
+
+                // 4. Serialize and Download
+                statusText.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Encoding New Document...';
+                const newPdfBytes = await newPdf.save();
+
+                const blob = new Blob([newPdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Smart Naming Convention
+                const originalName = currentFile.name.replace('.pdf', '');
+                a.download = `${originalName}_Extracted.pdf`;
+                
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // 5. Success Telemetry
+                splitBtn.style.background = '#198754';
+                splitBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Extraction Complete';
+                statusText.className = "text-center mt-3 small fw-bold text-success";
+                statusText.innerHTML = `Successfully extracted ${pagesToExtract.length} pages.`;
+
+                setTimeout(() => {
+                    splitBtn.style.background = 'var(--brand-danger)';
+                    splitBtn.innerHTML = '<i class="fas fa-cut me-2"></i> Extract Pages';
+                    splitBtn.disabled = false;
+                }, 3000);
+
+            } catch (error) {
+                console.error("[L.I.S.A Core] Extraction Failed:", error);
+                splitBtn.style.background = 'var(--brand-danger)';
+                splitBtn.innerHTML = '<i class="fas fa-cut me-2"></i> Extract Pages';
+                showError(error.message);
+            }
+        }
+
+        // --- Helper: String to Array Parser ---
+        function parseRangeString(str, max) {
+            const pages = new Set(); // Use Set to prevent duplicate pages
+            const parts = str.split(',');
+            
+            for (let part of parts) {
+                part = part.trim();
+                if (part.includes('-')) {
+                    // Handle ranges like "3-7"
+                    let [start, end] = part.split('-').map(n => parseInt(n.trim()));
+                    if (!isNaN(start) && !isNaN(end) && start <= end) {
+                        // Clamp to document bounds
+                        start = Math.max(1, start);
+                        end = Math.min(max, end);
+                        for (let i = start; i <= end; i++) {
+                            pages.add(i - 1); // 0-indexed for pdf-lib
+                        }
+                    }
+                } else {
+                    // Handle single pages like "5"
+                    let num = parseInt(part);
+                    if (!isNaN(num) && num >= 1 && num <= max) {
+                        pages.add(num - 1);
+                    }
+                }
+            }
+            // Return sorted array
+            return Array.from(pages).sort((a, b) => a - b);
+        }
+
+        // --- Helper: UI Reset ---
+        function resetTool() {
+            currentFile = null;
+            pdfBytes = null;
+            totalPages = 0;
+            pageRangeInput.value = '';
+            splitBtn.disabled = true;
+            statusText.style.display = 'none';
+            
+            document.getElementById('fileDetails').style.display = 'none';
+            document.getElementById('extractionPanel').style.display = 'none';
+            document.getElementById('dropZone').style.display = 'block';
+        }
+
+        function showError(msg) {
+            statusText.className = "text-center mt-3 small fw-bold text-danger";
+            statusText.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> ${msg}`;
+            statusText.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

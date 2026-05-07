@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triangle Solver | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1.2rem;
+            color: #495057;
+            width: 100px;
+            text-align: center;
+        }
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .alert-info-custom {
+            background: rgba(13, 110, 253, 0.05);
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            color: #0d6efd;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: auto;
+            line-height: 1.5;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card.highlight {
+            background: rgba(25, 135, 84, 0.05);
+            border-color: rgba(25, 135, 84, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .highlight .stat-label { color: var(--lasu-accent); }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #212529;
+        }
+        .highlight .stat-val { color: var(--lasu-accent); }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
+            min-height: 400px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+            background-image: radial-gradient(#e9ecef 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        #triangleCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .badge-type {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 0.9rem;
+            padding: 8px 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-ruler-combined"></i> SSS Triangle Input
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                <i class="fas fa-exclamation-triangle mb-1 fa-lg"></i><br>
+                <span id="errorText">Invalid Triangle.</span>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-primary">Side <span class="ms-1">a</span></div>
+                <input type="number" class="num-input" id="sideA" value="5" step="any" oninput="solveTriangle()">
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-danger">Side <span class="ms-1">b</span></div>
+                <input type="number" class="num-input" id="sideB" value="5" step="any" oninput="solveTriangle()">
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-success">Side <span class="ms-1">c</span></div>
+                <input type="number" class="num-input" id="sideC" value="5" step="any" oninput="solveTriangle()">
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-2" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Values
+            </button>
+
+            <div class="alert-info-custom mt-4">
+                <i class="fas fa-info-circle mb-2 fa-lg"></i><br>
+                <strong>Triangle Inequality Theorem:</strong><br>
+                For any valid triangle, the sum of the lengths of any two sides must be strictly greater than the length of the remaining third side.<br>
+                (a + b > c), (a + c > b), (b + c > a)
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            
+            <div class="top-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label text-primary">Angle A</div>
+                    <div class="stat-val" id="angleA">60.00°</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label text-danger">Angle B</div>
+                    <div class="stat-val" id="angleB">60.00°</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label text-success">Angle C</div>
+                    <div class="stat-val" id="angleC">60.00°</div>
+                </div>
+                
+                <div class="stat-card highlight">
+                    <div class="stat-label">Total Area</div>
+                    <div class="stat-val" id="resArea">10.83</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Perimeter</div>
+                    <div class="stat-val" id="resPerimeter">15.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Semi-Perimeter (s)</div>
+                    <div class="stat-val" id="resSemi">7.50</div>
+                </div>
+            </div>
+
+            <div class="pane-header text-dark border-0 mt-4 mb-2 pb-0">
+                <i class="fas fa-drafting-compass text-primary"></i> Live Scaled Diagram
+            </div>
+
+            <div class="canvas-container" id="graphContainer">
+                <span class="badge bg-primary badge-type" id="triangleType">Equilateral Acute</span>
+                <canvas id="triangleCanvas"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const sideAIn = document.getElementById('sideA');
+    const sideBIn = document.getElementById('sideB');
+    const sideCIn = document.getElementById('sideC');
+    
+    const errorBanner = document.getElementById('errorBanner');
+    const errorText = document.getElementById('errorText');
+    
+    const angleAOut = document.getElementById('angleA');
+    const angleBOut = document.getElementById('angleB');
+    const angleCOut = document.getElementById('angleC');
+    
+    const resArea = document.getElementById('resArea');
+    const resPerimeter = document.getElementById('resPerimeter');
+    const resSemi = document.getElementById('resSemi');
+    const triangleType = document.getElementById('triangleType');
+
+    const canvas = document.getElementById('triangleCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    function resizeCanvas() {
+        const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        ctx.scale(dpr, dpr);
+        solveTriangle();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function roundSafe(num) {
+        return Math.round(num * 100) / 100;
+    }
+
+    // --- MATH ENGINE ---
+    function solveTriangle() {
+        const a = parseFloat(sideAIn.value);
+        const b = parseFloat(sideBIn.value);
+        const c = parseFloat(sideCIn.value);
+
+        if (isNaN(a) || isNaN(b) || isNaN(c) || a <= 0 || b <= 0 || c <= 0) {
+            showError("All sides must be positive numbers.");
+            return;
+        }
+
+        // Triangle Inequality Theorem
+        if ((a + b <= c) || (a + c <= b) || (b + c <= a)) {
+            showError("Does not form a valid triangle (Sum of any two sides must be > third side).");
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        // 1. Calculate Angles using Law of Cosines
+        // cos(C) = (a^2 + b^2 - c^2) / 2ab
+        const cosA = (b*b + c*c - a*a) / (2*b*c);
+        const cosB = (a*a + c*c - b*b) / (2*a*c);
+        const cosC = (a*a + b*b - c*c) / (2*a*b);
+
+        const radA = Math.acos(cosA);
+        const radB = Math.acos(cosB);
+        const radC = Math.acos(cosC);
+
+        const degA = radA * (180 / Math.PI);
+        const degB = radB * (180 / Math.PI);
+        const degC = radC * (180 / Math.PI);
+
+        // 2. Calculate Perimeter & Area (Heron's Formula)
+        const perimeter = a + b + c;
+        const s = perimeter / 2;
+        const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+
+        // 3. Determine Type
+        let typeSide = "Scalene";
+        if (a === b && b === c) typeSide = "Equilateral";
+        else if (a === b || b === c || a === c) typeSide = "Isosceles";
+
+        let typeAngle = "Acute";
+        const maxAngle = Math.max(degA, degB, degC);
+        // Precision padding for 90 degrees
+        if (Math.abs(maxAngle - 90) < 0.1) typeAngle = "Right";
+        else if (maxAngle > 90) typeAngle = "Obtuse";
+
+        // 4. Update UI
+        angleAOut.innerText = `${roundSafe(degA)}°`;
+        angleBOut.innerText = `${roundSafe(degB)}°`;
+        angleCOut.innerText = `${roundSafe(degC)}°`;
+
+        resPerimeter.innerText = roundSafe(perimeter);
+        resSemi.innerText = roundSafe(s);
+        resArea.innerText = roundSafe(area);
+
+        triangleType.innerText = `${typeSide} ${typeAngle}`;
+        
+        if (typeAngle === "Right") triangleType.className = "badge bg-danger badge-type";
+        else if (typeAngle === "Obtuse") triangleType.className = "badge bg-warning text-dark badge-type";
+        else triangleType.className = "badge bg-success badge-type";
+
+        // 5. Draw the Triangle
+        drawTriangle(a, b, c, radA, radB, radC);
+    }
+
+    // --- CANVAS GRAPHICS ENGINE ---
+    function drawTriangle(a, b, c, radA, radB, radC) {
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+        
+        ctx.clearRect(0, 0, w, h);
+
+        // Calculate logical coordinates
+        // Place point C at (0,0)
+        // Place point A along the x-axis at (b, 0)
+        // Point B is at (a*cos(C), a*sin(C))
+        const pxC = 0;
+        const pyC = 0;
+        
+        const pxA = b;
+        const pyA = 0;
+
+        const pxB = a * Math.cos(radC);
+        const pyB = a * Math.sin(radC);
+
+        // Bounding Box to determine scale
+        const minX = Math.min(pxC, pxA, pxB);
+        const maxX = Math.max(pxC, pxA, pxB);
+        const minY = Math.min(pyC, pyA, pyB);
+        const maxY = Math.max(pyC, pyA, pyB);
+
+        const logicW = maxX - minX;
+        const logicH = maxY - minY;
+
+        // Apply Padding
+        const padding = 40;
+        const drawW = w - (padding * 2);
+        const drawH = h - (padding * 2);
+
+        // Determine uniform scale factor
+        const scale = Math.min(drawW / logicW, drawH / logicH);
+
+        // Center offsets
+        const offsetX = (w - (logicW * scale)) / 2 - (minX * scale);
+        const offsetY = (h - (logicH * scale)) / 2 - (minY * scale);
+
+        // Transform logical points to canvas pixels
+        // Y is inverted in canvas, so we do (h - y)
+        const p1 = { x: pxC * scale + offsetX, y: h - (pyC * scale + offsetY) };
+        const p2 = { x: pxA * scale + offsetX, y: h - (pyA * scale + offsetY) };
+        const p3 = { x: pxB * scale + offsetX, y: h - (pyB * scale + offsetY) };
+
+        // Draw the shape
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p3.x, p3.y);
+        ctx.closePath();
+
+        // Styling
+        ctx.fillStyle = 'rgba(25, 135, 84, 0.1)';
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#198754';
+        ctx.stroke();
+
+        // Draw Vertices and Labels
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = '#212529';
+        
+        // C (Origin)
+        ctx.beginPath(); ctx.arc(p1.x, p1.y, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillText('C', p1.x - 20, p1.y + 20);
+
+        // A
+        ctx.beginPath(); ctx.arc(p2.x, p2.y, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillText('A', p2.x + 10, p2.y + 20);
+
+        // B
+        ctx.beginPath(); ctx.arc(p3.x, p3.y, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillText('B', p3.x - 5, p3.y - 15);
+
+        // Draw Side Labels (midpoints)
+        ctx.fillStyle = '#6c757d';
+        ctx.font = 'italic 14px Arial';
+        
+        // Side b (C to A)
+        ctx.fillText(`b = ${b}`, (p1.x + p2.x)/2, (p1.y + p2.y)/2 + 20);
+        // Side c (A to B)
+        ctx.fillText(`c = ${c}`, (p2.x + p3.x)/2 + 10, (p2.y + p3.y)/2 - 5);
+        // Side a (B to C)
+        ctx.fillText(`a = ${a}`, (p3.x + p1.x)/2 - 40, (p3.y + p1.y)/2 - 5);
+    }
+
+    function showError(msg) {
+        errorText.innerText = msg;
+        errorBanner.style.display = 'block';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        angleAOut.innerText = '--';
+        angleBOut.innerText = '--';
+        angleCOut.innerText = '--';
+        resArea.innerText = '--';
+        resPerimeter.innerText = '--';
+        resSemi.innerText = '--';
+        triangleType.innerText = 'INVALID';
+        triangleType.className = "badge bg-secondary badge-type";
+    }
+
+    function clearInputs() {
+        sideAIn.value = '';
+        sideBIn.value = '';
+        sideCIn.value = '';
+        sideAIn.focus();
+        showError("Waiting for input...");
+    }
+
+    // Init
+    setTimeout(() => {
+        resizeCanvas();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

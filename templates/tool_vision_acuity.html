@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision Acuity Test | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            line-height: 1.2;
+        }
+
+        .select-custom {
+            width: 100%;
+            border: none;
+            padding: 15px;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* Hardware Calibration Box */
+        .calibration-area {
+            background: #f8f9fa;
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .cc-visual {
+            background: linear-gradient(135deg, #0d6efd, #6f42c1);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            transition: width 0.1s, height 0.1s;
+            
+            /* Start with a default physical dimension (will be set by JS) */
+            width: 250px;
+            height: 158px; /* Standard ID ratio 85.6 x 53.98 */
+        }
+
+        .slider-custom {
+            width: 100%;
+            accent-color: var(--math-blue);
+        }
+
+        .alert-info-custom {
+            background: rgba(13, 110, 253, 0.05); 
+            color: var(--math-blue);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            border: none;
+        }
+
+        /* --- Right Pane: Output (Snellen Chart) --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 30px;
+            min-width: 0;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .chart-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #212529;
+            width: 100%;
+        }
+
+        .chart-header h2 {
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        .chart-header p {
+            color: #6c757d;
+            font-weight: 700;
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* The Clinical Chart */
+        .snellen-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding-bottom: 50px;
+        }
+
+        .snellen-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .snellen-letters {
+            /* Optotypes use a geometric, high-legibility sans/slab font */
+            font-family: "Arial", sans-serif;
+            font-weight: 900;
+            color: #000000;
+            line-height: 1;
+            letter-spacing: 0.5em; /* Spacing between letters */
+            margin-right: -0.5em; /* Compensate for last letter spacing */
+            text-align: center;
+        }
+
+        /* Telemetry overlay for the lines */
+        .line-marker {
+            position: absolute;
+            left: 0;
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            color: #adb5bd;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .line-marker span {
+            color: #212529;
+            font-size: 1rem;
+        }
+
+        /* Clinical reference lines */
+        .ref-line-red {
+            width: 80%;
+            height: 4px;
+            background-color: var(--math-red);
+            margin: 10px 0;
+            opacity: 0.8;
+            border-radius: 2px;
+        }
+        .ref-line-green {
+            width: 80%;
+            height: 4px;
+            background-color: var(--lasu-accent);
+            margin: 10px 0;
+            opacity: 0.8;
+            border-radius: 2px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .line-marker { position: static; text-align: center; align-items: center; margin-bottom: 5px; width: 100%; }
+            .snellen-line { flex-direction: column; margin-bottom: 25px;}
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-sliders-h"></i> Optical Setup
+            </div>
+
+            <div class="alert-info-custom mb-3">
+                <i class="fas fa-info-circle mb-2 fa-lg"></i><br>
+                <strong>Step 1: Calibration</strong><br>
+                Hold a standard credit card (or ID card) against the screen. Adjust the slider until the blue box exactly matches the physical size of your card.
+            </div>
+
+            <div class="calibration-area">
+                <div class="cc-visual" id="ccVisual">ID Card</div>
+                <input type="range" class="form-range slider-custom" id="ccSlider" min="150" max="600" value="250" oninput="updateCalibration()">
+                <div class="mt-2 fw-bold text-muted" style="font-family: 'Fira Code', monospace;" id="ppiDisplay">PPI: Calibrating...</div>
+            </div>
+
+            <div class="input-group-custom mt-auto mb-0">
+                <div class="input-label">
+                    <span>Viewing Distance</span>
+                </div>
+                <select class="select-custom" id="valDistance" onchange="generateChart()">
+                    <option value="2">2 Feet (Arm's Length)</option>
+                    <option value="3" selected>3 Feet (Desk Distance)</option>
+                    <option value="5">5 Feet</option>
+                    <option value="10">10 Feet (Half Standard)</option>
+                    <option value="20">20 Feet (Clinical Standard)</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-3" onclick="generateChart()">
+                <i class="fas fa-random me-2"></i> Randomize Letters
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="chart-header">
+            <h2>Snellen Acuity Chart</h2>
+            <p id="chartTelemetry">Calibrated for exactly 3 Feet</p>
+        </div>
+
+        <div class="snellen-container" id="chartContainer">
+            </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Elements
+    const ccVisual = document.getElementById('ccVisual');
+    const ccSlider = document.getElementById('ccSlider');
+    const ppiDisplay = document.getElementById('ppiDisplay');
+    const valDistance = document.getElementById('valDistance');
+    const chartContainer = document.getElementById('chartContainer');
+    const chartTelemetry = document.getElementById('chartTelemetry');
+
+    // Physical Constants
+    const CARD_WIDTH_MM = 85.6; // Standard CR80 credit card width
+    const CARD_RATIO = 53.98 / 85.6; // Height / Width
+
+    // Optotype lines array [Snellen Denominator, Number of letters]
+    const linesConfig = [
+        { denom: 200, count: 1 },
+        { denom: 100, count: 2 },
+        { denom: 70,  count: 3 },
+        { denom: 50,  count: 4 },
+        { denom: 40,  count: 5 },
+        { denom: 30,  count: 6 },
+        { denom: 25,  count: 6 }, // Often the red line goes above this
+        { denom: 20,  count: 7 }, // The standard green line
+        { denom: 15,  count: 8 }
+    ];
+
+    // Standard clinical Snellen letters (Sloan/Optotypes without confusing shapes)
+    const optotypes = ['C', 'D', 'E', 'F', 'L', 'N', 'O', 'P', 'T', 'Z'];
+
+    let pixelsPerMM = 1;
+
+    // --- CALIBRATION ENGINE ---
+    function updateCalibration() {
+        const sliderVal = parseInt(ccSlider.value);
+        
+        // Update visual card box
+        ccVisual.style.width = `${sliderVal}px`;
+        ccVisual.style.height = `${sliderVal * CARD_RATIO}px`;
+
+        // Calculate PPI (Pixels per Millimeter)
+        pixelsPerMM = sliderVal / CARD_WIDTH_MM;
+        
+        // Display calculated PPI for nerds
+        let ppiInch = pixelsPerMM * 25.4;
+        ppiDisplay.innerText = `Calibrated PPI: ~${Math.round(ppiInch)}`;
+
+        generateChart();
+    }
+
+    function getRandomLetters(count) {
+        let result = '';
+        for(let i=0; i<count; i++){
+            result += optotypes[Math.floor(Math.random() * optotypes.length)];
+        }
+        return result;
+    }
+
+    // --- PROCEDURAL SNELLEN ENGINE ---
+    function generateChart() {
+        const distanceFeet = parseFloat(valDistance.value);
+        const distanceMM = distanceFeet * 304.8;
+        
+        chartTelemetry.innerText = `Mathematically calibrated for ${distanceFeet} Feet viewing distance`;
+
+        // Clinical Math:
+        // Visual acuity = d / D. 20/20 means 5 arcminutes total height.
+        // Height_mm = 2 * distance_mm * tan((5/60) degrees / 2)
+        // Note: tan requires radians. 1 degree = Math.PI / 180 radians.
+        // 5 arcmin = (5/60) * (Math.PI / 180) = 0.00145444 radians.
+        const angleRadians = (5 / 60) * (Math.PI / 180);
+        const h2020_mm = 2 * distanceMM * Math.tan(angleRadians / 2);
+
+        let html = '';
+
+        linesConfig.forEach((line) => {
+            // For line 20/X, the physical size is scaled by (X / 20)
+            let scaleFactor = line.denom / 20;
+            let physicalHeightMM = h2020_mm * scaleFactor;
+            
+            // Convert to physical screen pixels based on user calibration
+            let pixelHeight = physicalHeightMM * pixelsPerMM;
+
+            // In CSS, font-size sets the em-square, but the actual capital letter height (cap-height) 
+            // is usually around 70-75% of the font-size for standard sans-serif fonts like Arial.
+            // To make the actual drawn letter exact, we apply a Cap-Height compensation factor.
+            const CAP_HEIGHT_RATIO = 0.72; 
+            let adjustedFontSize = pixelHeight / CAP_HEIGHT_RATIO;
+
+            let letters = getRandomLetters(line.count);
+
+            html += `
+                <div class="snellen-line">
+                    <div class="line-marker">
+                        20 / <span>${line.denom}</span>
+                    </div>
+                    <div class="snellen-letters" style="font-size: ${adjustedFontSize}px;">
+                        ${letters}
+                    </div>
+                </div>
+            `;
+
+            // Inject clinical red/green reference lines
+            if (line.denom === 30) {
+                html += `<div class="ref-line-red"></div>`;
+            }
+            if (line.denom === 20) {
+                html += `<div class="ref-line-green"></div>`;
+            }
+        });
+
+        chartContainer.innerHTML = html;
+    }
+
+    // INIT
+    setTimeout(() => {
+        updateCalibration();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

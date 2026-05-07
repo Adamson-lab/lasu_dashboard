@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V700 Swiss Brutalism | Unix Epoch</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V700 SWISS BRUTALISM THEME ENGINE
+           ========================================== */
+        
+        [data-theme="light"] {
+            --bg-master: #ffffff;
+            --fg-master: #000000;
+            --accent-primary: #ff3333; /* Pure Brutalist Red */
+            --border-width: 6px;
+            --shadow-color: #000000;
+        }
+
+        [data-theme="dark"] {
+            --bg-master: #000000;
+            --fg-master: #ffffff;
+            --accent-primary: #ff3333;
+            --border-width: 6px;
+            --shadow-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-master);
+            color: var(--fg-master);
+            margin: 0;
+            padding: 60px 20px;
+            text-transform: uppercase;
+            transition: background-color 0s, color 0s; /* No soft transitions in Brutalism */
+        }
+
+        .tool-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* HARD STRUCTURAL ELEMENTS */
+        .brutal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: var(--border-width) solid var(--fg-master);
+            padding-bottom: 20px;
+            margin-bottom: 60px;
+        }
+
+        .brutal-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin: 0;
+            line-height: 0.9;
+        }
+
+        .brutal-nav-btn {
+            background-color: var(--bg-master);
+            color: var(--fg-master);
+            border: 4px solid var(--fg-master);
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            text-decoration: none;
+            box-shadow: 6px 6px 0px var(--shadow-color);
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .brutal-nav-btn:active {
+            transform: translate(6px, 6px);
+            box-shadow: 0px 0px 0px var(--shadow-color);
+        }
+
+        /* LIVE TICKER BLOCK */
+        .live-ticker-block {
+            background-color: var(--fg-master);
+            color: var(--bg-master);
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 60px;
+            border: var(--border-width) solid var(--fg-master);
+        }
+
+        .ticker-label {
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            color: var(--accent-primary);
+        }
+
+        .ticker-value {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 8rem;
+            font-weight: 900;
+            letter-spacing: -5px;
+            line-height: 1;
+        }
+
+        /* THE PHYSICAL ODOMETER DIALER */
+        .brutal-card {
+            border: var(--border-width) solid var(--fg-master);
+            background-color: var(--bg-master);
+            padding: 40px;
+            box-shadow: 15px 15px 0px var(--shadow-color);
+            margin-bottom: 60px;
+        }
+
+        .card-label {
+            background-color: var(--fg-master);
+            color: var(--bg-master);
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            margin-bottom: 40px;
+        }
+
+        .odometer-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .digit-col {
+            display: flex;
+            flex-direction: column;
+            border: 4px solid var(--fg-master);
+            background-color: var(--bg-master);
+        }
+
+        .dial-btn {
+            background-color: var(--bg-master);
+            color: var(--fg-master);
+            border: none;
+            padding: 15px 0;
+            font-size: 2rem;
+            cursor: pointer;
+            font-weight: 900;
+            outline: none;
+        }
+        .dial-btn.up { border-bottom: 4px solid var(--fg-master); }
+        .dial-btn.down { border-top: 4px solid var(--fg-master); }
+        
+        .dial-btn:hover { background-color: var(--accent-primary); color: #ffffff; }
+        .dial-btn:active { background-color: var(--fg-master); color: var(--bg-master); }
+
+        .digit-value {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-align: center;
+            padding: 10px 20px;
+            background-color: var(--bg-master);
+            color: var(--fg-master);
+        }
+
+        .odometer-output {
+            border-top: var(--border-width) dashed var(--fg-master);
+            padding-top: 40px;
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-align: center;
+            color: var(--accent-primary);
+        }
+
+        /* TERRESTRIAL INPUT OVERRIDE */
+        .brutal-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .brutal-input {
+            width: 100%;
+            border: var(--border-width) solid var(--fg-master);
+            background-color: var(--bg-master);
+            color: var(--fg-master);
+            padding: 25px;
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            outline: none;
+        }
+
+        .brutal-input:focus {
+            background-color: #ffff00; /* Harsh yellow focus */
+            color: #000000;
+        }
+        [data-theme="dark"] .brutal-input:focus {
+            background-color: var(--accent-primary);
+            color: #ffffff;
+        }
+
+        ::-webkit-calendar-picker-indicator { 
+            cursor: pointer; 
+            transform: scale(2);
+            margin-right: 10px;
+        }
+        [data-theme="dark"] ::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+        .btn-execute {
+            background-color: var(--accent-primary);
+            color: #ffffff;
+            border: var(--border-width) solid var(--fg-master);
+            padding: 25px;
+            font-size: 2rem;
+            font-weight: 900;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 10px 10px 0px var(--shadow-color);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .btn-execute:active {
+            transform: translate(10px, 10px);
+            box-shadow: 0px 0px 0px var(--shadow-color);
+        }
+
+        .terrestrial-output {
+            margin-top: 40px;
+            background-color: var(--fg-master);
+            color: var(--bg-master);
+            padding: 30px;
+            font-size: 4rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: -2px;
+        }
+
+        /* Responsive Fixes */
+        @media (max-width: 900px) {
+            .brutal-title { font-size: 2.5rem; }
+            .ticker-value { font-size: 4rem; }
+            .digit-value { font-size: 2.5rem; padding: 10px; }
+            .dial-btn { font-size: 1.5rem; padding: 10px 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        
+        <div class="brutal-header">
+            <div>
+                <a href="{{ url_for('student_tools_dashboard') }}" class="brutal-nav-btn mb-4">
+                    &#x25C0; DASHBOARD
+                </a>
+                <h1 class="brutal-title">UNIX EPOCH</h1>
+                <h1 class="brutal-title" style="color: var(--accent-primary);">V700 SYSTEM</h1>
+            </div>
+            <div>
+                <button class="brutal-nav-btn" onclick="toggleBrutalTheme()">INVERT</button>
+            </div>
+        </div>
+
+        <div class="live-ticker-block">
+            <div class="ticker-label">LIVE SYSTEM KERNEL (SECONDS SINCE 1970)</div>
+            <div class="ticker-value" id="liveTickerValue">0000000000</div>
+        </div>
+
+        <div class="brutal-card">
+            <div class="card-label">PHYSICAL ODOMETER DIALER</div>
+            
+            <div class="odometer-wrapper">
+                <div class="digit-col"><button class="dial-btn up" onclick="shiftDigit(0, 1)">&#x25B2;</button><div class="digit-value" id="dig0">0</div><button class="dial-btn down" onclick="shiftDigit(0, -1)">&#x25BC;</button></div>
+                <div class="digit-col"><button class="dial-btn up" onclick="shiftDigit(1, 1)">&#x25B2;</button><div class="digit-value" id="dig1">0</div><button class="dial-btn down" onclick="shiftDigit(1, -1)">&#x25BC;</button></div>
+                <div class="digit-col"><button class="dial-btn up" onclick="shiftDigit(2, 1)">&#x25B2;</button><div class="digit-value" id="dig2">0</div><button class="dial-btn down" onclick="shiftDigit(2, -1)">&#x25BC;</button></div>
+                <div class="digit-col"><button class="dial-btn up" onclick="shiftDigit(3, 1)">&#x25B2;</button><div class="digit-value" id="dig3">0</div><button class="dial-btn down" onclick="shiftDigit(3, -1)">&#x25BC;</button></div>
+                <div class="digit-col"><button class="dial-btn up" onclick="shiftDigit(4, 1)">&#x25B2;</button><div class="digit-value" id="dig4">0</div><button class="dial-btn down" onclick="shiftDigit(4, -1)">&#x25BC;</button></div>
+                <div class="digit-col"><button class="dial-btn up" onclick="shiftDigit(5, 1)">&#x25B2;</button><div class="digit-value" id="dig5">0</div><button class="dial-btn down" onclick="shiftDigit(5, -1)">&#x25BC;</button></div>
+                <div class="digit-col"><button class="dial-btn up" onclick="shiftDigit(6, 1)">&#x25B2;</button><div class="digit-value" id="dig6">0</div><button class="dial-btn down" onclick="shiftDigit(6, -1)">&#x25BC;</button></div>
+                <div class="digit-col"><button class="dial-btn up" onclick="shiftDigit(7, 1)">&#x25B2;</button><div class="digit-value" id="dig7">0</div><button class="dial-btn down" onclick="shiftDigit(7, -1)">&#x25BC;</button></div>
+                <div class="digit-col"><button class="dial-btn up" onclick="shiftDigit(8, 1)">&#x25B2;</button><div class="digit-value" id="dig8">0</div><button class="dial-btn down" onclick="shiftDigit(8, -1)">&#x25BC;</button></div>
+                <div class="digit-col"><button class="dial-btn up" onclick="shiftDigit(9, 1)">&#x25B2;</button><div class="digit-value" id="dig9">0</div><button class="dial-btn down" onclick="shiftDigit(9, -1)">&#x25BC;</button></div>
+            </div>
+
+            <div class="odometer-output" id="odometerResultDisplay">
+                AWAITING DIAL INPUT
+            </div>
+        </div>
+
+        <div class="brutal-card">
+            <div class="card-label">TERRESTRIAL OVERRIDE</div>
+            
+            <div class="brutal-input-group">
+                <input type="datetime-local" id="overrideInput" class="brutal-input">
+                <button class="btn-execute" onclick="executeTerrestrialOverride()">LOCK COORDINATES</button>
+            </div>
+
+            <div class="terrestrial-output" id="overrideResultDisplay">
+                ---
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V700 THEME INVERTER
+        // ==========================================
+        function toggleBrutalTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v700_brutal', nextTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v700_brutal');
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+
+            // Ignite Live Ticker
+            runLiveKernel();
+
+            // Set up Odometer with current time
+            initializeOdometer();
+
+            // Set up Override Input
+            let nowObject = new Date();
+            let offsetMilliseconds = nowObject.getTimezoneOffset() * 60000;
+            let localDateObject = new Date(nowObject.getTime() - offsetMilliseconds);
+            document.getElementById('overrideInput').value = localDateObject.toISOString().slice(0, 16);
+        });
+
+        // ==========================================
+        // V700 CORE MATHEMATICS
+        // ==========================================
+
+        function runLiveKernel() {
+            let currentDateObject = new Date();
+            let totalSeconds = Math.floor(currentDateObject.getTime() / 1000);
+            
+            document.getElementById('liveTickerValue').innerText = String(totalSeconds);
+            
+            requestAnimationFrame(runLiveKernel);
+        }
+
+        // ODOMETER STATE
+        let odometerDigitArray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        function initializeOdometer() {
+            let initialDateObject = new Date();
+            let initialSeconds = Math.floor(initialDateObject.getTime() / 1000);
+            let stringSeconds = String(initialSeconds);
+
+            // Pad string to exactly 10 digits
+            while (stringSeconds.length < 10) {
+                stringSeconds = "0" + stringSeconds;
+            }
+
+            // Inject into array and UI
+            for (let i = 0; i < 10; i = i + 1) {
+                let singleCharacter = stringSeconds.charAt(i);
+                let integerValue = parseInt(singleCharacter, 10);
+                
+                odometerDigitArray[i] = integerValue;
+                
+                let displayElement = document.getElementById('dig' + String(i));
+                displayElement.innerText = String(integerValue);
+            }
+
+            calculateOdometerDate();
+        }
+
+        function shiftDigit(indexPosition, shiftAmount) {
+            let currentValue = odometerDigitArray[indexPosition];
+            let newValue = currentValue + shiftAmount;
+
+            if (newValue > 9) {
+                newValue = 0;
+            } else if (newValue < 0) {
+                newValue = 9;
+            }
+
+            odometerDigitArray[indexPosition] = newValue;
+
+            let displayElement = document.getElementById('dig' + String(indexPosition));
+            displayElement.innerText = String(newValue);
+
+            calculateOdometerDate();
+        }
+
+        function padNumberString(numberValue) {
+            let stringValue = String(numberValue);
+            if (stringValue.length === 1) {
+                return "0" + stringValue;
+            } else {
+                return stringValue;
+            }
+        }
+
+        function calculateOdometerDate() {
+            let fullEpochString = "";
+            
+            for (let i = 0; i < odometerDigitArray.length; i = i + 1) {
+                fullEpochString = fullEpochString + String(odometerDigitArray[i]);
+            }
+
+            let fullEpochInteger = parseInt(fullEpochString, 10);
+            
+            // JavaScript requires milliseconds
+            let resolvedDateObject = new Date(fullEpochInteger * 1000);
+
+            let yearValue = resolvedDateObject.getFullYear();
+            let monthValue = resolvedDateObject.getMonth() + 1;
+            let dayValue = resolvedDateObject.getDate();
+            
+            let hourValue = resolvedDateObject.getHours();
+            let minuteValue = resolvedDateObject.getMinutes();
+            let secondValue = resolvedDateObject.getSeconds();
+
+            let finalDateString = String(yearValue) + "-" + padNumberString(monthValue) + "-" + padNumberString(dayValue);
+            let finalTimeString = padNumberString(hourValue) + ":" + padNumberString(minuteValue) + ":" + padNumberString(secondValue);
+
+            document.getElementById('odometerResultDisplay').innerText = finalDateString + " " + finalTimeString + " LOCAL";
+        }
+
+        function executeTerrestrialOverride() {
+            let overrideInputElement = document.getElementById('overrideInput');
+            let stringValue = overrideInputElement.value;
+
+            if (stringValue === "") {
+                alert("CRITICAL ERROR: Terrestrial coordinate must be provided.");
+                return;
+            }
+
+            let targetDateObject = new Date(stringValue);
+            let calculatedUnixSeconds = Math.floor(targetDateObject.getTime() / 1000);
+
+            document.getElementById('overrideResultDisplay').innerText = String(calculatedUnixSeconds);
+        }
+
+    </script>
+</body>
+</html>

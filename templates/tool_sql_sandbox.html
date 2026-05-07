@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dracula">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LASU Quantum Studio | Enterprise Database Environment v2.5</title>
+    <meta name="description" content="Production-grade SQL IDE for LASU Student Portal using WebAssembly technology.">
+    <meta name="author" content="LASU Dev Team">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/eclipse.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/dialog/dialog.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/scroll/simplescrollbars.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/foldgutter.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/lint/lint.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/sql-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/scroll/simplescrollbars.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/selection/active-line.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+
+    <style>
+        /* ======================================================= */
+        /* 🎨 SYSTEM DESIGN SYSTEM (SDS) v4.5 (Extended) */
+        /* ======================================================= */
+        :root {
+            /* Layout Geometry */
+            --sidebar-width: 280px;
+            --activity-bar-width: 55px;
+            --header-height: 42px;
+            --footer-height: 28px;
+            --tab-height: 38px;
+            
+            /* Typography */
+            --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-code: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            
+            /* Z-Indices */
+            --z-modal: 2000;
+            --z-toast: 3000;
+            --z-tooltip: 1500;
+            --z-dropdown: 1000;
+        }
+
+        /* 🌙 THEME: DRACULA PRO (DEFAULT) */
+        [data-theme="dracula"] {
+            --bg-root: #1e1e1e;
+            --bg-activity: #333333;
+            --bg-sidebar: #252526;
+            --bg-editor: #1e1e1e;
+            --bg-panel: #1e1e1e;
+            --bg-header: #2d2d2d;
+            --bg-input: #3c3c3c;
+            --bg-hover: #2a2d2e;
+            --bg-selection: #264f78;
+            --bg-tab-inactive: #2d2d2d;
+            --bg-tab-active: #1e1e1e;
+            
+            --border-color: #3e3e42;
+            --accent-color: #007acc;
+            --accent-hover: #0062a3;
+            
+            --text-main: #cccccc;
+            --text-muted: #858585;
+            --text-inverse: #ffffff;
+            
+            --color-success: #198754;
+            --color-warning: #cca700;
+            --color-danger: #f14c4c;
+            --color-info: #007acc;
+            --color-ai: #8e44ad;
+            
+            --scroll-thumb: #424242;
+            --scroll-hover: #4f4f4f;
+        }
+
+        /* ☀️ THEME: GITHUB LIGHT */
+        [data-theme="light"] {
+            --bg-root: #ffffff;
+            --bg-activity: #24292e;
+            --bg-sidebar: #f6f8fa;
+            --bg-editor: #ffffff;
+            --bg-panel: #ffffff;
+            --bg-header: #f1f3f5;
+            --bg-input: #ffffff;
+            --bg-hover: #e1e4e8;
+            --bg-selection: #c8c8fa;
+            --bg-tab-inactive: #e1e4e8;
+            --bg-tab-active: #ffffff;
+            
+            --border-color: #d1d5da;
+            --accent-color: #0366d6;
+            --accent-hover: #005cc5;
+            
+            --text-main: #24292e;
+            --text-muted: #586069;
+            --text-inverse: #ffffff;
+            
+            --color-success: #28a745;
+            --color-warning: #b08800;
+            --color-danger: #cb2431;
+            --color-info: #0366d6;
+            --color-ai: #6f42c1;
+            
+            --scroll-thumb: #c1c1c1;
+            --scroll-hover: #a8a8a8;
+        }
+
+        /* GLOBAL RESET */
+        * { box-sizing: border-box; outline: none; -webkit-font-smoothing: antialiased; }
+        body { margin: 0; padding: 0; background: var(--bg-root); color: var(--text-main); font-family: var(--font-ui); height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; transition: background 0.3s; }
+        
+        /* ZEN MODE STYLES */
+        body.zen-mode .activity-bar,
+        body.zen-mode .sidebar,
+        body.zen-mode .status-bar,
+        body.zen-mode .panel-container { display: none !important; }
+        body.zen-mode .app-shell { height: 100vh; }
+        body.zen-mode .editor-pane { height: 100% !important; }
+        body.zen-mode .gutter { display: none !important; }
+
+        /* ======================================================= */
+        /* 🧱 APPLICATION SHELL LAYOUT */
+        /* ======================================================= */
+        .app-shell { display: flex; flex: 1; height: calc(100vh - var(--footer-height)); position: relative; }
+        
+        /* 1. ACTIVITY BAR */
+        .activity-bar { width: var(--activity-bar-width); background: var(--bg-activity); display: flex; flex-direction: column; align-items: center; padding-top: 10px; z-index: 20; border-right: 1px solid var(--border-color); }
+        .action-item { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4); font-size: 22px; cursor: pointer; transition: 0.2s; border-left: 3px solid transparent; position: relative; margin-bottom: 5px; }
+        .action-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .action-item.active { color: #fff; border-left-color: var(--accent-color); background: transparent; }
+        .action-spacer { flex: 1; }
+        .action-tooltip { position: absolute; left: 100%; top: 12px; background: #000; color: #fff; padding: 4px 8px; font-size: 10px; border-radius: 4px; pointer-events: none; opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: var(--z-tooltip); }
+        .action-item:hover .action-tooltip { opacity: 1; left: 110%; }
+
+        /* 2. SIDEBAR */
+        .sidebar { width: var(--sidebar-width); background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: width 0.1s; }
+        .sidebar-header { height: 35px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: bold; text-transform: uppercase; color: var(--text-muted); background: rgba(0,0,0,0.05); letter-spacing: 0.5px; }
+        .sidebar-content { flex: 1; overflow-y: auto; }
+        
+        /* Tree View */
+        .tree-section { border-bottom: 1px solid var(--border-color); }
+        .tree-header { padding: 8px 15px; cursor: pointer; font-size: 11px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; transition: 0.1s; background: rgba(0,0,0,0.02); }
+        .tree-header:hover { color: var(--text-inverse); background: var(--bg-hover); }
+        .tree-header i { margin-right: 8px; width: 14px; text-align: center; transition: transform 0.2s; font-size: 10px; opacity: 0.8; }
+        .tree-header.collapsed i { transform: rotate(-90deg); }
+        .tree-content { padding-left: 0; }
+        .tree-content.hidden { display: none; }
+        
+        .tree-node { padding: 5px 15px 5px 28px; cursor: pointer; font-size: 13px; color: var(--text-main); display: flex; align-items: center; border: 1px solid transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; transition: all 0.1s; }
+        .tree-node:hover { background: var(--bg-hover); }
+        .tree-node.active { background: var(--bg-selection); color: #fff; border-left: 2px solid var(--accent-color); padding-left: 26px; }
+        .tree-node i { margin-right: 8px; width: 16px; text-align: center; opacity: 0.7; font-size: 14px; }
+        .tree-node-meta { margin-left: auto; font-size: 10px; color: var(--text-muted); font-family: var(--font-code); opacity: 0.7; }
+        .node-actions { display: none; margin-left: auto; gap: 5px; }
+        .tree-node:hover .node-actions, .tree-header:hover .node-actions { display: flex; }
+        .action-mini-btn { background: none; border: none; padding: 2px; cursor: pointer; opacity: 0.7; transition: 0.2s; }
+        .action-mini-btn:hover { opacity: 1; transform: scale(1.1); }
+
+        /* AI Panel Styles */
+        .ai-message { padding: 12px; margin: 10px; border-radius: 6px; font-size: 13px; line-height: 1.5; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); }
+        .ai-message.suggestion { border-left: 3px solid var(--color-warning); }
+        .ai-message.error { border-left: 3px solid var(--color-danger); background: rgba(241, 76, 76, 0.1); }
+        .ai-message.insight { border-left: 3px solid var(--color-ai); }
+        .ai-title { font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+
+        /* 3. MAIN WORKSPACE */
+        .workspace { flex: 1; display: flex; flex-direction: column; background: var(--bg-editor); min-width: 0; position: relative; }
+        
+        /* Tab Bar */
+        .tab-bar { height: var(--tab-height); background: var(--bg-header); display: flex; overflow-x: auto; border-bottom: 1px solid var(--border-color); }
+        .editor-tab { 
+            height: 100%; padding: 0 15px; display: flex; align-items: center; cursor: pointer; 
+            background: var(--bg-tab-inactive); color: var(--text-muted); font-size: 13px; 
+            border-right: 1px solid var(--border-color); border-top: 2px solid transparent; min-width: 140px; max-width: 220px;
+            user-select: none; position: relative; transition: background 0.1s;
+        }
+        .editor-tab.active { background: var(--bg-tab-active); color: var(--text-main); border-top-color: var(--accent-color); font-weight: 500; }
+        .editor-tab:hover { background: var(--bg-hover); }
+        .tab-close { margin-left: auto; font-size: 11px; padding: 2px; border-radius: 3px; opacity: 0; transition: 0.2s; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
+        .editor-tab:hover .tab-close { opacity: 1; }
+        .editor-tab.active .tab-close { opacity: 1; }
+        .tab-close:hover { background: rgba(255,255,255,0.2); color: var(--text-inverse); }
+        
+        /* Editor Toolbar */
+        .editor-toolbar { height: 40px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; padding: 0 10px; justify-content: space-between; background: var(--bg-panel); }
+        .toolbar-group { display: flex; align-items: center; gap: 8px; }
+        
+        /* CodeMirror Overrides */
+        .editor-container { flex: 1; position: relative; overflow: hidden; }
+        .CodeMirror { height: 100% !important; font-family: var(--font-code); font-size: 14px; line-height: 1.6; background: var(--bg-editor); color: var(--text-main); }
+        .CodeMirror-gutters { background: var(--bg-editor); border-right: 1px solid var(--border-color); }
+        .CodeMirror-activeline-background { background: rgba(0,0,0,0.15); }
+        .cm-s-dracula .CodeMirror-cursor { border-left: 2px solid var(--accent-color) !important; }
+
+        /* Split.js Resizer Style */
+        .gutter { background-color: var(--border-color); background-repeat: no-repeat; background-position: 50%; }
+        .gutter.gutter-horizontal { cursor: col-resize; }
+        .gutter.gutter-vertical { cursor: row-resize; }
+
+        /* Bottom Panel */
+        .panel-container { height: 350px; display: flex; flex-direction: column; background: var(--bg-panel); border-top: 1px solid var(--border-color); }
+        .panel-header { height: 35px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background: var(--bg-sidebar); }
+        .panel-tabs { display: flex; gap: 20px; height: 100%; }
+        .panel-tab { height: 100%; display: flex; align-items: center; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; letter-spacing: 0.5px; transition: 0.2s; }
+        .panel-tab:hover { color: var(--text-main); }
+        .panel-tab.active { color: var(--text-main); border-bottom-color: var(--accent-color); }
+        
+        /* Data Grid */
+        .grid-wrapper { flex: 1; overflow: auto; position: relative; }
+        .sql-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; font-family: var(--font-ui); white-space: nowrap; }
+        .sql-table th { 
+            position: sticky; top: 0; background: var(--bg-header); color: var(--text-main); z-index: 10;
+            padding: 8px 12px; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); 
+            user-select: none;
+        }
+        .sql-table td { padding: 6px 12px; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); color: var(--text-main); }
+        .sql-table tr:nth-child(even) { background: rgba(0,0,0,0.02); }
+        .sql-table tr:hover { background: var(--bg-hover); }
+        .cell-null { color: var(--color-danger); font-style: italic; opacity: 0.7; }
+        .cell-num { color: #b5cea8; }
+        .cell-str { color: #ce9178; }
+
+        /* Visualization Panel */
+        .viz-wrapper { flex: 1; padding: 20px; display: none; overflow: hidden; position: relative; background: var(--bg-editor); }
+        .viz-wrapper.active { display: flex; flex-direction: column; }
+        .viz-controls { margin-bottom: 15px; display: flex; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .viz-canvas-container { flex: 1; position: relative; min-height: 0; }
+        
+        /* Console Panel */
+        .console-wrapper { flex: 1; padding: 10px; overflow-y: auto; font-family: var(--font-code); font-size: 12px; display: none; background: #1e1e1e; }
+        .console-wrapper.active { display: block; }
+        .log-entry { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #333; display: flex; gap: 10px; }
+        .log-time { color: var(--text-muted); min-width: 70px; opacity: 0.7; }
+        .log-msg { color: var(--text-main); word-break: break-all; }
+        .log-success { color: var(--color-success); }
+        .log-error { color: var(--color-danger); }
+        .log-info { color: var(--accent-color); }
+
+        /* 4. FOOTER */
+        .status-bar { height: var(--footer-height); background: var(--accent-color); display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: 11px; color: #fff; user-select: none; }
+        .status-left, .status-right { display: flex; align-items: center; }
+        .status-item { display: flex; align-items: center; gap: 6px; margin-right: 15px; cursor: pointer; padding: 0 5px; height: 100%; transition: background 0.2s; }
+        .status-item:hover { background: rgba(255,255,255,0.2); }
+
+        /* ======================================================= */
+        /* 🧩 UI COMPONENTS */
+        /* ======================================================= */
+        
+        /* Buttons */
+        .btn-icon { background: transparent; border: 1px solid transparent; color: var(--text-main); padding: 5px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .btn-icon:hover { background: rgba(150,150,150,0.15); color: var(--text-inverse); border-color: var(--border-color); }
+        .btn-icon.active { background: rgba(0, 122, 204, 0.3); color: #fff; border-color: var(--accent-color); }
+        
+        .btn-run { background: var(--color-success); color: white; border: none; padding: 6px 18px; font-size: 12px; font-weight: 600; border-radius: 4px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-run:hover { background: #157347; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .btn-run:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+
+        /* Loader */
+        .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-root); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .loader-spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top: 4px solid var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: var(--z-modal); display: none; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-box { background: var(--bg-panel); width: 500px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 20px 60px rgba(0,0,0,0.6); display: flex; flex-direction: column; animation: modalIn 0.2s ease-out; }
+        @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; color: var(--text-inverse); }
+        .modal-body { padding: 25px; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; background: var(--bg-sidebar); border-radius: 0 0 8px 8px; }
+
+        .form-label { display: block; font-size: 12px; margin-bottom: 6px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.3px; }
+        .form-input, .form-select { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 12px; font-size: 13px; border-radius: 4px; outline: none; transition: 0.2s; }
+        .form-input:focus, .form-select:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.2); }
+
+        /* Toasts */
+        .toast-container { position: fixed; bottom: 35px; right: 20px; z-index: var(--z-toast); display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast-item { background: var(--bg-panel); border-left: 4px solid var(--accent-color); padding: 12px 16px; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); color: var(--text-main); font-size: 13px; display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: slideIn 0.3s ease-out; width: 300px; }
+        .toast-item.success { border-color: var(--color-success); }
+        .toast-item.error { border-color: var(--color-danger); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Empty State */
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); opacity: 0.7; user-select: none; }
+        .empty-state i { font-size: 64px; margin-bottom: 20px; opacity: 0.5; color: var(--accent-color); }
+        .empty-text { font-size: 16px; font-weight: 500; }
+        .empty-sub { font-size: 12px; margin-top: 5px; }
+        
+        /* Keyboard Shortcuts Help */
+        .kbd-key { background: #333; border: 1px solid #555; border-radius: 3px; padding: 2px 5px; font-family: var(--font-code); font-size: 10px; color: #fff; box-shadow: 0 2px 0 #222; }
+    </style>
+</head>
+<body>
+
+<div class="loader-overlay" id="appLoader">
+    <div class="loader-spinner mb-4"></div>
+    <div class="text-inverse fw-bold" style="letter-spacing: 2px; font-size: 18px;">LASU QUANTUM STUDIO</div>
+    <div class="text-xs text-muted mt-2">Initializing WASM Kernel v3.42.0 • Allocating Virtual Memory</div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<div class="app-shell">
+    
+    <div class="activity-bar">
+        <div class="action-item active" id="act-explorer" onclick="App.ui.switchSidebar('explorer')" title="Project Explorer">
+            <i class="far fa-copy"></i>
+        </div>
+        <div class="action-item" id="act-schema" onclick="App.ui.switchSidebar('schema')" title="Database Schema">
+            <i class="fas fa-database"></i>
+        </div>
+        <div class="action-item" id="act-erd" onclick="App.ui.switchSidebar('erd')" title="ER Diagram">
+            <i class="fas fa-project-diagram"></i>
+        </div>
+        <div class="action-item" id="act-history" onclick="App.ui.switchSidebar('history')" title="Query History">
+            <i class="fas fa-history"></i>
+        </div>
+        <div class="action-item" id="act-ai" onclick="App.ui.switchSidebar('ai')" title="AI SQL Assistant">
+            <i class="fas fa-robot" style="color: var(--color-ai);"></i>
+        </div>
+        <div class="action-spacer"></div>
+        <div class="action-item" title="Keyboard Shortcuts" onclick="App.ui.openModal('shortcutsModal')">
+            <i class="fas fa-keyboard"></i>
+        </div>
+        <div class="action-item" title="Settings" onclick="App.ui.openModal('settingsModal')">
+            <i class="fas fa-cog"></i>
+        </div>
+        <div class="action-item" title="Exit to Portal" onclick="window.location.href='{{ url_for('student_tools_dashboard') }}'">
+            <i class="fas fa-sign-out-alt text-danger"></i>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        
+        <div id="view-explorer" class="h-100 d-flex flex-column">
+            <div class="sidebar-header">
+                <span>PROJECT WORKSPACE</span>
+                <i class="fas fa-plus cursor-pointer hover-text-white" title="New Query" onclick="App.editor.newTab()"></i>
+            </div>
+            <div class="sidebar-content">
+                <div class="tree-section">
+                    <div class="tree-header" onclick="App.ui.toggleTree(this)">
+                        <i class="fas fa-chevron-down"></i> <span>OPEN EDITORS</span>
+                    </div>
+                    <div class="tree-content" id="tree-open-editors">
+                    </div>
+                </div>
+                <div class="tree-section">
+                    <div class="tree-header" onclick="App.ui.toggleTree(this)">
+                        <i class="fas fa-chevron-down"></i> <span>LOCAL DRIVE</span>
+                    </div>
+                    <div class="tree-content" id="tree-local">
+                    </div>
+                </div>
+                <div class="tree-section">
+                    <div class="tree-header" onclick="App.ui.toggleTree(this)">
+                        <i class="fas fa-chevron-down"></i> <span>SNIPPET LIBRARY</span>
+                    </div>
+                    <div class="tree-content" id="tree-snippets">
+                        </div>
+                </div>
+                <div class="tree-section">
+                    <div class="tree-header" onclick="App.ui.toggleTree(this)">
+                        <i class="fas fa-chevron-down"></i> <span>SNAPSHOTS</span>
+                    </div>
+                    <div class="tree-content">
+                        <div class="tree-node" onclick="App.db.exportDB()">
+                            <i class="fas fa-download text-success"></i> <span>Download DB (.sqlite)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-schema" class="h-100 d-flex flex-column d-none">
+            <div class="sidebar-header">
+                <span>DATABASE OBJECTS</span>
+                <div class="d-flex gap-2">
+                    <i class="fas fa-sync cursor-pointer hover-text-white" title="Refresh" onclick="App.db.refreshSchema()"></i>
+                    <i class="fas fa-file-import cursor-pointer hover-text-white" title="Import CSV" onclick="App.ui.openModal('importModal')"></i>
+                </div>
+            </div>
+            <div class="sidebar-content" id="schema-container">
+            </div>
+        </div>
+
+        <div id="view-erd" class="h-100 d-flex flex-column d-none">
+            <div class="sidebar-header">ENTITY RELATIONSHIPS</div>
+            <div class="p-3 text-sm text-muted">
+                <p>The system automatically generates diagrams based on foreign keys and naming conventions.</p>
+                <button class="btn btn-primary btn-sm w-100 mt-2" onclick="App.viz.generateERD()">
+                    <i class="fas fa-magic me-2"></i> Render Diagram
+                </button>
+            </div>
+        </div>
+
+        <div id="view-history" class="h-100 d-flex flex-column d-none">
+            <div class="sidebar-header">
+                <span>EXECUTION LOG</span>
+                <i class="fas fa-trash cursor-pointer hover-text-white" title="Clear All" onclick="App.db.clearHistory()"></i>
+            </div>
+            <div class="sidebar-content" id="history-container">
+            </div>
+        </div>
+
+        <div id="view-ai" class="h-100 d-flex flex-column d-none">
+            <div class="sidebar-header" style="color: var(--color-ai);">
+                <span>AI COPILOT</span>
+                <i class="fas fa-sparkles"></i>
+            </div>
+            <div class="sidebar-content" id="ai-container">
+                <div class="p-3 text-center text-muted text-sm">
+                    <i class="fas fa-robot fa-2x mb-2 opacity-50"></i>
+                    <p>Execute a query or encounter an error to get AI insights.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="workspace" id="workspace">
+        
+        <div class="d-flex flex-column" id="editor-pane" style="height: 50%;">
+            <div class="tab-bar" id="tab-bar">
+            </div>
+
+            <div class="editor-toolbar">
+                <div class="toolbar-group">
+                    <button class="btn-run" onclick="App.editor.run()" title="Ctrl+Enter">
+                        <i class="fas fa-play"></i> EXECUTE
+                    </button>
+                    <div class="vr mx-2 bg-secondary opacity-25" style="height: 20px;"></div>
+                    <button class="btn-icon" title="Save Script (Ctrl+S)" onclick="App.fs.saveScript()"><i class="fas fa-save"></i></button>
+                    <button class="btn-icon" title="Format SQL (Shift+Alt+F)" onclick="App.editor.format()"><i class="fas fa-align-left"></i></button>
+                    <button class="btn-icon" title="Clear Editor" onclick="App.editor.clear()"><i class="fas fa-eraser"></i></button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="btn-icon" title="Toggle Zen Mode" onclick="App.ui.toggleZenMode()" id="zen-btn"><i class="fas fa-expand"></i></button>
+                    <div class="vr mx-2 bg-secondary opacity-25" style="height: 20px;"></div>
+                    <div class="text-xs text-muted me-2">Connection:</div>
+                    <div class="d-flex align-items-center gap-1 text-xs text-success fw-bold">
+                        <i class="fas fa-circle" style="font-size: 8px;"></i> In-Memory (Active)
+                    </div>
+                </div>
+            </div>
+
+            <div class="editor-container" id="editor-container">
+                <textarea id="code-editor"></textarea>
+            </div>
+        </div>
+
+        <div class="panel-container" id="bottom-panel" style="height: 50%;">
+            <div class="panel-header">
+                <div class="panel-tabs">
+                    <div class="panel-tab active" onclick="App.ui.switchPanel('grid')"><i class="fas fa-table me-2"></i> Data Grid</div>
+                    <div class="panel-tab" onclick="App.ui.switchPanel('viz')"><i class="fas fa-chart-bar me-2"></i> Visualizer</div>
+                    <div class="panel-tab" onclick="App.ui.switchPanel('json')"><i class="fas fa-code me-2"></i> JSON</div>
+                    <div class="panel-tab" onclick="App.ui.switchPanel('console')"><i class="fas fa-terminal me-2"></i> Console</div>
+                    <div class="panel-tab" onclick="App.ui.switchPanel('erd-panel')"><i class="fas fa-project-diagram me-2"></i> Diagram</div>
+                </div>
+                <div class="toolbar-group">
+                    <span class="text-muted text-xs me-3 font-monospace" id="query-stats">0 rows • 0ms</span>
+                    <button class="btn-icon" title="Export CSV" onclick="App.io.exportCSV()"><i class="fas fa-file-csv"></i></button>
+                    <button class="btn-icon" title="Export JSON" onclick="App.io.exportJSON()"><i class="fas fa-file-code"></i></button>
+                    <button class="btn-icon" title="Export Excel" onclick="App.io.exportExcel()"><i class="fas fa-file-excel"></i></button>
+                    <button class="btn-icon" title="Export PDF" onclick="App.io.exportPDF()"><i class="fas fa-file-pdf"></i></button>
+                </div>
+            </div>
+
+            <div class="grid-wrapper" id="panel-grid">
+                <div class="empty-state">
+                    <i class="fas fa-database"></i>
+                    <div class="empty-text">Ready to Execute</div>
+                    <div class="empty-sub">Type a query above and press Ctrl+Enter</div>
+                </div>
+                <div id="grid-content" class="d-none h-100 d-flex flex-column">
+                    <div class="p-1 border-bottom border-secondary d-flex">
+                        <input type="text" id="grid-search" class="form-input py-1 px-2" style="height: 26px; width: 200px; font-size: 11px;" placeholder="Search results..." onkeyup="App.ui.filterGrid(this.value)">
+                    </div>
+                    <div style="flex:1; overflow:auto;">
+                        <table class="sql-table" id="result-table">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="viz-wrapper d-none" id="panel-viz">
+                <div class="viz-controls">
+                    <div style="flex: 1;">
+                        <label class="form-label mb-1">Chart Type</label>
+                        <select id="viz-type" class="form-select py-1" onchange="App.viz.render()">
+                            <option value="bar">Bar Chart</option>
+                            <option value="line">Line Chart</option>
+                            <option value="pie">Pie Chart</option>
+                            <option value="doughnut">Doughnut Chart</option>
+                            <option value="radar">Radar Chart</option>
+                            <option value="polarArea">Polar Area</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="form-label mb-1">Label Column (X)</label>
+                        <select id="viz-x-col" class="form-select py-1" onchange="App.viz.render()"></select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="form-label mb-1">Data Column (Y)</label>
+                        <select id="viz-y-col" class="form-select py-1" onchange="App.viz.render()"></select>
+                    </div>
+                </div>
+                <div class="viz-canvas-container">
+                    <canvas id="chartCanvas"></canvas>
+                </div>
+            </div>
+
+            <div class="console-wrapper d-none" id="panel-json">
+                <pre class="text-inverse m-0" id="json-output"></pre>
+            </div>
+
+            <div class="console-wrapper d-none" id="panel-console">
+                <div class="log-entry"><span class="log-time">SYSTEM</span><span class="log-info">Console Ready. Environment: WebAssembly</span></div>
+            </div>
+            
+             <div class="viz-wrapper d-none" id="panel-erd-panel" style="background: white; overflow: auto;">
+                <div class="mermaid" id="mermaid-graph"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="status-bar">
+    <div class="status-left">
+        <div class="status-item"><i class="fas fa-code-branch"></i> master</div>
+        <div class="status-item"><i class="fas fa-database"></i> SQLite 3.42.0 (WASM)</div>
+        <div class="status-item" id="memory-stats"><i class="fas fa-memory"></i> 4MB</div>
+        <div class="status-item" id="autosave-status"><i class="fas fa-save"></i> Ready</div>
+    </div>
+    <div class="status-right">
+        <div class="status-item" id="clock-display">00:00:00</div>
+        <div class="status-item" id="status-cursor">Ln 1, Col 1</div>
+        <div class="status-item">UTF-8</div>
+        <div class="status-item">SQL</div>
+        <div class="status-item"><i class="fas fa-bell"></i></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="importModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span>Import Data Wizard</span>
+            <i class="fas fa-times cursor-pointer" onclick="App.ui.closeModal('importModal')"></i>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Source File (.csv)</label>
+                <input type="file" id="csv-file-input" class="form-input" accept=".csv">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Target Table Name</label>
+                <input type="text" id="csv-table-name" class="form-input" placeholder="e.g. new_students">
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="csv-header" checked>
+                <label class="form-check-label text-muted text-sm">File includes headers</label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-sm btn-secondary" onclick="App.ui.closeModal('importModal')">Cancel</button>
+            <button class="btn btn-sm btn-primary" onclick="App.db.importCSV()">Run Import</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span>Preferences</span>
+            <i class="fas fa-times cursor-pointer" onclick="App.ui.closeModal('settingsModal')"></i>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Interface Theme</label>
+                <select class="form-input" onchange="App.ui.setTheme(this.value)">
+                    <option value="dracula">Dracula (Pro Dark)</option>
+                    <option value="light">GitHub (Light)</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Editor Font Size (px)</label>
+                <input type="number" class="form-input" value="14" onchange="App.editor.setFontSize(this.value)">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-sm btn-primary" onclick="App.ui.closeModal('settingsModal')">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="shortcutsModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span>Keyboard Shortcuts</span>
+            <i class="fas fa-times cursor-pointer" onclick="App.ui.closeModal('shortcutsModal')"></i>
+        </div>
+        <div class="modal-body">
+            <table class="w-100 text-sm">
+                <tr class="border-bottom border-secondary">
+                    <td class="py-2">Execute Query</td>
+                    <td class="text-end"><span class="kbd-key">Ctrl</span> + <span class="kbd-key">Enter</span></td>
+                </tr>
+                <tr class="border-bottom border-secondary">
+                    <td class="py-2">Save Script</td>
+                    <td class="text-end"><span class="kbd-key">Ctrl</span> + <span class="kbd-key">S</span></td>
+                </tr>
+                <tr class="border-bottom border-secondary">
+                    <td class="py-2">Format Code</td>
+                    <td class="text-end"><span class="kbd-key">Shift</span> + <span class="kbd-key">Alt</span> + <span class="kbd-key">F</span></td>
+                </tr>
+                <tr class="border-bottom border-secondary">
+                    <td class="py-2">Autocomplete</td>
+                    <td class="text-end"><span class="kbd-key">Ctrl</span> + <span class="kbd-key">Space</span></td>
+                </tr>
+                <tr>
+                    <td class="py-2">Toggle Comment</td>
+                    <td class="text-end"><span class="kbd-key">Ctrl</span> + <span class="kbd-key">/</span></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * LASU QUANTUM STUDIO - ENTERPRISE KERNEL v2.5
+ * Architecture: Singleton State Machine with Module Injection
+ * Updated: With AI Assistant, Auto-Save, Zen Mode, and Snippets
+ */
+
+const App = {
+    // --- CONFIGURATION ---
+    config: {
+        sqlWasmUrl: "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm"
+    },
+
+    // --- GLOBAL STATE ---
+    state: {
+        db: null,
+        editor: null,
+        tabs: [],
+        activeTabId: null,
+        lastResult: null,
+        chart: null,
+        files: JSON.parse(localStorage.getItem('lasu_fs') || '[]'),
+        history: [],
+        splitInstance: null,
+        autoSaveInterval: null,
+        isZenMode: false
+    },
+
+    // --- BOOTSTRAPPER ---
+    init: async function() {
+        console.log("🚀 Booting Quantum Kernel...");
+        
+        try {
+            // 1. Initialize UI Elements (Synchronous)
+            this.ui.initEditor();
+            this.ui.initSplitter();
+            this.fs.renderFileTree();
+            this.fs.loadAutoSave(); // Load temp save
+            this.ui.initSnippets(); // Load Snippets
+            
+            // 2. Initialize Database Engine (Async WASM)
+            const SQL = await initSqlJs({ locateFile: () => this.config.sqlWasmUrl });
+            this.state.db = new SQL.Database();
+            this.db.seed(); // Hydrate with robust sample data
+            this.db.refreshSchema();
+            
+            // 3. Create Default Tab (Safe Init)
+            if (this.state.files.length > 0) {
+                // Load first saved file
+                this.editor.openTab(this.state.files[0].id, this.state.files[0].name, this.state.files[0].content);
+            } else if (this.state.tabs.length === 0) {
+                // Create Scratchpad if no autosave was loaded
+                this.editor.newTab("Scratchpad.sql", "-- Welcome to LASU Quantum SQL\n-- Try running this query:\n\nSELECT * FROM students;");
+            }
+
+            // 4. Remove Loader
+            document.getElementById('appLoader').style.opacity = '0';
+            setTimeout(() => document.getElementById('appLoader').style.display = 'none', 500);
+            this.ui.showToast("System Online. Engine Ready.", "success");
+
+            // 5. Memory Monitor & Auto Save & Clock
+            setInterval(() => {
+                if(this.state.db) {
+                    const size = this.state.db.export().byteLength;
+                    document.getElementById('memory-stats').innerHTML = `<i class="fas fa-memory"></i> ${(size/1024).toFixed(1)} KB`;
+                }
+            }, 5000);
+
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('clock-display').innerText = now.toLocaleTimeString();
+            }, 1000);
+
+            // Start Auto-saver
+            this.fs.startAutoSave();
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById('appLoader').innerHTML = `<div class="text-danger fw-bold">KERNEL PANIC: ${e.message}</div>`;
+        }
+    },
+
+    // --- UI MANAGER ---
+    ui: {
+        switchSidebar: function(viewId) {
+            document.querySelectorAll('.action-item').forEach(el => el.classList.remove('active'));
+            const btn = document.getElementById('act-'+viewId);
+            if(btn) btn.classList.add('active');
+            
+            ['explorer', 'schema', 'history', 'erd', 'ai'].forEach(id => {
+                const el = document.getElementById(`view-${id}`);
+                if(el) el.classList.add('d-none');
+            });
+            const target = document.getElementById(`view-${viewId}`);
+            if(target) target.classList.remove('d-none');
+        },
+
+        switchPanel: function(panelId) {
+            document.querySelectorAll('.panel-tab').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            ['grid', 'viz', 'json', 'console', 'erd-panel'].forEach(id => {
+                document.getElementById(`panel-${id}`).classList.add('d-none');
+            });
+            document.getElementById(`panel-${panelId}`).classList.remove('d-none');
+            
+            // Specific panel logic
+            if(panelId === 'grid') document.getElementById('panel-grid').querySelector('.d-none')?.classList.remove('d-none');
+            if(panelId === 'viz' && App.state.lastResult) App.viz.render(); // Re-render viz
+            if(panelId === 'json' && App.state.lastResult) App.ui.renderJSON();
+            if(panelId === 'erd-panel') App.viz.generateERD();
+            
+            // Add active class for flexbox fix
+            if(panelId === 'viz') document.getElementById('panel-viz').classList.add('active');
+        },
+
+        toggleZenMode: function() {
+            App.state.isZenMode = !App.state.isZenMode;
+            document.body.classList.toggle('zen-mode', App.state.isZenMode);
+            const btn = document.getElementById('zen-btn');
+            
+            if(App.state.isZenMode) {
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="fas fa-compress"></i>';
+                App.ui.showToast("Zen Mode Enabled. Press Esc to exit.", "info");
+                if(App.state.splitInstance) App.state.splitInstance.destroy(); // Remove split to full screen
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="fas fa-expand"></i>';
+                App.ui.initSplitter(); // Restore splitter
+            }
+            setTimeout(() => App.state.editor.refresh(), 100);
+        },
+
+        renderJSON: function() {
+            const data = App.db.resultToJson(App.state.lastResult);
+            document.getElementById('json-output').innerText = JSON.stringify(data, null, 2);
+        },
+
+        toggleTree: function(header) {
+            const content = header.nextElementSibling;
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                header.querySelector('i').classList.remove('fa-chevron-right');
+                header.querySelector('i').classList.add('fa-chevron-down');
+            } else {
+                content.style.display = 'none';
+                header.querySelector('i').classList.add('fa-chevron-right');
+                header.querySelector('i').classList.remove('fa-chevron-down');
+            }
+        },
+
+        initSnippets: function() {
+            const snippets = [
+                { name: "SELECT All", code: "SELECT * FROM table_name LIMIT 100;" },
+                { name: "SELECT Where", code: "SELECT * FROM table_name WHERE id = 1;" },
+                { name: "INSERT Row", code: "INSERT INTO table_name (col1, col2) VALUES ('val1', 'val2');" },
+                { name: "UPDATE Row", code: "UPDATE table_name SET col1 = 'new_val' WHERE id = 1;" },
+                { name: "CREATE Table", code: "CREATE TABLE new_table (id INT PRIMARY KEY, name TEXT);" },
+                { name: "JOIN Query", code: "SELECT t1.name, t2.course FROM students t1 JOIN enrollments t2 ON t1.id = t2.sid;" }
+            ];
+            
+            const container = document.getElementById('tree-snippets');
+            container.innerHTML = snippets.map(s => `
+                <div class="tree-node" onclick="App.editor.insertSnippet(\`${s.code.replace(/'/g, "\\'")}\`)">
+                    <i class="fas fa-code text-info"></i> ${s.name}
+                    <i class="fas fa-plus ms-auto text-muted" style="font-size:10px"></i>
+                </div>
+            `).join('');
+        },
+
+        openModal: (id) => document.getElementById(id).style.display = 'flex',
+        closeModal: (id) => document.getElementById(id).style.display = 'none',
+
+        log: function(msg, type='info') {
+            const container = document.getElementById('panel-console');
+            const time = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'log-error' : (type === 'success' ? 'log-success' : 'log-info');
+            
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = `<span class="log-time">${time}</span><span class="log-msg ${colorClass}">${msg}</span>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        },
+
+        showToast: function(msg, type='info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast-item ${type}`;
+            const icon = type === 'success' ? 'check-circle' : (type === 'error' ? 'exclamation-circle' : 'info-circle');
+            toast.innerHTML = `<i class="fas fa-${icon}"></i> <span>${msg}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Log to console as well
+            this.log(msg, type);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        },
+
+        setTheme: function(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const cmTheme = theme === 'dracula' ? 'dracula' : 'eclipse';
+            App.state.editor.setOption('theme', cmTheme);
+        },
+
+        initEditor: function() {
+            const textarea = document.getElementById('code-editor');
+            App.state.editor = CodeMirror.fromTextArea(textarea, {
+                mode: 'text/x-sql',
+                theme: 'dracula',
+                lineNumbers: true,
+                smartIndent: true,
+                indentWithTabs: true,
+                matchBrackets: true,
+                autoCloseBrackets: true,
+                foldGutter: true,
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+                extraKeys: {
+                    "Ctrl-Enter": () => App.editor.run(),
+                    "Cmd-Enter": () => App.editor.run(),
+                    "Ctrl-Space": "autocomplete",
+                    "Shift-Alt-F": () => App.editor.format(),
+                    "Ctrl-S": () => App.fs.saveScript(),
+                    "Ctrl-/": () => App.editor.toggleComment(),
+                    "Esc": () => {
+                        if(App.state.isZenMode) App.ui.toggleZenMode();
+                    }
+                }
+            });
+
+            App.state.editor.on('cursorActivity', () => {
+                const pos = App.state.editor.getCursor();
+                const sel = App.state.editor.getSelection().length;
+                document.getElementById('status-cursor').innerText = `Ln ${pos.line + 1}, Col ${pos.ch + 1} (${sel} sel)`;
+            });
+            
+            // Auto-update active tab content on change
+            App.state.editor.on('change', () => {
+                if (App.state.activeTabId) {
+                    const tab = App.state.tabs.find(t => t.id === App.state.activeTabId);
+                    if(tab) tab.content = App.state.editor.getValue();
+                }
+            });
+        },
+
+        initSplitter: function() {
+            if(App.state.splitInstance) App.state.splitInstance.destroy();
+            App.state.splitInstance = Split(['#editor-pane', '#bottom-panel'], {
+                sizes: [60, 40],
+                minSize: 100,
+                gutterSize: 6,
+                direction: 'vertical',
+                onDragEnd: () => App.state.editor.refresh()
+            });
+        },
+        
+        filterGrid: function(text) {
+            const rows = document.querySelectorAll("#result-table tbody tr");
+            text = text.toLowerCase();
+            rows.forEach(row => {
+                const match = row.innerText.toLowerCase().includes(text);
+                row.style.display = match ? '' : 'none';
+            });
+        }
+    },
+
+    // --- EDITOR MODULE ---
+    editor: {
+        newTab: function(title, content) {
+            const name = title || prompt("Script Name:", `Query ${App.state.tabs.length + 1}.sql`);
+            if(name) {
+                const id = Date.now();
+                this.openTab(id, name, content || "");
+            }
+        },
+
+        openTab: function(id, title, content) {
+            const existing = App.state.tabs.find(t => t.id === id);
+            if(existing) {
+                this.activateTab(id);
+                return;
+            }
+
+            const tab = { id, title, content };
+            App.state.tabs.push(tab);
+            this.renderTabs();
+            this.activateTab(id);
+        },
+
+        activateTab: function(id) {
+            App.state.activeTabId = id;
+            const next = App.state.tabs.find(t => t.id === id);
+            
+            if (next && App.state.editor) {
+                App.state.editor.setValue(next.content);
+                this.renderTabs();
+            }
+        },
+
+        closeTab: function(id, e) {
+            e.stopPropagation();
+            if(App.state.tabs.length === 1) return; // Must keep one open
+            
+            App.state.tabs = App.state.tabs.filter(t => t.id !== id);
+            if(App.state.activeTabId === id) this.activateTab(App.state.tabs[0].id);
+            else this.renderTabs();
+        },
+
+        renderTabs: function() {
+            const container = document.getElementById('tab-bar');
+            container.innerHTML = App.state.tabs.map(t => `
+                <div class="editor-tab ${App.state.activeTabId === t.id ? 'active' : ''}" onclick="App.editor.activateTab(${t.id})">
+                    <i class="fas fa-file-code tab-icon"></i> ${t.title}
+                    <i class="fas fa-times tab-close ms-2" onclick="App.editor.closeTab(${t.id}, event)"></i>
+                </div>
+            `).join('');
+            
+            // Update Open Editors Tree
+            document.getElementById('tree-open-editors').innerHTML = App.state.tabs.map(t => `
+                <div class="tree-node ${App.state.activeTabId === t.id ? 'active' : ''}" onclick="App.editor.activateTab(${t.id})">
+                    <i class="fas fa-file-code text-warning"></i> ${t.title}
+                </div>
+            `).join('');
+        },
+
+        run: function() {
+            const sql = App.state.editor.getSelection() || App.state.editor.getValue();
+            if(!sql.trim()) return;
+
+            const start = performance.now();
+            try {
+                const results = App.state.db.exec(sql);
+                const time = (performance.now() - start).toFixed(2);
+                
+                // Add to History
+                App.state.history.unshift({ sql, time, status: 'OK' });
+                App.db.renderHistory();
+
+                if (results.length === 0) {
+                    App.ui.showToast(`Query executed in ${time}ms. No results.`, "success");
+                    document.getElementById('query-stats').innerText = `Success • ${time}ms`;
+                    App.db.refreshSchema();
+                    App.ai.analyze(sql, null); // Analyze successful empty query
+                    return;
+                }
+
+                const data = results[0];
+                App.state.lastResult = data;
+                
+                // Render Grid
+                this.renderGrid(data);
+                document.getElementById('query-stats').innerText = `${data.values.length} rows • ${time}ms`;
+                App.ui.showToast(`Fetched ${data.values.length} rows in ${time}ms.`, "success");
+                
+                // Analyze Result for AI
+                App.ai.analyze(sql, data);
+
+                // Populate Visualizer Dropdowns
+                App.viz.populateDropdowns(data.columns);
+                
+                // Auto Switch to Grid
+                App.ui.switchPanel('grid');
+
+            } catch (e) {
+                App.ui.showToast("Execution Error", "error");
+                App.ui.log(e.message, "error");
+                App.ui.switchPanel('console');
+                App.ai.analyzeError(sql, e.message); // AI Error Analysis
+            }
+        },
+
+        renderGrid: function(data) {
+            document.querySelector('.grid-wrapper .empty-state').classList.add('d-none');
+            document.getElementById('grid-content').classList.remove('d-none');
+            const table = document.getElementById('result-table');
+            
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+
+            thead.innerHTML = `<tr>${data.columns.map(c => `<th>${c}</th>`).join('')}</tr>`;
+            tbody.innerHTML = data.values.map(row => 
+                `<tr>${row.map(c => {
+                    if(c === null) return '<td class="cell-null">NULL</td>';
+                    if(typeof c === 'number') return `<td class="cell-num">${c}</td>`;
+                    return `<td>${c}</td>`;
+                }).join('')}</tr>`
+            ).join('');
+        },
+
+        format: function() {
+            let sql = App.state.editor.getValue().replace(/\s+/g, ' ').trim();
+            const keywords = ["SELECT", "FROM", "WHERE", "JOIN", "INNER JOIN", "LEFT JOIN", "GROUP BY", "ORDER BY", "LIMIT", "INSERT", "VALUES", "UPDATE", "SET", "DELETE", "CREATE", "DROP", "ALTER"];
+            keywords.forEach(kw => sql = sql.replace(new RegExp(`\\b${kw}\\b`, 'gi'), `\n${kw}`));
+            App.state.editor.setValue(sql.trim());
+        },
+
+        clear: function() {
+            App.state.editor.setValue('');
+            App.state.editor.focus();
+        },
+
+        setFontSize: function(size) {
+            document.querySelector('.CodeMirror').style.fontSize = size + 'px';
+            App.state.editor.refresh();
+        },
+
+        toggleComment: function() {
+            const doc = App.state.editor.getDoc();
+            const cursor = doc.getCursor();
+            const line = doc.getLine(cursor.line);
+            if(line.startsWith('--')) {
+                doc.replaceRange(line.substring(2).trim(), {line: cursor.line, ch: 0}, {line: cursor.line, ch: line.length});
+            } else {
+                doc.replaceRange('-- ' + line, {line: cursor.line, ch: 0}, {line: cursor.line, ch: line.length});
+            }
+        },
+
+        insertSnippet: function(code) {
+            const doc = App.state.editor.getDoc();
+            const cursor = doc.getCursor();
+            doc.replaceRange(code, cursor);
+            App.state.editor.focus();
+        }
+    },
+
+    // --- AI MODULE (NEW) ---
+    ai: {
+        analyze: function(sql, data) {
+            const container = document.getElementById('ai-container');
+            container.innerHTML = '';
+            let html = '';
+
+            // 1. Performance Checks
+            if(data && data.values.length > 500 && !sql.toUpperCase().includes('LIMIT')) {
+                html += this.msg("Performance Warning", "You fetched a large dataset without a LIMIT clause. This can slow down the browser.", "suggestion");
+            }
+            if(sql.toUpperCase().includes('SELECT *')) {
+                html += this.msg("Optimization", "Using 'SELECT *' retrieves all columns. Specify columns explicitly for better performance.", "suggestion");
+            }
+
+            // 2. Safety Checks
+            if(sql.toUpperCase().includes('DROP') || sql.toUpperCase().includes('DELETE')) {
+                 html += this.msg("Safety Alert", "You executed a destructive command. Ensure you have backups before running DELETE or DROP operations in production.", "error");
+            }
+
+            // 3. Data Insights
+            if(data && data.values.length > 0) {
+                html += this.msg("Data Insight", `Query returned ${data.values.length} records.`, "insight");
+                
+                // Simple aggregates
+                const numCols = data.columns.filter((c, i) => typeof data.values[0][i] === 'number');
+                if(numCols.length > 0) {
+                    html += this.msg("Visualization", `I found numeric columns (${numCols.join(', ')}). You can switch to the 'Visualizer' tab to graph this data.`, "insight");
+                }
+            }
+
+            if(html === '') html = this.msg("Good Job", "Your query looks clean and efficient!", "insight");
+            
+            container.innerHTML = html;
+            
+            // Auto-notify if suggestions exist
+            if(document.getElementById('view-ai').classList.contains('d-none')) {
+                const btn = document.getElementById('act-ai');
+                btn.style.color = 'var(--color-warning)';
+                setTimeout(() => btn.style.color = '', 2000);
+            }
+        },
+
+        analyzeError: function(sql, error) {
+            const container = document.getElementById('ai-container');
+            let explanation = "An error occurred.";
+            
+            if(error.includes("no such table")) explanation = "You are trying to query a table that doesn't exist. Check the 'Database Objects' sidebar to see available tables.";
+            else if(error.includes("syntax error")) explanation = "There is a typo in your SQL syntax. Check for missing commas or keywords.";
+            else if(error.includes("no such column")) explanation = "One of the columns in your query doesn't exist in that table.";
+            else if(error.includes("UNIQUE constraint")) explanation = "You are trying to insert a duplicate value into a column that must be unique (like a Primary Key).";
+            
+            container.innerHTML = this.msg("Error Analysis", `${explanation}<br><br><small>${error}</small>`, "error");
+            App.ui.switchSidebar('ai'); // Auto-open AI panel on error
+        },
+
+        msg: function(title, text, type) {
+            return `
+                <div class="ai-message ${type}">
+                    <div class="ai-title"><i class="fas fa-${type === 'error' ? 'bug' : 'lightbulb'}"></i> ${title}</div>
+                    <div>${text}</div>
+                </div>
+            `;
+        }
+    },
+
+    // --- DATABASE ENGINE ---
+    db: {
+        seed: function() {
+            App.state.db.run(`
+                CREATE TABLE students (id INT PRIMARY KEY, name TEXT, email TEXT, dept TEXT, cgpa FLOAT);
+                INSERT INTO students VALUES 
+                (101, 'Favour Adamson', 'fav@lasu.edu.ng', 'Computer Science', 4.5),
+                (102, 'Chioma Okeke', 'chi@lasu.edu.ng', 'Economics', 3.8),
+                (103, 'Ibrahim Musa', 'ibrahim@lasu.edu.ng', 'Law', 4.2),
+                (104, 'David Mark', 'david@lasu.edu.ng', 'Medicine', 2.5),
+                (105, 'Seyi Vibez', 'seyi@lasu.edu.ng', 'Music', 3.1),
+                (106, 'Emeka Eze', 'emeka@lasu.edu.ng', 'Engineering', 4.0),
+                (107, 'Tunde Bakare', 'tunde@lasu.edu.ng', 'Computer Science', 3.9);
+
+                CREATE TABLE courses (code TEXT, title TEXT, units INT);
+                INSERT INTO courses VALUES ('CSC401', 'Software Engineering', 3), ('ECO201', 'Microeconomics', 2), ('LAW101', 'Nigerian Legal System', 4);
+                
+                CREATE TABLE enrollments (id INT, sid INT, code TEXT, score INT);
+                INSERT INTO enrollments VALUES (1, 101, 'CSC401', 90), (2, 102, 'ECO201', 85), (3, 102, 'ECO201', 72), (4, 106, 'CSC401', 88), (5, 107, 'CSC401', 92);
+            `);
+        },
+
+        refreshSchema: function() {
+            const container = document.getElementById('schema-container');
+            container.innerHTML = '';
+            
+            try {
+                const tables = App.state.db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")[0].values;
+                const hints = {};
+
+                tables.forEach(row => {
+                    const tName = row[0];
+                    const cols = App.state.db.exec(`PRAGMA table_info(${tName})`)[0].values;
+                    hints[tName] = cols.map(c => c[1]);
+
+                    const html = `
+                        <div class="tree-section">
+                            <div class="tree-header" onclick="App.ui.toggleTree(this)">
+                                <i class="fas fa-table text-info"></i> <span>${tName}</span>
+                                <div class="node-actions">
+                                    <button class="action-mini-btn" title="Select Top 100" onclick="event.stopPropagation(); App.editor.newTab('Select ${tName}', 'SELECT * FROM ${tName} LIMIT 100;')"><i class="fas fa-play text-success"></i></button>
+                                    <button class="action-mini-btn" title="Drop Table" onclick="event.stopPropagation(); if(confirm('Are you sure?')) { App.state.db.run('DROP TABLE ${tName}'); App.db.refreshSchema(); }"><i class="fas fa-trash text-danger"></i></button>
+                                </div>
+                            </div>
+                            <div class="tree-content hidden">
+                                ${cols.map(c => `
+                                    <div class="tree-node">
+                                        <i class="fas fa-columns text-muted"></i> ${c[1]} 
+                                        <span class="tree-node-meta">${c[2]}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+                
+                App.state.editor.setOption("hintOptions", { tables: hints });
+            } catch(e) { console.log("DB Empty"); }
+        },
+
+        resultToJson: function(data) {
+            return data.values.map(row => {
+                let obj = {};
+                data.columns.forEach((col, i) => obj[col] = row[i]);
+                return obj;
+            });
+        },
+
+        importCSV: function() {
+            const file = document.getElementById('csv-file-input').files[0];
+            const table = document.getElementById('csv-table-name').value || 'imported_data';
+            const hasHeader = document.getElementById('csv-header').checked;
+
+            if(!file) return alert("Please select a file.");
+
+            Papa.parse(file, {
+                header: hasHeader,
+                complete: function(res) {
+                    const cols = res.meta.fields || res.data[0].map((_, i) => `col${i}`);
+                    const create = `CREATE TABLE ${table} (${cols.map(c => `"${c.trim()}" TEXT`).join(', ')});`;
+                    App.state.db.run(create);
+
+                    res.data.forEach(row => {
+                        const vals = hasHeader ? cols.map(c => row[c]) : row;
+                        if(vals.length === cols.length) {
+                            const safe = vals.map(v => `'${String(v).replace(/'/g, "''")}'`).join(',');
+                            App.state.db.run(`INSERT INTO ${table} VALUES (${safe})`);
+                        }
+                    });
+                    
+                    App.ui.closeModal('importModal');
+                    App.db.refreshSchema();
+                    App.ui.showToast(`Imported ${res.data.length} rows into ${table}.`, "success");
+                }
+            });
+        },
+        
+        exportDB: function() {
+            const binary = App.state.db.export();
+            const blob = new Blob([binary]);
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = 'lasu_database.sqlite';
+            link.click();
+        },
+
+        renderHistory: function() {
+            const con = document.getElementById('history-container');
+            con.innerHTML = App.state.history.map(h => `
+                <div class="tree-node" onclick="App.editor.newTab('History Query', \`${h.sql.replace(/`/g, "\\`")}\`)">
+                    <i class="fas fa-clock text-muted"></i> 
+                    <span class="text-truncate ms-2" style="max-width:180px">${h.sql}</span>
+                </div>
+            `).join('');
+        },
+        
+        clearHistory: function() {
+            App.state.history = [];
+            this.renderHistory();
+        }
+    },
+
+    // --- VISUALIZATION ---
+    viz: {
+        populateDropdowns: function(columns) {
+            const xSelect = document.getElementById('viz-x-col');
+            const ySelect = document.getElementById('viz-y-col');
+            
+            const options = columns.map((c, i) => `<option value="${i}">${c}</option>`).join('');
+            xSelect.innerHTML = options;
+            ySelect.innerHTML = options;
+            
+            // Auto-guess: X is first string/date, Y is first number
+            if(columns.length > 1) ySelect.value = 1;
+        },
+
+        render: function() {
+            const data = App.state.lastResult;
+            if(!data || data.values.length < 1) return;
+
+            const type = document.getElementById('viz-type').value;
+            const xIdx = document.getElementById('viz-x-col').value || 0;
+            const yIdx = document.getElementById('viz-y-col').value || (data.columns.length > 1 ? 1 : 0);
+
+            const ctx = document.getElementById('chartCanvas');
+            if(App.state.chart) App.state.chart.destroy();
+
+            App.state.chart = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: data.values.map(r => r[xIdx]),
+                    datasets: [{
+                        label: data.columns[yIdx],
+                        data: data.values.map(r => r[yIdx]),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)'
+                        ],
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        },
+        
+        generateERD: function() {
+            let mermaidCode = "erDiagram\n";
+            try {
+                const tables = App.state.db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")[0].values;
+                tables.forEach(row => {
+                    const tName = row[0];
+                    mermaidCode += `  ${tName} {\n`;
+                    const cols = App.state.db.exec(`PRAGMA table_info(${tName})`)[0].values;
+                    cols.forEach(c => {
+                        mermaidCode += `    ${c[2] || 'TEXT'} ${c[1]}\n`;
+                    });
+                    mermaidCode += "  }\n";
+                });
+                
+                const container = document.getElementById('mermaid-graph');
+                container.innerHTML = mermaidCode;
+                container.removeAttribute('data-processed');
+                mermaid.init(undefined, container);
+            } catch(e) {
+                console.log("ERD Gen Failed");
+            }
+        }
+    },
+
+    // --- I/O EXPORT ---
+    io: {
+        exportCSV: function() {
+            if(!App.state.lastResult) return App.ui.showToast("No data to export", "error");
+            const csv = Papa.unparse({
+                fields: App.state.lastResult.columns,
+                data: App.state.lastResult.values
+            });
+            this.download(csv, 'result.csv', 'text/csv');
+        },
+
+        exportJSON: function() {
+            if(!App.state.lastResult) return App.ui.showToast("No data to export", "error");
+            const data = App.db.resultToJson(App.state.lastResult);
+            this.download(JSON.stringify(data, null, 2), 'result.json', 'application/json');
+        },
+        
+        exportExcel: function() {
+            if(!App.state.lastResult) return App.ui.showToast("No data to export", "error");
+            const data = App.db.resultToJson(App.state.lastResult);
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Query Results");
+            XLSX.writeFile(wb, "lasu_export.xlsx");
+        },
+
+        exportPDF: function() {
+            if(!App.state.lastResult) return App.ui.showToast("No data to export", "error");
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("LASU Query Report", 14, 10);
+            doc.autoTable({
+                head: [App.state.lastResult.columns],
+                body: App.state.lastResult.values
+            });
+            doc.save("query_report.pdf");
+        },
+
+        download: function(content, name, mime) {
+            const blob = new Blob([content], {type: mime});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = name;
+            a.click();
+            App.ui.showToast(`Downloaded ${name}`, "success");
+        }
+    },
+
+    // --- FILE SYSTEM & AUTOSAVE ---
+    fs: {
+        startAutoSave: function() {
+            App.state.autoSaveInterval = setInterval(() => {
+                if(App.state.editor) {
+                    const content = App.state.editor.getValue();
+                    const name = App.state.activeTabId 
+                        ? App.state.tabs.find(t => t.id === App.state.activeTabId)?.title 
+                        : "Untitled.sql";
+                    
+                    localStorage.setItem('lasu_autosave_content', content);
+                    localStorage.setItem('lasu_autosave_name', name);
+                    
+                    document.getElementById('autosave-status').innerHTML = '<i class="fas fa-check"></i> Saved';
+                    setTimeout(() => {
+                        document.getElementById('autosave-status').innerHTML = '<i class="fas fa-save"></i> Ready';
+                    }, 2000);
+                }
+            }, 5000); // Save every 5 seconds
+        },
+
+        loadAutoSave: function() {
+            const content = localStorage.getItem('lasu_autosave_content');
+            const name = localStorage.getItem('lasu_autosave_name');
+            if(content && name) {
+                 // Create temp tab with this content
+                 App.editor.newTab(name, content);
+                 App.ui.showToast("Restored unsaved session", "success");
+            }
+            this.loadFiles();
+        },
+
+        loadFiles: function() {
+            try {
+                const stored = localStorage.getItem('lasu_fs');
+                if (stored) App.state.files = JSON.parse(stored);
+                this.renderFileTree();
+            } catch(e) {
+                console.error("FS Load Error", e);
+                App.state.files = [];
+            }
+        },
+
+        saveScript: function() {
+            const name = prompt("Save Script As:", "Query.sql");
+            if(name) {
+                const content = App.state.editor.getValue();
+                const id = Date.now();
+                const file = { id, name, content, date: new Date().toISOString() };
+                App.state.files.push(file);
+                
+                localStorage.setItem('lasu_fs', JSON.stringify(App.state.files));
+                this.renderFileTree();
+                App.ui.showToast(`Saved ${name} to local drive.`, "success");
+            }
+        },
+
+        renderFileTree: function() {
+            const container = document.getElementById('tree-local');
+            if(App.state.files.length === 0) {
+                container.innerHTML = '<div class="p-3 text-muted text-xs text-center fst-italic">Empty</div>';
+                return;
+            }
+            container.innerHTML = App.state.files.map((f, i) => `
+                <div class="tree-node" onclick="App.editor.openTab(${f.id}, '${f.name}', \`${f.content.replace(/`/g, "\\`")}\`)">
+                    <i class="fas fa-file-code text-warning"></i> ${f.name}
+                    <div class="node-actions">
+                        <button class="action-mini-btn" onclick="event.stopPropagation(); App.fs.deleteFile(${i})"><i class="fas fa-trash text-danger"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        },
+
+        deleteFile: function(index) {
+            if(confirm("Delete this file?")) {
+                App.state.files.splice(index, 1);
+                localStorage.setItem('lasu_fs', JSON.stringify(App.state.files));
+                this.renderFileTree();
+            }
+        }
+    }
+};
+
+// --- START ENGINE ---
+document.addEventListener('DOMContentLoaded', () => {
+    App.init();
+});
+
+</script>
+
+</body>
+</html>

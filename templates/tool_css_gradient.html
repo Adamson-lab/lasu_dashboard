@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Gradient Maker | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .card-custom {
+            background: white; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Controls Section */
+        .controls-panel {
+            padding: 30px;
+            background: #ffffff;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .control-group { margin-bottom: 1.5rem; }
+        .control-label {
+            font-weight: 600; color: #495057;
+            font-size: 0.9rem; margin-bottom: 8px;
+            display: flex; justify-content: space-between;
+        }
+
+        .val-badge {
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: var(--lasu-green);
+        }
+
+        input[type=range] { width: 100%; accent-color: var(--lasu-green); }
+        
+        .color-picker-group {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f8f9fa; padding: 10px 15px; border-radius: 8px; border: 1px solid #dee2e6;
+        }
+        input[type=color] {
+            border: none; width: 40px; height: 40px; border-radius: 4px; cursor: pointer;
+            padding: 0; background: transparent;
+        }
+
+        /* Playground Section */
+        .playground-panel {
+            padding: 40px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .preview-area {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 350px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: background 0.3s ease;
+            background-color: #ffffff;
+        }
+
+        /* Code Output Section */
+        .code-output {
+            background: #272822; /* Monokai dark */
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .code-output pre {
+            margin: 0; color: #f8f8f2;
+            font-family: 'Fira Code', monospace; font-size: 1rem;
+            white-space: pre-wrap;
+        }
+        .prop-key { color: #66d9ef; } /* Blue */
+        .prop-val { color: #a6e22e; } /* Green */
+
+        .copy-btn { position: absolute; top: 15px; right: 15px; }
+
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .card-custom { flex-direction: column; }
+            .controls-panel { border-right: none; border-bottom: 1px solid #dee2e6; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">CSS TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="row h-100 g-0 card-custom flex-row overflow-hidden shadow-lg">
+        
+        <div class="col-lg-4 controls-panel">
+            <h5 class="fw-bold mb-4"><i class="fas fa-fill-drip me-2 text-danger"></i> Gradient Settings</h5>
+
+            <div class="control-group">
+                <label class="control-label">Type</label>
+                <select class="form-select" id="gradType" onchange="toggleType()">
+                    <option value="linear">Linear Gradient</option>
+                    <option value="radial">Radial Gradient</option>
+                </select>
+            </div>
+
+            <div id="linearSettings" class="control-group">
+                <label class="control-label">Angle <span class="val-badge" id="valAngle">90deg</span></label>
+                <input type="range" id="gradAngle" min="0" max="360" value="90" oninput="updateGradient()">
+            </div>
+
+            <div id="radialSettings" class="control-group" style="display:none;">
+                <label class="control-label">Shape</label>
+                <select class="form-select mb-3" id="radialShape" onchange="updateGradient()">
+                    <option value="circle">Circle</option>
+                    <option value="ellipse">Ellipse</option>
+                </select>
+            </div>
+
+            <hr class="my-4">
+
+            <h6 class="fw-bold text-muted mb-3">Colors</h6>
+
+            <div class="control-group color-picker-group">
+                <label class="mb-0 fw-bold text-dark">Color 1</label>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="color" id="color1" value="#ff0055" oninput="updateGradient()">
+                </div>
+            </div>
+            
+            <div class="text-center my-2 text-muted">
+                <button class="btn btn-sm btn-light border rounded-circle" onclick="swapColors()" title="Swap Colors">
+                    <i class="fas fa-exchange-alt fa-rotate-90"></i>
+                </button>
+            </div>
+
+            <div class="control-group color-picker-group">
+                <label class="mb-0 fw-bold text-dark">Color 2</label>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="color" id="color2" value="#0000ff" oninput="updateGradient()">
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <button class="btn btn-sm btn-outline-secondary m-1" onclick="randomGradient()">Surprise Me <i class="fas fa-dice ms-1"></i></button>
+            </div>
+        </div>
+
+        <div class="col-lg-8 playground-panel">
+            
+            <div class="preview-area" id="previewArea"></div>
+
+            <div class="code-output">
+                <button class="btn btn-sm btn-outline-light copy-btn" onclick="copyCSS()"><i class="fas fa-copy"></i> Copy CSS</button>
+                <pre id="cssOutput"></pre>
+            </div>
+            
+        </div>
+
+    </div>
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    // Elements
+    const gradType = document.getElementById('gradType');
+    const linearSettings = document.getElementById('linearSettings');
+    const radialSettings = document.getElementById('radialSettings');
+    const gradAngle = document.getElementById('gradAngle');
+    const radialShape = document.getElementById('radialShape');
+    const color1 = document.getElementById('color1');
+    const color2 = document.getElementById('color2');
+    
+    const previewArea = document.getElementById('previewArea');
+    const cssOutput = document.getElementById('cssOutput');
+    const valAngle = document.getElementById('valAngle');
+
+    function toggleType() {
+        if (gradType.value === 'linear') {
+            linearSettings.style.display = 'block';
+            radialSettings.style.display = 'none';
+        } else {
+            linearSettings.style.display = 'none';
+            radialSettings.style.display = 'block';
+        }
+        updateGradient();
+    }
+
+    function updateGradient() {
+        const type = gradType.value;
+        const c1 = color1.value;
+        const c2 = color2.value;
+        let gradString = "";
+
+        if (type === 'linear') {
+            const angle = gradAngle.value;
+            valAngle.innerText = `${angle}deg`;
+            gradString = `linear-gradient(${angle}deg, ${c1}, ${c2})`;
+        } else {
+            const shape = radialShape.value;
+            gradString = `radial-gradient(${shape}, ${c1}, ${c2})`;
+        }
+
+        // Apply to preview
+        previewArea.style.background = gradString;
+
+        // Generate Code Text (HTML formatted for highlight)
+        let cssStr = `<span class="prop-key">background</span>: <span class="prop-val">${c1}</span>; <span class="text-secondary">/* fallback */</span>\n`;
+        cssStr += `<span class="prop-key">background</span>: <span class="prop-val">-webkit-${gradString}</span>;\n`;
+        cssStr += `<span class="prop-key">background</span>: <span class="prop-val">${gradString}</span>;`;
+        
+        cssOutput.innerHTML = cssStr;
+    }
+
+    function swapColors() {
+        const temp = color1.value;
+        color1.value = color2.value;
+        color2.value = temp;
+        updateGradient();
+    }
+
+    function getRandomHex() {
+        return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+    }
+
+    function randomGradient() {
+        color1.value = getRandomHex();
+        color2.value = getRandomHex();
+        if(gradType.value === 'linear') {
+            gradAngle.value = Math.floor(Math.random() * 360);
+        }
+        updateGradient();
+    }
+
+    function copyCSS() {
+        // Extract raw text for clipboard
+        const rawText = cssOutput.innerText;
+        navigator.clipboard.writeText(rawText).then(() => {
+            showToast('CSS copied to clipboard!', 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        const toastBox = document.getElementById('toastBox');
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Init
+    updateGradient();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

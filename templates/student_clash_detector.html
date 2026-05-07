@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Exam Clash Detector</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        .radar-scan {
+            height: 200px; width: 200px;
+            background: radial-gradient(circle, rgba(25,135,84,0.1) 0%, rgba(25,135,84,0.4) 100%);
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto 20px;
+            border: 2px solid #198754;
+            overflow: hidden;
+        }
+        .radar-line {
+            position: absolute; width: 100%; height: 2px;
+            background: #198754; top: 50%;
+            animation: scan 2s infinite linear;
+            transform-origin: center;
+        }
+        @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .danger-mode .radar-scan { background: radial-gradient(circle, rgba(220,53,69,0.1) 0%, rgba(220,53,69,0.4) 100%); border-color: #dc3545; }
+        .danger-mode .radar-line { background: #dc3545; animation-duration: 0.5s; }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 {{ 'danger-mode' if clashes else '' }}">
+                <div class="card-header fw-bold text-white {{ 'bg-danger' if clashes else 'bg-success' }}">
+                    <i class="fas fa-search me-2"></i>Exam Timetable Diagnostic
+                </div>
+                <div class="card-body text-center py-5">
+                    
+                    <div class="radar-scan">
+                        <div class="radar-line"></div>
+                    </div>
+
+                    {% if clashes %}
+                        <h2 class="fw-bold text-danger animate__animated animate__flash animate__infinite">⚠️ CLASH DETECTED!</h2>
+                        <p class="text-muted">Critical schedule conflict found.</p>
+                        
+                        <div class="list-group text-start mt-4">
+                            {% for clash in clashes %}
+                            <div class="list-group-item list-group-item-danger border-danger">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1 fw-bold">{{ clash.course1.code }} <span class="text-muted fs-6">vs</span> {{ clash.course2.code }}</h5>
+                                    <small class="fw-bold bg-danger text-white px-2 rounded">{{ clash.time }}</small>
+                                </div>
+                                <p class="mb-1 small">Both exams are scheduled for <strong>{{ clash.date.strftime('%d %b, %Y') }}</strong>.</p>
+                                <small class="text-danger fw-bold"><i class="fas fa-exclamation-triangle me-1"></i> Immediate Action Required</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mt-4">
+                            <button class="btn btn-outline-danger w-100">Report to Exam Officer</button>
+                        </div>
+                    {% else %}
+                        <h2 class="fw-bold text-success animate__animated animate__pulse">No Clashes Found</h2>
+                        <p class="text-muted">Your exam schedule is conflict-free.</p>
+                        <div class="alert alert-success bg-opacity-10 border-success mt-4">
+                            <strong>{{ student.registered_courses|length }} Courses Scanned.</strong><br>
+                            All exams have unique time slots.
+                        </div>
+                        <a href="{{ url_for('student_portal') }}" class="btn btn-outline-success mt-3">Return to Portal</a>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

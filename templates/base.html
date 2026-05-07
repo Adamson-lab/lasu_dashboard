@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LASU Analytics</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile_fix.css') }}">
+
+    <style>
+        /* Custom Nav Tweaks */
+        .navbar-nav .nav-link { font-size: 0.95rem; font-weight: 500; padding-left: 12px !important; padding-right: 12px !important; }
+        .navbar-brand { font-size: 1.2rem; font-weight: bold; }
+        
+        /* Make colors pop on hover */
+        .nav-link:hover { opacity: 0.8; transform: scale(1.05); transition: all 0.2s; }
+    </style>
+</head>
+<body>
+    
+    {% if session.get('logged_in') %}
+    <nav class="navbar navbar-expand-xl navbar-dark bg-dark shadow-sm px-3 mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand text-uppercase text-white" href="{{ url_for('dashboard') }}">LASU Admin</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center text-nowrap">
+                    
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('dashboard') }}">Overview</a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link text-primary" href="{{ url_for('student_list') }}">Students</a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link text-success" href="{{ url_for('manage_courses') }}">Courses</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="{{ url_for('manage_timetable') }}">📅 Time-Table</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link text-info" href="{{ url_for('manage_quizzes') }}">🖥️ CBT / Tests</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="{{ url_for('lecturer_appeals') }}">
+                            <i class="fas fa-gavel"></i> Appeals
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="{{ url_for('lecturer_transfers') }}">
+                            <i class="fas fa-random text-primary"></i> Transfers
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="{{ url_for('course_analysis') }}">Analysis</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link text-success fw-bold" href="{{ url_for('bursary_dashboard') }}">₦ Finance</a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="{{ url_for('activity_log') }}">Logs</a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link text-secondary" href="{{ url_for('settings') }}">Settings</a>
+                    </li>
+                    
+                    <li class="nav-item border-start ms-2 ps-3 d-none d-xl-block">
+                        <span class="text-light small me-2">{{ session.user_name }}</span>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
+                    </li>
+                    <li class="nav-item d-xl-none mt-2">
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger w-100">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="container-fluid">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

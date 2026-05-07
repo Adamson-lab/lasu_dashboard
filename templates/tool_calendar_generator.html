@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V4000 Omni-Planner | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V4000 OMNI-PLANNER THEME ENGINE
+           ========================================== */
+        
+        [data-theme="light"] {
+            --paper-bg: #f9f8f6; 
+            --ink-main: #1a1a1a; 
+            --ink-muted: #737373; 
+            --ink-accent: #b91c1c; 
+            --grid-line: #d4d4d4;
+            --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.05);
+            --surface-bg: #ffffff;
+            --brand-purple: #6f42c1;
+        }
+
+        [data-theme="dark"] {
+            --paper-bg: #171717; 
+            --ink-main: #f5f5f5; 
+            --ink-muted: #a3a3a3;
+            --ink-accent: #ef4444; 
+            --grid-line: #404040;
+            --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.5);
+            --surface-bg: #262626;
+            --brand-purple: #a855f7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--paper-bg);
+            color: var(--ink-main);
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* V4000 MASSIVE CONTAINER */
+        .tool-container {
+            max-width: 98%;
+            margin: 0 auto;
+        }
+
+        /* Input Panel Styling */
+        .input-panel {
+            background-color: var(--surface-bg);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--grid-line);
+            height: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-soft);
+        }
+        .input-panel::-webkit-scrollbar { width: 6px; }
+        .input-panel::-webkit-scrollbar-thumb { background-color: var(--grid-line); border-radius: 10px; }
+
+        .form-label {
+            font-weight: 800;
+            color: var(--ink-muted);
+            margin-bottom: 5px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .form-control, .form-select {
+            border-color: var(--grid-line);
+            font-weight: 600;
+            font-size: 0.95rem;
+            background-color: transparent;
+            color: var(--ink-main);
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-purple);
+            box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+            color: var(--ink-main);
+        }
+        .form-select option {
+            background-color: var(--surface-bg);
+            color: var(--ink-main);
+        }
+
+        .section-divider {
+            margin: 25px 0 15px 0;
+            border-top: 2px solid var(--grid-line);
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: var(--surface-bg);
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--ink-muted);
+            letter-spacing: 1px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .btn-print {
+            background-color: var(--ink-main);
+            color: var(--surface-bg);
+            border: 1px solid var(--ink-main);
+            padding: 15px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .btn-print:hover {
+            background-color: transparent;
+            color: var(--ink-main);
+        }
+
+        .nav-btn {
+            background: transparent;
+            color: var(--ink-main);
+            border: 1px solid var(--grid-line);
+            padding: 8px 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-btn:hover { background: var(--grid-line); }
+
+        /* The Printable Canvas */
+        .preview-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .printable-canvas {
+            background-color: var(--surface-bg);
+            border: 1px solid var(--grid-line);
+            padding: 50px;
+            min-height: 800px;
+            width: 100%;
+            min-width: 900px; /* Prevents crushing on small screens */
+            display: flex;
+            flex-direction: column;
+            font-family: 'Times New Roman', Times, serif; /* Default font */
+            transition: font-family 0.3s ease, color 0.3s ease;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 4px solid var(--ink-main);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .title-display {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--ink-muted);
+            margin-bottom: 10px;
+        }
+
+        .month-display {
+            font-size: 4.5rem;
+            font-weight: normal;
+            letter-spacing: -1px;
+            margin: 0;
+            line-height: 0.9;
+            color: var(--ink-main);
+        }
+
+        .year-display {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: var(--ink-muted);
+            letter-spacing: 5px;
+        }
+
+        /* Calendar Grid Engine */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            background-color: var(--grid-line); 
+            border: 2px solid var(--grid-line);
+            flex-grow: 1;
+        }
+
+        .day-header {
+            background-color: var(--surface-bg);
+            padding: 12px;
+            text-align: center;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+        }
+
+        .day-cell {
+            background-color: var(--surface-bg);
+            min-height: 120px;
+            padding: 40px 10px 10px 10px;
+            position: relative;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 0.95rem;
+            color: var(--ink-main);
+            outline: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .day-cell:focus {
+            background-color: rgba(111, 66, 193, 0.05);
+            box-shadow: inset 0 0 0 2px var(--brand-purple);
+        }
+
+        .day-number {
+            font-family: inherit; /* Inherits from document */
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--ink-main);
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            pointer-events: none;
+        }
+
+        .day-empty {
+            background-color: rgba(0, 0, 0, 0.03);
+            pointer-events: none; 
+        }
+        [data-theme="dark"] .day-empty { background-color: rgba(255, 255, 255, 0.03); }
+
+        .day-weekend {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        [data-theme="dark"] .day-weekend { background-color: rgba(255, 255, 255, 0.05); }
+
+        /* V4000 Lined Notes Section */
+        .notes-section {
+            margin-top: 30px;
+            border-top: 2px solid var(--grid-line);
+            padding-top: 15px;
+        }
+
+        .notes-title {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+            margin-bottom: 10px;
+        }
+
+        .lined-paper {
+            width: 100%;
+            min-height: 150px;
+            background-image: linear-gradient(transparent 29px, var(--grid-line) 30px);
+            background-size: 100% 30px;
+            line-height: 30px;
+            font-family: inherit;
+            font-size: 1.2rem;
+            color: var(--ink-main);
+            outline: none;
+            padding: 0;
+        }
+
+        .lined-paper:empty:before {
+            content: attr(placeholder);
+            color: var(--ink-muted);
+            font-style: italic;
+            opacity: 0.6;
+        }
+
+        /* ==========================================
+           V4000 ABSOLUTE PRINT ISOLATION
+           ========================================== */
+        @media print {
+            @page {
+                size: landscape;
+                margin: 0.4in;
+            }
+            body {
+                background-color: #ffffff !important; 
+                padding: 0 !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+            }
+
+            /* Hide UI Elements */
+            .col-lg-3, .border-bottom { display: none !important; }
+
+            /* Break out of grids */
+            .row, .col-lg-9, .tool-container, .preview-wrapper {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+            }
+
+            /* Force Canvas to fill page */
+            .printable-canvas {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                width: 100% !important;
+                min-width: 100% !important;
+                height: auto !important;
+                background-color: #ffffff !important;
+            }
+
+            /* Standardize printable colors */
+            .calendar-grid { border: 2px solid #000000 !important; background-color: #000000 !important; }
+            .day-header, .day-cell { background-color: #ffffff !important; }
+            .day-empty { background-color: #f3f3f3 !important; }
+            .day-weekend { background-color: #f8f8f8 !important; }
+            .calendar-header { border-bottom: 4px solid #000000 !important; }
+            
+            .lined-paper {
+                background-image: linear-gradient(transparent 29px, #cccccc 30px) !important;
+            }
+            .lined-paper:empty:before { content: "" !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-calendar-alt me-2" style="color: var(--brand-purple);"></i> Omni-Planner Engine <span class="badge bg-dark ms-2" style="font-size: 0.7rem;">V4000 MATRIX</span></h2>
+            <div class="d-flex gap-2">
+                <button class="nav-btn" onclick="togglePlannerTheme()"><i class="fas fa-adjust"></i> Environment</button>
+                <a href="{{ url_for('student_tools_dashboard') }}" class="btn btn-outline-secondary btn-sm fw-bold"><i class="fas fa-arrow-left me-1"></i> Dashboard</a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-3">
+                <div class="input-panel">
+                    
+                    <div class="section-divider mt-0"><span>TEMPORAL COORDINATES</span></div>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <button class="nav-btn" onclick="shiftMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                        <div class="fw-bold d-flex align-items-center" style="color: var(--ink-main); text-transform: uppercase;">Time Shift</div>
+                        <button class="nav-btn" onclick="shiftMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-7">
+                            <label class="form-label">Month</label>
+                            <select id="monthSelector" class="form-select form-select-sm" onchange="executeMatrixGeneration()">
+                                <option value="0">January</option>
+                                <option value="1">February</option>
+                                <option value="2">March</option>
+                                <option value="3">April</option>
+                                <option value="4">May</option>
+                                <option value="5">June</option>
+                                <option value="6">July</option>
+                                <option value="7">August</option>
+                                <option value="8">September</option>
+                                <option value="9">October</option>
+                                <option value="10">November</option>
+                                <option value="11">December</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label">Year</label>
+                            <input type="number" id="yearSelector" class="form-control form-control-sm" value="2026" onchange="executeMatrixGeneration()">
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>DOCUMENT METADATA</span></div>
+                    <div class="mb-3">
+                        <label class="form-label">Custom Document Title</label>
+                        <input type="text" id="customTitle" class="form-control form-control-sm" placeholder="e.g. Q1 Master Schedule" oninput="executeMatrixGeneration()">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Typography Engine</label>
+                        <select id="fontSelector" class="form-select form-select-sm" onchange="executeMatrixGeneration()">
+                            <option value="'Times New Roman', Times, serif">Corporate Serif (Classic)</option>
+                            <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Modern Sans-Serif</option>
+                            <option value="'Courier New', Courier, monospace">Bespoke Monospace</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ink Theme</label>
+                        <select id="inkSelector" class="form-select form-select-sm" onchange="executeMatrixGeneration()">
+                            <option value="#1a1a1a">Jet Black</option>
+                            <option value="#1e3a8a">Corporate Navy</option>
+                            <option value="#991b1b">Crimson Red</option>
+                            <option value="#166534">Forest Green</option>
+                        </select>
+                    </div>
+
+                    <div class="section-divider"><span>MATRIX MODIFIERS</span></div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="shadeWeekends" onchange="executeMatrixGeneration()" checked>
+                        <label class="form-check-label fw-bold" style="font-size: 0.85rem; color: var(--ink-main);">Isolate Weekends (Shading)</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="showNotes" onchange="executeMatrixGeneration()" checked>
+                        <label class="form-check-label fw-bold" style="font-size: 0.85rem; color: var(--ink-main);">Enable Lined Notes Section</label>
+                    </div>
+
+                    <button class="btn-print" onclick="executeNativePrint()">
+                        <i class="fas fa-print me-2"></i> Print Document
+                    </button>
+
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="preview-wrapper">
+                    
+                    <div class="printable-canvas" id="printZone">
+                        
+                        <div class="calendar-header" id="headerBorder">
+                            <div>
+                                <div class="title-display" id="renderTitle" style="display: none;"></div>
+                                <h1 class="month-display" id="renderMonth">March</h1>
+                            </div>
+                            <div class="year-display" id="renderYear">2026</div>
+                        </div>
+
+                        <div class="calendar-grid" id="renderGrid">
+                            </div>
+
+                        <div class="notes-section" id="renderNotesBlock">
+                            <div class="notes-title" id="renderNotesTitle">Executive Notes & Objectives</div>
+                            <div class="lined-paper" contenteditable="true" placeholder="Click here to type your objectives prior to printing..."></div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // V4000 EXPLICIT JAVASCRIPT ENGINE
+        // ZERO ARROW FUNCTIONS. ZERO TERNARIES.
+        // ==========================================
+
+        function togglePlannerTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v4000_planner', nextTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v4000_planner');
+            
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+
+            let currentDateObject = new Date();
+            let currentMonthInteger = currentDateObject.getMonth();
+            let currentYearInteger = currentDateObject.getFullYear();
+
+            document.getElementById('monthSelector').value = String(currentMonthInteger);
+            document.getElementById('yearSelector').value = String(currentYearInteger);
+
+            executeMatrixGeneration();
+        });
+
+        // Quick Navigation Buttons
+        function shiftMonth(directionInteger) {
+            let monthElement = document.getElementById('monthSelector');
+            let yearElement = document.getElementById('yearSelector');
+            
+            let currentMonth = parseInt(monthElement.value, 10);
+            let currentYear = parseInt(yearElement.value, 10);
+            
+            let newMonth = currentMonth + directionInteger;
+            
+            if (newMonth > 11) {
+                newMonth = 0;
+                currentYear = currentYear + 1;
+            } else if (newMonth < 0) {
+                newMonth = 11;
+                currentYear = currentYear - 1;
+            }
+
+            monthElement.value = String(newMonth);
+            yearElement.value = String(currentYear);
+            
+            executeMatrixGeneration();
+        }
+
+        // Native Print Trigger
+        function executeNativePrint() {
+            window.print();
+        }
+
+        // ==========================================
+        // V4000 MATRIX GENERATOR
+        // ==========================================
+        function executeMatrixGeneration() {
+            // 1. Collect Metadata
+            let monthStringValue = document.getElementById('monthSelector').value;
+            let yearStringValue = document.getElementById('yearSelector').value;
+            let customTitleString = document.getElementById('customTitle').value;
+            let selectedFontValue = document.getElementById('fontSelector').value;
+            let selectedInkColor = document.getElementById('inkSelector').value;
+            
+            let isWeekendsShaded = document.getElementById('shadeWeekends').checked;
+            let isNotesVisible = document.getElementById('showNotes').checked;
+
+            if (yearStringValue === "") {
+                alert("CRITICAL: Year coordinate required for generation.");
+                return;
+            }
+
+            let targetMonthInteger = parseInt(monthStringValue, 10);
+            let targetYearInteger = parseInt(yearStringValue, 10);
+
+            let monthNamesArray = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+            let selectedMonthName = monthNamesArray[targetMonthInteger];
+
+            // 2. Apply Theming & Fonts
+            let printZoneElement = document.getElementById('printZone');
+            printZoneElement.style.fontFamily = selectedFontValue;
+            
+            // Override ink colors dynamically
+            document.getElementById('renderMonth').style.color = selectedInkColor;
+            document.getElementById('headerBorder').style.borderBottomColor = selectedInkColor;
+            document.getElementById('renderGrid').style.borderColor = selectedInkColor;
+            document.getElementById('renderGrid').style.backgroundColor = selectedInkColor;
+
+            // 3. Update Text Content
+            document.getElementById('renderMonth').innerText = selectedMonthName;
+            document.getElementById('renderYear').innerText = String(targetYearInteger);
+
+            let titleDisplayElement = document.getElementById('renderTitle');
+            if (customTitleString.trim() !== "") {
+                titleDisplayElement.style.display = "block";
+                titleDisplayElement.innerText = customTitleString;
+            } else {
+                titleDisplayElement.style.display = "none";
+            }
+
+            let notesBlockElement = document.getElementById('renderNotesBlock');
+            if (isNotesVisible === true) {
+                notesBlockElement.style.display = "block";
+            } else {
+                notesBlockElement.style.display = "none";
+            }
+
+            // 4. Calculate Grid Mathematics
+            let firstDayObject = new Date(targetYearInteger, targetMonthInteger, 1);
+            let startingDayOfWeek = firstDayObject.getDay(); // 0 is Sunday
+
+            let lastDayObject = new Date(targetYearInteger, targetMonthInteger + 1, 0);
+            let totalDaysInMonth = lastDayObject.getDate();
+
+            let previousMonthLastDayObject = new Date(targetYearInteger, targetMonthInteger, 0);
+            let totalDaysInPreviousMonth = previousMonthLastDayObject.getDate();
+
+            // 5. Construct the Physical Grid
+            let gridContainerElement = document.getElementById('renderGrid');
+            gridContainerElement.innerHTML = ""; 
+
+            let dayHeadersArray = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            
+            for (let i = 0; i < dayHeadersArray.length; i = i + 1) {
+                let headerElement = document.createElement("div");
+                headerElement.className = "day-header";
+                headerElement.innerText = dayHeadersArray[i];
+                gridContainerElement.appendChild(headerElement);
+            }
+
+            let totalCellsInGrid = 42; 
+            let currentDayCounter = 1;
+            let nextMonthDayCounter = 1;
+
+            for (let cellIndex = 0; cellIndex < totalCellsInGrid; cellIndex = cellIndex + 1) {
+                
+                let cellElement = document.createElement("div");
+                let numberSpanElement = document.createElement("span");
+                numberSpanElement.className = "day-number";
+
+                // V4000 Weekend Identification Logic
+                let isWeekendColumn = false;
+                if (cellIndex % 7 === 0 || cellIndex % 7 === 6) {
+                    isWeekendColumn = true;
+                }
+
+                if (cellIndex < startingDayOfWeek) {
+                    // Previous Month Padding
+                    cellElement.className = "day-cell day-empty";
+                    
+                    let daysToSubtract = startingDayOfWeek - cellIndex - 1;
+                    let previousDateNumber = totalDaysInPreviousMonth - daysToSubtract;
+                    
+                    numberSpanElement.innerText = String(previousDateNumber);
+                    
+                } else if (currentDayCounter <= totalDaysInMonth) {
+                    // Current Month Active Cells
+                    cellElement.className = "day-cell";
+                    if (isWeekendColumn === true && isWeekendsShaded === true) {
+                        cellElement.className = "day-cell day-weekend";
+                    }
+                    
+                    cellElement.setAttribute("contenteditable", "true");
+                    cellElement.style.color = selectedInkColor;
+                    
+                    numberSpanElement.innerText = String(currentDayCounter);
+                    numberSpanElement.style.color = selectedInkColor;
+                    
+                    currentDayCounter = currentDayCounter + 1;
+                    
+                } else {
+                    // Next Month Padding
+                    cellElement.className = "day-cell day-empty";
+                    numberSpanElement.innerText = String(nextMonthDayCounter);
+                    
+                    nextMonthDayCounter = nextMonthDayCounter + 1;
+                }
+
+                cellElement.appendChild(numberSpanElement);
+                gridContainerElement.appendChild(cellElement);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Octal Converter | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --octal-purple: #6f42c1; /* Distinct color for Octal */
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            max-width: 1300px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        /* Controls / Header */
+        .controls-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .tool-title {
+            font-weight: 700;
+            color: var(--lasu-green);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Settings Group */
+        .settings-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .settings-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #495057;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* Split Converter Area */
+        .converter-wrapper {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .pane {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            width: 50%;
+        }
+
+        .pane-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pane-title {
+            font-weight: 700;
+            color: #495057;
+            margin: 0;
+            font-size: 1.05rem;
+        }
+
+        .pane-textarea {
+            flex-grow: 1;
+            border: none;
+            resize: none;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            width: 100%;
+            outline: none;
+            background-color: #fff;
+            color: #212529;
+            min-height: 400px;
+        }
+
+        .pane-textarea:focus {
+            box-shadow: inset 0 0 0 2px var(--lasu-accent);
+        }
+
+        /* Octal Specific Styling */
+        #octalInput {
+            color: var(--octal-purple);
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .invalid-octal {
+            box-shadow: inset 0 0 0 2px #dc3545 !important;
+            background-color: #fff8f8 !important;
+        }
+
+        /* Middle Swap Button */
+        .swap-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-swap {
+            background: var(--lasu-green);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 77, 64, 0.2);
+            transition: all 0.2s;
+        }
+
+        .btn-swap:hover {
+            transform: scale(1.1) rotate(180deg);
+            background: var(--lasu-accent);
+        }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            z-index: 1050;
+            display: none; 
+            min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .converter-wrapper { flex-direction: column; }
+            .pane { width: 100%; }
+            .btn-swap { transform: rotate(90deg); margin: 10px 0; }
+            .btn-swap:hover { transform: scale(1.1) rotate(270deg); }
+            .pane-textarea { min-height: 250px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">DEV TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-card">
+        <h1 class="tool-title"><i class="fas fa-sort-numeric-down"></i> Octal Converter</h1>
+        
+        <div class="settings-group">
+            <div>
+                <label>Spacing Format</label>
+                <select class="form-select form-select-sm border-secondary" id="formatSelect" onchange="convertTextToOctal()">
+                    <option value="space">Spaced (114 101 123 125)</option>
+                    <option value="none">Continuous (114101123125)</option>
+                </select>
+            </div>
+            <button class="btn btn-outline-danger btn-sm mt-4" onclick="clearBoth()">
+                <i class="fas fa-eraser me-1"></i> Clear Board
+            </button>
+        </div>
+    </div>
+
+    <div class="converter-wrapper">
+        
+        <div class="pane">
+            <div class="pane-header">
+                <h5 class="pane-title"><i class="fas fa-font text-primary me-2"></i>UTF-8 Text String</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="copyContent('textInput')">
+                    <i class="fas fa-copy"></i> Copy Text
+                </button>
+            </div>
+            <textarea id="textInput" class="pane-textarea" placeholder="Type or paste text here (supports Emojis & Symbols 🚀)..." oninput="convertTextToOctal()"></textarea>
+            <div class="bg-light p-2 border-top text-muted small fw-bold d-flex justify-content-between">
+                <span>Standard Text</span>
+                <span id="textStats">0 Characters</span>
+            </div>
+        </div>
+
+        <div class="swap-container">
+            <button class="btn-swap" title="Two-way conversion happens automatically!">
+                <i class="fas fa-exchange-alt"></i>
+            </button>
+        </div>
+
+        <div class="pane">
+            <div class="pane-header">
+                <h5 class="pane-title" style="color: var(--octal-purple);"><i class="fas fa-barcode me-2"></i>Octal Data (Base-8)</h5>
+                <button class="btn btn-sm" style="border-color: var(--octal-purple); color: var(--octal-purple);" onclick="copyContent('octalInput')" onmouseover="this.style.backgroundColor='var(--octal-purple)'; this.style.color='white';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--octal-purple)';">
+                    <i class="fas fa-copy"></i> Copy Octal
+                </button>
+            </div>
+            <textarea id="octalInput" class="pane-textarea" placeholder="Type or paste Octal numbers (0-7) here..." oninput="convertOctalToText()"></textarea>
+            <div class="bg-light p-2 border-top text-muted small fw-bold d-flex justify-content-between">
+                <span id="octalError" class="text-danger d-none"><i class="fas fa-exclamation-triangle"></i> Invalid octal character (8, 9, or letters) detected.</span>
+                <span id="octalCount" class="ms-auto">0 Bytes</span>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    const textInput = document.getElementById('textInput');
+    const octalInput = document.getElementById('octalInput');
+    const formatSelect = document.getElementById('formatSelect');
+    
+    const textStats = document.getElementById('textStats');
+    const octalCount = document.getElementById('octalCount');
+    const octalError = document.getElementById('octalError');
+    const toastBox = document.getElementById('toastBox');
+
+    // Advanced UTF-8 Encoder/Decoder ensures Emojis and foreign languages convert flawlessly
+    const utf8Encoder = new TextEncoder();
+    const utf8Decoder = new TextDecoder('utf-8', { fatal: false }); 
+
+    // Convert Text to Octal
+    function convertTextToOctal() {
+        const text = textInput.value;
+        const format = formatSelect.value;
+
+        // Update Text Stats (counts symbols like emojis as single visual characters)
+        const visualCharCount = [...text].length;
+        textStats.innerText = `${visualCharCount} Characters`;
+
+        if (!text) {
+            octalInput.value = '';
+            octalInput.classList.remove('invalid-octal');
+            octalError.classList.add('d-none');
+            octalCount.innerText = "0 Bytes";
+            return;
+        }
+
+        // Encode to raw UTF-8 bytes
+        const bytes = utf8Encoder.encode(text);
+        let octalArray = [];
+
+        for (let i = 0; i < bytes.length; i++) {
+            // Convert byte to octal. A byte goes up to 255 (decimal), which is 377 (octal).
+            // Pad with leading zeros to ensure it's exactly 3 digits.
+            let octalStr = bytes[i].toString(8).padStart(3, '0');
+            octalArray.push(octalStr);
+        }
+
+        let finalOctalString = '';
+        if (format === 'none') finalOctalString = octalArray.join('');
+        else finalOctalString = octalArray.join(' ');
+
+        octalInput.value = finalOctalString;
+        octalInput.classList.remove('invalid-octal');
+        octalError.classList.add('d-none');
+        
+        // Accurate Byte count
+        octalCount.innerText = `${bytes.length} Bytes`;
+    }
+
+    // Convert Octal to Text
+    function convertOctalToText() {
+        let octal = octalInput.value;
+
+        if (!octal.trim()) {
+            textInput.value = '';
+            octalInput.classList.remove('invalid-octal');
+            octalError.classList.add('d-none');
+            textStats.innerText = "0 Characters";
+            octalCount.innerText = "0 Bytes";
+            return;
+        }
+
+        // Clean input: remove spaces, newlines, and commas
+        let cleanOctal = octal.replace(/\s+/g, '').replace(/,/g, '');
+
+        // Validation: Ensure it ONLY contains valid octal digits (0-7)
+        if (!/^[0-7]*$/.test(cleanOctal)) {
+            octalInput.classList.add('invalid-octal');
+            octalError.classList.remove('d-none');
+            return; // Stop processing to avoid garbage data
+        } else {
+            octalInput.classList.remove('invalid-octal');
+            octalError.classList.add('d-none');
+        }
+
+        // Ignore the remainder if it's not a full 3-digit byte yet
+        let validLength = Math.floor(cleanOctal.length / 3) * 3;
+        let processableOctal = cleanOctal.substring(0, validLength);
+
+        // Calculate Bytes
+        const byteLength = validLength / 3;
+        octalCount.innerText = `${byteLength} Bytes`;
+
+        // Conversion to Typed Array for safe UTF-8 decoding
+        const bytes = new Uint8Array(byteLength);
+        for (let i = 0; i < processableOctal.length; i += 3) {
+            // Parse base-8 back into a decimal byte
+            bytes[i / 3] = parseInt(processableOctal.substring(i, i + 3), 8);
+        }
+
+        // Safely decode UTF-8 bytes back to text (Emojis reappear!)
+        const textResult = utf8Decoder.decode(bytes);
+
+        textInput.value = textResult;
+        
+        // Count visual characters
+        textStats.innerText = `${[...textResult].length} Characters`;
+    }
+
+    function clearBoth() {
+        textInput.value = '';
+        octalInput.value = '';
+        textInput.focus();
+        convertTextToOctal(); 
+    }
+
+    function copyContent(elementId) {
+        const el = document.getElementById(elementId);
+        if (!el.value) return;
+        el.select();
+        document.execCommand('copy');
+        
+        const type = elementId === 'textInput' ? 'Text' : 'Octal Data';
+        showToast(`${type} copied to clipboard!`, 'success');
+        window.getSelection().removeAllRanges();
+    }
+
+    function showToast(message, type) {
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

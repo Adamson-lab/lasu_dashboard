@@ -1,0 +1,2731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Tools | LASU Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* --- THEME CONFIGURATION --- */
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --card-hover-y: -5px;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- NAVBAR --- */
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .nav-link { font-size: 0.9rem; color: rgba(255,255,255,0.9) !important; }
+        .nav-link:hover { color: #fff !important; }
+
+        /* --- HERO SECTION --- */
+        .hero-section {
+            background: linear-gradient(135deg, #ffffff 0%, #e8f5e9 100%);
+            padding: 3rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        /* --- SEARCH BAR --- */
+        .search-container {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .search-input {
+            border-radius: 50px;
+            padding: 12px 25px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .search-input:focus {
+            border-color: var(--lasu-green);
+            box-shadow: 0 4px 12px rgba(0, 77, 64, 0.15);
+            outline: none;
+        }
+
+        /* --- TOOL CARDS --- */
+        .tool-card {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            overflow: hidden;
+            position: relative;
+            height: 100%;
+        }
+
+        /* Card Hover Effect */
+        .tool-card:not(.disabled-tool):hover { 
+            transform: translateY(var(--card-hover-y)); 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08); 
+            border-color: rgba(25, 135, 84, 0.2);
+        }
+
+        /* Side Strip Accent */
+        .tool-card::before { 
+            content: ''; 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 4px; height: 100%; 
+            background: #eee; 
+            transition: 0.3s; 
+        }
+        .tool-card:not(.disabled-tool):hover::before { 
+            background: var(--lasu-accent); 
+        }
+
+        /* Icon Styling */
+        .icon-box { 
+            width: 54px; height: 54px; 
+            min-width: 54px; 
+            border-radius: 14px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.6rem; margin-right: 16px;
+            background: #f8f9fa; color: #6c757d;
+            transition: 0.3s;
+        }
+        .tool-card:not(.disabled-tool):hover .icon-box { 
+            background: #e8f5e9; 
+            color: var(--lasu-accent); 
+        }
+
+        /* Disabled / Coming Soon Styling */
+        .tool-card.disabled-tool {
+            cursor: default;
+            background-color: #fbfbfb;
+        }
+        .tool-card.disabled-tool .icon-box {
+            opacity: 0.5;
+        }
+        .badge-coming-soon {
+            background-color: #6c757d;
+            font-size: 0.65rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- TYPOGRAPHY (UNIFIED DEMARCATION LINE) --- */
+        .category-title { 
+            font-weight: 700; 
+            color: var(--lasu-green); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            font-size: 0.8rem;
+            margin: 40px 0 20px 0; 
+            display: flex;
+            align-items: center;
+        }
+        .category-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e0e0;
+            margin-left: 15px;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            margin-top: auto;
+            background: #fff;
+            padding: 20px 0;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('student_portal') }}" style="font-size: 0.95rem;">
+            <i class="fas fa-arrow-left me-2"></i> <span>Back to Portal</span>
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-sm-block">THE ARSENAL 🛠️</span>
+    </div>
+</nav>
+
+<div class="hero-section text-center">
+    <div class="container">
+        <h2 class="fw-bold text-dark mb-2">Productivity Suite</h2>
+        <p class="text-muted mb-4">A collection of 150+ tools to supercharge your workflow.</p>
+        
+        <div class="search-container">
+            <input type="text" id="toolSearch" class="form-control search-input" placeholder="Search tools (e.g., Resize, Dimension, Numerical)...">
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+
+    <div class="tool-section" data-category="dev">
+        <div class="category-title"><i class="fas fa-laptop-code me-2"></i>Computer Science & Dev</div>
+        <div class="row g-4">
+            
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="sql database query db">
+                <a href="{{ url_for('tool_sql_sandbox') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-database"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">SQL Sandbox</h6>
+                            <small class="text-muted d-block lh-sm">In-memory DB practice environment</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="code python compiler html js">
+                <a href="{{ url_for('tool_code_playground') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-code"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Code IDE</h6>
+                            <small class="text-muted d-block lh-sm">Python/Web multi-language Compiler</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="regex text pattern match">
+                <a href="{{ url_for('tool_regex_tester') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-cogs"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">RegEx Tester</h6>
+                            <small class="text-muted d-block lh-sm">Test regular expressions</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="json xml format prettify minify">
+                <a href="{{ url_for('tool_json_formatter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-file-code"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">JSON Formatter</h6>
+                            <small class="text-muted d-block lh-sm">Prettify/Minify JSON</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="xml validator syntax check schema">
+                <a href="{{ url_for('tool_xml_validator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-code-branch"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">XML Validator</h6>
+                            <small class="text-muted d-block lh-sm">Check XML syntax & Format</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="yaml json converter config docker kubernetes">
+                <a href="{{ url_for('tool_yaml_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-exchange-alt"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">YAML to JSON</h6>
+                            <small class="text-muted d-block lh-sm">Convert config files</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="base64 encode decode text string image">
+                <a href="{{ url_for('tool_base64') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Base64 Converter</h6>
+                            <small class="text-muted d-block lh-sm">Encode strings & files</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="url encoder decoder web link address broken">
+                <a href="{{ url_for('tool_url_encoder') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-link"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">URL Encoder</h6>
+                            <small class="text-muted d-block lh-sm">Encode/Decode URLs</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="jwt debugger token decode json web auth authentication">
+                <a href="{{ url_for('tool_jwt_debugger') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-key"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">JWT Debugger</h6>
+                            <small class="text-muted d-block lh-sm">Decode JSON Web Tokens</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="user agent parser ua browser os device detect">
+                <a href="{{ url_for('tool_user_agent') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-user-secret"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">UA Parser</h6>
+                            <small class="text-muted d-block lh-sm">Show browser & OS info</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="keycode keyboard event listener javascript key which code js">
+                <a href="{{ url_for('tool_keycode') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-keyboard"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Keycode Checker</h6>
+                            <small class="text-muted d-block lh-sm">Get JavaScript keycodes</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="git command generator version control github gitlab gui pull push merge branch commit">
+                <a href="{{ url_for('tool_git_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fab fa-git-alt" style="color: #f14e32;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Git Generator</h6>
+                            <small class="text-muted d-block lh-sm">GUI for Git commands</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="crontab cron generator schedule timer linux server unix job">
+                <a href="{{ url_for('tool_crontab_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Cron Generator</h6>
+                            <small class="text-muted d-block lh-sm">Visual cron schedule maker</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="chmod calculator linux unix permissions 777 755 file access">
+                <a href="{{ url_for('tool_chmod_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-user-shield"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">chmod Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Visual permission setter</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="css flexbox playground layout visual builder web design flex">
+                <a href="{{ url_for('tool_flexbox_playground') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-th-large text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Flexbox Playground</h6>
+                            <small class="text-muted d-block lh-sm">Visual layout builder</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="css grid generator layout visual builder web design">
+                <a href="{{ url_for('tool_grid_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-border-all text-info"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Grid Generator</h6>
+                            <small class="text-muted d-block lh-sm">Visual grid layout builder</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="css box shadow generator maker visual frontend design">
+                <a href="{{ url_for('tool_box_shadow') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-clone text-warning"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Box Shadow Gen</h6>
+                            <small class="text-muted d-block lh-sm">CSS shadow maker</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="border radius shape generator css corners fancy blob">
+                <a href="{{ url_for('tool_border_radius') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-vector-square text-secondary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Border Radius</h6>
+                            <small class="text-muted d-block lh-sm">Fancy corner shaper</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="css gradient maker linear radial color background generator">
+                <a href="{{ url_for('tool_css_gradient') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-fill-drip text-danger"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Gradient Maker</h6>
+                            <small class="text-muted d-block lh-sm">Linear/Radial tool</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="minifier compress js css code size reducer optimize shrink">
+                <a href="{{ url_for('tool_minifier') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-compress-arrows-alt text-dark"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Code Minifier</h6>
+                            <small class="text-muted d-block lh-sm">Compress JS/CSS code</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="code diff checker compare text lines changes additions deletions match">
+                <a href="{{ url_for('tool_diff_checker') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-not-equal text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Code Diff Checker</h6>
+                            <small class="text-muted d-block lh-sm">Compare two text blocks</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="markdown table generator md github readme format grid">
+                <a href="{{ url_for('tool_markdown_table') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-table text-secondary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Markdown Table</h6>
+                            <small class="text-muted d-block lh-sm">Create GitHub README tables</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="hash generator md5 sha1 sha256 sha512 cryptography security encrypt checksum">
+                <a href="{{ url_for('tool_hash_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-fingerprint text-info"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Hash Generator</h6>
+                            <small class="text-muted d-block lh-sm">MD5, SHA-256, SHA-512 calc</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="uuid guid generator unique id identifier random">
+                <a href="{{ url_for('tool_uuid_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-barcode text-success"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">UUID/GUID Gen</h6>
+                            <small class="text-muted d-block lh-sm">Create unique IDs</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="lorem ipsum generator text dummy placeholder content words">
+                <a href="{{ url_for('tool_lorem_ipsum') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-paragraph text-muted"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Lorem Ipsum Gen</h6>
+                            <small class="text-muted d-block lh-sm">Dummy text creator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="htaccess redirect generator apache server 301 302 http https www">
+                <a href="{{ url_for('tool_htaccess_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-server" style="color: #d22128;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">.htaccess Gen</h6>
+                            <small class="text-muted d-block lh-sm">Apache redirect config tool</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="meta tag generator seo html head open graph twitter seo builder">
+                <a href="{{ url_for('tool_meta_tag_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-tags text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Meta Tag Gen</h6>
+                            <small class="text-muted d-block lh-sm">SEO tag builder</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="open graph previewer facebook twitter linkedin social share card seo">
+                <a href="{{ url_for('tool_open_graph') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-share-alt text-info"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Open Graph Preview</h6>
+                            <small class="text-muted d-block lh-sm">Test social sharing cards</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="favicon checker grabber download site icon website image web">
+                <a href="{{ url_for('tool_favicon_checker') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-bookmark text-warning"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Favicon Checker</h6>
+                            <small class="text-muted d-block lh-sm">Fetch & preview site icons</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="robots.txt generator seo crawler spider bot allow disallow sitemap">
+                <a href="{{ url_for('tool_robots_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-robot text-secondary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Robots.txt Gen</h6>
+                            <small class="text-muted d-block lh-sm">SEO crawler config</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="sitemap generator xml seo search engine urls links submit">
+                <a href="{{ url_for('tool_sitemap_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-sitemap text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Sitemap Gen</h6>
+                            <small class="text-muted d-block lh-sm">XML sitemap builder</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="ascii art generator text font retro terminal console">
+                <a href="{{ url_for('tool_ascii_art') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-terminal text-dark"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">ASCII Art Gen</h6>
+                            <small class="text-muted d-block lh-sm">Text to Art converter</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="binary converter text to binary 0101 machine code string convert">
+                <a href="{{ url_for('tool_binary_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-microchip text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Binary Converter</h6>
+                            <small class="text-muted d-block lh-sm">Text to Binary (0101)</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="hex converter text to hexadecimal base16 decode encode string">
+                <a href="{{ url_for('tool_hex_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-hashtag text-danger"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Hex Converter</h6>
+                            <small class="text-muted d-block lh-sm">Text to Hexadecimal</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="octal converter text to octal base8 decode encode string">
+                <a href="{{ url_for('tool_octal_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-sort-numeric-down" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Octal Converter</h6>
+                            <small class="text-muted d-block lh-sm">Text to Octal (Base-8)</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="rgb to hex converter color code swapper css color format style">
+                <a href="{{ url_for('tool_rgb_hex_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-palette text-success"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">RGB to Hex</h6>
+                            <small class="text-muted d-block lh-sm">Color code swapper</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="color picker eye dropper grab color image design hex rgb hsl">
+                <a href="{{ url_for('tool_color_picker') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-eye-dropper text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Color Picker</h6>
+                            <small class="text-muted d-block lh-sm">Grab colors from images</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="image to base64 converter encode picture string css html img src">
+                <a href="{{ url_for('tool_image_base64') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-file-image text-warning"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Image to Base64</h6>
+                            <small class="text-muted d-block lh-sm">Convert images to code</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="qr code generator barcode create scan link url image">
+                <a href="{{ url_for('tool_qr_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-qrcode text-dark"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">QR Generator</h6>
+                            <small class="text-muted d-block lh-sm">Create custom QR codes</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="barcode generator upc ean code128 retail scanner scan product tag image">
+                <a href="{{ url_for('tool_barcode_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-barcode text-success"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Barcode Generator</h6>
+                            <small class="text-muted d-block lh-sm">Create UPC/EAN barcodes</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="slugifier url slug generator seo title hyphen text formatting format link">
+                <a href="{{ url_for('tool_slugifier') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-link text-info"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Slugifier</h6>
+                            <small class="text-muted d-block lh-sm">Turn titles into URL slugs</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+    
+    <div class="tool-section" data-category="math">
+        <div class="category-title mt-5"><i class="fas fa-square-root-alt me-2"></i>Mathematics & Statistics</div>
+        <div class="row g-4">
+            
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="numerical analysis engine error root bisection newton raphson interpolation gaussian elimination jacobi seidel euler runge kutta lu decomposition">
+                <a href="{{ url_for('tool_numerical_engine') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-square-root-variable" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Numerical Engine</h6>
+                            <small class="text-muted d-block lh-sm">Full Computational Matrix Suite</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="matrix calculator algebra linear addition multiplication determinant inverse transpose math">
+                <a href="{{ url_for('tool_matrix_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-th text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Matrix Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Add, multiply, invert matrices</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="graph plotter function curve math algebra calculus sine cosine line chart">
+                <a href="{{ url_for('tool_graph_plotter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-chart-line text-success"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Graph Plotter</h6>
+                            <small class="text-muted d-block lh-sm">Plot mathematical functions</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="quadratic equation solver roots parabola math algebra formula discriminant">
+                <a href="{{ url_for('tool_quadratic_solver') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-superscript text-danger"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Quadratic Solver</h6>
+                            <small class="text-muted d-block lh-sm">Find X roots & plot parabola</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="prime number checker math factors composite primality test">
+                <a href="{{ url_for('tool_prime_checker') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-fingerprint text-info"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Prime Checker</h6>
+                            <small class="text-muted d-block lh-sm">High-speed primality test</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="prime factorization tree math factors divisor division math">
+                <a href="{{ url_for('tool_prime_factorization') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-cubes text-warning"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Prime Factorization</h6>
+                            <small class="text-muted d-block lh-sm">Break numbers down</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="gcd lcm calculator greatest common divisor least multiple math">
+                <a href="{{ url_for('tool_gcd_lcm') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-divide text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">GCD/LCM Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Greatest Divisor & Multiple</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="fibonacci sequence generator math numbers golden ratio spiral">
+                <a href="{{ url_for('tool_fibonacci') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-stream" style="color: #6610f2;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Fibonacci Sequence</h6>
+                            <small class="text-muted d-block lh-sm">List first N numbers</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="factorial calculator math factorial exclamation mark combination permutation">
+                <a href="{{ url_for('tool_factorial') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-exclamation" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Factorial Calc (N!)</h6>
+                            <small class="text-muted d-block lh-sm">Calculate massive factorials</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="percentage calculator math percent discount increase decrease margin">
+                <a href="{{ url_for('tool_percentage') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-percentage text-danger"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Percentage Calc</h6>
+                            <small class="text-muted d-block lh-sm">X is what % of Y?</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="standard deviation variance mean median mode statistics data set math">
+                <a href="{{ url_for('tool_standard_deviation') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-chart-bar" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Standard Deviation</h6>
+                            <small class="text-muted d-block lh-sm">SD, Variance, Mean stats</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="mean median mode average central tendency math statistics numbers dataset">
+                <a href="{{ url_for('tool_mean_median_mode') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-bullseye text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Mean, Median, Mode</h6>
+                            <small class="text-muted d-block lh-sm">Central tendency calc</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="z-score calculator statistics probability normal distribution bell curve mean standard deviation p-value">
+                <a href="{{ url_for('tool_zscore_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-bell text-success"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Z-Score Calc</h6>
+                            <small class="text-muted d-block lh-sm">Probability & Bell Curve</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="combination permutation ncr npr probability math choose order arrange">
+                <a href="{{ url_for('tool_combination_permutation') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-random text-danger"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Combination/Perm.</h6>
+                            <small class="text-muted d-block lh-sm">nCr and nPr probability</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="random number generator picker true unique lottery dice math">
+                <a href="{{ url_for('tool_random_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-dice" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Random Generator</h6>
+                            <small class="text-muted d-block lh-sm">True cryptographically secure</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="binary algebra solver boolean logic math gates bits add subtract calculator">
+                <a href="{{ url_for('tool_binary_algebra') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-code-branch" style="color: #20c997;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Binary Algebra</h6>
+                            <small class="text-muted d-block lh-sm">Arithmetic & Bitwise Engine</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="truth table generator logic gates boolean math expression true false">
+                <a href="{{ url_for('tool_truth_table') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-table" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Truth Table Gen</h6>
+                            <small class="text-muted d-block lh-sm">Boolean logic evaluator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="vector calculator magnitude dot product cross product 2D 3D physics math">
+                <a href="{{ url_for('tool_vector_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-location-arrow" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Vector Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Dot & Cross products</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="triangle solver trigonometry geometry angles sides heron area perimeter">
+                <a href="{{ url_for('tool_triangle_solver') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-ruler-combined" style="color: #198754;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Triangle Solver</h6>
+                            <small class="text-muted d-block lh-sm">SSS, angles & live drawing</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="circle solver radius diameter circumference area geometry math pi">
+                <a href="{{ url_for('tool_circle_solver') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-circle-notch" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Circle Solver</h6>
+                            <small class="text-muted d-block lh-sm">Radius, Area & Circumference</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="volume calculator sphere cone cylinder geometry math 3d shape">
+                <a href="{{ url_for('tool_volume_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-cube" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Volume Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Sphere, Cone, Cylinder</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="surface area calculator sphere cone cylinder prism cube geometry math 3d shape">
+                <a href="{{ url_for('tool_surface_area') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-cubes" style="color: #e83e8c;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Surface Area Calc</h6>
+                            <small class="text-muted d-block lh-sm">Omni-Dimensional Area Matrix</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="slope calculator math line points intercept equation cartesian geometry mx+b">
+                <a href="{{ url_for('tool_slope_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-chart-area" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Slope Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Find slope, intercepts, line</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="distance formula distance between points x1 y1 x2 y2 math geometry">
+                <a href="{{ url_for('tool_distance_formula') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-ruler" style="color: #20c997;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Distance Formula</h6>
+                            <small class="text-muted d-block lh-sm">Distance between two points</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="midpoint calculator distance point line segment coordinate geometry math center">
+                <a href="{{ url_for('tool_midpoint_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-map-marker-alt" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Midpoint Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Midpoint of a line segment</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="pythagorean theorem triangle hypotenuse legs math geometry sides">
+                <a href="{{ url_for('tool_pythagorean_theorem') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-caret-up" style="color: #dc3545; transform: rotate(90deg);"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Pythagorean Calc</h6>
+                            <small class="text-muted d-block lh-sm">Find missing triangle side</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="number base converter binary hex octal decimal math 36 alphanumeric">
+                <a href="{{ url_for('tool_number_base') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-exchange-alt" style="color: #198754;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Base Converter</h6>
+                            <small class="text-muted d-block lh-sm">Convert Base 2 to Base 36</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="roman numeral converter numbers latin math history mmxxiv">
+                <a href="{{ url_for('tool_roman_numeral') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-landmark" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Roman Numeral</h6>
+                            <small class="text-muted d-block lh-sm">Convert 2026 to MMXXVI</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="scientific notation converter e notation exponent math numbers">
+                <a href="{{ url_for('tool_scientific_notation') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-microscope" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Scientific Notation</h6>
+                            <small class="text-muted d-block lh-sm">E-notation & Expanded forms</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="logarithm calculator log base ln natural common math exponent">
+                <a href="{{ url_for('tool_logarithm') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-superscript" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Logarithm Calc</h6>
+                            <small class="text-muted d-block lh-sm">Log base 2, 10, e, etc.</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="tool-section" data-category="engineering">
+        <div class="category-title mt-5"><i class="fas fa-cogs me-2"></i>Engineering & Physics</div>
+        <div class="row g-4">
+            
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="logic gate simulator AND OR NOT XOR NAND circuit electronic engineering">
+                <a href="{{ url_for('tool_logic_gate_simulator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-microchip" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Logic Gate Sim</h6>
+                            <small class="text-muted d-block lh-sm">Interactive circuit visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="ohms law calculator voltage current resistance power watts amps volts ohms physics">
+                <a href="{{ url_for('tool_ohms_law') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-bolt" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Ohm's Law Calc</h6>
+                            <small class="text-muted d-block lh-sm">V = IR and Power (Watts)</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="resistor color code calculator electronic bands ohms tolerance components">
+                <a href="{{ url_for('tool_resistor_color_code') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-palette" style="color: #198754;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Resistor Code</h6>
+                            <small class="text-muted d-block lh-sm">4-Band & 5-Band Calculator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="voltage divider calculator circuit design electronics physics engineering resistors">
+                <a href="{{ url_for('tool_voltage_divider') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-project-diagram" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Voltage Divider</h6>
+                            <small class="text-muted d-block lh-sm">Circuit design tool</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="led resistor calculator light emitting diode protect circuit electronics wattage power">
+                <a href="{{ url_for('tool_led_resistor') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-lightbulb" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">LED Resistor Calc</h6>
+                            <small class="text-muted d-block lh-sm">E12 series and wattage rating</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="capacitor charge calculator time constant tau rc circuit electronics capacitance farads">
+                <a href="{{ url_for('tool_capacitor_charge') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-car-battery" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Capacitor Charge</h6>
+                            <small class="text-muted d-block lh-sm">RC Time Constant (&tau;) tool</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="555 timer calculator astable multivibrator frequency duty cycle electronics pulse square wave">
+                <a href="{{ url_for('tool_555_timer') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-wave-square" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">555 Timer Calc</h6>
+                            <small class="text-muted d-block lh-sm">Astable freq & duty cycle</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="wheatstone bridge calculator unknown resistance galvanometer circuit nodes voltage difference">
+                <a href="{{ url_for('tool_wheatstone_bridge') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-network-wired" style="color: #e83e8c;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Wheatstone Bridge</h6>
+                            <small class="text-muted d-block lh-sm">Find unknown resistance (Rx)</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="thermal resistance calculator heatsink cooling thermodynamics physics temp junction">
+                <a href="{{ url_for('tool_thermal_resistance') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-fire-alt" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Thermal Resistance</h6>
+                            <small class="text-muted d-block lh-sm">Heatsink & cooling calc</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="pcb trace width calculator current capacity ipc 2221 resistance voltage drop power loss">
+                <a href="{{ url_for('tool_pcb_trace_width') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-microchip" style="color: #198754;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">PCB Trace Width</h6>
+                            <small class="text-muted d-block lh-sm">IPC-2221 Current capacity</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="engineering unit converter pressure force torque pascal psi newton pound">
+                <a href="{{ url_for('tool_engineering_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-exchange-alt" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Unit Converter</h6>
+                            <small class="text-muted d-block lh-sm">Pressure, Force, & Torque</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="projectile motion simulator physics cannonball trajectory range gravity kinematic">
+                <a href="{{ url_for('tool_projectile_motion') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-rocket" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Projectile Motion</h6>
+                            <small class="text-muted d-block lh-sm">Live cannonball physics</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="pendulum simulator physics period frequency harmonic oscillator gravity swing">
+                <a href="{{ url_for('tool_pendulum_simulator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-arrows-alt-v" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Pendulum Sim</h6>
+                            <small class="text-muted d-block lh-sm">Kinematic period & frequency</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="wave interference simulator constructive destructive superposition beats frequency phase physics">
+                <a href="{{ url_for('tool_wave_interference') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-water" style="color: #e83e8c;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Wave Interference</h6>
+                            <small class="text-muted d-block lh-sm">Live superposition visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="doppler effect simulator physics acoustic sound frequency wavelength sonic boom mach">
+                <a href="{{ url_for('tool_doppler_effect') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-broadcast-tower" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Doppler Effect Sim</h6>
+                            <small class="text-muted d-block lh-sm">Live acoustic wavefronts</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="lens mirror ray tracer optics physics light focal length magnification real virtual image">
+                <a href="{{ url_for('tool_lens_mirror') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-glasses" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Optics Ray Tracer</h6>
+                            <small class="text-muted d-block lh-sm">Live Lens/Mirror physics</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="fluid flow simulator pipe pressure velocity bernoulli venturi continuity equation">
+                <a href="{{ url_for('tool_fluid_flow') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-tint" style="color: #198754;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Fluid Flow Sim</h6>
+                            <small class="text-muted d-block lh-sm">Bernoulli & Venturi Engine</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="beam deflection calculator civil engineering structural load stress moment inertia">
+                <a href="{{ url_for('tool_beam_deflection') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-hammer" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Beam Deflection</h6>
+                            <small class="text-muted d-block lh-sm">Structural bending calculator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="gear ratio calculator mechanics transmission torque rpm speed teeth cogs engineering">
+                <a href="{{ url_for('tool_gear_ratio') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-cogs" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Gear Ratio Calc</h6>
+                            <small class="text-muted d-block lh-sm">Live kinematic transmission</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="torque converter force radius rotation mechanics newton meter foot pound">
+                <a href="{{ url_for('tool_torque_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-wrench" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Torque Converter</h6>
+                            <small class="text-muted d-block lh-sm">Nm to ft-lb mechanical sim</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+    
+    <div class="tool-section" data-category="science">
+        <div class="category-title mt-5"><i class="fas fa-flask me-2"></i>Science (Bio/Chem) & Health</div>
+        <div class="row g-4">
+            
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="periodic table elements chemistry atoms atomic mass number bio chem interactive">
+                <a href="{{ url_for('tool_periodic_table') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-table" style="color: #198754;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Periodic Table</h6>
+                            <small class="text-muted d-block lh-sm">Interactive element details</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="molar mass calculator chemistry molecules compounds weight grams moles">
+                <a href="{{ url_for('tool_molar_mass') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-balance-scale" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Molar Mass Calc</h6>
+                            <small class="text-muted d-block lh-sm">Chemical compound parser</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="solution dilution calculator chemistry c1v1 c2v2 concentration volume molarity">
+                <a href="{{ url_for('tool_solution_dilution') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-vial" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Solution Dilution</h6>
+                            <small class="text-muted d-block lh-sm">C₁V₁ = C₂V₂ visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="ph calculator acid base chemistry poh equilibrium concentration ions h+ oh-">
+                <a href="{{ url_for('tool_ph_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-vials" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">pH Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Equilibrium math visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="half life calculator radioactive decay nuclear chemistry physics time">
+                <a href="{{ url_for('tool_half_life') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-radiation" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Half-Life Calc</h6>
+                            <small class="text-muted d-block lh-sm">Radioactive decay visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="amino acid converter dna rna protein sequence translation transcription biology genes">
+                <a href="{{ url_for('tool_amino_acid') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-dna" style="color: #198754;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Amino Acid Converter</h6>
+                            <small class="text-muted d-block lh-sm">DNA &rarr; RNA &rarr; Protein calc</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="codon table genetic code rna amino acids biology genetics dictionary chart">
+                <a href="{{ url_for('tool_codon_table') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-table" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Codon Table</h6>
+                            <small class="text-muted d-block lh-sm">Interactive genetic code</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="bmi calculator body mass index health weight height metric imperial">
+                <a href="{{ url_for('tool_bmi_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-weight" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">BMI Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Live physiological gauge</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="bmr calculator basal metabolic rate calories tdee diet weight loss maintenance bulk cut">
+                <a href="{{ url_for('tool_bmr_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-burn" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">BMR/TDEE Calc</h6>
+                            <small class="text-muted d-block lh-sm">Daily calorie target visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="water intake calculator hydration fluid drink health fitness litres ounces glasses">
+                <a href="{{ url_for('tool_water_intake') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-tint" style="color: #0dcaf0;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Water Intake Calc</h6>
+                            <small class="text-muted d-block lh-sm">Hydro-kinematic visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="sleep cycle calculator health rest wake up time rem deep circadian rhythm">
+                <a href="{{ url_for('tool_sleep_cycle') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-bed" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Sleep Cycle Calc</h6>
+                            <small class="text-muted d-block lh-sm">Circadian hypnogram visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="pregnancy due date calculator baby gestational age trimester weeks mother health">
+                <a href="{{ url_for('tool_pregnancy_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-baby" style="color: #e83e8c;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Pregnancy Due Date</h6>
+                            <small class="text-muted d-block lh-sm">Gestational timeline visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="ovulation calculator fertility window next period cycle tracking reproductive health women">
+                <a href="{{ url_for('tool_ovulation_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-calendar-alt" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Ovulation Calc</h6>
+                            <small class="text-muted d-block lh-sm">Fertility window visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="breath pacer anxiety visualizer breathing calm meditation relax box 478">
+                <a href="{{ url_for('tool_breath_pacer') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-wind" style="color: #0dcaf0;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Breath Pacer</h6>
+                            <small class="text-muted d-block lh-sm">Therapeutic anxiety visualizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="reaction time test measure reflexes speed ms milliseconds brain health">
+                <a href="{{ url_for('tool_reaction_time') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-bolt" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Reaction Time Test</h6>
+                            <small class="text-muted d-block lh-sm">Neurological reflex benchmark</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="color blindness simulator vision test protanopia deuteranopia tritanopia accessibility">
+                <a href="{{ url_for('tool_color_blindness') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-eye" style="color: #e83e8c;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Color Blindness Sim</h6>
+                            <small class="text-muted d-block lh-sm">Image pixel transformation</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="hearing frequency test tone generator audio hz acoustics physics presbycusis sound ear">
+                <a href="{{ url_for('tool_hearing_test') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-assistive-listening-systems" style="color: #198754;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Hearing Frequency</h6>
+                            <small class="text-muted d-block lh-sm">Live audiometry tone generator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="vision acuity test snellen chart eye exam optometry health sight">
+                <a href="{{ url_for('tool_vision_acuity') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-glasses" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Vision Acuity Test</h6>
+                            <small class="text-muted d-block lh-sm">Screen-calibrated Snellen chart</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="pomodoro timer focus study break 25 5 time management health">
+                <a href="{{ url_for('tool_pomodoro_timer') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-stopwatch" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Pomodoro Timer</h6>
+                            <small class="text-muted d-block lh-sm">Cognitive pacing & focus tracker</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="tool-section" data-category="text">
+        <div class="category-title mt-5"><i class="fas fa-file-word me-2"></i>Text & Productivity</div>
+        <div class="row g-4">
+            
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="word counter character count sentences paragraphs reading time text analyzer">
+                <a href="{{ url_for('tool_word_counter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-file-alt" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Word Counter</h6>
+                            <small class="text-muted d-block lh-sm">Live linguistic text analyzer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="case converter uppercase lowercase title case camelcase snakecase string text">
+                <a href="{{ url_for('tool_case_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-font" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Case Converter</h6>
+                            <small class="text-muted d-block lh-sm">Multi-algorithm string mutator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="remove duplicates list cleaner sort purge deduplicate lines text">
+                <a href="{{ url_for('tool_remove_duplicates') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-list-ul" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Remove Duplicates</h6>
+                            <small class="text-muted d-block lh-sm">Gideon Neural NLP list cleaner</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="sort list engine alphabetical numerical length natural domain shuffle text">
+                <a href="{{ url_for('tool_sort_list') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-sort-alpha-down" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Sort List Engine</h6>
+                            <small class="text-muted d-block lh-sm">Advanced heuristic array mutator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="text reverser flip backward words string characters mirror">
+                <a href="{{ url_for('tool_text_reverser') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-backward" style="color: #0dcaf0;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Text Reverser</h6>
+                            <small class="text-muted d-block lh-sm">Multi-mode string mirroring</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="find and replace batch regex regular expression text editor swap">
+                <a href="{{ url_for('tool_find_replace') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-search-plus" style="color: #198754;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Find & Replace</h6>
+                            <small class="text-muted d-block lh-sm">Regex-powered batch replacement</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="readability score flesch kincaid grade level school syllables grammar text analyzer">
+                <a href="{{ url_for('tool_readability_score') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-book-reader" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Readability Score</h6>
+                            <small class="text-muted d-block lh-sm">Flesch-Kincaid grade algorithm</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="plagiarism checker simulate text match copy paste detect overlap shingle n-gram">
+                <a href="{{ url_for('tool_plagiarism_checker') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-user-secret" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Plagiarism Checker</h6>
+                            <small class="text-muted d-block lh-sm">N-Gram Jaccard overlap scanner</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="citation generator apa mla chicago bibliography references format academic paper">
+                <a href="{{ url_for('tool_citation_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-quote-right" style="color: #198754;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Citation Generator</h6>
+                            <small class="text-muted d-block lh-sm">APA, MLA & Chicago formatter</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="title case converter headlines capitalization ap style chicago manual apa text formatting">
+                <a href="{{ url_for('tool_title_case') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-heading" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Title Case Converter</h6>
+                            <small class="text-muted d-block lh-sm">Editorial headline formatter</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="ai detector chatgpt artificial intelligence check human perplexity burstiness pdf text">
+                <a href="{{ url_for('tool_ai_detector') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(0,243,255,0.1);"><i class="fas fa-robot" style="color: #00f3ff;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">AI Detector</h6>
+                            <small class="text-muted d-block lh-sm">Neural perplexity & burstiness scanner</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="upside down text generator reverse mirror flip letters social media tweet">
+                <a href="{{ url_for('tool_upside_down') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-undo" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Upside Down Text</h6>
+                            <small class="text-muted d-block lh-sm">uʍop ǝpısdn generator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="morse code translator text dots dashes audio generator radio sos">
+                <a href="{{ url_for('tool_morse_code') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-broadcast-tower" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Morse Code Translator</h6>
+                            <small class="text-muted d-block lh-sm">Auto-detect & audio playback</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="nato phonetic translator alpha bravo charlie military aviation voice radio text">
+                <a href="{{ url_for('tool_nato_phonetic') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-fighter-jet" style="color: #4b5320;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">NATO Phonetic Trans.</h6>
+                            <small class="text-muted d-block lh-sm">Aviation & military TTS engine</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="text to speech tts voice read out loud synthesizer reader">
+                <a href="{{ url_for('tool_text_to_speech') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-volume-up" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Text to Speech</h6>
+                            <small class="text-muted d-block lh-sm">Browser-native vocal synthesizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="speech to text dictation microphone audio transcribe voice">
+                <a href="{{ url_for('tool_speech_to_text') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-microphone-alt" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Speech to Text</h6>
+                            <small class="text-muted d-block lh-sm">Continuous audio dictation matrix</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="speed reading words per minute rsvp flash text fast reader">
+                <a href="{{ url_for('tool_speed_reading') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-bolt" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Speed Reading</h6>
+                            <small class="text-muted d-block lh-sm">Rapid Serial Visual Presentation</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="markdown editor live preview html md text syntax code">
+                <a href="{{ url_for('tool_markdown_editor') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fab fa-markdown" style="color: #000;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Markdown Live Editor</h6>
+                            <small class="text-muted d-block lh-sm">Real-time compiler & preview</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="rich text editor word document format bold italic pdf writer">
+                <a href="{{ url_for('tool_rich_text_editor') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-file-word" style="color: #0d6efd;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Rich Text Editor</h6>
+                            <small class="text-muted d-block lh-sm">MS Word document replacement</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="sticky notes board localstorage post it pin drag drop">
+                <a href="{{ url_for('tool_sticky_notes') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-sticky-note" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Sticky Notes</h6>
+                            <small class="text-muted d-block lh-sm">Kinetic LocalStorage note board</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="tool-section" data-category="media">
+        <div class="category-title mt-5"><i class="fas fa-photo-video me-2"></i>Media & Files</div>
+        <div class="row g-4">
+            
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="image compressor shrink file size jpg png webp resize">
+                <a href="{{ url_for('tool_image_compressor') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-compress-arrows-alt text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Image Compressor</h6>
+                            <small class="text-muted d-block lh-sm">Live client-side size reduction</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="image resizer scale width height dimensions shrink enlarge">
+                <a href="{{ url_for('tool_image_resizer') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-expand-arrows-alt text-success"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Image Resizer</h6>
+                            <small class="text-muted d-block lh-sm">Algorithmic dimensional scaling</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="exif data viewer metadata camera photo image read extract info hidden">
+                <a href="{{ url_for('tool_exif_data_viewer') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-camera-retro" style="color: #20c997;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Exif Data Viewer</h6>
+                            <small class="text-muted d-block lh-sm">Extract photo metadata</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="svg editor vector drawing draw graphic paint illustration path">
+                <a href="{{ url_for('tool_svg_editor') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-bezier-curve" style="color: #e83e8c;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">SVG Editor</h6>
+                            <small class="text-muted d-block lh-sm">Simple vector drawing</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="image filter css visual engine sepia grayscale blur contrast brightness hue invert">
+                <a href="{{ url_for('tool_image_filters') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-sliders-h" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Filter Matrix</h6>
+                            <small class="text-muted d-block lh-sm">GPU-accelerated image filters</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="image cropper resize cut avatar profile picture tool">
+                <a href="{{ url_for('tool_image_cropper') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-crop-alt" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Image Cropper</h6>
+                            <small class="text-muted d-block lh-sm">Precision avatar cropping</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="screen recorder capture video record tab desktop window audio">
+                <a href="{{ url_for('tool_screen_recorder') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-video" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Screen Recorder</h6>
+                            <small class="text-muted d-block lh-sm">Capture display & audio</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="webcam tester camera check feed video photo snapshot device hardware">
+                <a href="{{ url_for('tool_webcam_tester') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-camera" style="color: #0dcaf0;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Webcam Tester</h6>
+                            <small class="text-muted d-block lh-sm">Hardware & resolution check</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="microphone tester audio visualizer sound check voice input hz decibel">
+                <a href="{{ url_for('tool_microphone_tester') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-microphone-alt" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Microphone Tester</h6>
+                            <small class="text-muted d-block lh-sm">Acoustic spectrum analyzer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="audio visualizer mp3 player frequency bars spectrum music sound">
+                <a href="{{ url_for('tool_audio_visualizer') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-chart-bar" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Audio Visualizer</h6>
+                            <small class="text-muted d-block lh-sm">MP3 spectrum analyzer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="metronome tempo bpm beat music rhythm time tap">
+                <a href="{{ url_for('tool_metronome') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-stopwatch-20" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Precision Metronome</h6>
+                            <small class="text-muted d-block lh-sm">Zero-drift audio scheduler</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="instrument tuner guitar piano hz detector pitch note frequency">
+                <a href="{{ url_for('tool_instrument_tuner') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-guitar" style="color: #20c997;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Instrument Tuner</h6>
+                            <small class="text-muted d-block lh-sm">Autocorrelation Hz detector</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="piano keyboard synthesizer play notes keys music audio web audio polyphonic">
+                <a href="{{ url_for('tool_piano_keyboard') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-music" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Synthesizer Piano</h6>
+                            <small class="text-muted d-block lh-sm">Polyphonic Web Audio synth</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="drum machine beat sequencer loop maker music studio audio rhythm">
+                <a href="{{ url_for('tool_drum_machine') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-drum" style="color: #fd7e14;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Beat Sequencer</h6>
+                            <small class="text-muted d-block lh-sm">16-step algorithmic drum engine</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="white noise generator pink brown ambient sound rain focus study sleep cafe">
+                <a href="{{ url_for('tool_white_noise') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-headphones" style="color: #0dcaf0;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Ambient Soundscape</h6>
+                            <small class="text-muted d-block lh-sm">Procedural noise synthesizer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="pdf merger combine join file document binder local js">
+                <a href="{{ url_for('tool_pdf_merger') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-file-pdf" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">PDF Merger</h6>
+                            <small class="text-muted d-block lh-sm">Securely combine PDFs locally</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="pdf splitter separate extract pages document local js">
+                <a href="{{ url_for('tool_pdf_splitter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-file-export" style="color: #dc3545;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">PDF Splitter</h6>
+                            <small class="text-muted d-block lh-sm">Extract specific pages</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="video to gif short clip converter mp4 animation">
+                <a href="{{ url_for('tool_video_to_gif') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box"><i class="fas fa-film" style="color: #6f42c1;"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Video to GIF</h6>
+                            <small class="text-muted d-block lh-sm">Short clip converter</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="meme generator add text to images funny canvas overlay">
+                <a href="{{ url_for('tool_meme_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(253, 126, 20, 0.1); color: #fd7e14;"><i class="fas fa-laugh-squint"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Meme Generator</h6>
+                            <small class="text-muted d-block lh-sm">Add text to images</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="screenshot tool capture visible div image export picture html2canvas">
+                <a href="{{ url_for('tool_screenshot') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(13, 110, 253, 0.1); color: #0d6efd;"><i class="fas fa-crop"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Screenshot Tool</h6>
+                            <small class="text-muted d-block lh-sm">Capture visible div to PNG</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="tool-section" data-category="finance">
+        <div class="category-title mt-5"><i class="fas fa-chart-line me-2"></i>Finance & Business</div>
+        <div class="row g-4">
+            
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="loan calculator monthly payments interest finance money debt bank">
+                <a href="{{ url_for('tool_loan_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(25, 135, 84, 0.1); color: #198754;"><i class="fas fa-money-check-alt"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Simple Loan Calc</h6>
+                            <small class="text-muted d-block lh-sm">Monthly payments & amortization</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="mortgage calculator house payments property finance real estate">
+                <a href="{{ url_for('tool_mortgage_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(13, 110, 253, 0.1); color: #0d6efd;"><i class="fas fa-home"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Mortgage Calc</h6>
+                            <small class="text-muted d-block lh-sm">House payments & PITI</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="compound interest investment growth finance APY savings return">
+                <a href="{{ url_for('tool_compound_interest') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(111, 66, 193, 0.1); color: #6f42c1;"><i class="fas fa-chart-pie"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Compound Interest</h6>
+                            <small class="text-muted d-block lh-sm">Investment growth projection</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="inflation calculator value money time finance economy">
+                <a href="{{ url_for('tool_inflation_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;"><i class="fas fa-arrow-trend-up"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Inflation Calc</h6>
+                            <small class="text-muted d-block lh-sm">Value of money over time</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="salary tax calculator net pay estimator income wages">
+                <a href="{{ url_for('tool_salary_tax_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(32, 201, 151, 0.1); color: #20c997;"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Salary Tax Calc</h6>
+                            <small class="text-muted d-block lh-sm">Net pay estimator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="roi return investment calculator business profit margin">
+                <a href="{{ url_for('tool_roi_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(25, 135, 84, 0.1); color: #198754;"><i class="fas fa-percent"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">ROI Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Return on Investment</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="cagr growth rate calculator business year over year">
+                <a href="{{ url_for('tool_cagr_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(13, 110, 253, 0.1); color: #0d6efd;"><i class="fas fa-chart-bar"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">CAGR Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Year-over-year growth rate</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="discount calculator sale price percent off saving">
+                <a href="{{ url_for('tool_discount_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(253, 126, 20, 0.1); color: #fd7e14;"><i class="fas fa-tags"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Discount Calc</h6>
+                            <small class="text-muted d-block lh-sm">Sale price</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="tip calculator restaurant gratuity bill split">
+                <a href="{{ url_for('tool_tip_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(111, 66, 193, 0.1); color: #6f42c1;"><i class="fas fa-utensils"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Tip Calculator</h6>
+                            <small class="text-muted d-block lh-sm">Restaurant gratuity</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="currency converter exchange rates money forex">
+                <a href="{{ url_for('tool_currency_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(32, 201, 151, 0.1); color: #20c997;"><i class="fas fa-exchange-alt"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Currency Converter</h6>
+                            <small class="text-muted d-block lh-sm">Live exchange rates</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="unit price compare cheaper pack grocery shopping value">
+                <a href="{{ url_for('tool_unit_price_compare') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(13, 110, 253, 0.1); color: #0d6efd;"><i class="fas fa-balance-scale"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Unit Price Compare</h6>
+                            <small class="text-muted d-block lh-sm">Omni-metric value analysis</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="fuel cost calculator trip expense gas mileage mpg kilometers liters">
+                <a href="{{ url_for('tool_fuel_cost_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;"><i class="fas fa-gas-pump"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Fuel Cost Calc</h6>
+                            <small class="text-muted d-block lh-sm">Trip expense & logistics</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="break even analysis business startup finance revenue">
+                <a href="{{ url_for('tool_break_even') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(253, 126, 20, 0.1); color: #fd7e14;"><i class="fas fa-project-diagram"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Break-Even Analysis</h6>
+                            <small class="text-muted d-block lh-sm">Business profitability modeling</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="margin calculator profit margins business retail markup">
+                <a href="{{ url_for('tool_margin_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(25, 135, 84, 0.1); color: #198754;"><i class="fas fa-coins"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Margin Calc</h6>
+                            <small class="text-muted d-block lh-sm">Margin vs. Markup modeling</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="time sheet calculator hours rate freelance wage pay">
+                <a href="{{ url_for('tool_time_sheet_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(13, 110, 253, 0.1); color: #0d6efd;"><i class="fas fa-user-clock"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Time Sheet Calc</h6>
+                            <small class="text-muted d-block lh-sm">Hours worked x Rate</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="invoice generator create pdf billing business sales">
+                <a href="{{ url_for('tool_invoice_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(111, 66, 193, 0.1); color: #6f42c1;"><i class="fas fa-file-invoice"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Invoice Generator</h6>
+                            <small class="text-muted d-block lh-sm">Create PDF invoice</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="receipt maker pos bill payment paid invoice">
+                <a href="{{ url_for('tool_receipt_maker') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(32, 201, 151, 0.1); color: #20c997;"><i class="fas fa-receipt"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Receipt Maker</h6>
+                            <small class="text-muted d-block lh-sm">Dual-Mode POS & Corporate</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="budget planner income expense zero based finance 50 30 20">
+                <a href="{{ url_for('tool_budget_planner') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(25, 135, 84, 0.1); color: #198754;"><i class="fas fa-wallet"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Budget Architect</h6>
+                            <small class="text-muted d-block lh-sm">Zero-based modeling & export</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="savings goal tracker compound interest time to reach amount finance">
+                <a href="{{ url_for('tool_savings_goal') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(16, 185, 129, 0.1); color: #10b981;"><i class="fas fa-bullseye"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Savings Goal Tracker</h6>
+                            <small class="text-muted d-block lh-sm">Temporal wealth projection</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="credit card payoff calculator debt elimination interest finance">
+                <a href="{{ url_for('tool_credit_card_payoff') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;"><i class="fas fa-credit-card"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Debt Matrix</h6>
+                            <small class="text-muted d-block lh-sm">Credit card & loan payoff</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="tool-section" data-category="time">
+        <div class="category-title mt-5"><i class="fas fa-clock me-2"></i>Time & Date</div>
+        <div class="row g-4">
+            
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="world clock timezones international market open">
+                <a href="{{ url_for('tool_world_clock') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;"><i class="fas fa-globe"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Global Market Clock</h6>
+                            <small class="text-muted d-block lh-sm">Timezones & market tracking</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="stopwatch lap timer time chronometer chronos">
+                <a href="{{ url_for('tool_stopwatch') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;"><i class="fas fa-stopwatch"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Stopwatch</h6>
+                            <small class="text-muted d-block lh-sm">High-precision lap timer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="countdown timer alarm defcon pomodoro">
+                <a href="{{ url_for('tool_countdown_timer') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;"><i class="fas fa-hourglass-half"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Defcon Timer</h6>
+                            <small class="text-muted d-block lh-sm">Tactical countdown & alarm</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="date difference days between dates business days calendar time">
+                <a href="{{ url_for('tool_date_difference') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;"><i class="fas fa-calendar-alt"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Date Difference</h6>
+                            <small class="text-muted d-block lh-sm">Temporal displacement logic</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="age calculator exact age in days birthday biometric time alive">
+                <a href="{{ url_for('tool_age_calculator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(236, 72, 153, 0.1); color: #ec4899;"><i class="fas fa-fingerprint"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Age Matrix</h6>
+                            <small class="text-muted d-block lh-sm">Biometric & exact day tracking</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="leap year checker calendar anomaly days february">
+                <a href="{{ url_for('tool_leap_year') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;"><i class="fas fa-globe-americas"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Orbital Alignment</h6>
+                            <small class="text-muted d-block lh-sm">Leap year & century tracking</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="week number iso current week year progress calendar day of year">
+                <a href="{{ url_for('tool_week_number') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(16, 185, 129, 0.1); color: #10b981;"><i class="fas fa-th-large"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">ISO Sync Engine</h6>
+                            <small class="text-muted d-block lh-sm">V400 Global Week Matrix</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="time zone converter meeting planner global hours">
+                <a href="{{ url_for('tool_timezone_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: #e0e5ec; color: #4a5568; box-shadow: 4px 4px 8px #b8bcc2, -4px -4px 8px #ffffff;"><i class="fas fa-handshake"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Meeting Planner</h6>
+                            <small class="text-muted d-block lh-sm">Tactile timezone alignment</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="julian date astronomy epoch converter space stellar">
+                <a href="{{ url_for('tool_julian_date') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(79, 172, 254, 0.1); color: #4facfe;"><i class="fas fa-user-astronaut"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Stellar Epoch</h6>
+                            <small class="text-muted d-block lh-sm">Astronomical Julian tracking</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="unix timestamp epoch converter time seconds 1970">
+                <a href="{{ url_for('tool_unix_converter') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(16, 185, 129, 0.1); color: #10b981;"><i class="fas fa-terminal"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Unix Epoch</h6>
+                            <small class="text-muted d-block lh-sm">Unix timestamp logic matrix</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="day of week born birthday solari retro mechanical">
+                <a href="{{ url_for('tool_day_of_week') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(217, 119, 6, 0.1); color: #d97706;"><i class="fas fa-calendar-day"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Birth Day Matrix</h6>
+                            <small class="text-muted d-block lh-sm">Mechanical weekday engine</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="work day calculator business days exclude weekends corporate">
+                <a href="{{ url_for('tool_work_day') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(212, 175, 55, 0.1); color: #d4af37;"><i class="fas fa-briefcase"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Corporate Ledger</h6>
+                            <small class="text-muted d-block lh-sm">Business day calculator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="moon phase lunar cycle space astronomy illumination">
+                <a href="{{ url_for('tool_moon_phase') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;"><i class="fas fa-moon"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Lunar Astrolabe</h6>
+                            <small class="text-muted d-block lh-sm">Synodic cycle tracker</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="sun position sunrise sunset solar noon horizon trajectory">
+                <a href="{{ url_for('tool_sun_position') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;"><i class="fas fa-sun"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Solar Trajectory</h6>
+                            <small class="text-muted d-block lh-sm">Atmospheric optics & horizon</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="calendar generator printable month view planner schedule">
+                <a href="{{ url_for('tool_calendar_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(15, 23, 42, 0.1); color: #0f172a;"><i class="fas fa-calendar-check"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Printable Planner</h6>
+                            <small class="text-muted d-block lh-sm">Bespoke editorial calendar</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="tool-section" data-category="games">
+        <div class="category-title mt-5"><i class="fas fa-brain me-2"></i>Games & Fun (Brain Training)</div>
+        <div class="row g-4">
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="typing speed test wpm words per minute keyboard brain training">
+                <a href="{{ url_for('tool_typing_test') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100">
+                        <div class="icon-box" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;"><i class="fas fa-keyboard"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Typing Matrix</h6>
+                            <small class="text-muted d-block lh-sm">Biometric WPM analysis</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="memory test simon says cognitive sequence brain training game">
+                <a href="{{ url_for('tool_memory_test') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-memory"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Cognitive Matrix</h6>
+                            <small class="text-muted d-block lh-sm">Sequential memory testing</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="reaction time test measure reflexes speed ms milliseconds brain health">
+                <a href="{{ url_for('tool_reaction_time') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(253, 126, 20, 0.1); color: #fd7e14; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Reflex Matrix</h6>
+                            <small class="text-muted d-block lh-sm">Millisecond response test</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="aim trainer precision target practice mouse accuracy game brain">
+                <a href="{{ url_for('tool_aim_trainer') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(16, 185, 129, 0.1); color: #10b981; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-crosshairs"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Aim Trainer</h6>
+                            <small class="text-muted d-block lh-sm">High-speed precision tracking</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="sudoku solver puzzle logic game brain math">
+                <a href="{{ url_for('tool_sudoku_solver') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-th"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Sudoku Solver</h6>
+                            <small class="text-muted d-block lh-sm">Backtracking logic engine</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="sudoku generator play puzzle game math logic">
+                <a href="{{ url_for('tool_sudoku_generator') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(16, 185, 129, 0.1); color: #10b981; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-border-all"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Playable Cipher</h6>
+                            <small class="text-muted d-block lh-sm">Dynamic Sudoku Generator</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="2048 clone game tile combine math logic puzzle sliding block">
+                <a href="{{ url_for('tool_2048_clone') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-th-large"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Grid Combinator</h6>
+                            <small class="text-muted d-block lh-sm">2048 sliding tile puzzle</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="tic tac toe game vs ai minimax logic brain strategy">
+                <a href="{{ url_for('tool_tic_tac_toe') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-times"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Tactical Grid</h6>
+                            <small class="text-muted d-block lh-sm">Tic-Tac-Toe vs Minimax AI</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="snake game retro classic snake visual kinetic ouroboros">
+                <a href="{{ url_for('tool_snake_game') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(32, 201, 151, 0.1); color: #20c997; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-staff-snake"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Ouroboros Engine</h6>
+                            <small class="text-muted d-block lh-sm">Kinetic survival matrix</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="minesweeper logic bomb game puzzle sweep flag">
+                <a href="{{ url_for('tool_minesweeper') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-bomb"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Ordinance Sweeper</h6>
+                            <small class="text-muted d-block lh-sm">Tactical logic defusal</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="connect 4 four in a row logic strategy game board ai minmax">
+                <a href="{{ url_for('tool_connect_4') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-grip-horizontal"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Gravity Matrix</h6>
+                            <small class="text-muted d-block lh-sm">Tactical vertical alignment</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="rock paper scissors game ai predict pattern brain rps">
+                <a href="{{ url_for('tool_rps_ai') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-hand-scissors"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Cognitive Warfare</h6>
+                            <small class="text-muted d-block lh-sm">Predictive pattern AI (RPS)</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="dice roller d20 d6 rpg game random number generator probability">
+                <a href="{{ url_for('tool_dice_roller') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-dice-d20"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Polyhedral Matrix</h6>
+                            <small class="text-muted d-block lh-sm">Advanced tabletop mechanics</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+            <div class="col-md-6 col-lg-3 tool-item" data-keywords="spin wheel random decision maker generator choice roulette">
+                <a href="{{ url_for('tool_orbital_centrifuge') }}" class="text-decoration-none text-dark">
+                    <div class="tool-card p-3 d-flex align-items-center h-100" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div class="icon-box me-3 flex-shrink-0" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem;">
+                            <i class="fas fa-dharmachakra"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Orbital Centrifuge</h6>
+                            <small class="text-muted d-block lh-sm">Kinetic decision matrix</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="noResults" class="text-center mt-5 d-none">
+        <i class="fas fa-search fa-3x text-muted mb-3 opacity-25"></i>
+        <h5 class="text-muted">No tools found matching your search.</h5>
+    </div>
+
+</div>
+
+<footer class="text-center text-muted small">
+    <div class="container">
+        &copy; 2026 Lagos State University • Computer Science Dept.
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let searchInput = document.getElementById('toolSearch');
+        let toolItems = document.querySelectorAll('.tool-item');
+        let sections = document.querySelectorAll('.tool-section');
+        let noResults = document.getElementById('noResults');
+
+        searchInput.addEventListener('keyup', function(e) {
+            let term = e.target.value.toLowerCase();
+            let hasVisibleTools = false;
+
+            for (let i = 0; i < toolItems.length; i = i + 1) {
+                let item = toolItems[i];
+                let text = item.innerText.toLowerCase();
+                let keywords = item.getAttribute('data-keywords');
+                
+                if (keywords === null) {
+                    keywords = '';
+                }
+                
+                if (text.includes(term) === true || keywords.includes(term) === true) {
+                    item.classList.remove('d-none');
+                    hasVisibleTools = true;
+                } else {
+                    item.classList.add('d-none');
+                }
+            }
+
+            for (let j = 0; j < sections.length; j = j + 1) {
+                let section = sections[j];
+                let visibleToolsInSection = section.querySelectorAll('.tool-item:not(.d-none)');
+                
+                if (visibleToolsInSection.length === 0) {
+                    section.classList.add('d-none');
+                } else {
+                    section.classList.remove('d-none');
+                }
+            }
+
+            if (hasVisibleTools === false) {
+                noResults.classList.remove('d-none');
+            } else {
+                noResults.classList.add('d-none');
+            }
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

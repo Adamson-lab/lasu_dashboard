@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V700 Swiss Brutalism | Solar Trajectory</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V700 SWISS BRUTALISM THEME ENGINE
+           ========================================== */
+        
+        [data-theme="light"] {
+            --bg-master: #ffffff;
+            --fg-master: #000000;
+            --accent-primary: #ff3333; /* Pure Brutalist Red */
+            --border-width: 6px;
+            --shadow-color: #000000;
+            --text-muted: #666666;
+        }
+
+        [data-theme="dark"] {
+            --bg-master: #000000;
+            --fg-master: #ffffff;
+            --accent-primary: #ff3333;
+            --border-width: 6px;
+            --shadow-color: #ffffff;
+            --text-muted: #999999;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-master);
+            color: var(--fg-master);
+            margin: 0;
+            padding: 60px 20px;
+            text-transform: uppercase;
+            transition: background-color 0s, color 0s;
+        }
+
+        .tool-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* STRUCTURAL HEADER */
+        .brutal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: var(--border-width) solid var(--fg-master);
+            padding-bottom: 20px;
+            margin-bottom: 60px;
+        }
+
+        .brutal-title {
+            font-size: 4rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin: 0;
+            line-height: 0.9;
+        }
+
+        .brutal-nav-btn {
+            background-color: var(--bg-master);
+            color: var(--fg-master);
+            border: 4px solid var(--fg-master);
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            text-decoration: none;
+            box-shadow: 6px 6px 0px var(--shadow-color);
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .brutal-nav-btn:active {
+            transform: translate(6px, 6px);
+            box-shadow: 0px 0px 0px var(--shadow-color);
+        }
+
+        /* INPUT DECK */
+        .brutal-card {
+            border: var(--border-width) solid var(--fg-master);
+            background-color: var(--bg-master);
+            padding: 40px;
+            box-shadow: 15px 15px 0px var(--shadow-color);
+            margin-bottom: 60px;
+        }
+
+        .card-label {
+            background-color: var(--fg-master);
+            color: var(--bg-master);
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            margin-bottom: 40px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .brutal-input-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-title {
+            font-size: 1rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: var(--text-muted);
+        }
+
+        .brutal-input {
+            width: 100%;
+            border: 4px solid var(--fg-master);
+            background-color: var(--bg-master);
+            color: var(--fg-master);
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            outline: none;
+        }
+
+        .brutal-input:focus {
+            background-color: #ffff00;
+            color: #000000;
+        }
+        [data-theme="dark"] .brutal-input:focus {
+            background-color: var(--accent-primary);
+            color: #ffffff;
+        }
+
+        ::-webkit-calendar-picker-indicator { 
+            cursor: pointer; 
+            transform: scale(1.5);
+        }
+        [data-theme="dark"] ::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+        .btn-execute {
+            background-color: var(--accent-primary);
+            color: #ffffff;
+            border: 4px solid var(--fg-master);
+            padding: 20px;
+            font-size: 2rem;
+            font-weight: 900;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 10px 10px 0px var(--shadow-color);
+            transition: transform 0.1s, box-shadow 0.1s;
+            width: 100%;
+            text-transform: uppercase;
+        }
+
+        .btn-execute:active {
+            transform: translate(10px, 10px);
+            box-shadow: 0px 0px 0px var(--shadow-color);
+        }
+
+        .preset-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn-preset {
+            background-color: var(--bg-master);
+            color: var(--fg-master);
+            border: 2px dashed var(--fg-master);
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .btn-preset:hover {
+            background-color: var(--fg-master);
+            color: var(--bg-master);
+        }
+
+        /* DATA OUTPUT MATRIX */
+        .data-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .data-block {
+            border: 4px solid var(--fg-master);
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .data-block.primary {
+            background-color: var(--fg-master);
+            color: var(--bg-master);
+        }
+
+        .data-label {
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: var(--accent-primary);
+        }
+
+        .data-value {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 5rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -3px;
+        }
+
+        .data-block.primary .data-label {
+            color: var(--accent-primary);
+        }
+
+        /* HORIZON TRACKER */
+        .horizon-tracker {
+            border: 4px solid var(--fg-master);
+            padding: 40px;
+            margin-top: 40px;
+        }
+
+        .track-line {
+            width: 100%;
+            height: 10px;
+            background-color: var(--fg-master);
+            position: relative;
+            margin: 40px 0;
+        }
+
+        .sun-block {
+            position: absolute;
+            top: -20px;
+            left: 0%;
+            width: 50px;
+            height: 50px;
+            background-color: var(--accent-primary);
+            border: 4px solid var(--fg-master);
+            transition: left 1s ease-in-out;
+            margin-left: -25px; /* Center alignment */
+        }
+
+        .track-labels {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 900;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive Fixes */
+        @media (max-width: 900px) {
+            .input-grid { grid-template-columns: 1fr; }
+            .data-matrix { grid-template-columns: 1fr; }
+            .data-value { font-size: 3.5rem; }
+            .brutal-title { font-size: 2.5rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        
+        <div class="brutal-header">
+            <div>
+                <a href="{{ url_for('student_tools_dashboard') }}" class="brutal-nav-btn mb-4">
+                    &#x25C0; DASHBOARD
+                </a>
+                <h1 class="brutal-title">SOLAR TRAJECTORY</h1>
+                <h1 class="brutal-title" style="color: var(--accent-primary);">V700 SYSTEM</h1>
+            </div>
+            <div>
+                <button class="brutal-nav-btn" onclick="toggleBrutalTheme()">INVERT</button>
+            </div>
+        </div>
+
+        <div class="brutal-card">
+            <div class="card-label">COORDINATE INJECTION</div>
+            
+            <div class="input-grid">
+                <div class="brutal-input-wrapper">
+                    <div class="input-title">LATITUDE (DECIMAL)</div>
+                    <input type="number" id="inputLat" class="brutal-input" step="0.000001">
+                </div>
+                <div class="brutal-input-wrapper">
+                    <div class="input-title">LONGITUDE (DECIMAL)</div>
+                    <input type="number" id="inputLng" class="brutal-input" step="0.000001">
+                </div>
+                <div class="brutal-input-wrapper">
+                    <div class="input-title">TERRESTRIAL DATE</div>
+                    <input type="date" id="inputDate" class="brutal-input">
+                </div>
+            </div>
+
+            <button class="btn-execute" onclick="executeSolarCalculation()">CALCULATE TRAJECTORY</button>
+
+            <div class="preset-row">
+                <div class="input-title" style="margin-right: 10px; margin-top: 10px;">QUICK LOCATIONS:</div>
+                <button class="btn-preset" onclick="injectCoordinates(6.4654, 3.2011)">LAGOS (LASU)</button>
+                <button class="btn-preset" onclick="injectCoordinates(51.5074, -0.1278)">LONDON</button>
+                <button class="btn-preset" onclick="injectCoordinates(35.6762, 139.6503)">TOKYO</button>
+                <button class="btn-preset" onclick="injectCoordinates(40.7128, -74.0060)">NEW YORK</button>
+            </div>
+        </div>
+
+        <div class="data-matrix">
+            <div class="data-block primary">
+                <div class="data-label">DAWN (SUNRISE)</div>
+                <div class="data-value" id="valSunrise">--:--</div>
+            </div>
+            <div class="data-block">
+                <div class="data-label">DUSK (SUNSET)</div>
+                <div class="data-value" id="valSunset">--:--</div>
+            </div>
+        </div>
+
+        <div class="horizon-tracker">
+            <div class="card-label" style="margin-bottom: 20px;">PHYSICAL HORIZON MAP</div>
+            
+            <div class="track-line">
+                <div class="sun-block" id="sunOrbObject"></div>
+            </div>
+
+            <div class="track-labels">
+                <span>00:00 (MIDNIGHT)</span>
+                <span>12:00 (NOON)</span>
+                <span>23:59 (MIDNIGHT)</span>
+            </div>
+            
+            <div id="statusTextOutput" style="margin-top: 30px; font-weight: 900; font-size: 1.5rem; color: var(--accent-primary);">
+                AWAITING CALCULATIONS.
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V700 THEME ENGINE
+        // ==========================================
+        function toggleBrutalTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v700_sun_brutal', nextTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v700_sun_brutal');
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+
+            // Set Date Input to Today
+            let currentDateObject = new Date();
+            let yearString = String(currentDateObject.getFullYear());
+            let monthString = String(currentDateObject.getMonth() + 1);
+            let dayString = String(currentDateObject.getDate());
+
+            if (monthString.length === 1) { monthString = "0" + monthString; }
+            if (dayString.length === 1) { dayString = "0" + dayString; }
+
+            document.getElementById('inputDate').value = yearString + "-" + monthString + "-" + dayString;
+
+            // Default Coordinates to Lagos, Nigeria
+            injectCoordinates(6.4654, 3.2011);
+        });
+
+        function injectCoordinates(latitudeValue, longitudeValue) {
+            document.getElementById('inputLat').value = latitudeValue;
+            document.getElementById('inputLng').value = longitudeValue;
+            executeSolarCalculation(); // Automatically execute
+        }
+
+        // ==========================================
+        // V700 EXPLICIT MATHEMATICAL ENGINE
+        // (Bulletproof NOAA Approximation)
+        // ==========================================
+
+        function wrapNumber(value, maximum) {
+            let result = value % maximum;
+            if (result < 0) {
+                result = result + maximum;
+            }
+            return result;
+        }
+
+        function calculateDayOfYear(targetDateObject) {
+            let startOfYearObject = new Date(targetDateObject.getFullYear(), 0, 1);
+            let differenceInMilliseconds = targetDateObject.getTime() - startOfYearObject.getTime();
+            let millisecondsInOneDay = 1000 * 60 * 60 * 24;
+            let dayOfYear = Math.floor(differenceInMilliseconds / millisecondsInOneDay) + 1;
+            return dayOfYear;
+        }
+
+        // Function returns decimal hours (e.g. 6.5 = 6:30 AM)
+        function calculateSolarEvent(latitude, longitude, dateObject, isRising) {
+            let dayOfYearNumber = calculateDayOfYear(dateObject);
+            
+            // Degrees to Radians conversions
+            let piConstant = Math.PI;
+            let degreesToRadians = piConstant / 180.0;
+            let radiansToDegrees = 180.0 / piConstant;
+            
+            // Zenith angle for official sunrise/sunset
+            let zenithAngleDegrees = 90.8333;
+            let zenithAngleRadians = zenithAngleDegrees * degreesToRadians;
+
+            // Step 1: Longitude to hour value
+            let longitudeHourValue = longitude / 15.0;
+
+            // Step 2: Approximate time
+            let approximateTime;
+            if (isRising === true) {
+                approximateTime = dayOfYearNumber + ((6.0 - longitudeHourValue) / 24.0);
+            } else {
+                approximateTime = dayOfYearNumber + ((18.0 - longitudeHourValue) / 24.0);
+            }
+
+            // Step 3: Sun's mean anomaly
+            let sunMeanAnomaly = (0.9856 * approximateTime) - 3.289;
+            let meanAnomalyRadians = sunMeanAnomaly * degreesToRadians;
+
+            // Step 4: Sun's true longitude
+            let trueLongitude = sunMeanAnomaly + (1.916 * Math.sin(meanAnomalyRadians)) + (0.020 * Math.sin(2.0 * meanAnomalyRadians)) + 282.634;
+            trueLongitude = wrapNumber(trueLongitude, 360.0);
+            let trueLongitudeRadians = trueLongitude * degreesToRadians;
+
+            // Step 5: Right Ascension
+            let rightAscension = Math.atan(0.91764 * Math.tan(trueLongitudeRadians)) * radiansToDegrees;
+            rightAscension = wrapNumber(rightAscension, 360.0);
+
+            // Step 6: Right ascension quadrant adjustment
+            let trueLongitudeQuadrant = Math.floor(trueLongitude / 90.0) * 90.0;
+            let rightAscensionQuadrant = Math.floor(rightAscension / 90.0) * 90.0;
+            rightAscension = rightAscension + (trueLongitudeQuadrant - rightAscensionQuadrant);
+            rightAscension = rightAscension / 15.0; // Convert to hours
+
+            // Step 7: Sun's declination
+            let sinDeclination = 0.39782 * Math.sin(trueLongitudeRadians);
+            let cosDeclination = Math.cos(Math.asin(sinDeclination));
+
+            // Step 8: Sun's local hour angle
+            let latitudeRadians = latitude * degreesToRadians;
+            let cosHourAngle = (Math.cos(zenithAngleRadians) - (sinDeclination * Math.sin(latitudeRadians))) / (cosDeclination * Math.cos(latitudeRadians));
+
+            if (cosHourAngle > 1.0) {
+                return -1; // Polar region: Sun never rises
+            }
+            if (cosHourAngle < -1.0) {
+                return -2; // Polar region: Sun never sets
+            }
+
+            // Step 9: Finish Hour Angle calculation
+            let hourAngle;
+            if (isRising === true) {
+                hourAngle = 360.0 - (Math.acos(cosHourAngle) * radiansToDegrees);
+            } else {
+                hourAngle = Math.acos(cosHourAngle) * radiansToDegrees;
+            }
+            hourAngle = hourAngle / 15.0;
+
+            // Step 10: Local mean time
+            let localMeanTime = hourAngle + rightAscension - (0.06571 * approximateTime) - 6.622;
+
+            // Step 11: Universal Time (UTC)
+            let universalTime = localMeanTime - longitudeHourValue;
+            universalTime = wrapNumber(universalTime, 24.0);
+
+            // Step 12: Local TimeZone Conversion
+            let browserTimezoneOffsetHours = -(dateObject.getTimezoneOffset() / 60.0);
+            let finalLocalTime = universalTime + browserTimezoneOffsetHours;
+            finalLocalTime = wrapNumber(finalLocalTime, 24.0);
+
+            return finalLocalTime;
+        }
+
+        // ==========================================
+        // V700 UI CONTROLLERS
+        // ==========================================
+
+        function convertDecimalToTimeString(decimalHourValue) {
+            if (decimalHourValue === -1) {
+                return "NO RISE";
+            }
+            if (decimalHourValue === -2) {
+                return "NO SET";
+            }
+
+            let totalSeconds = Math.round(decimalHourValue * 3600);
+            let hoursInteger = Math.floor(totalSeconds / 3600);
+            let remainingSeconds = totalSeconds - (hoursInteger * 3600);
+            let minutesInteger = Math.floor(remainingSeconds / 60);
+
+            let stringHours = String(hoursInteger);
+            if (stringHours.length === 1) {
+                stringHours = "0" + stringHours;
+            }
+
+            let stringMinutes = String(minutesInteger);
+            if (stringMinutes.length === 1) {
+                stringMinutes = "0" + stringMinutes;
+            }
+
+            return stringHours + ":" + stringMinutes;
+        }
+
+        function executeSolarCalculation() {
+            let latitudeString = document.getElementById('inputLat').value;
+            let longitudeString = document.getElementById('inputLng').value;
+            let dateString = document.getElementById('inputDate').value;
+
+            // Explicit validation to prevent crashes
+            if (latitudeString === "" || longitudeString === "" || dateString === "") {
+                alert("SYSTEM HALT: ALL DATA FIELDS ARE REQUIRED.");
+                return;
+            }
+
+            let latitudeFloat = parseFloat(latitudeString);
+            let longitudeFloat = parseFloat(longitudeString);
+
+            if (latitudeFloat < -90.0 || latitudeFloat > 90.0) {
+                alert("SYSTEM HALT: LATITUDE MUST BE BETWEEN -90 AND 90.");
+                return;
+            }
+
+            if (longitudeFloat < -180.0 || longitudeFloat > 180.0) {
+                alert("SYSTEM HALT: LONGITUDE MUST BE BETWEEN -180 AND 180.");
+                return;
+            }
+
+            // Explicit Date parsing
+            let datePartsArray = dateString.split("-");
+            let yearInteger = parseInt(datePartsArray[0], 10);
+            let monthInteger = parseInt(datePartsArray[1], 10) - 1;
+            let dayInteger = parseInt(datePartsArray[2], 10);
+
+            let targetDateObject = new Date(yearInteger, monthInteger, dayInteger, 12, 0, 0);
+
+            // Execute Mathematics
+            let sunriseDecimalValue = calculateSolarEvent(latitudeFloat, longitudeFloat, targetDateObject, true);
+            let sunsetDecimalValue = calculateSolarEvent(latitudeFloat, longitudeFloat, targetDateObject, false);
+
+            // Output to UI
+            let sunriseDisplayElement = document.getElementById('valSunrise');
+            let sunsetDisplayElement = document.getElementById('valSunset');
+            let statusTextElement = document.getElementById('statusTextOutput');
+            let sunOrbElement = document.getElementById('sunOrbObject');
+
+            sunriseDisplayElement.innerText = convertDecimalToTimeString(sunriseDecimalValue);
+            sunsetDisplayElement.innerText = convertDecimalToTimeString(sunsetDecimalValue);
+
+            // Handle Polar Extremes
+            if (sunriseDecimalValue === -1 || sunsetDecimalValue === -1) {
+                statusTextElement.innerText = "POLAR REGION DETECTED: SUN DOES NOT RISE.";
+                sunOrbElement.style.left = "0%";
+                return;
+            }
+            if (sunriseDecimalValue === -2 || sunsetDecimalValue === -2) {
+                statusTextElement.innerText = "POLAR REGION DETECTED: SUN DOES NOT SET.";
+                sunOrbElement.style.left = "50%";
+                return;
+            }
+
+            // Normal Execution: Calculate Sun's Position on the brutalist track
+            let currentDateObject = new Date();
+            let isToday = false;
+
+            if (currentDateObject.getFullYear() === yearInteger) {
+                if (currentDateObject.getMonth() === monthInteger) {
+                    if (currentDateObject.getDate() === dayInteger) {
+                        isToday = true;
+                    }
+                }
+            }
+
+            if (isToday === true) {
+                let currentHourDecimal = currentDateObject.getHours() + (currentDateObject.getMinutes() / 60.0);
+                
+                // Map position on track (0 to 24 hours maps to 0% to 100%)
+                let trackPercentage = (currentHourDecimal / 24.0) * 100.0;
+                sunOrbElement.style.left = String(trackPercentage) + "%";
+
+                if (currentHourDecimal < sunriseDecimalValue) {
+                    statusTextElement.innerText = "CURRENT STATUS: PRE-DAWN (NIGHT).";
+                } else if (currentHourDecimal > sunsetDecimalValue) {
+                    statusTextElement.innerText = "CURRENT STATUS: POST-DUSK (NIGHT).";
+                } else {
+                    statusTextElement.innerText = "CURRENT STATUS: DAYLIGHT ENGAGED.";
+                }
+            } else {
+                // Not today, park the sun at noon
+                sunOrbElement.style.left = "50%";
+                statusTextElement.innerText = "HISTORICAL/FUTURE MAPPING. ORB PARKED AT NOON.";
+            }
+        }
+    </script>
+</body>
+</html>

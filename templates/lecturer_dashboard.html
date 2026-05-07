@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecturer Portal | LASU</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .dash-card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+            transition: all 0.3s ease; 
+            border: 2px solid transparent; 
+            text-align: center; 
+            text-decoration: none; 
+            display: block; 
+            color: #333; 
+        }
+        .dash-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 25px rgba(0,102,179,0.2); 
+            border-color: #0066b3;
+            color: #0066b3; 
+        }
+        .dash-icon { font-size: 2.5rem; color: #0066b3; margin-bottom: 10px; }
+        .badge-notification { position: absolute; top: 10px; right: 10px; font-size: 0.8rem; }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">👨‍🏫 Lecturer Portal</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm fw-bold">Logout</a>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% set alert_class = 'alert-danger' if category == 'danger' or category == 'message' else 'alert-' + category %}
+                <div class="alert {{ alert_class }} text-center fw-bold shadow-sm">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h3 class="fw-bold">Welcome, {{ session['user_name'] }}</h3>
+                    <p class="text-muted">Manage your courses, academic operations, and student interactions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2">Academic Control Matrix</h5>
+    <div class="row g-3 mb-5">
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('lecturer_attendance_scanner') }}" class="dash-card position-relative h-100">
+                <i class="fas fa-camera dash-icon text-success"></i>
+                <h6 class="fw-bold mb-1">Optical Scanner</h6>
+                <p class="small text-muted mb-0">Take Class Attendance</p>
+            </a>
+        </div>
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('auto_quiz_generator') }}" class="dash-card position-relative h-100">
+                <i class="fas fa-brain dash-icon text-primary"></i>
+                <h6 class="fw-bold mb-1">AI Auto-Quiz</h6>
+                <p class="small text-muted mb-0">Generate CBT tests</p>
+            </a>
+        </div>
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('lecturer_lesson_planner') }}" class="dash-card position-relative h-100">
+                <i class="fas fa-chalkboard-teacher dash-icon text-info"></i>
+                <h6 class="fw-bold mb-1">Lesson Planner</h6>
+                <p class="small text-muted mb-0">AI Curriculum Builder</p>
+            </a>
+        </div>
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('lecturer_complaints') }}" class="dash-card position-relative h-100">
+                {% if complaints > 0 %}
+                <span class="badge bg-danger badge-notification">{{ complaints }}</span>
+                {% endif %}
+                <i class="fas fa-envelope-open-text dash-icon text-danger"></i>
+                <h6 class="fw-bold mb-1">Student Tickets</h6>
+                <p class="small text-muted mb-0">View active complaints</p>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 rounded-4">
+                <div class="card-header bg-white fw-bold border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-calendar-alt text-primary me-2"></i> Upcoming Student Meetings</span>
+                    <a href="{{ url_for('manage_office_hours') }}" class="btn btn-sm btn-outline-success">Manage Hours</a>
+                </div>
+                <div class="card-body px-4">
+                    {% if appointments %}
+                        <ul class="list-group list-group-flush">
+                            {% for appt in appointments %}
+                            <li class="list-group-item px-0 py-3">
+                                <strong class="text-dark">{{ appt.start_time.strftime('%d %b, %I:%M %p') }}</strong><br>
+                                <small class="text-muted">Topic: {{ appt.topic }}</small>
+                                <br>
+                                <a href="{{ appt.meeting_link }}" target="_blank" class="btn btn-sm btn-primary mt-2 shadow-sm">
+                                    <i class="fas fa-video me-1"></i> Join Meeting
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center mt-4">
+                            <i class="fas fa-calendar-times fa-3x text-muted opacity-25 mb-3"></i>
+                            <p class="text-muted">No upcoming appointments scheduled.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 rounded-4">
+                <div class="card-header bg-white fw-bold border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-book text-warning me-2"></i> My Courses</span>
+                    <a href="{{ url_for('manage_courses') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body px-4">
+                    {% if courses %}
+                        <ul class="list-group list-group-flush">
+                            {% for course in courses %}
+                            <li class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold d-block">{{ course.code }}</span>
+                                    <span class="text-muted small">{{ course.title }}</span>
+                                </div>
+                                <span class="badge bg-primary rounded-pill px-3 py-2 shadow-sm">{{ course.students|length }} Enrolled</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center mt-4">
+                            <i class="fas fa-folder-open fa-3x text-muted opacity-25 mb-3"></i>
+                            <p class="text-muted">No courses assigned yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

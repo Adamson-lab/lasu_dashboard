@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V7100 Cognitive Matrix | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V7100 COGNITIVE THEME ENGINE
+           ========================================== */
+        
+        [data-theme="dark"] {
+            --nk-bg: #0b0f19;
+            --nk-surface: #131a2a;
+            --nk-text: #e2e8f0;
+            --nk-text-muted: #475569;
+            --nk-accent: #ec4899; 
+            --nk-border: #1e293b;
+            
+            --pad-0: #ef4444; /* Top Left: Red */
+            --pad-1: #10b981; /* Top Right: Green */
+            --pad-2: #3b82f6; /* Bottom Left: Blue */
+            --pad-3: #f59e0b; /* Bottom Right: Yellow */
+        }
+
+        [data-theme="light"] {
+            --nk-bg: #f8fafc;
+            --nk-surface: #ffffff;
+            --nk-text: #0f172a;
+            --nk-text-muted: #94a3b8;
+            --nk-accent: #db2777; 
+            --nk-border: #e2e8f0;
+
+            --pad-0: #dc2626; 
+            --pad-1: #059669; 
+            --pad-2: #2563eb; 
+            --pad-3: #d97706; 
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--nk-bg);
+            color: var(--nk-text);
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none; /* Prevent accidental text selection while clicking fast */
+        }
+
+        .test-container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* HUD Header */
+        .nk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--nk-border);
+        }
+
+        .nk-title {
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+
+        .btn-nav {
+            background: transparent;
+            color: var(--nk-text);
+            border: 1px solid var(--nk-border);
+            padding: 10px 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-nav:hover { background: var(--nk-surface); border-color: var(--nk-accent); color: var(--nk-accent); }
+
+        /* Telemetry Dashboard */
+        .telemetry-dash {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .telemetry-node {
+            background: var(--nk-surface);
+            border: 1px solid var(--nk-border);
+            padding: 20px;
+            text-align: center;
+            border-radius: 4px;
+            flex-grow: 1;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .node-val {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--nk-accent);
+            line-height: 1;
+            margin-bottom: 5px;
+            transition: color 0.3s;
+        }
+
+        .node-lbl {
+            font-size: 0.85rem;
+            font-weight: 900;
+            color: var(--nk-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* The Testing Arena */
+        .arena-box {
+            background: var(--nk-surface);
+            border: 1px solid var(--nk-border);
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.1s;
+        }
+
+        .status-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--nk-text);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            height: 30px;
+            text-align: center;
+        }
+
+        /* The 2x2 Grid */
+        .simon-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            overflow: hidden;
+            padding: 10px;
+            background: var(--nk-bg);
+            border: 4px solid var(--nk-border);
+        }
+
+        .simon-pad {
+            cursor: pointer;
+            border: none;
+            opacity: 0.4;
+            transition: opacity 0.1s, transform 0.05s, box-shadow 0.1s;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Top Left */
+        .pad-0 { background-color: var(--pad-0); border-top-left-radius: 100%; }
+        /* Top Right */
+        .pad-1 { background-color: var(--pad-1); border-top-right-radius: 100%; }
+        /* Bottom Left */
+        .pad-2 { background-color: var(--pad-2); border-bottom-left-radius: 100%; }
+        /* Bottom Right */
+        .pad-3 { background-color: var(--pad-3); border-bottom-right-radius: 100%; }
+
+        /* Physical Engagement State */
+        .simon-pad.active {
+            opacity: 1;
+            box-shadow: inset 0 0 0px rgba(0,0,0,0), 0 0 30px currentColor;
+            transform: scale(0.98);
+        }
+
+        /* Error Shake Animation */
+        @keyframes errorShake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-15px); }
+            40% { transform: translateX(15px); }
+            60% { transform: translateX(-15px); }
+            80% { transform: translateX(15px); }
+            100% { transform: translateX(0); }
+        }
+        .arena-shake {
+            animation: errorShake 0.4s ease-in-out;
+            border-color: #ef4444;
+        }
+
+        /* Controls */
+        .btn-action {
+            background: var(--nk-accent);
+            color: #ffffff;
+            border: none;
+            padding: 15px 40px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .btn-action:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(236, 72, 153, 0.2);
+        }
+        .btn-action:disabled {
+            background: var(--nk-border);
+            color: var(--nk-text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        @media (max-width: 600px) {
+            .simon-grid { width: 280px; height: 280px; }
+            .node-val { font-size: 2.5rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="test-container">
+        
+        <div class="nk-header">
+            <div>
+                <h1 class="nk-title">Cognitive Matrix</h1>
+                <div style="font-size: 0.8rem; font-weight: bold; color: var(--nk-text-muted); letter-spacing: 3px; margin-top: 5px;">V7100 Sequential Memory Testing</div>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn-nav" onclick="toggleNeuroTheme()"><i class="fas fa-adjust"></i></button>
+                <a href="{{ url_for('student_tools_dashboard') }}" class="btn-nav"><i class="fas fa-arrow-left me-2"></i> Dashboard</a>
+            </div>
+        </div>
+
+        <div class="telemetry-dash">
+            <div class="telemetry-node">
+                <div class="node-val" id="hudSequenceLevel">0</div>
+                <div class="node-lbl">Current Level</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudHighScore" style="color: var(--nk-text);">0</div>
+                <div class="node-lbl">Peak Memory Limit</div>
+            </div>
+        </div>
+
+        <div class="arena-box" id="arenaBox">
+            
+            <div class="status-display" id="systemStatus">SYSTEM STANDBY. AWAITING INITIALIZATION.</div>
+
+            <div class="simon-grid">
+                <div class="simon-pad pad-0" id="pad_0" onclick="handlePlayerEngagement(0)"></div>
+                <div class="simon-pad pad-1" id="pad_1" onclick="handlePlayerEngagement(1)"></div>
+                <div class="simon-pad pad-2" id="pad_2" onclick="handlePlayerEngagement(2)"></div>
+                <div class="simon-pad pad-3" id="pad_3" onclick="handlePlayerEngagement(3)"></div>
+            </div>
+
+        </div>
+
+        <button class="btn-action" id="btnInitiate" onclick="executeInitializationProtocol()">Initiate Sequence Protocol</button>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V7100 THEME ENGINE
+        // ==========================================
+        function toggleNeuroTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v7100_memory', nextTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v7100_memory');
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        });
+
+        // ==========================================
+        // V7100 WEB AUDIO API SYNTHESIZER
+        // Generates pure sine waves for cognitive tracking
+        // ==========================================
+        let audioContextObject = null;
+        
+        function instantiateAudioEngine() {
+            if (audioContextObject === null) {
+                let AudioContextReference = window.AudioContext || window.webkitAudioContext;
+                audioContextObject = new AudioContextReference();
+            }
+        }
+
+        function playKineticTone(padIndexInteger, durationMilliseconds) {
+            if (audioContextObject === null) {
+                instantiateAudioEngine();
+            }
+
+            let oscillatorNode = audioContextObject.createOscillator();
+            let gainNode = audioContextObject.createGain();
+
+            // Distinct Frequencies for Cognitive Anchoring
+            // 0: C4, 1: E4, 2: G4, 3: C5, 99: Error Buzz
+            let targetFrequency = 0;
+            
+            if (padIndexInteger === 0) { targetFrequency = 261.63; oscillatorNode.type = 'sine'; }
+            if (padIndexInteger === 1) { targetFrequency = 329.63; oscillatorNode.type = 'sine'; }
+            if (padIndexInteger === 2) { targetFrequency = 392.00; oscillatorNode.type = 'sine'; }
+            if (padIndexInteger === 3) { targetFrequency = 523.25; oscillatorNode.type = 'sine'; }
+            if (padIndexInteger === 99) { targetFrequency = 150.00; oscillatorNode.type = 'sawtooth'; } // Error tone
+
+            oscillatorNode.frequency.setValueAtTime(targetFrequency, audioContextObject.currentTime);
+            
+            // Envelope shaping to prevent clicking noises
+            gainNode.gain.setValueAtTime(0.1, audioContextObject.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContextObject.currentTime + (durationMilliseconds / 1000.0));
+
+            oscillatorNode.connect(gainNode);
+            gainNode.connect(audioContextObject.destination);
+
+            oscillatorNode.start();
+            
+            setTimeout(function() {
+                oscillatorNode.stop();
+            }, durationMilliseconds);
+        }
+
+
+        // ==========================================
+        // V7100 COGNITIVE MATRIX LOGIC
+        // ZERO ARROW FUNCTIONS. ZERO TERNARIES.
+        // ==========================================
+
+        let systemMemoryArray = [];
+        let playerInputCursor = 0;
+        let isSystemLockActive = true;
+        
+        let currentLevelCounter = 0;
+        let peakMemoryLimit = 0;
+
+        function updateTelemetryDisplay() {
+            document.getElementById('hudSequenceLevel').innerText = String(currentLevelCounter);
+            document.getElementById('hudHighScore').innerText = String(peakMemoryLimit);
+        }
+
+        function executeInitializationProtocol() {
+            // Unlock Audio Context on first user gesture
+            instantiateAudioEngine();
+
+            // Reset matrix
+            systemMemoryArray = [];
+            currentLevelCounter = 0;
+            playerInputCursor = 0;
+            
+            updateTelemetryDisplay();
+            
+            let initiateButton = document.getElementById('btnInitiate');
+            initiateButton.disabled = true;
+            initiateButton.innerText = "PROTOCOL ENGAGED";
+
+            document.getElementById('systemStatus').style.color = "var(--nk-text)";
+            
+            // Brief pause before generating first node
+            setTimeout(function() {
+                generateNextSequenceNode();
+            }, 1000);
+        }
+
+        function generateNextSequenceNode() {
+            isSystemLockActive = true;
+            playerInputCursor = 0;
+            
+            // Advance Level
+            currentLevelCounter = currentLevelCounter + 1;
+            updateTelemetryDisplay();
+            
+            document.getElementById('systemStatus').innerText = "OBSERVE STRUCTURAL PATTERN...";
+
+            // Generate Random Node (0, 1, 2, or 3)
+            let randomNodeIndex = Math.floor(Math.random() * 4);
+            systemMemoryArray.push(randomNodeIndex);
+
+            // Execute Playback Engine
+            playbackStructuralPattern();
+        }
+
+        function playbackStructuralPattern() {
+            let playbackCursor = 0;
+            
+            let patternIntervalObject = setInterval(function() {
+                
+                if (playbackCursor >= systemMemoryArray.length) {
+                    // Sequence playback complete
+                    clearInterval(patternIntervalObject);
+                    isSystemLockActive = false;
+                    document.getElementById('systemStatus').innerText = "REPLICATE THE SEQUENCE.";
+                    return;
+                }
+
+                let targetPadId = systemMemoryArray[playbackCursor];
+                ignitePhysicalPad(targetPadId, 400);
+
+                playbackCursor = playbackCursor + 1;
+
+            }, 800); // 800ms gap between ignitions
+        }
+
+        function ignitePhysicalPad(padIndexInteger, illuminationDuration) {
+            let targetElement = document.getElementById('pad_' + String(padIndexInteger));
+            
+            if (targetElement !== null) {
+                targetElement.classList.add('active');
+                playKineticTone(padIndexInteger, illuminationDuration);
+
+                setTimeout(function() {
+                    targetElement.classList.remove('active');
+                }, illuminationDuration);
+            }
+        }
+
+        function handlePlayerEngagement(padIndexInteger) {
+            // Reject input if system is demonstrating or game is over
+            if (isSystemLockActive === true) {
+                return;
+            }
+
+            // Immediately ignite the pad for tactile feedback
+            ignitePhysicalPad(padIndexInteger, 200);
+
+            // Validation Logic
+            let expectedNodeId = systemMemoryArray[playerInputCursor];
+
+            if (padIndexInteger === expectedNodeId) {
+                // Correct Input
+                playerInputCursor = playerInputCursor + 1;
+
+                // Check if sequence is fully replicated
+                if (playerInputCursor === systemMemoryArray.length) {
+                    isSystemLockActive = true; // Lock immediately to prevent over-clicking
+                    document.getElementById('systemStatus').innerText = "PATTERN VERIFIED. GENERATING NEXT...";
+                    
+                    // Update High Score tracking
+                    if (currentLevelCounter > peakMemoryLimit) {
+                        peakMemoryLimit = currentLevelCounter;
+                    }
+                    
+                    updateTelemetryDisplay();
+
+                    // Pause, then launch next level
+                    setTimeout(function() {
+                        generateNextSequenceNode();
+                    }, 1500);
+                }
+
+            } else {
+                // Critical Failure
+                executeSystemFailure();
+            }
+        }
+
+        function executeSystemFailure() {
+            isSystemLockActive = true;
+            
+            // Update High Score tracking if they failed mid-sequence
+            let finalAchievedLevel = currentLevelCounter - 1;
+            if (finalAchievedLevel > peakMemoryLimit) {
+                peakMemoryLimit = finalAchievedLevel;
+                updateTelemetryDisplay();
+            }
+
+            // Audio & Visual Alert
+            playKineticTone(99, 1000); // Trigger harsh failure tone
+            
+            let statusElement = document.getElementById('systemStatus');
+            statusElement.innerText = "CRITICAL FAILURE. MATRIX COLLAPSE.";
+            statusElement.style.color = "#ef4444";
+
+            let arenaElement = document.getElementById('arenaBox');
+            arenaElement.classList.add('arena-shake');
+            
+            setTimeout(function() {
+                arenaElement.classList.remove('arena-shake');
+            }, 500);
+
+            // Re-enable Initialization Button
+            let initiateButton = document.getElementById('btnInitiate');
+            initiateButton.disabled = false;
+            initiateButton.innerText = "RESTART PROTOCOL";
+        }
+
+    </script>
+</body>
+</html>

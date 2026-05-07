@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>🔒 System Activity Log (Audit Trail)</h2>
+    <p class="text-muted">This is a secure, read-only record of all actions performed in the system.</p>
+    
+    <div class="card shadow-sm mt-3">
+        <div class="card-body p-0">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Action Performed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="text-muted small" style="width: 200px;">
+                            {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </td>
+                        <td class="fw-bold text-primary" style="width: 200px;">
+                            {{ log.user }}
+                        </td>
+                        <td>
+                            {% if "Deleted" in log.action %}
+                                <span class="badge bg-danger">DELETE</span> {{ log.action }}
+                            {% elif "Added" in log.action %}
+                                <span class="badge bg-success">ADD</span> {{ log.action }}
+                            {% elif "Edited" in log.action %}
+                                <span class="badge bg-warning text-dark">EDIT</span> {{ log.action }}
+                            {% else %}
+                                {{ log.action }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center py-4 text-muted">No activity recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

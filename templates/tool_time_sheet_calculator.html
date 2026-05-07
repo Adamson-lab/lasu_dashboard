@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Sheet Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-blue: #0d6efd; 
+            --brand-blue-light: rgba(13, 110, 253, 0.1);
+            --brand-purple: #6f42c1;
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 800;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 3px var(--brand-blue-light);
+        }
+
+        /* Day Row Styling */
+        .day-row {
+            background: white;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: 0.2s;
+        }
+        .day-row:focus-within {
+            border-color: var(--brand-blue);
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.08);
+        }
+        .day-name {
+            font-weight: 800;
+            color: var(--brand-blue);
+            width: 50px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+        .day-total {
+            font-weight: 800;
+            color: var(--text-primary);
+            text-align: right;
+            width: 70px;
+            font-size: 0.9rem;
+        }
+
+        /* Results Card */
+        .result-card {
+            background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-card::after {
+            content: '\f508'; /* FA User Clock */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -10px;
+            bottom: -20px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+            transform: rotate(-10deg);
+        }
+        .result-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 5px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            margin-top: 20px;
+            background: #ffffff;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .section-divider {
+            margin: 25px 0 15px 0;
+            border-top: 2px solid #e2e8f0;
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-user-clock me-2" style="color: var(--brand-blue);"></i> Timesheet Engine</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="input-panel">
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Hourly Pay Rate</label>
+                            <div class="input-group">
+                                <select id="currencySelect" class="form-select" style="max-width: 80px;" onchange="updateCurrency()">
+                                    <option value="USD" selected>$</option>
+                                    <option value="NGN">₦</option>
+                                    <option value="EUR">€</option>
+                                    <option value="GBP">£</option>
+                                </select>
+                                <input type="number" id="hourlyRate" class="form-control" value="25.00" min="0" step="0.5" oninput="calculateTimesheet()">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Overtime Rule (Weekly)</label>
+                            <select id="overtimeRule" class="form-select" onchange="calculateTimesheet()">
+                                <option value="none">No Overtime Rate</option>
+                                <option value="40" selected>1.5x Rate After 40 Hours</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="form-label mb-0" style="font-size: 0.85rem;">Weekly Ledger</div>
+                        <button class="btn btn-sm btn-outline-primary fw-bold" onclick="fillStandardWeek()"><i class="fas fa-bolt me-1"></i> Fill 9-to-5</button>
+                    </div>
+
+                    <div id="timesheetLedger">
+                        <div class="day-row d-flex align-items-center gap-2">
+                            <div class="day-name">Mon</div>
+                            <input type="time" class="form-control form-control-sm time-in" oninput="calculateTimesheet()">
+                            <span class="text-muted"><i class="fas fa-arrow-right"></i></span>
+                            <input type="time" class="form-control form-control-sm time-out" oninput="calculateTimesheet()">
+                            <input type="number" class="form-control form-control-sm break-mins" placeholder="Break (min)" min="0" step="5" style="max-width: 90px;" oninput="calculateTimesheet()">
+                            <div class="day-total" id="total-0">0.00h</div>
+                        </div>
+                        <div class="day-row d-flex align-items-center gap-2">
+                            <div class="day-name">Tue</div>
+                            <input type="time" class="form-control form-control-sm time-in" oninput="calculateTimesheet()">
+                            <span class="text-muted"><i class="fas fa-arrow-right"></i></span>
+                            <input type="time" class="form-control form-control-sm time-out" oninput="calculateTimesheet()">
+                            <input type="number" class="form-control form-control-sm break-mins" placeholder="Break (min)" min="0" step="5" style="max-width: 90px;" oninput="calculateTimesheet()">
+                            <div class="day-total" id="total-1">0.00h</div>
+                        </div>
+                        <div class="day-row d-flex align-items-center gap-2">
+                            <div class="day-name">Wed</div>
+                            <input type="time" class="form-control form-control-sm time-in" oninput="calculateTimesheet()">
+                            <span class="text-muted"><i class="fas fa-arrow-right"></i></span>
+                            <input type="time" class="form-control form-control-sm time-out" oninput="calculateTimesheet()">
+                            <input type="number" class="form-control form-control-sm break-mins" placeholder="Break (min)" min="0" step="5" style="max-width: 90px;" oninput="calculateTimesheet()">
+                            <div class="day-total" id="total-2">0.00h</div>
+                        </div>
+                        <div class="day-row d-flex align-items-center gap-2">
+                            <div class="day-name">Thu</div>
+                            <input type="time" class="form-control form-control-sm time-in" oninput="calculateTimesheet()">
+                            <span class="text-muted"><i class="fas fa-arrow-right"></i></span>
+                            <input type="time" class="form-control form-control-sm time-out" oninput="calculateTimesheet()">
+                            <input type="number" class="form-control form-control-sm break-mins" placeholder="Break (min)" min="0" step="5" style="max-width: 90px;" oninput="calculateTimesheet()">
+                            <div class="day-total" id="total-3">0.00h</div>
+                        </div>
+                        <div class="day-row d-flex align-items-center gap-2">
+                            <div class="day-name">Fri</div>
+                            <input type="time" class="form-control form-control-sm time-in" oninput="calculateTimesheet()">
+                            <span class="text-muted"><i class="fas fa-arrow-right"></i></span>
+                            <input type="time" class="form-control form-control-sm time-out" oninput="calculateTimesheet()">
+                            <input type="number" class="form-control form-control-sm break-mins" placeholder="Break (min)" min="0" step="5" style="max-width: 90px;" oninput="calculateTimesheet()">
+                            <div class="day-total" id="total-4">0.00h</div>
+                        </div>
+                        <div class="day-row d-flex align-items-center gap-2">
+                            <div class="day-name">Sat</div>
+                            <input type="time" class="form-control form-control-sm time-in" oninput="calculateTimesheet()">
+                            <span class="text-muted"><i class="fas fa-arrow-right"></i></span>
+                            <input type="time" class="form-control form-control-sm time-out" oninput="calculateTimesheet()">
+                            <input type="number" class="form-control form-control-sm break-mins" placeholder="Break (min)" min="0" step="5" style="max-width: 90px;" oninput="calculateTimesheet()">
+                            <div class="day-total" id="total-5">0.00h</div>
+                        </div>
+                        <div class="day-row d-flex align-items-center gap-2">
+                            <div class="day-name text-danger">Sun</div>
+                            <input type="time" class="form-control form-control-sm time-in" oninput="calculateTimesheet()">
+                            <span class="text-muted"><i class="fas fa-arrow-right"></i></span>
+                            <input type="time" class="form-control form-control-sm time-out" oninput="calculateTimesheet()">
+                            <input type="number" class="form-control form-control-sm break-mins" placeholder="Break (min)" min="0" step="5" style="max-width: 90px;" oninput="calculateTimesheet()">
+                            <div class="day-total" id="total-6">0.00h</div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline-danger w-100 fw-bold mt-2" onclick="clearTimesheet()"><i class="fas fa-trash-alt me-2"></i>Clear Entire Week</button>
+
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="result-card">
+                    <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.9;">Total Gross Pay</div>
+                    <div class="result-value" id="grossPayDisplay">$0.00</div>
+                    <div style="font-size: 1rem; opacity: 0.9; font-weight: 600;" id="totalHoursDisplay">Total Hours: 0.00</div>
+                </div>
+
+                <div style="background: var(--bg-surface); padding: 20px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                    <h6 class="fw-bold text-uppercase mb-3" style="font-size: 0.75rem; color: #64748b; letter-spacing: 1px;">Payroll Breakdown</h6>
+                    
+                    <div class="breakdown-row">
+                        <div><span class="color-dot" style="background: var(--brand-blue);"></span> Regular Hours (<span id="regHoursSpan">0.00</span>)</div>
+                        <span class="text-dark fw-bold" id="regPayDisplay">$0.00</span>
+                    </div>
+                    <div class="breakdown-row border-0">
+                        <div><span class="color-dot" style="background: var(--brand-purple);"></span> Overtime Hours (<span id="otHoursSpan">0.00</span>)</div>
+                        <span class="text-dark fw-bold" id="otPayDisplay">$0.00</span>
+                    </div>
+                    
+                    <div class="mt-3 p-2 rounded text-center small fw-bold" id="otAlert" style="display: none; background: rgba(111, 66, 193, 0.1); border: 1px solid var(--brand-purple); color: var(--brand-purple);">
+                        <i class="fas fa-level-up-alt me-1"></i> Overtime Multiplier Engaged (1.5x)
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="hoursChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let hoursChartInstance = null;
+        let activeCurrencyCode = 'USD';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateCurrency();
+        });
+
+        // 1. Core Formatters
+        function updateCurrency() {
+            const select = document.getElementById('currencySelect');
+            const sym = select.options[select.selectedIndex].text;
+            activeCurrencyCode = select.value;
+            calculateTimesheet();
+        }
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: activeCurrencyCode,
+                minimumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // 2. Utility Actions
+        function fillStandardWeek() {
+            const timeIns = document.querySelectorAll('.time-in');
+            const timeOuts = document.querySelectorAll('.time-out');
+            const breaks = document.querySelectorAll('.break-mins');
+
+            // Fill Monday to Friday (indices 0 to 4)
+            for (let i = 0; i < 5; i++) {
+                timeIns[i].value = "09:00";
+                timeOuts[i].value = "17:00";
+                breaks[i].value = "30";
+            }
+            // Clear Weekend
+            for (let i = 5; i < 7; i++) {
+                timeIns[i].value = "";
+                timeOuts[i].value = "";
+                breaks[i].value = "";
+            }
+            calculateTimesheet();
+        }
+
+        function clearTimesheet() {
+            document.querySelectorAll('.time-in, .time-out, .break-mins').forEach(el => el.value = "");
+            calculateTimesheet();
+        }
+
+        // 3. Time Parsing Logic
+        function getTimeDiffInHours(startStr, endStr, breakMinsStr) {
+            if (!startStr || !endStr) return 0;
+            
+            const startParts = startStr.split(':');
+            const endParts = endStr.split(':');
+            
+            let start = new Date(0, 0, 0, startParts[0], startParts[1], 0);
+            let end = new Date(0, 0, 0, endParts[0], endParts[1], 0);
+            
+            // Handle overnight shifts (e.g. 22:00 to 06:00)
+            if (end < start) {
+                end.setDate(end.getDate() + 1);
+            }
+            
+            let diffMs = end - start;
+            let diffHours = diffMs / 1000 / 60 / 60;
+            
+            // Subtract breaks
+            let breaks = parseFloat(breakMinsStr) || 0;
+            diffHours -= (breaks / 60);
+            
+            return Math.max(0, diffHours); // Prevent negative hours if break is longer than shift
+        }
+
+        // 4. Payroll Engine
+        function calculateTimesheet() {
+            const rate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+            const otRule = document.getElementById('overtimeRule').value;
+            
+            const timeIns = document.querySelectorAll('.time-in');
+            const timeOuts = document.querySelectorAll('.time-out');
+            const breaks = document.querySelectorAll('.break-mins');
+
+            let totalHours = 0;
+            let dailyHoursArray = [];
+
+            // Calculate each day
+            for (let i = 0; i < 7; i++) {
+                let dailyHours = getTimeDiffInHours(timeIns[i].value, timeOuts[i].value, breaks[i].value);
+                document.getElementById(`total-${i}`).innerText = dailyHours.toFixed(2) + 'h';
+                totalHours += dailyHours;
+                dailyHoursArray.push(dailyHours);
+            }
+
+            // OT Logic Separation
+            let regHours = totalHours;
+            let otHours = 0;
+
+            if (otRule === '40' && totalHours > 40) {
+                regHours = 40;
+                otHours = totalHours - 40;
+            }
+
+            // Pay Calculations
+            const regPay = regHours * rate;
+            const otPay = otHours * (rate * 1.5);
+            const totalGross = regPay + otPay;
+
+            updateUI(totalHours, regHours, otHours, regPay, otPay, totalGross, dailyHoursArray);
+        }
+
+        function updateUI(total, regH, otH, regP, otP, gross, dailyHoursArray) {
+            // Numbers
+            document.getElementById('totalHoursDisplay').innerText = `Total Hours: ${total.toFixed(2)}`;
+            document.getElementById('grossPayDisplay').innerText = formatMoney(gross);
+            
+            document.getElementById('regHoursSpan').innerText = regH.toFixed(2);
+            document.getElementById('regPayDisplay').innerText = formatMoney(regP);
+            
+            document.getElementById('otHoursSpan').innerText = otH.toFixed(2);
+            document.getElementById('otPayDisplay').innerText = formatMoney(otP);
+
+            // Conditional OT Alert
+            document.getElementById('otAlert').style.display = otH > 0 ? 'block' : 'none';
+
+            renderChart(dailyHoursArray, total);
+        }
+
+        function renderChart(dailyHours, total) {
+            const ctx = document.getElementById('hoursChart').getContext('2d');
+            
+            if (hoursChartInstance) {
+                hoursChartInstance.destroy();
+            }
+
+            if (total === 0) return;
+
+            hoursChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+                    datasets: [{
+                        label: 'Hours Worked',
+                        data: dailyHours,
+                        backgroundColor: function(context) {
+                            const index = context.dataIndex;
+                            // Make weekend bars purple to distinguish them visually
+                            return (index === 5 || index === 6) ? '#6f42c1' : '#0d6efd';
+                        },
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                            title: { display: true, text: 'Hours' }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { weight: 'bold' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.raw.toFixed(2)} Hrs`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

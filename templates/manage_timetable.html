@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>📅 Manage Class Time-Table</h2>
+    <p class="text-muted">Assign time and venue to courses.</p>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white fw-bold">Set Class Schedule</div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="fw-bold">Course</label>
+                            <select name="course_id" class="form-select" required>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.code }} - {{ course.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Day of Week</label>
+                            <select name="day" class="form-select" required>
+                                <option>Monday</option>
+                                <option>Tuesday</option>
+                                <option>Wednesday</option>
+                                <option>Thursday</option>
+                                <option>Friday</option>
+                                <option>Saturday</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="fw-bold">Start Time</label>
+                                <input type="time" name="start_time" class="form-control" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="fw-bold">End Time</label>
+                                <input type="time" name="end_time" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Venue</label>
+                            <input type="text" name="venue" class="form-control" placeholder="e.g. Hall 3, Lab 1" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add to Timetable</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">Master Schedule</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Day</th>
+                                <th>Time</th>
+                                <th>Course</th>
+                                <th>Venue</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sch in schedules %}
+                            <tr>
+                                <td><span class="badge bg-secondary">{{ sch.day }}</span></td>
+                                <td class="small fw-bold">{{ sch.start_time }} - {{ sch.end_time }}</td>
+                                <td>
+                                    <div class="fw-bold">{{ sch.course.code }}</div>
+                                    <small class="text-muted">{{ sch.course.title }}</small>
+                                </td>
+                                <td>{{ sch.venue }}</td>
+                                <td>
+                                    <form action="{{ url_for('delete_schedule', id=sch.id) }}" method="POST">
+                                        <button class="btn btn-sm btn-outline-danger">✕</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center py-4">No classes scheduled yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

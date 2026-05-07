@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Office Hours</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mb-3">← Back to Dashboard</a>
+    
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>🕒 Manage Virtual Office Hours</h2>
+        <span class="badge bg-primary fs-6">Standard Hours: 8am - 6pm</span>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white fw-bold">Add New Slot</div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="fw-bold">Select Course</label>
+                            <select name="course_id" class="form-select" required>
+                                <option value="" disabled selected>-- Choose from All Courses --</option>
+                                {% for course in courses %}
+                                    <option value="{{ course.id }}">{{ course.code }} - {{ course.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="fw-bold">Date</label>
+                            <input type="date" name="slot_date" class="form-control" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="fw-bold">Start Time</label>
+                                <input type="time" name="start_time" class="form-control" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="fw-bold">End Time</label>
+                                <input type="time" name="end_time" class="form-control" required>
+                                <div class="form-text small text-muted">Use 24h format (e.g. 17:00)</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="fw-bold">Meeting Link</label>
+                            <input type="text" name="meeting_link" class="form-control" placeholder="https://..." required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 fw-bold">Create Availability</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold">My Active Slots</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Date & Time</th>
+                                    <th>Status</th>
+                                    <th>Registered Students</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for slot in slots %}
+                                <tr>
+                                    <td>
+                                        {% if slot.course_id %}
+                                            <span class="badge bg-dark">
+                                                {% for c in courses %}
+                                                    {% if c.id == slot.course_id %}{{ c.code }}{% endif %}
+                                                {% endfor %}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">General</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">{{ slot.start_time.strftime('%a, %d %b') }}</div>
+                                        <small class="text-muted">{{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}</small>
+                                    </td>
+                                    <td>
+                                        {% set count = slot.attendees|length %}
+                                        {% if count > 0 %}
+                                            <span class="badge bg-primary">{{ count }} Joined</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Open</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if slot.attendees %}
+                                            <div class="d-flex flex-wrap gap-2">
+                                                {% for booking in slot.attendees %}
+                                                    <button class="btn btn-sm btn-light border d-flex align-items-center gap-1 p-1" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#studentModal{{ booking.id }}">
+                                                        
+                                                        <img src="{{ url_for('static', filename='profile_pics/' + booking.student.image_file) }}" 
+                                                             class="rounded-circle" width="20" height="20"
+                                                             onerror="this.src='https://ui-avatars.com/api/?name={{ booking.student.name }}&background=0d6efd&color=fff'">
+                                                        
+                                                        <span class="small fw-bold">{{ booking.student.name }}</span>
+                                                    </button>
+
+                                                    <div class="modal fade" id="studentModal{{ booking.id }}" tabindex="-1">
+                                                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                            <div class="modal-content border-0 overflow-hidden">
+                                                                
+                                                                {% set status = booking.student.academic_status %}
+                                                                <div class="modal-header text-white 
+                                                                    {% if status == 'CRITICAL' %}bg-danger
+                                                                    {% elif status == 'AT RISK' %}bg-warning text-dark
+                                                                    {% else %}bg-success{% endif %}">
+                                                                    
+                                                                    <h5 class="modal-title fw-bold">
+                                                                        <i class="fas fa-user-secret me-2"></i>Student Intelligence Card
+                                                                    </h5>
+                                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                                </div>
+
+                                                                <div class="modal-body p-0">
+                                                                    <div class="row g-0">
+                                                                        <div class="col-md-4 bg-light text-center p-4 border-end">
+                                                                            <img src="{{ url_for('static', filename='profile_pics/' + booking.student.image_file) }}" 
+                                                                                 class="rounded-circle shadow mb-3" width="120" height="120"
+                                                                                 style="object-fit: cover; border: 4px solid white;"
+                                                                                 onerror="this.src='https://ui-avatars.com/api/?name={{ booking.student.name }}&background=0d6efd&color=fff&size=128'">
+                                                                            
+                                                                            <h4 class="fw-bold mb-0">{{ booking.student.name }}</h4>
+                                                                            <p class="text-muted small">{{ booking.student.matric_no }}</p>
+                                                                            
+                                                                            <div class="alert 
+                                                                                {% if status == 'CRITICAL' %}alert-danger
+                                                                                {% elif status == 'AT RISK' %}alert-warning
+                                                                                {% else %}alert-success{% endif %} p-1 mb-3">
+                                                                                <strong>STATUS: {{ status }}</strong>
+                                                                            </div>
+
+                                                                            <div class="d-grid gap-2">
+                                                                                <a href="{{ url_for('lecturer_view_transcript', student_id=booking.student.id) }}" 
+                                                                                   target="_blank" 
+                                                                                   class="btn btn-outline-primary btn-sm">
+                                                                                   <i class="fas fa-file-alt me-1"></i> View Transcript
+                                                                                </a>
+                                                                                
+                                                                                <button class="btn btn-outline-dark btn-sm" type="button" 
+                                                                                        data-bs-toggle="collapse" 
+                                                                                        data-bs-target="#emailForm{{ booking.id }}">
+                                                                                    <i class="fas fa-paper-plane me-1"></i> Send Portal Message
+                                                                                </button>
+                                                                            </div>
+
+                                                                            <div class="collapse mt-3" id="emailForm{{ booking.id }}">
+                                                                                <div class="card card-body bg-light border-0 p-3 text-start">
+                                                                                    <h6 class="fw-bold text-dark mb-2 small">Send to Inbox:</h6>
+                                                                                    
+                                                                                    <form action="{{ url_for('send_student_notification', student_id=booking.student.id) }}" method="POST">
+                                                                                        <div class="mb-2">
+                                                                                            <input type="text" name="email_subject" class="form-control form-control-sm" 
+                                                                                                   placeholder="Subject (e.g. Office Hour Follow-up)" required>
+                                                                                        </div>
+                                                                                        <div class="mb-2">
+                                                                                            <textarea name="email_body" class="form-control form-control-sm" rows="3" 
+                                                                                                      placeholder="Type your message here..." required></textarea>
+                                                                                        </div>
+                                                                                        <div class="text-end">
+                                                                                            <button type="submit" class="btn btn-dark btn-sm">
+                                                                                                Send Now <i class="fas fa-paper-plane ms-1"></i>
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </form>
+                                                                                </div>
+                                                                            </div>
+                                                                            </div>
+
+                                                                        <div class="col-md-8 p-4">
+                                                                            <h6 class="fw-bold text-uppercase text-muted border-bottom pb-2">📊 Performance Metrics</h6>
+                                                                            
+                                                                            <div class="row text-center mb-4">
+                                                                                <div class="col-4">
+                                                                                    <h3 class="fw-bold text-dark">{{ booking.student.average_score }}%</h3>
+                                                                                    <small class="text-muted">Avg Quiz</small>
+                                                                                </div>
+                                                                                <div class="col-4 border-start border-end">
+                                                                                    <h3 class="fw-bold text-dark">
+                                                                                        {% if booking.student.attendance_pct is defined %}
+                                                                                            {{ booking.student.attendance_pct }}%
+                                                                                        {% else %}--{% endif %}
+                                                                                    </h3>
+                                                                                    <small class="text-muted">Attendance</small>
+                                                                                </div>
+                                                                                <div class="col-4">
+                                                                                    <h3 class="fw-bold text-dark">{{ booking.student.level }}</h3>
+                                                                                    <small class="text-muted">Level</small>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <h6 class="fw-bold text-uppercase text-muted border-bottom pb-2">
+                                                                                <i class="fas fa-sticky-note text-warning me-1"></i> Private Notes
+                                                                            </h6>
+                                                                            <form action="{{ url_for('save_student_note', student_id=booking.student.id) }}" method="POST">
+                                                                                <textarea name="lecturer_note" class="form-control bg-light mb-2" rows="3" 
+                                                                                          placeholder="Write a private note about this student (e.g. 'Struggles with Java, needs extra help')...">{{ booking.student.lecturer_note or '' }}</textarea>
+                                                                                <div class="text-end">
+                                                                                    <button type="submit" class="btn btn-sm btn-primary">
+                                                                                        💾 Save Secret Note
+                                                                                    </button>
+                                                                                </div>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted small fst-italic">- No registrations yet -</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <form action="{{ url_for('delete_office_hour', id=slot.id) }}" method="POST">
+                                            <button class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Delete this slot?')" title="Delete Slot">
+                                                🗑
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">No office hours scheduled yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

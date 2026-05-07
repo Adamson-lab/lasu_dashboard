@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAGR Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-blue: #0d6efd; /* Corporate Blue */
+            --brand-blue-light: rgba(13, 110, 253, 0.1);
+            --brand-danger: #dc3545;
+            --brand-danger-light: rgba(220, 53, 69, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 3px var(--brand-blue-light);
+        }
+        .form-control.is-loss:focus {
+            border-color: var(--brand-danger);
+            box-shadow: 0 0 0 3px var(--brand-danger-light);
+        }
+        
+        /* Dynamic Result Card */
+        .result-card {
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .result-card.positive {
+            background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
+        }
+        .result-card.negative {
+            background: linear-gradient(135deg, #dc3545 0%, #8b0000 100%);
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.2);
+        }
+        .result-card i.bg-icon {
+            position: absolute;
+            right: -10px;
+            bottom: -20px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+            transition: 0.4s;
+        }
+        .result-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 5px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-chart-bar me-2" style="color: var(--brand-blue);" id="headerIcon"></i> CAGR Calculator</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="input-panel">
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Data Type</label>
+                        <select id="dataType" class="form-select dynamic-input" onchange="toggleDataType()">
+                            <option value="currency" selected>Financial (Currency)</option>
+                            <option value="metric">Metrics (Users, Units, etc.)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Beginning Value</label>
+                        <div class="input-group">
+                            <span class="input-group-text data-symbol">$</span>
+                            <input type="number" id="startValue" class="form-control dynamic-input" value="10000" min="1" oninput="calculateCAGR()">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Ending Value</label>
+                        <div class="input-group">
+                            <span class="input-group-text data-symbol">$</span>
+                            <input type="number" id="endValue" class="form-control dynamic-input" value="25000" min="0" oninput="calculateCAGR()">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Duration (Years)</label>
+                        <input type="number" id="years" class="form-control dynamic-input" value="5" min="0.1" step="0.5" oninput="calculateCAGR()">
+                    </div>
+
+                    <button class="btn btn-outline-secondary w-100 fw-bold" onclick="resetCalculator()"><i class="fas fa-redo-alt me-2"></i>Reset</button>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="result-card positive" id="mainResultCard">
+                            <i class="fas fa-chart-line bg-icon" id="cardBgIcon"></i>
+                            <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.9;">Compound Annual Growth</div>
+                            <div class="result-value" id="cagrDisplay">20.11%</div>
+                            <div style="font-size: 0.95rem; opacity: 0.9; font-weight: 600;" id="multiplierDisplay">2.5x Growth Multiplier</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-panel d-flex flex-column justify-content-center h-100">
+                            <div class="breakdown-row">
+                                <span class="text-muted">Total Absolute ROI</span>
+                                <span class="fw-bold" id="totalRoiDisplay" style="font-size: 1.1rem;">150.00%</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="text-muted">Net Increase</span>
+                                <span class="fw-bold text-dark" id="netIncreaseDisplay">15,000</span>
+                            </div>
+                            <small class="text-muted mt-3 d-block lh-sm" style="font-size: 0.75rem;">
+                                <i class="fas fa-info-circle text-primary me-1"></i> CAGR smooths out volatility to show you the steady, year-over-year rate required to reach the ending value.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="cagrChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cagrChartInstance = null;
+
+        // Formatters
+        const currencyFormatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0
+        });
+
+        const numberFormatter = new Intl.NumberFormat('en-US', {
+            maximumFractionDigits: 0
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            calculateCAGR();
+        });
+
+        function toggleDataType() {
+            const isCurrency = document.getElementById('dataType').value === 'currency';
+            const symbols = document.querySelectorAll('.data-symbol');
+            
+            symbols.forEach(el => {
+                el.innerText = isCurrency ? '$' : '#';
+            });
+            
+            calculateCAGR();
+        }
+
+        function formatData(value) {
+            const isCurrency = document.getElementById('dataType').value === 'currency';
+            return isCurrency ? currencyFormatter.format(value) : numberFormatter.format(value);
+        }
+
+        function calculateCAGR() {
+            // 1. Fetch Inputs
+            const startVal = parseFloat(document.getElementById('startValue').value) || 0;
+            const endVal = parseFloat(document.getElementById('endValue').value) || 0;
+            const years = parseFloat(document.getElementById('years').value) || 0;
+
+            if (startVal <= 0 || years <= 0) {
+                updateUI(0, 0, startVal, endVal, 1, true, [], []);
+                return;
+            }
+
+            // 2. Core CAGR Formula: (End / Start)^(1 / Years) - 1
+            let cagr = 0;
+            const isPositive = endVal >= startVal;
+            
+            if (endVal > 0) {
+                cagr = (Math.pow((endVal / startVal), (1 / years)) - 1) * 100;
+            } else {
+                cagr = -100; // 100% loss
+            }
+
+            const absoluteROI = ((endVal - startVal) / startVal) * 100;
+            const netIncrease = endVal - startVal;
+            const multiplier = endVal / startVal;
+
+            // 3. Generate Geometric Curve Data for the Chart
+            let labels = [];
+            let chartData = [];
+            const decimalCagr = cagr / 100;
+
+            // Cap the chart points so it doesn't try to render 500 individual bars if someone types "500 years"
+            const chartPoints = Math.min(Math.floor(years), 30); 
+            const step = years / chartPoints;
+
+            for (let i = 0; i <= chartPoints; i++) {
+                let currentYear = (i * step);
+                let projectedValue = startVal * Math.pow(1 + decimalCagr, currentYear);
+                
+                labels.push(currentYear === 0 ? 'Start' : `Yr ${currentYear.toFixed(1).replace('.0', '')}`);
+                chartData.push(projectedValue);
+            }
+            
+            // Ensure the exact final value is the last point
+            if (labels[labels.length-1] !== `Yr ${years}`) {
+                labels.push(`Yr ${years}`);
+                chartData.push(endVal);
+            }
+
+            updateUI(cagr, absoluteROI, netIncrease, multiplier, isPositive, labels, chartData);
+        }
+
+        function updateUI(cagr, absoluteROI, netIncrease, multiplier, isPositive, labels, chartData) {
+            // Theme Shifting
+            const card = document.getElementById('mainResultCard');
+            const bgIcon = document.getElementById('cardBgIcon');
+            const headerIcon = document.getElementById('headerIcon');
+            const dynamicInputs = document.querySelectorAll('.dynamic-input');
+
+            if (isPositive) {
+                card.className = "result-card positive";
+                bgIcon.className = "fas fa-chart-line bg-icon";
+                headerIcon.style.color = "var(--brand-blue)";
+                dynamicInputs.forEach(el => el.classList.remove('is-loss'));
+            } else {
+                card.className = "result-card negative";
+                bgIcon.className = "fas fa-chart-line bg-icon"; // keep line chart icon, but it's red
+                headerIcon.style.color = "var(--brand-danger)";
+                dynamicInputs.forEach(el => el.classList.add('is-loss'));
+            }
+
+            // Update DOM Text
+            const sign = isPositive && cagr > 0 ? '+' : '';
+            document.getElementById('cagrDisplay').innerText = `${sign}${cagr.toFixed(2)}%`;
+            document.getElementById('totalRoiDisplay').innerText = `${sign}${absoluteROI.toFixed(2)}%`;
+            
+            const incSign = isPositive && netIncrease > 0 ? '+' : '';
+            document.getElementById('netIncreaseDisplay').innerText = `${incSign}${formatData(netIncrease)}`;
+            document.getElementById('multiplierDisplay').innerText = `${multiplier.toFixed(2)}x Growth Multiplier`;
+
+            renderChart(labels, chartData, isPositive);
+        }
+
+        function renderChart(labels, data, isPositive) {
+            const ctx = document.getElementById('cagrChart').getContext('2d');
+            
+            if (cagrChartInstance) {
+                cagrChartInstance.destroy();
+            }
+
+            if (labels.length === 0) return;
+
+            const lineColor = isPositive ? '#0d6efd' : '#dc3545';
+            const fillGradient = ctx.createLinearGradient(0, 0, 0, 250);
+            fillGradient.addColorStop(0, isPositive ? 'rgba(13, 110, 253, 0.2)' : 'rgba(220, 53, 69, 0.2)');
+            fillGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            cagrChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Projected Geometric Growth',
+                        data: data,
+                        borderColor: lineColor,
+                        backgroundColor: fillGradient,
+                        borderWidth: 3,
+                        pointRadius: labels.length > 15 ? 0 : 5, // Hide dots if crowded
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: lineColor,
+                        pointBorderWidth: 2,
+                        fill: true,
+                        tension: 0.4 // Smoothed curve
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { display: false, drawBorder: false }
+                        },
+                        y: {
+                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                                    if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { size: 13 },
+                            bodyFont: { size: 14, weight: 'bold' },
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Value: ${formatData(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                }
+            });
+        }
+
+        function resetCalculator() {
+            document.getElementById('dataType').value = 'currency';
+            document.getElementById('startValue').value = 10000;
+            document.getElementById('endValue').value = 25000;
+            document.getElementById('years').value = 5;
+            toggleDataType(); // resets symbols and recalculates
+        }
+    </script>
+</body>
+</html>

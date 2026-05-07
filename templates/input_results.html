@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2>📝 Enter Results</h2>
+            <h5 class="text-muted">{{ course.code }} - {{ course.title }}</h5>
+        </div>
+        <a href="{{ url_for('manage_courses') }}" class="btn btn-secondary">← Back to Courses</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-success text-white">
+            <div class="d-flex justify-content-between">
+                <span>Registered Students: <strong>{{ students|length }}</strong></span>
+                <span class="small">Enter scores over 100</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <form method="POST">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">S/N</th>
+                            <th style="width: 150px;">Matric No</th>
+                            <th>Student Name</th>
+                            <th>Current Score</th>
+                            <th style="width: 150px;">Input New Score</th>
+                            <th style="width: 100px;">Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        {% set current_score = scores.get(student.id) %}
+                        <tr class="{{ 'table-success' if current_score is not none else '' }}">
+                            <td>{{ loop.index }}</td>
+                            <td class="fw-bold">{{ student.matric_no }}</td>
+                            <td>{{ student.name }}</td>
+                            <td>
+                                {% if current_score is not none %}
+                                    <span class="fw-bold">{{ current_score }}</span>
+                                {% else %}
+                                    <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <input type="number" step="0.1" min="0" max="100" 
+                                       name="score_{{ student.id }}" 
+                                       value="{{ current_score if current_score is not none else '' }}" 
+                                       class="form-control form-control-sm border-dark" placeholder="0-100">
+                            </td>
+                            <td class="fw-bold text-muted">
+                                {% if current_score is not none %}
+                                    {% if current_score >= 70 %}A{% elif current_score >= 60 %}B{% elif current_score >= 50 %}C{% elif current_score >= 45 %}D{% elif current_score >= 40 %}E{% else %}F{% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <h5>No students registered yet.</h5>
+                                <p>Students must register for this course before you can grade them.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                {% if students %}
+                <div class="p-3 bg-light border-top text-end sticky-bottom">
+                    <button type="submit" class="btn btn-success fw-bold px-4">💾 Save Results</button>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

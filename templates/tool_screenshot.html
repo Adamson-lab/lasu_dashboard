@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Tool | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --brand-blue: #0d6efd;
+            --brand-blue-light: rgba(13, 110, 253, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        
+        /* The Canvas Environment */
+        .capture-wrapper {
+            background: #e2e8f0;
+            padding: 40px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed #cbd5e1;
+            min-height: 400px;
+        }
+
+        /* THE ACTUAL TARGET DIV TO BE SCREENSHOTTED */
+        .capture-target {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+        
+        /* Decorative elements inside the capture div */
+        .capture-target::before {
+            content: '\201C';
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            font-size: 8rem;
+            color: rgba(255,255,255,0.05);
+            font-family: Georgia, serif;
+            line-height: 1;
+            pointer-events: none;
+        }
+        
+        .editable-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+            outline: none;
+            cursor: text;
+            transition: 0.2s;
+        }
+        .editable-text:focus, .editable-author:focus, .editable-title:focus {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 4px;
+        }
+        
+        .author-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            z-index: 2;
+        }
+        .author-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--brand-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .editable-author {
+            font-size: 1rem;
+            font-weight: 700;
+            outline: none;
+            cursor: text;
+        }
+        .editable-title {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            outline: none;
+            cursor: text;
+        }
+
+        .watermark {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            opacity: 0.3;
+            display: none;
+            pointer-events: none;
+        }
+
+        /* Controls Area */
+        .controls-panel {
+            background: var(--bg-main);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .btn-action {
+            background: var(--brand-blue);
+            color: white;
+            font-weight: 700;
+            padding: 14px 24px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            transition: 0.2s;
+            font-size: 1.05rem;
+            margin-top: 20px;
+        }
+        .btn-action:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .btn-action:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(13, 110, 253, 0.3);
+        }
+        .theme-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .theme-btn.active {
+            border-color: var(--text-primary);
+            transform: scale(1.15);
+        }
+        .watermark-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-crop me-2" style="color: var(--brand-blue);"></i> Screenshot Tool</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <p class="text-muted mb-4">Edit the text in the card below, select a theme, and capture a high-resolution screenshot of the specific DOM element. Perfect for sharing quotes or snippets.</p>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="capture-wrapper">
+                    <div id="targetDiv" class="capture-target" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;">
+                        <div class="editable-text" contenteditable="true" spellcheck="false">
+                            "Enterprise Architecture is not about building the software; it's about building the environment where the software can thrive."
+                        </div>
+                        <div class="author-section">
+                            <div class="author-avatar" id="avatarLetter">C</div>
+                            <div>
+                                <div class="editable-author" contenteditable="true" spellcheck="false" onkeyup="updateAvatar(this)">Chief Architect</div>
+                                <div class="editable-title" contenteditable="true" spellcheck="false">L.I.S.A. Systems</div>
+                            </div>
+                        </div>
+                        <div id="watermarkElement" class="watermark">Generated by L.I.S.A.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="controls-panel">
+                    <h6 class="fw-bold mb-3 text-uppercase" style="letter-spacing: 1px; font-size: 0.8rem; color: #64748b;">Card Theme</h6>
+                    
+                    <div class="theme-selector">
+                        <div class="theme-btn active" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);" onclick="setTheme(this, 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', 'white', 'rgba(255,255,255,0.05)', '#0d6efd')"></div>
+                        <div class="theme-btn" style="background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);" onclick="setTheme(this, 'linear-gradient(135deg, #0d6efd 0%, #0043a8 100%)', 'white', 'rgba(255,255,255,0.1)', '#1e293b')"></div>
+                        <div class="theme-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="setTheme(this, 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 'white', 'rgba(255,255,255,0.1)', '#1e293b')"></div>
+                        <div class="theme-btn" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #cbd5e1;" onclick="setTheme(this, 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', '#0f172a', 'rgba(0,0,0,0.03)', '#0d6efd')"></div>
+                        <div class="theme-btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #5b21b6 100%);" onclick="setTheme(this, 'linear-gradient(135deg, #8b5cf6 0%, #5b21b6 100%)', 'white', 'rgba(255,255,255,0.1)', '#1e293b')"></div>
+                    </div>
+
+                    <hr class="my-4" style="border-color: var(--glass-border);">
+
+                    <label class="watermark-toggle">
+                        <input type="checkbox" id="watermarkCheck" onchange="toggleWatermark(this)" style="width: 18px; height: 18px; accent-color: var(--brand-blue);">
+                        Include "L.I.S.A." Watermark
+                    </label>
+
+                    <button class="btn-action" id="captureBtn" onclick="takeScreenshot()">
+                        <i class="fas fa-camera me-2"></i> Capture Screenshot
+                    </button>
+
+                    <div id="statusText" class="text-center mt-3 small fw-bold" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Live Editing Handlers ---
+        function updateAvatar(element) {
+            const text = element.innerText.trim();
+            // Get the first letter, default to '?' if empty
+            const firstLetter = text.length > 0 ? text.charAt(0).toUpperCase() : '?';
+            document.getElementById('avatarLetter').innerText = firstLetter;
+        }
+
+        // --- Theme Engine ---
+        function setTheme(btnElement, gradient, textColor, quoteColor, avatarColor) {
+            // Update active state on buttons
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            // Apply theme to target div
+            const target = document.getElementById('targetDiv');
+            target.style.background = gradient;
+            target.style.color = textColor;
+
+            // Apply avatar color
+            document.getElementById('avatarLetter').style.background = avatarColor;
+
+            // Adjust pseudo-element quote mark color via a trick (modifying a custom property if we had one, but we'll use a style sheet injection for true dynamic pseudo-elements)
+            const style = document.createElement('style');
+            style.innerHTML = `.capture-target::before { color: ${quoteColor} !important; }`;
+            document.head.appendChild(style);
+        }
+
+        function toggleWatermark(checkbox) {
+            document.getElementById('watermarkElement').style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        // --- Core HTML2Canvas Engine ---
+        function takeScreenshot() {
+            const targetNode = document.getElementById('targetDiv');
+            const captureBtn = document.getElementById('captureBtn');
+            const statusText = document.getElementById('statusText');
+
+            // 1. Lock UI & Show Telemetry
+            captureBtn.disabled = true;
+            captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Capturing...';
+            statusText.style.display = 'block';
+            statusText.className = "text-center mt-3 small fw-bold text-primary";
+            statusText.innerHTML = "Initializing Canvas Engine...";
+
+            // 2. Remove focus from editable areas so the blinking text cursor DOES NOT appear in the screenshot
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.hasAttribute('contenteditable')) {
+                activeElement.blur();
+            }
+            
+            // Un-focus any active ranges
+            window.getSelection().removeAllRanges();
+
+            // 3. Enterprise Render Options
+            const renderOptions = {
+                scale: 3, // 3x resolution multiplier for crisp Retina/4K text rendering
+                useCORS: true, // Allow external web fonts/images to render
+                backgroundColor: null, // Transparent background outside the rounded div boundaries
+                logging: false, // Suppress console noise
+                allowTaint: true
+            };
+
+            // 4. Execute Capture (Timeout allows the blur UI changes to paint before rendering)
+            setTimeout(() => { 
+                html2canvas(targetNode, renderOptions).then(canvas => {
+                    try {
+                        statusText.innerHTML = "Encoding High-Res PNG...";
+                        
+                        // Extract base64 image data at maximum quality
+                        const imgData = canvas.toDataURL('image/png', 1.0);
+                        
+                        // Secure Local Download Trigger
+                        const a = document.createElement('a');
+                        a.href = imgData;
+                        a.download = `LISA_Capture_${Date.now()}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+
+                        // Success Telemetry
+                        captureBtn.style.background = '#198754';
+                        captureBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Saved Successfully';
+                        statusText.className = "text-center mt-3 small fw-bold text-success";
+                        statusText.innerHTML = "Screenshot downloaded to your device.";
+
+                        // Reset button
+                        setTimeout(() => {
+                            captureBtn.style.background = 'var(--brand-blue)';
+                            captureBtn.innerHTML = '<i class="fas fa-camera me-2"></i> Capture Screenshot';
+                            captureBtn.disabled = false;
+                        }, 3000);
+
+                    } catch (error) {
+                        // Fault Tolerance
+                        console.error("[L.I.S.A Core] Canvas Export Failed:", error);
+                        captureBtn.style.background = '#dc3545';
+                        captureBtn.innerHTML = '<i class="fas fa-times-circle me-2"></i> Capture Failed';
+                        statusText.className = "text-center mt-3 small fw-bold text-danger";
+                        statusText.innerHTML = "Security Policy blocked canvas extraction.";
+                        captureBtn.disabled = false;
+                    }
+                }).catch(err => {
+                    console.error("[L.I.S.A Core] html2canvas Engine Error:", err);
+                    captureBtn.style.background = '#dc3545';
+                    captureBtn.innerHTML = '<i class="fas fa-times-circle me-2"></i> Render Error';
+                    statusText.className = "text-center mt-3 small fw-bold text-danger";
+                    statusText.innerHTML = "Engine failed to parse the DOM tree.";
+                    captureBtn.disabled = false;
+                });
+            }, 150);
+        }
+    </script>
+</body>
+</html>

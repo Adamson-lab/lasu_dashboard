@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CGPA Forecaster</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        .score-card { transition: all 0.3s; border-left: 5px solid #0d6efd; }
+        .score-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .result-box { position: sticky; top: 20px; z-index: 1000; }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-success px-3 mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ url_for('student_portal') }}">LASU Student Portal</a>
+        <a href="{{ url_for('student_portal') }}" class="btn btn-sm btn-outline-light">Back to Dashboard</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h4 class="fw-bold text-primary mb-0">🔮 Academic Forecaster</h4>
+                    <p class="text-muted small mb-0">Predict your future CGPA based on expected performance.</p>
+                </div>
+                <div class="card-body">
+                    {% if pending_courses %}
+                        <p class="mb-3">Select expected grades for your registered courses:</p>
+                        <form id="forecastForm">
+                            {% for course in pending_courses %}
+                            <div class="card score-card mb-3 p-3 bg-white">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h5 class="fw-bold mb-1">{{ course.code }}</h5>
+                                        <p class="text-muted mb-0 small">{{ course.title }} ({{ course.units }} Units)</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select grade-select" data-units="{{ course.units }}">
+                                            <option value="">-- Select Grade --</option>
+                                            <option value="5">A (5 Points)</option>
+                                            <option value="4">B (4 Points)</option>
+                                            <option value="3">C (3 Points)</option>
+                                            <option value="2">D (2 Points)</option>
+                                            <option value="1">E (1 Point)</option>
+                                            <option value="0">F (0 Points)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            You have no pending registered courses to forecast. Register courses first!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="result-box">
+                <div class="card shadow border-0 bg-dark text-white text-center">
+                    <div class="card-body py-4">
+                        <h6 class="text-white-50">CURRENT CGPA</h6>
+                        <h1 class="display-4 fw-bold mb-3">{{ "%.2f"|format(current_cgpa) }}</h1>
+                        
+                        <hr class="border-secondary">
+                        
+                        <h6 class="text-warning">PROJECTED CGPA</h6>
+                        <h1 class="display-2 fw-bold text-warning" id="projectedCGPA">---</h1>
+                        <p id="remark" class="badge bg-secondary fs-6 mt-2">Select grades to see result</p>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mt-3">
+                    <div class="card-body">
+                        <h6 class="fw-bold">Goal Tracker</h6>
+                        <p class="small text-muted mb-1">Progress to First Class (4.50)</p>
+                        <div class="progress" style="height: 20px;">
+                            <div id="goalProgress" class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const currentCGPA = {{ current_cgpa }};
+    
+    // --- FIX: HANDLE LEVEL CALCULATION CORRECTLY ---
+    // If level is 100, 200, 300... we divide by 100 to get 1, 2, 3.
+    let rawLevel = {{ student.level }}; 
+    let year = (rawLevel >= 100) ? (rawLevel / 100) : rawLevel;
+    
+    // Estimate 35 units per year (Standard Nigerian University Load)
+    // We use Math.max to ensure we don't divide by zero for freshers
+    const approximateUnitsTaken = Math.max((year * 35), 15); 
+    
+    const currentTotalPoints = currentCGPA * approximateUnitsTaken;
+
+    const selects = document.querySelectorAll('.grade-select');
+    const display = document.getElementById('projectedCGPA');
+    const remarkBadge = document.getElementById('remark');
+    const progressBar = document.getElementById('goalProgress');
+
+    function calculateForecast() {
+        let addedPoints = 0;
+        let addedUnits = 0;
+
+        selects.forEach(select => {
+            if(select.value !== "") {
+                const points = parseInt(select.value);
+                const units = parseInt(select.getAttribute('data-units'));
+                
+                addedPoints += (points * units);
+                addedUnits += units;
+            }
+        });
+
+        if (addedUnits === 0) {
+            display.innerText = "---";
+            display.className = "display-2 fw-bold text-warning"; // Reset color
+            return;
+        }
+
+        const finalUnits = approximateUnitsTaken + addedUnits;
+        const finalPoints = currentTotalPoints + addedPoints;
+        const projected = (finalPoints / finalUnits).toFixed(2);
+
+        display.innerText = projected;
+        
+        // --- VISUAL FEEDBACK LOGIC ---
+        if (projected > currentCGPA) {
+            display.className = "display-2 fw-bold text-success animate__animated animate__pulse";
+            remarkBadge.className = "badge bg-success fs-6 mt-2";
+            remarkBadge.innerText = "📈 Trending Up!";
+        } else if (projected < currentCGPA) {
+            display.className = "display-2 fw-bold text-danger animate__animated animate__shakeX";
+            remarkBadge.className = "badge bg-danger fs-6 mt-2";
+            remarkBadge.innerText = "📉 Dropping";
+        } else {
+            display.className = "display-2 fw-bold text-warning";
+            remarkBadge.className = "badge bg-warning text-dark fs-6 mt-2";
+            remarkBadge.innerText = "No Change";
+        }
+
+        // Update Progress Bar (Target: 5.0)
+        const pct = (projected / 5.0) * 100;
+        progressBar.style.width = pct + "%";
+    }
+
+    selects.forEach(s => s.addEventListener('change', calculateForecast));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Input Pane --- */
+        .input-pane {
+            flex: 0 0 55%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .pane-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 700;
+            color: var(--lasu-green);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .matrix-setup-area {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .matrix-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .matrix-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .matrix-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--math-blue);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dimension-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dim-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .dim-select {
+            width: 70px;
+            font-family: 'Fira Code', monospace;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* --- Bulletproof Grid UI --- */
+        .matrix-wrapper {
+            /* This wrapper handles the overflow so the brackets scroll WITH the grid */
+            width: 100%;
+            overflow: auto;
+            max-height: 450px;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+            background: white;
+        }
+
+        .matrix-brackets {
+            /* Inline-flex forces it to strictly hug the exact width of the grid */
+            display: inline-flex;
+            position: relative;
+            padding: 0 15px;
+            min-width: min-content;
+            margin: 0 auto;
+        }
+
+        .matrix-brackets::before, .matrix-brackets::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 15px;
+            border: 3px solid #343a40;
+        }
+        .matrix-brackets::before { left: 0; border-right: none; }
+        .matrix-brackets::after { right: 0; border-left: none; }
+
+        .matrix-grid {
+            display: grid;
+            gap: 4px;
+            padding: 10px 5px;
+            /* Ensures columns do not collapse */
+            width: max-content;
+        }
+
+        .cell-input {
+            text-align: center;
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            color: #212529;
+            transition: all 0.1s;
+        }
+
+        .cell-input:focus {
+            border-color: var(--math-blue);
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
+            outline: none;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- Right Pane (Actions & Output) --- */
+        .action-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0; 
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .btn-math {
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            padding: 12px;
+            font-size: 1.05rem;
+        }
+
+        .output-box {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .output-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-image: radial-gradient(#e9ecef 1px, transparent 1px);
+            background-size: 20px 20px;
+            flex-direction: column;
+            overflow: auto; 
+        }
+
+        .result-matrix {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #212529;
+            border-collapse: separate;
+            border-spacing: 10px 5px; 
+            width: max-content;
+        }
+
+        .result-cell { text-align: center; white-space: nowrap; padding: 5px; }
+        .result-scalar { font-family: 'Fira Code', monospace; font-size: 2.5rem; font-weight: 800; color: var(--lasu-green); text-align: center; word-break: break-all;}
+        .error-message { color: #dc3545; font-weight: 700; text-align: center; font-size: 1.1rem; max-width: 80%; }
+
+        .btn-multiply { background-color: var(--lasu-green); color: white; border: none; }
+        .btn-multiply:hover { background-color: var(--lasu-accent); color: white;}
+        .btn-add { background-color: var(--math-blue); color: white; border: none;}
+        .btn-add:hover { background-color: #0b5ed7; color: white;}
+        .btn-single { background-color: #f8f9fa; color: #212529; border: 1px solid #dee2e6; }
+        .btn-single:hover { background-color: #e9ecef; }
+
+        /* --- Modal Styling --- */
+        .modal-matrix-wrapper {
+            overflow: auto;
+            max-height: 70vh;
+            padding: 20px;
+            display: flex;
+            justify-content: flex-start; /* Prevent cut-off on massive grids */
+            align-items: flex-start;
+            background-image: radial-gradient(#e9ecef 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .expanded-cell {
+            width: 70px !important;
+            height: 45px !important;
+            font-size: 1.1rem !important;
+            margin: 2px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="pane-header">
+            <div><i class="fas fa-th me-2"></i> Matrix Dimensions & Data</div>
+        </div>
+
+        <div class="matrix-setup-area">
+            
+            <div class="matrix-block">
+                <div class="matrix-header">
+                    <h4 class="matrix-title">
+                        Matrix A 
+                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="openModal('A')" title="Expand to Fullscreen">
+                            <i class="fas fa-expand-arrows-alt"></i>
+                        </button>
+                    </h4>
+                    <div class="dimension-controls">
+                        <span class="dim-label">Rows</span>
+                        <input type="number" class="form-control form-control-sm dim-select" id="rowsA" min="1" max="50" value="2" onchange="buildMatrix('A')">
+                        <span class="dim-label ms-2">Cols</span>
+                        <input type="number" class="form-control form-control-sm dim-select" id="colsA" min="1" max="50" value="2" onchange="buildMatrix('A')">
+                    </div>
+                </div>
+                <div class="matrix-wrapper">
+                    <div class="matrix-brackets">
+                        <div class="matrix-grid" id="gridA"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="matrix-block">
+                <div class="matrix-header">
+                    <h4 class="matrix-title text-danger">
+                        Matrix B
+                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="openModal('B')" title="Expand to Fullscreen">
+                            <i class="fas fa-expand-arrows-alt"></i>
+                        </button>
+                    </h4>
+                    <div class="dimension-controls">
+                        <span class="dim-label">Rows</span>
+                        <input type="number" class="form-control form-control-sm dim-select" id="rowsB" min="1" max="50" value="2" onchange="buildMatrix('B')">
+                        <span class="dim-label ms-2">Cols</span>
+                        <input type="number" class="form-control form-control-sm dim-select" id="colsB" min="1" max="50" value="2" onchange="buildMatrix('B')">
+                    </div>
+                </div>
+                <div class="matrix-wrapper">
+                    <div class="matrix-brackets">
+                        <div class="matrix-grid" id="gridB"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold" onclick="clearAll()">
+                <i class="fas fa-eraser me-2"></i> Clear All Data
+            </button>
+
+        </div>
+    </div>
+
+    <div class="action-pane">
+        
+        <div class="card-box">
+            <h6 class="fw-bold text-uppercase text-muted mb-3 small"><i class="fas fa-bolt me-1"></i> Operations</h6>
+            
+            <div class="action-grid mb-3">
+                <button class="btn btn-add" onclick="calculate('add')">A + B</button>
+                <button class="btn btn-add" onclick="calculate('subtract')">A - B</button>
+                <button class="btn btn-multiply col-span-2" style="grid-column: span 2;" onclick="calculate('multiply')">A × B</button>
+            </div>
+
+            <div class="action-grid">
+                <button class="btn btn-single" onclick="calculate('detA')">Det(A)</button>
+                <button class="btn btn-single" onclick="calculate('detB')">Det(B)</button>
+                <button class="btn btn-single" onclick="calculate('invA')">A⁻¹ (Inverse)</button>
+                <button class="btn btn-single" onclick="calculate('invB')">B⁻¹ (Inverse)</button>
+                <button class="btn btn-single" onclick="calculate('transA')">Aᵀ (Transpose)</button>
+                <button class="btn btn-single" onclick="calculate('transB')">Bᵀ (Transpose)</button>
+            </div>
+        </div>
+
+        <div class="output-box">
+            <div class="pane-header bg-light text-dark">
+                <div><i class="fas fa-equals text-success me-2"></i> Result</div>
+                <button class="btn btn-sm btn-outline-success d-none" id="expandResultBtn" onclick="openModal('Result')">
+                    <i class="fas fa-expand"></i> Expand
+                </button>
+            </div>
+            <div class="output-content" id="outputArea">
+                <div class="text-muted small fw-bold text-uppercase opacity-50">Awaiting Calculation...</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade" id="matrixModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold" id="modalTitle">Expanded View</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="modal-matrix-wrapper" id="modalMatrixWrapper">
+                    <div class="matrix-brackets">
+                        <div class="matrix-grid" id="modalGridContainer"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success fw-bold" id="modalSaveBtn" onclick="saveModalChanges()" data-bs-dismiss="modal">
+                    <i class="fas fa-save me-1"></i> Apply Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- UI GRID BUILDER ---
+    function buildMatrix(matrixId) {
+        let rows = parseInt(document.getElementById(`rows${matrixId}`).value) || 2;
+        let cols = parseInt(document.getElementById(`cols${matrixId}`).value) || 2;
+        
+        if (rows > 50) { rows = 50; document.getElementById(`rows${matrixId}`).value = 50; }
+        if (cols > 50) { cols = 50; document.getElementById(`cols${matrixId}`).value = 50; }
+        if (rows < 1) { rows = 1; document.getElementById(`rows${matrixId}`).value = 1; }
+        if (cols < 1) { cols = 1; document.getElementById(`cols${matrixId}`).value = 1; }
+
+        const grid = document.getElementById(`grid${matrixId}`);
+        // 'max-content' forces columns to stay fixed size and triggers the scrollbar properly
+        grid.style.gridTemplateColumns = `repeat(${cols}, max-content)`;
+        grid.innerHTML = '';
+
+        // Dynamically adjust cell sizes based on how big the matrix is
+        let cellW = '60px';
+        let cellH = '45px';
+        let fontS = '1.1rem';
+
+        if (cols > 25 || rows > 25) {
+            cellW = '35px'; cellH = '25px'; fontS = '0.7rem';
+        } else if (cols > 10 || rows > 10) {
+            cellW = '45px'; cellH = '35px'; fontS = '0.9rem';
+        }
+
+        const fragment = document.createDocumentFragment();
+        
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'cell-input';
+                input.style.width = cellW;
+                input.style.height = cellH;
+                input.style.fontSize = fontS;
+                input.value = '0';
+                input.id = `cell_${matrixId}_${r}_${c}`;
+                input.onfocus = function() { this.select(); };
+                fragment.appendChild(input);
+            }
+        }
+        grid.appendChild(fragment);
+    }
+
+    // --- MODAL EXPANSION LOGIC ---
+    let currentModalTarget = '';
+
+    function openModal(target) {
+        currentModalTarget = target;
+        const modalTitle = document.getElementById('modalTitle');
+        const modalGrid = document.getElementById('modalGridContainer');
+        const modalWrapper = document.getElementById('modalMatrixWrapper');
+        const saveBtn = document.getElementById('modalSaveBtn');
+
+        if (target === 'A' || target === 'B') {
+            modalTitle.innerText = `Editing Matrix ${target} (Fullscreen)`;
+            saveBtn.style.display = 'block';
+            
+            const rows = parseInt(document.getElementById(`rows${target}`).value);
+            const cols = parseInt(document.getElementById(`cols${target}`).value);
+            
+            modalGrid.style.display = 'grid';
+            modalGrid.style.gridTemplateColumns = `repeat(${cols}, max-content)`;
+            modalGrid.innerHTML = '';
+            modalGrid.parentElement.className = 'matrix-brackets';
+
+            const fragment = document.createDocumentFragment();
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const originalVal = document.getElementById(`cell_${target}_${r}_${c}`).value;
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'cell-input expanded-cell';
+                    input.value = originalVal;
+                    input.id = `modal_cell_${r}_${c}`;
+                    input.onfocus = function() { this.select(); };
+                    fragment.appendChild(input);
+                }
+            }
+            modalGrid.appendChild(fragment);
+            
+        } else if (target === 'Result') {
+            modalTitle.innerText = `Result Output (Fullscreen View)`;
+            saveBtn.style.display = 'none'; 
+            
+            modalGrid.style.display = 'block'; 
+            modalGrid.parentElement.className = ''; 
+            modalGrid.innerHTML = document.getElementById('outputArea').innerHTML;
+        }
+
+        const matrixModal = new bootstrap.Modal(document.getElementById('matrixModal'));
+        matrixModal.show();
+    }
+
+    function saveModalChanges() {
+        if (currentModalTarget === 'A' || currentModalTarget === 'B') {
+            const rows = parseInt(document.getElementById(`rows${currentModalTarget}`).value);
+            const cols = parseInt(document.getElementById(`cols${currentModalTarget}`).value);
+            
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const modalVal = document.getElementById(`modal_cell_${r}_${c}`).value;
+                    document.getElementById(`cell_${currentModalTarget}_${r}_${c}`).value = modalVal;
+                }
+            }
+        }
+    }
+
+
+    // --- DATA EXTRACTION ---
+    function getMatrixData(matrixId) {
+        const rows = parseInt(document.getElementById(`rows${matrixId}`).value);
+        const cols = parseInt(document.getElementById(`cols${matrixId}`).value);
+        const matrix = [];
+
+        for (let r = 0; r < rows; r++) {
+            const row = [];
+            for (let c = 0; c < cols; c++) {
+                const val = parseFloat(document.getElementById(`cell_${matrixId}_${r}_${c}`).value) || 0;
+                row.push(val);
+            }
+            matrix.push(row);
+        }
+        return { data: matrix, rows: rows, cols: cols };
+    }
+
+    // --- CORE MATHEMATICS ENGINE ---
+    const MathEngine = {
+        add: (A, B) => {
+            if (A.rows !== B.rows || A.cols !== B.cols) throw new Error("Addition requires matrices of the exact same dimensions.");
+            return A.data.map((row, r) => row.map((val, c) => val + B.data[r][c]));
+        },
+        subtract: (A, B) => {
+            if (A.rows !== B.rows || A.cols !== B.cols) throw new Error("Subtraction requires matrices of the exact same dimensions.");
+            return A.data.map((row, r) => row.map((val, c) => val - B.data[r][c]));
+        },
+        multiply: (A, B) => {
+            if (A.cols !== B.rows) throw new Error(`Multiplication Error: Matrix A columns (${A.cols}) must equal Matrix B rows (${B.rows}).`);
+            let result = Array(A.rows).fill(0).map(() => Array(B.cols).fill(0));
+            for (let r = 0; r < A.rows; r++) {
+                for (let c = 0; c < B.cols; c++) {
+                    for (let i = 0; i < A.cols; i++) {
+                        result[r][c] += A.data[r][i] * B.data[i][c];
+                    }
+                }
+            }
+            return result;
+        },
+        transpose: (A) => {
+            let result = Array(A.cols).fill(0).map(() => Array(A.rows).fill(0));
+            for (let r = 0; r < A.rows; r++) {
+                for (let c = 0; c < A.cols; c++) {
+                    result[c][r] = A.data[r][c];
+                }
+            }
+            return result;
+        },
+        determinant: (M) => {
+            const n = M.length;
+            if (n === 1) return M[0][0];
+            if (n === 2) return (M[0][0] * M[1][1]) - (M[0][1] * M[1][0]);
+            
+            let A = M.map(row => [...row]);
+            let det = 1;
+
+            for (let i = 0; i < n; i++) {
+                let pivot = A[i][i];
+                if (Math.abs(pivot) < 1e-10) { // floating point tolerance
+                    let swapRow = -1;
+                    for (let j = i + 1; j < n; j++) {
+                        if (Math.abs(A[j][i]) > 1e-10) { swapRow = j; break; }
+                    }
+                    if (swapRow === -1) return 0; 
+                    
+                    let temp = A[i]; A[i] = A[swapRow]; A[swapRow] = temp;
+                    det *= -1; 
+                    pivot = A[i][i];
+                }
+                det *= pivot;
+                for (let j = i + 1; j < n; j++) {
+                    let factor = A[j][i] / pivot;
+                    for (let k = i + 1; k < n; k++) {
+                        A[j][k] -= factor * A[i][k];
+                    }
+                }
+            }
+            return det;
+        },
+        inverse: (A) => {
+            if (A.rows !== A.cols) throw new Error("Inverses can only be calculated for square (NxN) matrices.");
+            
+            const n = A.rows;
+            let aug = A.data.map((row, i) => {
+                let idRow = Array(n).fill(0);
+                idRow[i] = 1;
+                return [...row, ...idRow];
+            });
+
+            for (let i = 0; i < n; i++) {
+                let pivot = aug[i][i];
+                if (Math.abs(pivot) < 1e-10) {
+                    let swapRow = -1;
+                    for (let j = i + 1; j < n; j++) {
+                        if (Math.abs(aug[j][i]) > 1e-10) { swapRow = j; break; }
+                    }
+                    if (swapRow === -1) throw new Error("This matrix is Singular (Determinant = 0). It does not have an inverse.");
+                    let temp = aug[i]; aug[i] = aug[swapRow]; aug[swapRow] = temp;
+                    pivot = aug[i][i];
+                }
+                for (let j = 0; j < 2 * n; j++) { aug[i][j] /= pivot; }
+                for (let j = 0; j < n; j++) {
+                    if (i !== j) {
+                        let factor = aug[j][i];
+                        for (let k = 0; k < 2 * n; k++) {
+                            aug[j][k] -= factor * aug[i][k];
+                        }
+                    }
+                }
+            }
+            return aug.map(row => row.slice(n));
+        }
+    };
+
+    // --- CONTROLLER ---
+    function calculate(operation) {
+        const outArea = document.getElementById('outputArea');
+        const expandResultBtn = document.getElementById('expandResultBtn');
+        const A = getMatrixData('A');
+        const B = getMatrixData('B');
+
+        expandResultBtn.classList.add('d-none');
+
+        // Loading state for heavy operations
+        if (A.rows > 10 || B.rows > 10) {
+            outArea.innerHTML = `<div class="text-muted fw-bold"><i class="fas fa-spinner fa-spin me-2"></i> Processing high-dimensional matrix...</div>`;
+        }
+
+        setTimeout(() => {
+            try {
+                let result;
+                let isScalar = false;
+
+                if (operation === 'add') result = MathEngine.add(A, B);
+                else if (operation === 'subtract') result = MathEngine.subtract(A, B);
+                else if (operation === 'multiply') result = MathEngine.multiply(A, B);
+                else if (operation === 'transA') result = MathEngine.transpose(A);
+                else if (operation === 'transB') result = MathEngine.transpose(B);
+                else if (operation === 'detA') {
+                    if (A.rows !== A.cols) throw new Error("Determinants only exist for square (NxN) matrices.");
+                    result = MathEngine.determinant(A.data);
+                    isScalar = true;
+                }
+                else if (operation === 'detB') {
+                    if (B.rows !== B.cols) throw new Error("Determinants only exist for square (NxN) matrices.");
+                    result = MathEngine.determinant(B.data);
+                    isScalar = true;
+                }
+                else if (operation === 'invA') result = MathEngine.inverse(A);
+                else if (operation === 'invB') result = MathEngine.inverse(B);
+
+                renderOutput(result, isScalar);
+                expandResultBtn.classList.remove('d-none');
+
+            } catch (error) {
+                outArea.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle fa-2x mb-3 d-block"></i>${error.message}</div>`;
+            }
+        }, 50);
+    }
+
+    // --- RENDERING ---
+    function renderOutput(data, isScalar) {
+        const outArea = document.getElementById('outputArea');
+        
+        if (isScalar) {
+            // Safety for massive determinants like Infinity or -Infinity
+            let cleanVal;
+            if (!isFinite(data)) {
+                cleanVal = "∞ (Infinity)";
+            } else {
+                // Round to avoid float precision garbage, but allow scientific notation for huge numbers
+                cleanVal = Number(Math.round(data + 'e4') + 'e-4'); 
+            }
+            outArea.innerHTML = `<div class="result-scalar">${cleanVal}</div><div class="text-muted fw-bold mt-2">Scalar Value</div>`;
+            return;
+        }
+
+        const rows = data.length;
+        const cols = data[0].length;
+        
+        let html = `
+            <div class="matrix-wrapper" style="max-height: 400px;">
+                <div class="matrix-brackets">
+                    <table class="result-matrix">
+        `;
+
+        for (let r = 0; r < rows; r++) {
+            html += '<tr>';
+            for (let c = 0; c < cols; c++) {
+                let val = data[r][c];
+                
+                if (!isFinite(val)) {
+                    val = "∞";
+                } else {
+                    val = Number(Math.round(val + 'e4') + 'e-4');
+                    if (val === -0) val = 0;
+                }
+                
+                html += `<td class="result-cell">${val}</td>`;
+            }
+            html += '</tr>';
+        }
+
+        html += `
+                    </table>
+                </div>
+            </div>
+            <div class="text-muted fw-bold mt-4 small text-uppercase opacity-75">${rows} × ${cols} Matrix</div>
+        `;
+
+        outArea.innerHTML = html;
+    }
+
+    function clearAll() {
+        document.getElementById('rowsA').value = 2;
+        document.getElementById('colsA').value = 2;
+        document.getElementById('rowsB').value = 2;
+        document.getElementById('colsB').value = 2;
+        
+        buildMatrix('A');
+        buildMatrix('B');
+        
+        document.getElementById('outputArea').innerHTML = '<div class="text-muted small fw-bold text-uppercase opacity-50">Board Cleared.</div>';
+        document.getElementById('expandResultBtn').classList.add('d-none');
+    }
+
+    // Initialize UI
+    window.onload = () => {
+        buildMatrix('A');
+        buildMatrix('B');
+    };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Half-Life Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .mode-selector {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-label { font-weight: 700; color: #495057; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 10px; display: block; }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-purple); box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15); }
+        .input-group-custom.disabled { background: #e9ecef; opacity: 0.6; pointer-events: none; }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            width: 170px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        .input-label small { font-size: 0.75rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; margin-top: 2px;}
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* IDENTICAL STAT CARDS TO GEAR RATIO */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+        }
+        
+        .stat-card.primary { border-color: rgba(111, 66, 193, 0.3); background: rgba(111, 66, 193, 0.02); }
+        .stat-card.danger { border-color: rgba(220, 53, 69, 0.3); background: rgba(220, 53, 69, 0.02); }
+        .stat-card.warning { border-color: rgba(253, 126, 20, 0.3); background: rgba(253, 126, 20, 0.02); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .primary .stat-val { color: var(--math-purple); }
+        .danger .stat-val { color: var(--math-red); }
+        .warning .stat-val { color: var(--math-orange); }
+
+        .res-unit { font-size: 1rem; color: #adb5bd; margin-left: 2px; }
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* Advanced Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            min-height: 400px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center bottom;
+        }
+
+        #decayCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #00ff00;
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #adb5bd;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot.d1 { background: #6f42c1; box-shadow: 0 0 5px #6f42c1; }
+        .dot.d2 { background: #dc3545; box-shadow: 0 0 5px #dc3545; }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; align-items: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-radiation"></i> Radioactive Decay
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid positive numbers.
+            </div>
+
+            <div class="mode-selector">
+                <label class="mode-label">Variable to Solve For:</label>
+                <select class="form-select font-monospace fw-bold text-primary" id="calcMode" onchange="updateMode()">
+                    <option value="Nt" selected>Remaining Amount (Nₜ)</option>
+                    <option value="t">Elapsed Time (t)</option>
+                    <option value="h">Half-Life (t½)</option>
+                    <option value="N0">Initial Amount (N₀)</option>
+                </select>
+            </div>
+
+            <div class="input-group-custom" id="grpN0">
+                <div class="input-label">Initial Amt <small>(N₀)</small></div>
+                <input type="number" class="num-input" id="valN0" value="100" step="any" oninput="calculateDecay()">
+            </div>
+            
+            <div class="input-group-custom" id="grpH">
+                <div class="input-label">Half-Life <small>(t½)</small></div>
+                <input type="number" class="num-input" id="valH" value="5" step="any" oninput="calculateDecay()">
+            </div>
+
+            <div class="input-group-custom" id="grpT">
+                <div class="input-label">Elapsed Time <small>(t)</small></div>
+                <input type="number" class="num-input" id="valT" value="15" step="any" oninput="calculateDecay()">
+            </div>
+
+            <div class="input-group-custom mb-0" id="grpNt">
+                <div class="input-label">Remaining <small>(Nₜ)</small></div>
+                <input type="number" class="num-input" id="valNt" value="" step="any" oninput="calculateDecay()">
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-4" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Reset State
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-primary bg-primary bg-opacity-10 p-3 stat-card primary">
+                    <div class="stat-label" id="mainResLabel">Remaining Amount (Nₜ)</div>
+                    <div class="stat-val">
+                        <span id="mainResVal">12.50</span>
+                    </div>
+                    <div class="stat-sub" id="mainResFormula">Nₜ = N₀ &times; (0.5)^(t / t½)</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-warning bg-warning bg-opacity-10 p-3 stat-card warning">
+                    <div class="stat-label">Percentage Remaining</div>
+                    <div class="stat-val">
+                        <span id="resPct">12.50</span>
+                        <span class="res-unit">%</span>
+                    </div>
+                    <div class="stat-sub">(Nₜ / N₀) &times; 100</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-danger bg-danger bg-opacity-10 p-3 stat-card danger">
+                    <div class="stat-label">Decay Constant (&lambda;)</div>
+                    <div class="stat-val">
+                        <span id="resLambda">0.1386</span>
+                    </div>
+                    <div class="stat-sub">&lambda; = ln(2) / t½</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="simulation-box mt-2">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="decayCanvas"></canvas>
+            </div>
+            <div class="telemetry-bar">
+                <div class="legend">
+                    <div class="legend-item"><div class="dot d1"></div> Decay Curve</div>
+                    <div class="legend-item"><div class="dot d2"></div> Target Time (t)</div>
+                </div>
+                <div class="formula-bar">
+                    N(t) = N₀ &middot; e<sup>-&lambda;t</sup>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Inputs
+    const calcMode = document.getElementById('calcMode');
+    const valN0 = document.getElementById('valN0');
+    const valH = document.getElementById('valH');
+    const valT = document.getElementById('valT');
+    const valNt = document.getElementById('valNt');
+    
+    const grpN0 = document.getElementById('grpN0');
+    const grpH = document.getElementById('grpH');
+    const grpT = document.getElementById('grpT');
+    const grpNt = document.getElementById('grpNt');
+
+    const errorBanner = document.getElementById('errorBanner');
+    
+    // Outputs
+    const mainResLabel = document.getElementById('mainResLabel');
+    const mainResVal = document.getElementById('mainResVal');
+    const mainResFormula = document.getElementById('mainResFormula');
+    const resPct = document.getElementById('resPct');
+    const resLambda = document.getElementById('resLambda');
+
+    // Canvas
+    const canvas = document.getElementById('decayCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    let M = { n0: 100, h: 5, t: 15, nt: 12.5, lambda: 0 };
+
+    // FLAWLESS CANVAS SCALING ALGORITHM
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
+            
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            drawGraph(); 
+        }
+    });
+    resizeObserver.observe(container);
+
+    function formatNumber(num) {
+        if (!isFinite(num)) return "--";
+        if (num === 0) return "0.00";
+        if (num > 1e6 || (num < 1e-3 && num > 0)) return num.toExponential(4);
+        return (Math.round(num * 10000) / 10000).toString();
+    }
+
+    function updateMode() {
+        const mode = calcMode.value;
+        
+        grpN0.classList.remove('disabled'); valN0.disabled = false;
+        grpH.classList.remove('disabled'); valH.disabled = false;
+        grpT.classList.remove('disabled'); valT.disabled = false;
+        grpNt.classList.remove('disabled'); valNt.disabled = false;
+
+        if (mode === 'Nt') {
+            grpNt.classList.add('disabled'); valNt.disabled = true; valNt.value = '';
+            mainResLabel.innerText = 'Remaining Amount (Nₜ)';
+            mainResFormula.innerHTML = 'Nₜ = N₀ &times; (0.5)<sup>(t / t½)</sup>';
+        } else if (mode === 't') {
+            grpT.classList.add('disabled'); valT.disabled = true; valT.value = '';
+            mainResLabel.innerText = 'Elapsed Time (t)';
+            mainResFormula.innerHTML = 't = t½ &times; ln(Nₜ/N₀) / ln(0.5)';
+        } else if (mode === 'h') {
+            grpH.classList.add('disabled'); valH.disabled = true; valH.value = '';
+            mainResLabel.innerText = 'Half-Life (t½)';
+            mainResFormula.innerHTML = 't½ = t &times; ln(0.5) / ln(Nₜ/N₀)';
+        } else if (mode === 'N0') {
+            grpN0.classList.add('disabled'); valN0.disabled = true; valN0.value = '';
+            mainResLabel.innerText = 'Initial Amount (N₀)';
+            mainResFormula.innerHTML = 'N₀ = Nₜ / (0.5)<sup>(t / t½)</sup>';
+        }
+        
+        calculateDecay();
+    }
+
+    function calculateDecay() {
+        const mode = calcMode.value;
+        const n0 = parseFloat(valN0.value);
+        const h = parseFloat(valH.value);
+        const t = parseFloat(valT.value);
+        const nt = parseFloat(valNt.value);
+
+        let isError = false;
+
+        if (mode === 'Nt') {
+            if (isNaN(n0) || isNaN(h) || isNaN(t) || n0 <= 0 || h <= 0 || t < 0) isError = true;
+            else {
+                M.n0 = n0; M.h = h; M.t = t;
+                M.nt = M.n0 * Math.pow(0.5, M.t / M.h);
+                valNt.value = formatNumber(M.nt);
+                mainResVal.innerText = formatNumber(M.nt);
+            }
+        } else if (mode === 't') {
+            if (isNaN(n0) || isNaN(h) || isNaN(nt) || n0 <= 0 || h <= 0 || nt <= 0 || nt > n0) isError = true;
+            else {
+                M.n0 = n0; M.h = h; M.nt = nt;
+                M.t = M.h * (Math.log(M.nt / M.n0) / Math.log(0.5));
+                valT.value = formatNumber(M.t);
+                mainResVal.innerText = formatNumber(M.t);
+            }
+        } else if (mode === 'h') {
+            if (isNaN(n0) || isNaN(t) || isNaN(nt) || n0 <= 0 || t <= 0 || nt <= 0 || nt >= n0) isError = true;
+            else {
+                M.n0 = n0; M.t = t; M.nt = nt;
+                M.h = M.t * (Math.log(0.5) / Math.log(M.nt / M.n0));
+                valH.value = formatNumber(M.h);
+                mainResVal.innerText = formatNumber(M.h);
+            }
+        } else if (mode === 'N0') {
+            if (isNaN(h) || isNaN(t) || isNaN(nt) || h <= 0 || t < 0 || nt <= 0) isError = true;
+            else {
+                M.h = h; M.t = t; M.nt = nt;
+                M.n0 = M.nt / Math.pow(0.5, M.t / M.h);
+                valN0.value = formatNumber(M.n0);
+                mainResVal.innerText = formatNumber(M.n0);
+            }
+        }
+
+        if (isError) {
+            errorBanner.style.display = 'block';
+            mainResVal.innerText = '--';
+            resPct.innerText = '--';
+            resLambda.innerText = '--';
+            drawGraph(true);
+            return;
+        }
+        
+        errorBanner.style.display = 'none';
+
+        // Additional Stats
+        M.lambda = Math.LN2 / M.h;
+        resLambda.innerText = formatNumber(M.lambda);
+        
+        const pct = (M.nt / M.n0) * 100;
+        resPct.innerText = pct.toFixed(2);
+
+        drawGraph(false);
+    }
+
+    // --- MATHEMATICAL CANVAS PLOTTER ---
+    function drawGraph(isError = false) {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        if(cw === 0) return;
+        
+        ctx.clearRect(0, 0, cw, ch);
+
+        if (isError || M.n0 <= 0 || M.h <= 0) return;
+
+        // Bounding Box Logic (Leave padding)
+        const padX = 60;
+        const padY = 40;
+        const graphW = cw - padX * 2;
+        const graphH = ch - padY * 2;
+
+        // Scaling logic. View window shows up to max(t, 4 half-lives)
+        const maxX = Math.max(M.t * 1.2, M.h * 4);
+        const maxY = M.n0 * 1.1;
+
+        const scaleX = graphW / maxX;
+        const scaleY = graphH / maxY;
+
+        const pX = (logicalX) => padX + (logicalX * scaleX);
+        const pY = (logicalY) => ch - padY - (logicalY * scaleY); // Y is inverted
+
+        // 1. Draw Axes
+        ctx.strokeStyle = '#495057';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(padX, padY); ctx.lineTo(padX, ch - padY); // Y Axis
+        ctx.lineTo(cw - padX, ch - padY); // X Axis
+        ctx.stroke();
+
+        ctx.fillStyle = '#adb5bd';
+        ctx.font = 'bold 12px "Fira Code", monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText('N₀', padX - 10, pY(M.n0));
+        ctx.textAlign = 'center';
+        ctx.fillText('Time (t)', cw / 2, ch - 10);
+
+        // Draw Half-Life Markers (Vertical dashed lines)
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 1;
+        for (let i = 1; i <= 4; i++) {
+            let hlTime = M.h * i;
+            if (hlTime < maxX) {
+                ctx.beginPath();
+                ctx.moveTo(pX(hlTime), ch - padY);
+                ctx.lineTo(pX(hlTime), pY(M.n0 * Math.pow(0.5, i)));
+                ctx.stroke();
+                ctx.fillText(`${i}t½`, pX(hlTime), ch - padY + 20);
+            }
+        }
+        ctx.setLineDash([]);
+
+        // 2. Draw Exponential Decay Curve
+        ctx.beginPath();
+        ctx.moveTo(pX(0), pY(M.n0));
+        
+        // Plot points across the X axis
+        for (let x = 0; x <= maxX; x += (maxX / 100)) {
+            let y = M.n0 * Math.pow(0.5, x / M.h);
+            ctx.lineTo(pX(x), pY(y));
+        }
+        
+        ctx.strokeStyle = '#6f42c1';
+        ctx.lineWidth = 4;
+        ctx.shadowColor = '#6f42c1';
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Shaded area under curve up to time T
+        ctx.beginPath();
+        ctx.moveTo(pX(0), ch - padY);
+        ctx.lineTo(pX(0), pY(M.n0));
+        for (let x = 0; x <= M.t; x += (M.t / 50)) {
+            let y = M.n0 * Math.pow(0.5, x / M.h);
+            ctx.lineTo(pX(x), pY(y));
+        }
+        ctx.lineTo(pX(M.t), ch - padY);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(111, 66, 193, 0.2)';
+        ctx.fill();
+
+        // 3. Highlight Target Time Point (t, Nt)
+        const targetPx = pX(M.t);
+        const targetPy = pY(M.nt);
+
+        // Crosshairs
+        ctx.strokeStyle = '#dc3545';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(padX, targetPy); ctx.lineTo(targetPx, targetPy); // Horiz to Y
+        ctx.moveTo(targetPx, ch - padY); ctx.lineTo(targetPx, targetPy); // Vert to X
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Red glowing dot
+        ctx.beginPath();
+        ctx.arc(targetPx, targetPy, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#dc3545';
+        ctx.shadowBlur = 15;
+        ctx.fill();
+        ctx.strokeStyle = '#dc3545';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Label target point
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px "Segoe UI", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(`N(t) = ${formatNumber(M.nt)}`, targetPx + 15, targetPy - 10);
+    }
+
+    function clearInputs() { 
+        calcMode.value = 'Nt';
+        updateMode();
+        valN0.value = '100'; valH.value = '5'; valT.value = '15'; valNt.value = '';
+        calculateDecay(); 
+    }
+
+    // INIT
+    setTimeout(() => { calculateDecay(); }, 100);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

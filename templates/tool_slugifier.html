@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Slugifier | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        /* Controls Pane */
+        .controls-pane {
+            flex: 0 0 450px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .control-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 700;
+            color: var(--lasu-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-area {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .input-text {
+            resize: none;
+            font-family: 'Segoe UI', sans-serif;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 12px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+            font-size: 1.05rem;
+            line-height: 1.5;
+        }
+        .input-text:focus {
+            border-color: var(--lasu-green);
+            box-shadow: 0 0 0 3px rgba(0, 77, 64, 0.1);
+            outline: none;
+        }
+
+        .settings-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .form-check-label {
+            font-weight: 600;
+            color: #495057;
+            cursor: pointer;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--lasu-accent);
+            border-color: var(--lasu-accent);
+        }
+
+        /* Output Pane */
+        .output-pane {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .output-header {
+            background: var(--lasu-green);
+            padding: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .output-header h5 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .slug-display-area {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(#e9ecef 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .slug-box {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 25px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.5rem;
+            color: var(--lasu-accent);
+            font-weight: 600;
+            word-break: break-all;
+            min-height: 150px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .slug-box:focus {
+            outline: none;
+            border-color: var(--lasu-accent);
+            box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1);
+        }
+
+        .url-preview {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: 'Segoe UI', sans-serif;
+            color: #6c757d;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            overflow-x: hidden;
+            white-space: nowrap;
+        }
+        
+        .url-preview span {
+            color: #212529;
+            font-weight: 700;
+        }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .controls-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">DEV TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-pane">
+        <div class="control-header">
+            <i class="fas fa-link"></i> Slugifier Settings
+        </div>
+
+        <div class="form-area">
+            <div>
+                <label class="form-label text-primary">Original Title / Text</label>
+                <textarea class="input-text w-100" id="textInput" rows="5" placeholder="Enter an article title, filename, or text string here..." oninput="generateSlug()">How to Build an "Unprecedentedly Robust" SEO Tool in 2026! 🚀</textarea>
+            </div>
+
+            <div class="settings-card">
+                <label class="form-label mb-3 border-bottom pb-2 d-block">Configuration</label>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted" style="font-size: 0.75rem;">Separator</label>
+                    <select class="form-select border-secondary fw-bold" id="separatorSelect" onchange="generateSlug()">
+                        <option value="-">Hyphen (-)</option>
+                        <option value="_">Underscore (_)</option>
+                    </select>
+                </div>
+
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="optLowercase" checked onchange="generateSlug()">
+                    <label class="form-check-label" for="optLowercase">Force Lowercase</label>
+                </div>
+                
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="optDiacritics" checked onchange="generateSlug()">
+                    <label class="form-check-label" for="optDiacritics">Remove Accents (café → cafe)</label>
+                </div>
+
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="optStopwords" checked onchange="generateSlug()">
+                    <label class="form-check-label" for="optStopwords">Remove SEO Stop Words (a, an, the...)</label>
+                </div>
+
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="optStrict" checked onchange="generateSlug()">
+                    <label class="form-check-label" for="optStrict">Strict Alphanumeric Only (Removes Emojis)</label>
+                </div>
+            </div>
+
+            <button class="btn btn-outline-danger w-100 mt-2" onclick="clearBoard()">
+                <i class="fas fa-eraser me-1"></i> Clear Input
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="output-header">
+            <h5><i class="fas fa-check-circle me-2"></i> Generated URL Slug</h5>
+            <button class="btn btn-light btn-sm fw-bold text-success" onclick="copySlug()">
+                <i class="fas fa-copy"></i> Copy to Clipboard
+            </button>
+        </div>
+
+        <div class="slug-display-area">
+            
+            <div class="url-preview">
+                https://yourwebsite.com/article/&nbsp;<span id="urlPreviewSlug"></span>
+            </div>
+
+            <label class="form-label text-muted">Raw Slug Output</label>
+            <div class="slug-box" id="slugOutput" contenteditable="true" spellcheck="false"></div>
+            
+            <div class="d-flex justify-content-between text-muted small fw-bold mt-3 px-2">
+                <div id="charCount">0 Characters</div>
+                <div id="wordCount">0 Words</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    const textInput = document.getElementById('textInput');
+    const separatorSelect = document.getElementById('separatorSelect');
+    const optLowercase = document.getElementById('optLowercase');
+    const optDiacritics = document.getElementById('optDiacritics');
+    const optStopwords = document.getElementById('optStopwords');
+    const optStrict = document.getElementById('optStrict');
+    
+    const slugOutput = document.getElementById('slugOutput');
+    const urlPreviewSlug = document.getElementById('urlPreviewSlug');
+    const charCount = document.getElementById('charCount');
+    const wordCount = document.getElementById('wordCount');
+    const toastBox = document.getElementById('toastBox');
+
+    // Extensive list of common SEO stop words that don't add value to URLs
+    const stopWords = new Set([
+        'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'from', 'by', 'with', 
+        'over', 'in', 'into', 'of', 'as', 'is', 'it', 'its', 'this', 'that', 'these', 'those', 
+        'then', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 
+        'did', 'will', 'would', 'shall', 'should', 'can', 'could', 'may', 'might', 'must', 'am'
+    ]);
+
+    function generateSlug() {
+        let text = textInput.value;
+
+        if (!text.trim()) {
+            slugOutput.innerText = '';
+            urlPreviewSlug.innerText = '';
+            charCount.innerText = '0 Characters';
+            wordCount.innerText = '0 Words';
+            return;
+        }
+
+        // 1. Lowercase
+        if (optLowercase.checked) {
+            text = text.toLowerCase();
+        }
+
+        // 2. Remove Accents/Diacritics (e.g. résumé -> resume)
+        // Normalizing to NFD separates characters from their diacritical marks.
+        if (optDiacritics.checked) {
+            text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        // 3. Remove Stop Words
+        if (optStopwords.checked) {
+            // Split by words, filter out stopwords (case insensitive matching)
+            let words = text.split(/\s+/);
+            words = words.filter(word => {
+                // Strip punctuation from the word just for the stopword check
+                let cleanWord = word.replace(/[^\w\s]|_/g, "").toLowerCase();
+                return !stopWords.has(cleanWord);
+            });
+            text = words.join(' ');
+        }
+
+        // 4. Strict Mode (Remove all non-alphanumerics, including Emojis)
+        if (optStrict.checked) {
+            text = text.replace(/[^a-zA-Z0-9\s-]/g, '');
+        } else {
+            // If not strict, still remove standard punctuation to prevent messy URLs, but allow emojis/foreign chars
+            text = text.replace(/[.,\/#!$%\^&\*;:{}=\_`~()'"\?]/g, '');
+        }
+
+        // 5. Apply Separator
+        const separator = separatorSelect.value;
+        
+        // Replace spaces and consecutive separators with a single separator
+        text = text.replace(/\s+/g, separator);
+        
+        // Clean up duplicate separators (e.g. --- becomes -)
+        const sepRegex = new RegExp(`\\${separator}+`, 'g');
+        text = text.replace(sepRegex, separator);
+
+        // Trim separators from start and end
+        if (text.startsWith(separator)) text = text.substring(1);
+        if (text.endsWith(separator)) text = text.substring(0, text.length - 1);
+
+        // Update UI
+        slugOutput.innerText = text;
+        urlPreviewSlug.innerText = text;
+        
+        // Stats
+        charCount.innerText = `${text.length} Characters`;
+        const wordsCalculated = text ? text.split(separator).length : 0;
+        wordCount.innerText = `${wordsCalculated} Words`;
+    }
+
+    function clearBoard() {
+        textInput.value = '';
+        textInput.focus();
+        generateSlug();
+    }
+
+    function copySlug() {
+        const text = slugOutput.innerText;
+        if (!text) return;
+        
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Slug copied to clipboard!', 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Trigger on load
+    window.onload = () => {
+        generateSlug();
+    };
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

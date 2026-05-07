@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V800 Mechanical Solari Engine | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V800 MECHANICAL SOLARI THEME ENGINE
+           ========================================== */
+        
+        [data-theme="light"] {
+            --mech-bg: #fdfbf7; /* Vintage Ivory */
+            --mech-surface: #ffffff;
+            --mech-panel: #f4f1ea;
+            --mech-text: #2c2825;
+            --mech-text-muted: #8c857d;
+            --mech-accent: #d97706; /* Brass/Amber */
+            --mech-border: #e6e2d8;
+            --flap-bg: #1c1917;
+            --flap-text: #f8fafc;
+            --flap-border: #000000;
+        }
+
+        [data-theme="dark"] {
+            --mech-bg: #1c1917; /* Matte Black / Oiled Bronze */
+            --mech-surface: #292524;
+            --mech-panel: #44403c;
+            --mech-text: #f5f5f4;
+            --mech-text-muted: #a8a29e;
+            --mech-accent: #fbbf24; /* Polished Brass */
+            --mech-border: #57534e;
+            --flap-bg: #000000;
+            --flap-text: #fbbf24;
+            --flap-border: #292524;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background-color: var(--mech-bg);
+            color: var(--mech-text);
+            transition: all 0.4s ease;
+            margin: 0;
+            padding: 40px 20px;
+            /* Subtle paper/metal texture overlay */
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        }
+
+        .tool-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: var(--mech-surface);
+            border: 2px solid var(--mech-border);
+            border-radius: 4px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        [data-theme="dark"] .tool-container {
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* HEADER */
+        .mech-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--mech-border);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        .mech-title {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+
+        .btn-theme {
+            background: var(--mech-panel);
+            color: var(--mech-text);
+            border: 1px solid var(--mech-border);
+            padding: 10px 15px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+            box-shadow: 2px 2px 0 var(--mech-border);
+        }
+        .btn-theme:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0 var(--mech-border);
+        }
+
+        /* INPUT DECK */
+        .input-deck {
+            background-color: var(--mech-panel);
+            border: 1px solid var(--mech-border);
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 40px;
+            border-radius: 2px;
+        }
+
+        .input-label {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: var(--mech-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .date-input {
+            background-color: var(--mech-surface);
+            border: 2px solid var(--mech-border);
+            color: var(--mech-text);
+            padding: 15px 30px;
+            font-size: 1.8rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 900;
+            outline: none;
+            transition: border-color 0.3s;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .date-input:focus {
+            border-color: var(--mech-accent);
+        }
+
+        ::-webkit-calendar-picker-indicator { 
+            cursor: pointer; 
+        }
+        [data-theme="dark"] ::-webkit-calendar-picker-indicator { 
+            filter: invert(1); 
+        }
+
+        .btn-crank {
+            background-color: var(--mech-accent);
+            color: #ffffff;
+            border: none;
+            padding: 15px 40px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .btn-crank:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.2);
+        }
+
+        /* SOLARI SPLIT-FLAP DISPLAY */
+        .solari-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 50px;
+            min-height: 120px;
+            flex-wrap: wrap;
+        }
+
+        .flap {
+            background-color: var(--flap-bg);
+            color: var(--flap-text);
+            border: 2px solid var(--flap-border);
+            border-radius: 4px;
+            width: 80px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            font-size: 4.5rem;
+            font-weight: 900;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        /* The horizontal split line across the mechanical card */
+        .flap::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--flap-border);
+            margin-top: -1px;
+            z-index: 2;
+        }
+        
+        .flap-empty {
+            opacity: 0.1;
+        }
+
+        /* ANALYTICS & MYTHOLOGY */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .brass-plate {
+            background-color: var(--mech-surface);
+            border: 2px solid var(--mech-accent);
+            padding: 30px;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        /* Decorative Screws */
+        .brass-plate::before, .brass-plate::after {
+            content: '●';
+            position: absolute;
+            color: var(--mech-accent);
+            font-size: 0.8rem;
+        }
+        .brass-plate::before { top: 5px; left: 10px; }
+        .brass-plate::after { bottom: 5px; right: 10px; }
+
+        .plate-title {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            font-weight: 900;
+            color: var(--mech-accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--mech-border);
+            padding-bottom: 10px;
+        }
+
+        .poem-text {
+            font-size: 1.4rem;
+            font-style: italic;
+            line-height: 1.6;
+            color: var(--mech-text);
+        }
+
+        .recurrence-value {
+            font-family: 'Courier New', monospace;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--mech-text);
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .btn-retreat {
+            color: var(--mech-text);
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+            font-weight: 900;
+            border: 1px solid var(--mech-border);
+            padding: 5px 15px;
+            background: var(--mech-panel);
+        }
+        .btn-retreat:hover {
+            background: var(--mech-accent);
+            color: white;
+            border-color: var(--mech-accent);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        
+        <div class="mech-header">
+            <div>
+                <a href="{{ url_for('student_tools_dashboard') }}" class="btn-retreat mb-3 d-inline-block">
+                    <i class="fas fa-arrow-left me-2"></i> RETREAT
+                </a>
+                <h2 class="mech-title"><i class="fas fa-cogs me-2" style="color: var(--mech-accent);"></i> V800 Solari Engine</h2>
+            </div>
+            <button class="btn-theme" onclick="executeThemeToggle()">
+                <i class="fas fa-lightbulb" id="themeIcon"></i>
+            </button>
+        </div>
+
+        <div class="input-deck">
+            <label class="input-label">Select Temporal Origin (Date of Birth)</label>
+            <input type="date" id="birthDateInput" class="date-input">
+            <br>
+            <button class="btn-crank" onclick="executeSolariMechanism()">
+                ENGAGE CRANK
+            </button>
+        </div>
+
+        <div class="solari-container" id="solariBoard">
+            <div class="flap flap-empty">-</div>
+            <div class="flap flap-empty">-</div>
+            <div class="flap flap-empty">-</div>
+            <div class="flap flap-empty">-</div>
+            <div class="flap flap-empty">-</div>
+            <div class="flap flap-empty">-</div>
+        </div>
+
+        <div class="analytics-grid">
+            
+            <div class="brass-plate">
+                <div class="plate-title">Cultural Mythology Profile</div>
+                <div class="poem-text" id="nurseryRhymeOutput">
+                    Awaiting date to extract psychological and cultural folklore...
+                </div>
+            </div>
+
+            <div class="brass-plate">
+                <div class="plate-title">Temporal Recurrence Count</div>
+                <div class="recurrence-value" id="recurrenceOutput">0</div>
+                <div style="font-family: 'Courier New', monospace; font-size: 0.9rem; color: var(--mech-text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                    Exact number of times this specific weekday has occurred since your origin point.
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V800 THEME ENGINE
+        // ==========================================
+        function executeThemeToggle() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v800_solari', nextTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v800_solari');
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        });
+
+        // ==========================================
+        // V800 EXPLICIT MATHEMATICS
+        // ==========================================
+
+        function getNurseryRhyme(dayIndexNumber) {
+            // Traditional "Monday's Child" poem
+            if (dayIndexNumber === 0) {
+                return "But the child who is born on the Sabbath day,<br>Is bonny and blithe and good and gay.";
+            } else if (dayIndexNumber === 1) {
+                return "Monday's child is fair of face.";
+            } else if (dayIndexNumber === 2) {
+                return "Tuesday's child is full of grace.";
+            } else if (dayIndexNumber === 3) {
+                return "Wednesday's child is full of woe.";
+            } else if (dayIndexNumber === 4) {
+                return "Thursday's child has far to go.";
+            } else if (dayIndexNumber === 5) {
+                return "Friday's child is loving and giving.";
+            } else if (dayIndexNumber === 6) {
+                return "Saturday's child works hard for a living.";
+            } else {
+                return "Unknown temporal coordinate.";
+            }
+        }
+
+        function executeSolariMechanism() {
+            let dateInputValue = document.getElementById('birthDateInput').value;
+
+            if (dateInputValue === "") {
+                alert("CRITICAL: Temporal origin required to engage mechanism.");
+                return;
+            }
+
+            // Explicitly parse the YYYY-MM-DD string to avoid Timezone offset bugs
+            // If we just use new Date("1990-01-01"), it assumes UTC and might shift to Dec 31 locally.
+            let datePartsArray = dateInputValue.split("-");
+            let yearInteger = parseInt(datePartsArray[0], 10);
+            let monthInteger = parseInt(datePartsArray[1], 10) - 1; // JS Months are 0-11
+            let dayInteger = parseInt(datePartsArray[2], 10);
+
+            // Construct date explicitly at noon to avoid boundary shifts
+            let birthDateObject = new Date(yearInteger, monthInteger, dayInteger, 12, 0, 0);
+
+            let dayIndexNumber = birthDateObject.getDay();
+            
+            let daysOfTheWeekArray = [
+                "SUNDAY", 
+                "MONDAY", 
+                "TUESDAY", 
+                "WEDNESDAY", 
+                "THURSDAY", 
+                "FRIDAY", 
+                "SATURDAY"
+            ];
+
+            let correctDayString = daysOfTheWeekArray[dayIndexNumber];
+
+            // 1. Update Solari Board (Render each character as a flap)
+            let solariContainerElement = document.getElementById('solariBoard');
+            solariContainerElement.innerHTML = ""; // Clear existing flaps
+
+            for (let i = 0; i < correctDayString.length; i = i + 1) {
+                let currentLetter = correctDayString.charAt(i);
+                
+                let flapElement = document.createElement("div");
+                flapElement.className = "flap";
+                flapElement.innerText = currentLetter;
+                
+                solariContainerElement.appendChild(flapElement);
+            }
+
+            // 2. Update Cultural Mythology
+            let poemString = getNurseryRhyme(dayIndexNumber);
+            document.getElementById('nurseryRhymeOutput').innerHTML = poemString;
+
+            // 3. Calculate Temporal Recurrence
+            let currentDateObject = new Date();
+            
+            // Calculate absolute difference in milliseconds
+            let differenceInMilliseconds = currentDateObject.getTime() - birthDateObject.getTime();
+            
+            if (differenceInMilliseconds < 0) {
+                document.getElementById('recurrenceOutput').innerText = "0";
+            } else {
+                let millisecondsInOneDay = 1000 * 60 * 60 * 24;
+                let totalDaysLived = Math.floor(differenceInMilliseconds / millisecondsInOneDay);
+                
+                // Every 7 days, that specific weekday occurs once
+                let totalWeeksLived = Math.floor(totalDaysLived / 7);
+                
+                // Format the number nicely
+                let numberFormatter = new Intl.NumberFormat('en-US');
+                let formattedRecurrence = numberFormatter.format(totalWeeksLived);
+                
+                document.getElementById('recurrenceOutput').innerText = formattedRecurrence;
+            }
+        }
+    </script>
+</body>
+</html>

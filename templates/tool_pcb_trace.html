@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCB Trace Width Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+            --pcb-green: #0b6623;
+            --copper: #b87333;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .mode-selector {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-label {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .mode-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1rem;
+            color: #495057;
+            width: 170px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        .input-label small { font-size: 0.75rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; margin-top: 2px;}
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-select {
+            background: #f8f9fa;
+            border: none;
+            border-left: 1px solid #ced4da;
+            padding: 0 10px;
+            font-weight: 800;
+            color: var(--math-blue);
+            outline: none;
+            cursor: pointer;
+            font-family: 'Fira Code', monospace;
+            text-align: center;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .formula-display {
+            background: #212529;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.4rem;
+            text-align: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 110px;
+        }
+        .formula-display span { color: var(--math-orange); font-weight: 800; }
+        .formula-sub { font-size: 0.9rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .result-box.highlight {
+            background: rgba(11, 102, 35, 0.05); /* PCB Green tint */
+            border-color: rgba(11, 102, 35, 0.2);
+            grid-column: span 2;
+            flex-direction: row;
+            justify-content: space-around;
+        }
+
+        .res-label {
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .res-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+        .res-unit { font-size: 1.1rem; color: #adb5bd; }
+        
+        .highlight .res-val { color: var(--pcb-green); font-size: 2.5rem; margin: 0; }
+        .highlight .res-label { margin: 0; font-size: 1rem; color: var(--pcb-green); }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #1e1e1e; /* Dark theme for PCB visualizer */
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: 
+                radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        #pcbCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .result-grid { grid-template-columns: 1fr; }
+            .result-box.highlight { grid-column: span 1; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-microchip"></i> IPC-2221 Params
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid positive numbers.
+            </div>
+
+            <div class="mode-selector">
+                <label class="mode-label">Trace Location:</label>
+                <div class="mode-grid">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="layerMode" id="modeExt" value="external" checked onchange="calculateTrace()">
+                        <label class="form-check-label fw-bold text-primary" for="modeExt">External Layer (Top/Bottom)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="layerMode" id="modeInt" value="internal" onchange="calculateTrace()">
+                        <label class="form-check-label fw-bold text-warning" for="modeInt">Internal Layer (Embedded)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-danger">Target Current <small>(I)</small></div>
+                <input type="number" class="num-input" id="valCurrent" value="2" step="any" oninput="calculateTrace()">
+                <div class="unit-select text-danger" style="pointer-events: none;">A</div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-orange">Max Temp Rise <small>(&Delta;T)</small></div>
+                <input type="number" class="num-input" id="valTempRise" value="10" step="any" oninput="calculateTrace()">
+                <div class="unit-select text-orange" style="pointer-events: none;">&deg;C</div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-success">Copper Thickness <small>(Weight)</small></div>
+                <select class="num-input text-success" id="valThickness" onchange="calculateTrace()" style="text-align: left; padding-left: 20px;">
+                    <option value="0.5">0.5 oz/ft² (17.5 µm)</option>
+                    <option value="1.0" selected>1.0 oz/ft² (35 µm)</option>
+                    <option value="2.0">2.0 oz/ft² (70 µm)</option>
+                    <option value="3.0">3.0 oz/ft² (105 µm)</option>
+                </select>
+            </div>
+
+            <div class="pane-header border-0 mb-3 pb-0 mt-2">
+                <i class="fas fa-random"></i> Parasitic Properties
+            </div>
+
+            <div class="input-group-custom mb-0">
+                <div class="input-label text-primary">Trace Length <small>(For V-Drop)</small></div>
+                <input type="number" class="num-input" id="valLength" value="50" step="any" oninput="calculateTrace()">
+                <select class="unit-select text-primary" id="unitLength" onchange="calculateTrace()">
+                    <option value="25.4" selected>mm</option>
+                    <option value="1">inch</option>
+                </select>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-4" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Reset Parameters
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            
+            <div class="formula-display" id="formulaScreen">
+                A = ( I / (k &times; &Delta;T<sup>0.44</sup>) )<sup>(1/0.725)</sup>
+                <div class="formula-sub">IPC-2221A Standard Cross-Section Area Formula</div>
+            </div>
+
+            <div class="result-grid">
+                <div class="result-box highlight">
+                    <div class="res-label" id="mainResLabel">Required Trace Width (W)</div>
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="res-val" id="resWidthMm">0.762 <span class="res-unit">mm</span></div>
+                        <div class="res-val text-muted" id="resWidthMils" style="font-size: 1.5rem;">30.0 <span class="res-unit">mils</span></div>
+                    </div>
+                </div>
+                
+                <div class="result-box">
+                    <div class="res-label text-danger">Voltage Drop (V<sub>drop</sub>)</div>
+                    <div class="res-val" id="resVDrop">-- <span class="res-unit">mV</span></div>
+                    <div class="text-muted small fw-bold mt-1">Based on Length</div>
+                </div>
+
+                <div class="result-box">
+                    <div class="res-label text-warning">Power Loss (Heat)</div>
+                    <div class="res-val" id="resPower">-- <span class="res-unit">mW</span></div>
+                    <div class="text-muted small fw-bold mt-1">P = V &times; I</div>
+                </div>
+            </div>
+
+            <div class="pane-header text-dark border-0 mt-4 mb-2 pb-0">
+                <i class="fas fa-search-plus text-primary"></i> Microscopic Cross-Section
+            </div>
+
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="pcbCanvas"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valCurrent = document.getElementById('valCurrent');
+    const valTempRise = document.getElementById('valTempRise');
+    const valThickness = document.getElementById('valThickness');
+    const valLength = document.getElementById('valLength');
+    const unitLength = document.getElementById('unitLength');
+    
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const resWidthMm = document.getElementById('resWidthMm');
+    const resWidthMils = document.getElementById('resWidthMils');
+    const resVDrop = document.getElementById('resVDrop');
+    const resPower = document.getElementById('resPower');
+
+    const canvas = document.getElementById('pcbCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    function resizeCanvas() {
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        if(cw === 0 || ch === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = cw * dpr;
+        canvas.height = ch * dpr;
+        
+        canvas.style.width = `${cw}px`;
+        canvas.style.height = `${ch}px`;
+        
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        calculateTrace();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function roundSafe(num, decimals = 3) {
+        const factor = Math.pow(10, decimals);
+        return (Math.round(num * factor) / factor).toFixed(decimals);
+    }
+
+    function formatMilli(value, baseUnit) {
+        if (value >= 1) return { v: value.toFixed(3), u: baseUnit };
+        if (value >= 1e-3) return { v: (value * 1e3).toFixed(2), u: 'm' + baseUnit };
+        return { v: (value * 1e6).toFixed(2), u: '&mu;' + baseUnit };
+    }
+
+    // --- MATH ENGINE (IPC-2221A) ---
+    function calculateTrace() {
+        const I = parseFloat(valCurrent.value);
+        const dT = parseFloat(valTempRise.value);
+        const t_oz = parseFloat(valThickness.value); // Copper weight in oz
+        const lengthInput = parseFloat(valLength.value); // Custom length
+        
+        // Multiplier: If mm (25.4), we convert mm to inch. If inch (1), keep inch.
+        const lengthInches = lengthInput / parseFloat(unitLength.value);
+
+        if (isNaN(I) || isNaN(dT) || isNaN(t_oz) || isNaN(lengthInches) || I <= 0 || dT <= 0 || lengthInches <= 0) {
+            errorBanner.style.display = 'block';
+            resetOutputs();
+            return;
+        }
+        errorBanner.style.display = 'none';
+
+        // Constants for IPC-2221
+        const isExternal = document.getElementById('modeExt').checked;
+        const k = isExternal ? 0.048 : 0.024;
+        const b = 0.44;
+        const c = 0.725;
+
+        // 1. Calculate Area (sq mils)
+        // I = k * dT^b * A^c   =>   A = (I / (k * dT^b))^(1/c)
+        const dt_pow = Math.pow(dT, b);
+        const Area = Math.pow(I / (k * dt_pow), 1/c);
+
+        // 2. Calculate Width (mils)
+        // Thickness in mils: 1 oz = 1.378 mils
+        const thickness_mils = t_oz * 1.378;
+        const width_mils = Area / thickness_mils;
+        
+        // Convert to mm
+        const width_mm = width_mils * 0.0254;
+
+        // 3. Calculate Parasitics (Resistance, V-Drop, Power)
+        // R = (rho * L) / A
+        // Copper resistivity at 25C is ~1.724e-6 ohm-cm. 
+        // A common formula for traces at 25C: R = 0.6788 * Length(in) / Area(sq_mils)
+        // IPC accounts for the heated trace (Tamb + dT). Let's assume Tamb = 25C.
+        // R_hot = R_25 * (1 + 0.0039 * dT)
+        const R_25 = (0.6788 * lengthInches) / Area;
+        const R_hot = R_25 * (1 + 0.00393 * dT);
+
+        const vDrop = I * R_hot; // Volts
+        const powerLoss = vDrop * I; // Watts
+
+        // Update UI
+        resWidthMm.innerHTML = `${roundSafe(width_mm)} <span class="res-unit">mm</span>`;
+        resWidthMils.innerHTML = `${roundSafe(width_mils, 1)} <span class="res-unit">mils</span>`;
+
+        const fmtV = formatMilli(vDrop, 'V');
+        resVDrop.innerHTML = `${fmtV.v} <span class="res-unit">${fmtV.u}</span>`;
+
+        const fmtP = formatMilli(powerLoss, 'W');
+        resPower.innerHTML = `${fmtP.v} <span class="res-unit">${fmtP.u}</span>`;
+
+        drawCrossSection(width_mils, thickness_mils, isExternal, dT);
+    }
+
+    // --- CANVAS MICROSCOPIC CROSS SECTION ENGINE ---
+    function drawCrossSection(width_mils, thickness_mils, isExternal, dT) {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const cx = cw / 2;
+        const cy = ch / 2;
+        
+        // Auto-scaling drawing based on frame
+        const pcbThickness = ch * 0.4;
+        
+        // We dynamically scale the trace width visually. 
+        // Max visual width is 60% of canvas, min is 10%.
+        // We establish a base line where 100 mils = cw * 0.4.
+        let drawWidth = (width_mils / 100) * (cw * 0.4);
+        
+        // Clamp visuals so it always looks like a trace on a board
+        if (drawWidth > cw * 0.7) drawWidth = cw * 0.7;
+        if (drawWidth < cw * 0.05) drawWidth = cw * 0.05;
+
+        // Visual thickness clamping
+        let drawThick = (thickness_mils / 1.378) * 15; // 1oz = 15px
+        if (drawThick > 40) drawThick = 40;
+        if (drawThick < 5) drawThick = 5;
+
+        const traceTop = isExternal ? cy - (pcbThickness/2) - drawThick : cy - (drawThick/2);
+
+        // 1. Draw Heat Aura (Intensity based on dT)
+        // Redness scales with dT (0-100C)
+        let auraAlpha = Math.min(dT / 100, 1) * 0.6 + 0.2; 
+        let grad = ctx.createRadialGradient(cx, traceTop + drawThick/2, 0, cx, traceTop + drawThick/2, drawWidth + 100);
+        grad.addColorStop(0, `rgba(220, 53, 69, ${auraAlpha})`);
+        grad.addColorStop(1, 'rgba(220, 53, 69, 0)');
+        
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, traceTop + drawThick/2, drawWidth + 100, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Draw FR4 Substrate (PCB Green)
+        ctx.fillStyle = '#0b6623';
+        ctx.beginPath();
+        ctx.rect(0, cy - pcbThickness/2, cw, pcbThickness);
+        ctx.fill();
+        ctx.strokeStyle = '#053e14';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, cy - pcbThickness/2, cw, pcbThickness);
+
+        // Add FR4 Texture (dots)
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        for(let i=0; i<cw; i+=15) {
+            for(let j=cy - pcbThickness/2 + 10; j<cy + pcbThickness/2; j+=15) {
+                ctx.beginPath(); ctx.arc(i, j, 2, 0, Math.PI*2); ctx.fill();
+            }
+        }
+
+        // 3. Draw Copper Trace
+        ctx.fillStyle = '#b87333'; // Copper color
+        ctx.beginPath();
+        
+        // Trapezoid profile (etching effect)
+        const etchSlope = 5;
+        ctx.moveTo(cx - drawWidth/2 + etchSlope, traceTop);
+        ctx.lineTo(cx + drawWidth/2 - etchSlope, traceTop);
+        ctx.lineTo(cx + drawWidth/2, traceTop + drawThick);
+        ctx.lineTo(cx - drawWidth/2, traceTop + drawThick);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Copper Shine Gradient overlay
+        let shine = ctx.createLinearGradient(0, traceTop, 0, traceTop + drawThick);
+        shine.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+        shine.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+        shine.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+        ctx.fillStyle = shine;
+        ctx.fill();
+
+        // 4. Draw Solder Mask (If internal, cover it. If external, draw on rest of top)
+        ctx.fillStyle = 'rgba(11, 102, 35, 0.85)';
+        const maskThick = 6;
+        if (isExternal) {
+            // Mask left
+            ctx.beginPath(); ctx.rect(0, cy - pcbThickness/2 - maskThick, cx - drawWidth/2 - 5, maskThick); ctx.fill();
+            // Mask right
+            ctx.beginPath(); ctx.rect(cx + drawWidth/2 + 5, cy - pcbThickness/2 - maskThick, cw, maskThick); ctx.fill();
+        } else {
+            // Mask covers entire top and bottom
+            ctx.beginPath(); ctx.rect(0, cy - pcbThickness/2 - maskThick, cw, maskThick); ctx.fill();
+            ctx.beginPath(); ctx.rect(0, cy + pcbThickness/2, cw, maskThick); ctx.fill();
+        }
+
+        // 5. Draw Dimension Lines
+        ctx.strokeStyle = '#ffffff';
+        ctx.fillStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 16px "Fira Code", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+
+        // Width Dimension
+        const dimY = traceTop - 15;
+        ctx.beginPath();
+        ctx.moveTo(cx - drawWidth/2, traceTop - 5); ctx.lineTo(cx - drawWidth/2, dimY - 5);
+        ctx.moveTo(cx + drawWidth/2, traceTop - 5); ctx.lineTo(cx + drawWidth/2, dimY - 5);
+        ctx.moveTo(cx - drawWidth/2, dimY); ctx.lineTo(cx + drawWidth/2, dimY);
+        ctx.stroke();
+        
+        // Arrow heads
+        ctx.beginPath(); ctx.moveTo(cx - drawWidth/2, dimY); ctx.lineTo(cx - drawWidth/2 + 5, dimY - 5); ctx.lineTo(cx - drawWidth/2 + 5, dimY + 5); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(cx + drawWidth/2, dimY); ctx.lineTo(cx + drawWidth/2 - 5, dimY - 5); ctx.lineTo(cx + drawWidth/2 - 5, dimY + 5); ctx.fill();
+        
+        ctx.fillText(`W`, cx, dimY - 5);
+
+        // Thickness Dimension
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const rightEdge = cx + drawWidth/2 + 15;
+        
+        ctx.beginPath();
+        ctx.moveTo(cx + drawWidth/2, traceTop); ctx.lineTo(rightEdge + 5, traceTop);
+        ctx.moveTo(cx + drawWidth/2, traceTop + drawThick); ctx.lineTo(rightEdge + 5, traceTop + drawThick);
+        ctx.moveTo(rightEdge, traceTop); ctx.lineTo(rightEdge, traceTop + drawThick);
+        ctx.stroke();
+
+        ctx.fillText(`t`, rightEdge + 10, traceTop + drawThick/2);
+
+        // Labels
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#adb5bd';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText('FR-4 Substrate', 20, cy + pcbThickness/2 - 20);
+        
+        if (isExternal) {
+            ctx.fillStyle = '#0d6efd';
+            ctx.fillText('External Layer (Air Exposed)', 20, 30);
+        } else {
+            ctx.fillStyle = '#fd7e14';
+            ctx.fillText('Internal Layer (Embedded)', 20, 30);
+        }
+    }
+
+    function resetOutputs() {
+        resWidthMm.innerHTML = '-- <span class="res-unit">mm</span>';
+        resWidthMils.innerHTML = '-- <span class="res-unit">mils</span>';
+        resVDrop.innerHTML = '-- <span class="res-unit">mV</span>';
+        resPower.innerHTML = '-- <span class="res-unit">mW</span>';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function clearInputs() {
+        valCurrent.value = '';
+        valTempRise.value = '';
+        valLength.value = '';
+        errorBanner.style.display = 'block';
+        errorBanner.innerText = 'Waiting for input...';
+        resetOutputs();
+    }
+
+    // SAFE INIT
+    setTimeout(() => {
+        resizeCanvas();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

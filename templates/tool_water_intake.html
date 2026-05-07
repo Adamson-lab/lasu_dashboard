@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Intake Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0dcaf0; 
+            --math-dark-blue: #0d6efd;
+            --math-purple: #6f42c1;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .system-toggle {
+            display: flex;
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            color: #6c757d;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .toggle-btn.active {
+            background: white;
+            color: var(--math-dark-blue);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 202, 240, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            width: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-label {
+            background: #f8f9fa;
+            border-left: 1px solid #ced4da;
+            padding: 0 15px;
+            font-weight: 800;
+            color: var(--math-dark-blue);
+            display: flex;
+            align-items: center;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            width: 80px;
+            justify-content: center;
+        }
+
+        .select-custom {
+            flex: 1;
+            border: none;
+            padding: 12px 10px;
+            font-weight: 700;
+            color: #495057;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+        }
+        
+        .stat-card.primary { border-color: rgba(13, 110, 253, 0.3); background: rgba(13, 110, 253, 0.02); }
+        .stat-card.cyan { border-color: rgba(13, 202, 240, 0.3); background: rgba(13, 202, 240, 0.02); }
+        .stat-card.purple { border-color: rgba(111, 66, 193, 0.3); background: rgba(111, 66, 193, 0.02); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .primary .stat-val { color: var(--math-dark-blue); }
+        .cyan .stat-val { color: #0aaaaa; }
+        .purple .stat-val { color: var(--math-purple); }
+
+        .res-unit { font-size: 1rem; color: #adb5bd; margin-left: 2px; }
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* Advanced Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            min-height: 400px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(13, 202, 240, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(13, 202, 240, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center bottom;
+        }
+
+        #hydroCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #0dcaf0;
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .formula-bar span { color: #adb5bd; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; text-transform: uppercase; margin-right: 8px;}
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-tint"></i> Hydration Metrics
+            </div>
+
+            <div class="system-toggle">
+                <div class="toggle-btn active" id="btnMetric" onclick="setSystem('metric')">Metric (kg)</div>
+                <div class="toggle-btn" id="btnImperial" onclick="setSystem('imperial')">Imperial (lbs)</div>
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid positive numbers.
+            </div>
+
+            <div id="metricInputs">
+                <div class="input-group-custom">
+                    <div class="input-label">Weight</div>
+                    <input type="number" class="num-input" id="valWeightKg" value="70" step="any" oninput="calculateIntake()">
+                    <div class="unit-label">kg</div>
+                </div>
+            </div>
+
+            <div id="imperialInputs" style="display: none;">
+                <div class="input-group-custom">
+                    <div class="input-label">Weight</div>
+                    <input type="number" class="num-input" id="valWeightLbs" value="154" step="any" oninput="calculateIntake()">
+                    <div class="unit-label">lbs</div>
+                </div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label">Exercise</div>
+                <input type="number" class="num-input" id="valExercise" value="30" step="1" oninput="calculateIntake()">
+                <div class="unit-label">mins/day</div>
+            </div>
+
+            <div class="input-group-custom mb-0">
+                <div class="input-label">Climate</div>
+                <select class="select-custom" id="valClimate" onchange="calculateIntake()">
+                    <option value="1" selected>Normal / Temperate</option>
+                    <option value="1.15">Hot / Humid (+15%)</option>
+                    <option value="1.25">Extreme Heat (+25%)</option>
+                </select>
+            </div>
+
+            <div class="alert alert-info mt-auto mb-0 border-0" style="background: rgba(13, 202, 240, 0.05); color: var(--math-dark-blue);">
+                <i class="fas fa-info-circle mb-2 fa-lg"></i><br>
+                <strong>Science Note:</strong><br>
+                Base intake is ~33mL per kg of body weight. An additional 350mL is recommended per 30 minutes of strenuous exercise.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card primary">
+                    <div class="stat-label">Daily Target</div>
+                    <div class="stat-val">
+                        <span id="resLiters">2.66</span>
+                        <span class="res-unit">Liters</span>
+                    </div>
+                    <div class="stat-sub">Metric Volume</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card cyan">
+                    <div class="stat-label">Daily Target</div>
+                    <div class="stat-val">
+                        <span id="resOunces">90</span>
+                        <span class="res-unit">fl oz</span>
+                    </div>
+                    <div class="stat-sub">Imperial Volume</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card purple">
+                    <div class="stat-label">Standard Glasses</div>
+                    <div class="stat-val">
+                        <span id="resGlasses">11</span>
+                        <span class="res-unit"><i class="fas fa-glass-water ms-1"></i></span>
+                    </div>
+                    <div class="stat-sub">250mL / 8oz per glass</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="simulation-box mt-2">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="hydroCanvas"></canvas>
+            </div>
+            <div class="telemetry-bar">
+                <div class="formula-bar">
+                    <span>Engine:</span> Weight &times; Base + Activity + Climate
+                </div>
+                <div class="text-muted fw-bold small text-uppercase"><i class="fas fa-water me-1 text-info"></i> Hydro-Kinematic Target</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    let isMetric = true;
+    
+    // Inputs
+    const btnMetric = document.getElementById('btnMetric');
+    const btnImperial = document.getElementById('btnImperial');
+    const metricInputs = document.getElementById('metricInputs');
+    const imperialInputs = document.getElementById('imperialInputs');
+    
+    const valWeightKg = document.getElementById('valWeightKg');
+    const valWeightLbs = document.getElementById('valWeightLbs');
+    const valExercise = document.getElementById('valExercise');
+    const valClimate = document.getElementById('valClimate');
+
+    const errorBanner = document.getElementById('errorBanner');
+
+    // Outputs
+    const resLiters = document.getElementById('resLiters');
+    const resOunces = document.getElementById('resOunces');
+    const resGlasses = document.getElementById('resGlasses');
+
+    // Canvas
+    const canvas = document.getElementById('hydroCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // State
+    let targetLiters = 0;
+    let currentFillLiters = 0;
+    let waveOffset = 0;
+    let animationFrameId = null;
+
+    function setSystem(system) {
+        if (system === 'metric') {
+            isMetric = true;
+            btnMetric.classList.add('active');
+            btnImperial.classList.remove('active');
+            metricInputs.style.display = 'block';
+            imperialInputs.style.display = 'none';
+        } else {
+            isMetric = false;
+            btnMetric.classList.remove('active');
+            btnImperial.classList.add('active');
+            metricInputs.style.display = 'none';
+            imperialInputs.style.display = 'block';
+        }
+        calculateIntake();
+    }
+
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            // No need to call draw directly, animation loop handles it
+        }
+    });
+    resizeObserver.observe(container);
+
+    function calculateIntake() {
+        let weightKG;
+
+        if (isMetric) {
+            weightKG = parseFloat(valWeightKg.value);
+        } else {
+            const lbs = parseFloat(valWeightLbs.value);
+            weightKG = lbs * 0.453592;
+        }
+
+        const exerciseMins = parseFloat(valExercise.value) || 0;
+        const climateMultiplier = parseFloat(valClimate.value);
+
+        if (isNaN(weightKG) || weightKG <= 0 || exerciseMins < 0) {
+            errorBanner.style.display = 'block';
+            resLiters.innerText = '--'; resOunces.innerText = '--'; resGlasses.innerText = '--';
+            targetLiters = 0;
+            return;
+        }
+        
+        errorBanner.style.display = 'none';
+
+        // Core Math
+        // Base: 33ml per kg
+        let baseML = weightKG * 33;
+        
+        // Exercise: Add 350ml per 30 mins
+        let exerciseML = (exerciseMins / 30) * 350;
+        
+        // Climate: Multiplier
+        let totalML = (baseML * climateMultiplier) + exerciseML;
+
+        // Output Formatting
+        targetLiters = totalML / 1000;
+        const ounces = totalML / 29.5735;
+        const glasses = totalML / 250;
+
+        resLiters.innerText = targetLiters.toFixed(2);
+        resOunces.innerText = Math.round(ounces);
+        resGlasses.innerText = Math.round(glasses);
+
+        startAnimation();
+    }
+
+    // --- HYDRO-KINEMATIC CANVAS VISUALIZER ---
+    function drawJug() {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        if(cw === 0) return;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const cx = cw / 2;
+        const padding = 60;
+        // Jug dimensions
+        const jugW = Math.min(cw * 0.35, 200);
+        const jugH = ch - padding * 2;
+        const cy = ch - padding; // Bottom of jug
+
+        // Scale max volume to 6 Liters (so the jug doesn't infinitely scale)
+        const MAX_CAPACITY = 6.0;
+        const safeFill = Math.min(currentFillLiters, MAX_CAPACITY);
+        const fillPercent = safeFill / MAX_CAPACITY;
+        
+        const waterHeight = jugH * fillPercent;
+        const waterY = cy - waterHeight;
+
+        // 1. Draw Water inside Jug clipping region
+        ctx.save();
+        
+        // Create Jug Clipping Path
+        ctx.beginPath();
+        ctx.moveTo(cx - jugW/2, cy - jugH); // Top Left
+        ctx.lineTo(cx - jugW/2, cy - 20); // Down Left
+        ctx.quadraticCurveTo(cx - jugW/2, cy, cx - jugW/2 + 20, cy); // Bottom left corner
+        ctx.lineTo(cx + jugW/2 - 20, cy); // Bottom Right
+        ctx.quadraticCurveTo(cx + jugW/2, cy, cx + jugW/2, cy - 20); // Bottom right corner
+        ctx.lineTo(cx + jugW/2, cy - jugH); // Up right
+        ctx.closePath();
+        ctx.clip();
+
+        if (fillPercent > 0) {
+            // Draw Wave
+            ctx.fillStyle = 'rgba(13, 202, 240, 0.7)'; // Cyan water
+            ctx.beginPath();
+            ctx.moveTo(cx - jugW/2, cy); // Bottom left
+            ctx.lineTo(cx + jugW/2, cy); // Bottom right
+            ctx.lineTo(cx + jugW/2, waterY); // Up right to wave level
+            
+            // Sine wave logic
+            const waveAmp = 8;
+            const waveFreq = 0.05;
+            for (let x = cx + jugW/2; x >= cx - jugW/2; x--) {
+                let y = waterY + Math.sin(x * waveFreq + waveOffset) * waveAmp;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(cx - jugW/2, cy); // Close back to bottom left
+            ctx.fill();
+
+            // Background darker wave for depth
+            ctx.fillStyle = 'rgba(13, 110, 253, 0.4)'; // Dark blue water
+            ctx.beginPath();
+            ctx.moveTo(cx - jugW/2, cy); 
+            ctx.lineTo(cx + jugW/2, cy); 
+            ctx.lineTo(cx + jugW/2, waterY);
+            
+            for (let x = cx + jugW/2; x >= cx - jugW/2; x--) {
+                let y = waterY + Math.cos(x * waveFreq * 0.8 + waveOffset * 1.2) * waveAmp;
+                ctx.lineTo(x, y);
+            }
+            ctx.fill();
+        }
+        
+        ctx.restore(); // Remove clip
+
+        // 2. Draw Jug Outline
+        ctx.strokeStyle = '#adb5bd';
+        ctx.lineWidth = 4;
+        
+        ctx.beginPath();
+        // Left lip
+        ctx.moveTo(cx - jugW/2 - 10, cy - jugH); 
+        ctx.lineTo(cx - jugW/2, cy - jugH); 
+        
+        ctx.lineTo(cx - jugW/2, cy - 20); 
+        ctx.quadraticCurveTo(cx - jugW/2, cy, cx - jugW/2 + 20, cy); 
+        ctx.lineTo(cx + jugW/2 - 20, cy); 
+        ctx.quadraticCurveTo(cx + jugW/2, cy, cx + jugW/2, cy - 20); 
+        ctx.lineTo(cx + jugW/2, cy - jugH); 
+        
+        // Right lip
+        ctx.lineTo(cx + jugW/2 + 10, cy - jugH); 
+        ctx.stroke();
+
+        // 3. Draw Volume Ticks (1L, 2L, 3L, 4L, 5L)
+        ctx.fillStyle = '#6c757d';
+        ctx.font = 'bold 12px "Fira Code", monospace';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        for (let i = 1; i <= 5; i++) {
+            let tickY = cy - ((i / MAX_CAPACITY) * jugH);
+            
+            ctx.beginPath();
+            ctx.moveTo(cx - jugW/2, tickY);
+            ctx.lineTo(cx - jugW/2 + 15, tickY);
+            ctx.strokeStyle = '#6c757d';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillText(`${i}L`, cx - jugW/2 - 10, tickY);
+        }
+
+        // 4. Target Text
+        if (targetLiters > 0) {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 32px "Fira Code", monospace';
+            ctx.textAlign = 'center';
+            // Print in the middle of the water if deep enough, else above
+            let textY = waterY + 40;
+            if (fillPercent < 0.2) textY = waterY - 30;
+            
+            // Outline text for readability
+            ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+            ctx.lineWidth = 4;
+            ctx.strokeText(`${currentFillLiters.toFixed(2)} L`, cx, textY);
+            ctx.fillText(`${currentFillLiters.toFixed(2)} L`, cx, textY);
+        }
+    }
+
+    // Smooth Animation Loop
+    function animate() {
+        let needsUpdate = false;
+
+        // Animate fill level
+        if (Math.abs(currentFillLiters - targetLiters) > 0.01) {
+            currentFillLiters += (targetLiters - currentFillLiters) * 0.1;
+            needsUpdate = true;
+        } else {
+            currentFillLiters = targetLiters;
+        }
+
+        // Animate wave continuously if there is water
+        if (currentFillLiters > 0) {
+            waveOffset -= 0.1; // Speed of wave rolling
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            drawJug();
+            animationFrameId = requestAnimationFrame(animate);
+        } else {
+            animationFrameId = null;
+        }
+    }
+
+    function startAnimation() {
+        if (!animationFrameId) {
+            animate();
+        }
+    }
+
+    // INIT
+    setTimeout(() => { calculateIntake(); }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

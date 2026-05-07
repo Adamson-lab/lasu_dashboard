@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Command Generator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --git-color: #f14e32;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .card-custom {
+            background: white; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            overflow: hidden;
+            display: flex;
+            min-height: 65vh;
+        }
+
+        /* Sidebar Navigation */
+        .git-sidebar {
+            width: 280px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            padding: 20px 0;
+        }
+        .nav-pills .nav-link {
+            color: #495057;
+            font-weight: 600;
+            border-radius: 0;
+            padding: 12px 25px;
+            border-left: 4px solid transparent;
+        }
+        .nav-pills .nav-link:hover {
+            background: #e9ecef;
+        }
+        .nav-pills .nav-link.active {
+            background: white;
+            color: var(--git-color);
+            border-left: 4px solid var(--git-color);
+        }
+
+        /* Content Area */
+        .git-content {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Generated Command Display */
+        .command-display {
+            background: #212529;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: auto; /* Push to bottom */
+            position: relative;
+        }
+        .command-text {
+            color: #a6e22e;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.2rem;
+            margin: 0;
+            word-break: break-all;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+
+        /* Form styling */
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+        .form-control {
+            font-family: 'Fira Code', monospace;
+        }
+
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 768px) {
+            .card-custom { flex-direction: column; }
+            .git-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #dee2e6; }
+            .nav-pills { display: flex; overflow-x: auto; flex-wrap: nowrap; }
+            .nav-pills .nav-link { border-left: none; border-bottom: 4px solid transparent; white-space: nowrap; }
+            .nav-pills .nav-link.active { border-left: none; border-bottom: 4px solid var(--git-color); }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">DEV TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="card-custom">
+        
+        <div class="git-sidebar">
+            <div class="px-4 mb-3">
+                <h6 class="text-muted fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Categories</h6>
+            </div>
+            <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#setup" type="button" onclick="updateCmd()"><i class="fas fa-cog fa-fw me-2"></i> Setup & Init</button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#commit" type="button" onclick="updateCmd()"><i class="fas fa-save fa-fw me-2"></i> Add & Commit</button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#branching" type="button" onclick="updateCmd()"><i class="fas fa-code-branch fa-fw me-2"></i> Branching</button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#remote" type="button" onclick="updateCmd()"><i class="fas fa-cloud-upload-alt fa-fw me-2"></i> Remote (Push/Pull)</button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#undo" type="button" onclick="updateCmd()"><i class="fas fa-undo fa-fw me-2"></i> Undo Changes</button>
+            </div>
+        </div>
+
+        <div class="git-content">
+            <div class="tab-content flex-grow-1" id="v-pills-tabContent">
+                
+                <div class="tab-pane fade show active" id="setup" role="tabpanel">
+                    <h4 class="section-title"><i class="fab fa-git-alt" style="color: var(--git-color);"></i> Setup & Initialization</h4>
+                    <div class="mb-4">
+                        <label class="form-label">Action</label>
+                        <select class="form-select mb-3" id="setupAction" onchange="updateCmd()">
+                            <option value="clone">Clone a repository</option>
+                            <option value="init">Initialize new repository in current directory</option>
+                            <option value="config_name">Set global username</option>
+                            <option value="config_email">Set global email</option>
+                        </select>
+                    </div>
+
+                    <div id="setupInputs">
+                        <div class="mb-3" id="setupUrlDiv">
+                            <label class="form-label">Repository URL</label>
+                            <input type="text" class="form-control" id="setupUrl" placeholder="https://github.com/user/repo.git" oninput="updateCmd()">
+                        </div>
+                        <div class="mb-3" id="setupValDiv" style="display:none;">
+                            <label class="form-label">Value</label>
+                            <input type="text" class="form-control" id="setupValue" placeholder="John Doe" oninput="updateCmd()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="commit" role="tabpanel">
+                    <h4 class="section-title"><i class="fab fa-git-alt" style="color: var(--git-color);"></i> Add & Commit</h4>
+                    <div class="mb-4">
+                        <label class="form-label">Action</label>
+                        <select class="form-select mb-3" id="commitAction" onchange="updateCmd()">
+                            <option value="add_all">Add all files</option>
+                            <option value="add_file">Add specific file</option>
+                            <option value="commit">Commit changes</option>
+                            <option value="commit_amend">Amend last commit message</option>
+                        </select>
+                    </div>
+
+                    <div id="commitInputs">
+                        <div class="mb-3" id="commitFileDiv" style="display:none;">
+                            <label class="form-label">File Name</label>
+                            <input type="text" class="form-control" id="commitFile" placeholder="index.html" oninput="updateCmd()">
+                        </div>
+                        <div class="mb-3" id="commitMsgDiv" style="display:none;">
+                            <label class="form-label">Commit Message</label>
+                            <input type="text" class="form-control" id="commitMsg" placeholder="Initial commit" oninput="updateCmd()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="branching" role="tabpanel">
+                    <h4 class="section-title"><i class="fab fa-git-alt" style="color: var(--git-color);"></i> Branching & Merging</h4>
+                    <div class="mb-4">
+                        <label class="form-label">Action</label>
+                        <select class="form-select mb-3" id="branchAction" onchange="updateCmd()">
+                            <option value="new_branch">Create and switch to new branch</option>
+                            <option value="switch_branch">Switch to existing branch</option>
+                            <option value="delete_branch">Delete a local branch</option>
+                            <option value="merge">Merge branch into current branch</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Branch Name</label>
+                        <input type="text" class="form-control" id="branchName" placeholder="feature/new-login" oninput="updateCmd()">
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="remote" role="tabpanel">
+                    <h4 class="section-title"><i class="fab fa-git-alt" style="color: var(--git-color);"></i> Remote Operations</h4>
+                    <div class="mb-4">
+                        <label class="form-label">Action</label>
+                        <select class="form-select mb-3" id="remoteAction" onchange="updateCmd()">
+                            <option value="add_remote">Add remote origin</option>
+                            <option value="push">Push branch to remote</option>
+                            <option value="push_force">Force push branch (Danger)</option>
+                            <option value="pull">Pull latest changes</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6" id="remoteUrlDiv">
+                            <label class="form-label">Remote URL</label>
+                            <input type="text" class="form-control" id="remoteUrl" placeholder="https://github.com/..." oninput="updateCmd()">
+                        </div>
+                        <div class="col-md-6" id="remoteBranchDiv" style="display:none;">
+                            <label class="form-label">Branch Name</label>
+                            <input type="text" class="form-control" id="remoteBranch" placeholder="main" value="main" oninput="updateCmd()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="undo" role="tabpanel">
+                    <h4 class="section-title"><i class="fab fa-git-alt" style="color: var(--git-color);"></i> Undo Changes</h4>
+                    <div class="mb-4">
+                        <label class="form-label">Action</label>
+                        <select class="form-select mb-3" id="undoAction" onchange="updateCmd()">
+                            <option value="discard_file">Discard changes in file</option>
+                            <option value="reset_soft">Undo last commit (keep files)</option>
+                            <option value="reset_hard">Wipe all uncommitted changes</option>
+                            <option value="revert">Revert a specific commit</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="undoInputDiv">
+                        <label class="form-label" id="undoInputLabel">File Name</label>
+                        <input type="text" class="form-control" id="undoInputVal" placeholder="index.html" oninput="updateCmd()">
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="command-display mt-4 shadow-sm">
+                <button class="btn btn-sm btn-light copy-btn" onclick="copyCommand()"><i class="fas fa-copy"></i></button>
+                <div class="text-white-50 small mb-2 text-uppercase fw-bold" style="letter-spacing: 1px;">Generated Command:</div>
+                <p class="command-text" id="finalCommand">git </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    const finalCommand = document.getElementById('finalCommand');
+    
+    // Auto-update on load
+    window.onload = updateCmd;
+
+    function updateCmd() {
+        // Find which tab is active
+        const activeTabId = document.querySelector('.tab-pane.active').id;
+        let cmd = "git ";
+
+        if (activeTabId === 'setup') {
+            const action = document.getElementById('setupAction').value;
+            const urlDiv = document.getElementById('setupUrlDiv');
+            const valDiv = document.getElementById('setupValDiv');
+            const urlVal = document.getElementById('setupUrl').value || "<url>";
+            const confVal = document.getElementById('setupValue').value || "<value>";
+
+            urlDiv.style.display = 'none'; valDiv.style.display = 'none';
+
+            if (action === 'clone') {
+                urlDiv.style.display = 'block';
+                cmd += `clone ${urlVal}`;
+            } else if (action === 'init') {
+                cmd += `init`;
+            } else if (action === 'config_name') {
+                valDiv.style.display = 'block';
+                cmd += `config --global user.name "${confVal}"`;
+            } else if (action === 'config_email') {
+                valDiv.style.display = 'block';
+                cmd += `config --global user.email "${confVal}"`;
+            }
+        } 
+        else if (activeTabId === 'commit') {
+            const action = document.getElementById('commitAction').value;
+            const fileDiv = document.getElementById('commitFileDiv');
+            const msgDiv = document.getElementById('commitMsgDiv');
+            const fileVal = document.getElementById('commitFile').value || "<file>";
+            const msgVal = document.getElementById('commitMsg').value || "Commit message";
+
+            fileDiv.style.display = 'none'; msgDiv.style.display = 'none';
+
+            if (action === 'add_all') {
+                cmd += `add .`;
+            } else if (action === 'add_file') {
+                fileDiv.style.display = 'block';
+                cmd += `add ${fileVal}`;
+            } else if (action === 'commit') {
+                msgDiv.style.display = 'block';
+                cmd += `commit -m "${msgVal}"`;
+            } else if (action === 'commit_amend') {
+                msgDiv.style.display = 'block';
+                cmd += `commit --amend -m "${msgVal}"`;
+            }
+        }
+        else if (activeTabId === 'branching') {
+            const action = document.getElementById('branchAction').value;
+            const bName = document.getElementById('branchName').value || "<branch-name>";
+
+            if (action === 'new_branch') {
+                cmd += `checkout -b ${bName}`;
+            } else if (action === 'switch_branch') {
+                cmd += `checkout ${bName}`;
+            } else if (action === 'delete_branch') {
+                cmd += `branch -d ${bName}`;
+            } else if (action === 'merge') {
+                cmd += `merge ${bName}`;
+            }
+        }
+        else if (activeTabId === 'remote') {
+            const action = document.getElementById('remoteAction').value;
+            const rUrlDiv = document.getElementById('remoteUrlDiv');
+            const rBranchDiv = document.getElementById('remoteBranchDiv');
+            const rUrl = document.getElementById('remoteUrl').value || "<url>";
+            const rBranch = document.getElementById('remoteBranch').value || "main";
+
+            rUrlDiv.style.display = 'none'; rBranchDiv.style.display = 'none';
+
+            if (action === 'add_remote') {
+                rUrlDiv.style.display = 'block';
+                cmd += `remote add origin ${rUrl}`;
+            } else if (action === 'push') {
+                rBranchDiv.style.display = 'block';
+                cmd += `push -u origin ${rBranch}`;
+            } else if (action === 'push_force') {
+                rBranchDiv.style.display = 'block';
+                cmd += `push -f origin ${rBranch}`;
+            } else if (action === 'pull') {
+                rBranchDiv.style.display = 'block';
+                cmd += `pull origin ${rBranch}`;
+            }
+        }
+        else if (activeTabId === 'undo') {
+            const action = document.getElementById('undoAction').value;
+            const inputDiv = document.getElementById('undoInputDiv');
+            const inputLabel = document.getElementById('undoInputLabel');
+            const val = document.getElementById('undoInputVal').value || "<target>";
+
+            inputDiv.style.display = 'block';
+
+            if (action === 'discard_file') {
+                inputLabel.innerText = "File Name";
+                cmd += `checkout -- ${val === '<target>' ? '<file>' : val}`;
+            } else if (action === 'reset_soft') {
+                inputDiv.style.display = 'none';
+                cmd += `reset --soft HEAD~1`;
+            } else if (action === 'reset_hard') {
+                inputDiv.style.display = 'none';
+                cmd += `reset --hard HEAD`;
+            } else if (action === 'revert') {
+                inputLabel.innerText = "Commit Hash";
+                cmd += `revert ${val === '<target>' ? '<commit-hash>' : val}`;
+            }
+        }
+
+        finalCommand.innerText = cmd;
+    }
+
+    function copyCommand() {
+        const text = finalCommand.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Git command copied!', 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        const toastBox = document.getElementById('toastBox');
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

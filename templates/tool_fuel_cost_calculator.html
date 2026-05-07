@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Cost Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-danger: #dc3545; /* Fuel Red */
+            --brand-danger-light: rgba(220, 53, 69, 0.1);
+            --brand-warning: #fd7e14; /* Gas Orange */
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+            min-width: 60px;
+            justify-content: center;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-danger);
+            box-shadow: 0 0 0 3px var(--brand-danger-light);
+        }
+        .result-card {
+            background: linear-gradient(135deg, #dc3545 0%, #9b1c28 100%);
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.2);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-card::after {
+            content: '\f52f'; /* FA Gas Pump */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -10px;
+            bottom: -20px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+            transform: rotate(-10deg);
+        }
+        .result-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 5px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+        .amount-display {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .chart-container {
+            position: relative;
+            height: 220px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        .section-divider {
+            margin: 25px 0 15px 0;
+            border-top: 2px solid #e2e8f0;
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-gas-pump me-2" style="color: var(--brand-danger);"></i> Trip Logistics Engine</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="input-panel">
+                    
+                    <div class="d-flex justify-content-between align-items-end mb-4">
+                        <div class="flex-grow-1 me-2">
+                            <label class="form-label">Measurement System</label>
+                            <select id="measurementSystem" class="form-select" onchange="toggleMeasurementSystem()">
+                                <option value="imperial" selected>Imperial (Miles, MPG, Gallons)</option>
+                                <option value="metric">Metric (Km, Km/L, Liters)</option>
+                            </select>
+                        </div>
+                        <div style="width: 100px;">
+                            <label class="form-label">Currency</label>
+                            <select id="currencySelect" class="form-select" onchange="calculateFuelCost()">
+                                <option value="$" selected>USD ($)</option>
+                                <option value="₦">NGN (₦)</option>
+                                <option value="€">EUR (€)</option>
+                                <option value="£">GBP (£)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>ROUTE DETAILS</span></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Trip Distance</label>
+                        <div class="input-group">
+                            <input type="number" id="tripDistance" class="form-control" value="250" min="0" step="1" oninput="calculateFuelCost()">
+                            <span class="input-group-text" id="unitDistance">Miles</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="roundTrip" style="cursor: pointer;" onchange="calculateFuelCost()">
+                            <label class="form-check-label fw-bold text-muted small text-uppercase" for="roundTrip" style="margin-top: 2px;">Make it a Round Trip (x2)</label>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>VEHICLE & PRICING</span></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Fuel Efficiency</label>
+                        <div class="input-group">
+                            <input type="number" id="fuelEfficiency" class="form-control" value="24" min="0.1" step="0.1" oninput="calculateFuelCost()">
+                            <span class="input-group-text" id="unitEfficiency">MPG</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Fuel Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text dynamic-cur">$</span>
+                            <input type="number" id="fuelPrice" class="form-control" value="3.50" min="0.01" step="0.01" oninput="calculateFuelCost()">
+                            <span class="input-group-text" id="unitVolume">/ Gal</span>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>CARPOOL (OPTIONAL)</span></div>
+
+                    <div class="mb-2">
+                        <label class="form-label d-flex justify-content-between">
+                            <span>Number of Passengers</span>
+                            <span class="text-primary fw-bold" id="passengerCountDisplay">1 Person</span>
+                        </label>
+                        <input type="range" class="form-range w-100" id="passengerCount" min="1" max="10" value="1" oninput="calculateFuelCost()">
+                    </div>
+
+                    <button class="btn btn-outline-secondary w-100 fw-bold mt-3" onclick="resetCalculator()"><i class="fas fa-redo-alt me-2"></i>Reset Logistics</button>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="result-card">
+                    <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.9;" id="mainTitle">Total Trip Cost</div>
+                    <div class="result-value" id="totalCostDisplay">$0.00</div>
+                    <div style="font-size: 0.95rem; opacity: 0.9; font-weight: 600;" id="subtitleDisplay">Total Fuel Required: 0.00 Gallons</div>
+                </div>
+
+                <div class="row align-items-center g-4">
+                    <div class="col-md-5">
+                        <div class="chart-container">
+                            <canvas id="fuelChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div style="background: var(--bg-surface); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                            <h6 class="fw-bold text-uppercase mb-3" style="font-size: 0.75rem; color: #64748b; letter-spacing: 1px;">Logistics Breakdown</h6>
+                            
+                            <div class="breakdown-row">
+                                <div><i class="fas fa-route text-muted me-2"></i> Total Distance</div>
+                                <span class="amount-display" id="finalDistanceDisplay">0 Miles</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <div><i class="fas fa-tachometer-alt text-muted me-2"></i> Cost Per <span id="distUnitSingle">Mile</span></div>
+                                <span class="amount-display" id="costPerDistDisplay">$0.00</span>
+                            </div>
+                            <div class="breakdown-row border-0" id="splitRow" style="display: none; background: rgba(220, 53, 69, 0.05); padding: 10px; border-radius: 8px; margin-top: 10px;">
+                                <div class="fw-bold text-danger"><i class="fas fa-user-friends me-2"></i> Cost Per Person</div>
+                                <span class="amount-display text-danger fs-5" id="costPerPersonDisplay">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fuelChartInstance = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            toggleMeasurementSystem(); // Initializes labels and calculates
+        });
+
+        // 1. Omni-Metric Unit Toggler
+        function toggleMeasurementSystem() {
+            const system = document.getElementById('measurementSystem').value;
+            
+            const distLabel = document.getElementById('unitDistance');
+            const effLabel = document.getElementById('unitEfficiency');
+            const volLabel = document.getElementById('unitVolume');
+            const distUnitSingle = document.getElementById('distUnitSingle');
+
+            if (system === 'imperial') {
+                distLabel.innerText = "Miles";
+                effLabel.innerText = "MPG";
+                volLabel.innerText = "/ Gal";
+                distUnitSingle.innerText = "Mile";
+            } else {
+                distLabel.innerText = "Km";
+                effLabel.innerText = "Km/L";
+                volLabel.innerText = "/ Liter";
+                distUnitSingle.innerText = "Km";
+            }
+
+            calculateFuelCost();
+        }
+
+        // 2. Formatting Engine
+        function formatMoney(amount, sym) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD', // Using USD standard for display formatting, replacing symbol manually to support arbitrary symbols like ₦
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount).replace('$', sym);
+        }
+
+        // 3. Core Logistics Engine
+        function calculateFuelCost() {
+            // Fetch Inputs
+            let distance = parseFloat(document.getElementById('tripDistance').value) || 0;
+            const isRoundTrip = document.getElementById('roundTrip').checked;
+            const efficiency = parseFloat(document.getElementById('fuelEfficiency').value) || 1; // Prevent div by 0
+            const price = parseFloat(document.getElementById('fuelPrice').value) || 0;
+            const passengers = parseInt(document.getElementById('passengerCount').value) || 1;
+            
+            const sym = document.getElementById('currencySelect').value;
+            document.querySelectorAll('.dynamic-cur').forEach(el => el.innerText = sym);
+            
+            const system = document.getElementById('measurementSystem').value;
+            const volName = system === 'imperial' ? 'Gallons' : 'Liters';
+            const distName = system === 'imperial' ? 'Miles' : 'Km';
+
+            // Update UI Labels
+            document.getElementById('passengerCountDisplay').innerText = passengers === 1 ? '1 Person' : `${passengers} People`;
+
+            if (distance <= 0) {
+                updateUI(0, 0, 0, 0, 0, passengers, sym, volName, distName);
+                return;
+            }
+
+            // Math Logic
+            if (isRoundTrip) {
+                distance = distance * 2;
+            }
+
+            // The math is identical for MPG and Km/L (Distance / Efficiency = Volume of Fuel Needed)
+            const fuelNeeded = distance / efficiency;
+            const totalCost = fuelNeeded * price;
+
+            const costPerDist = distance > 0 ? totalCost / distance : 0;
+            const costPerPerson = totalCost / passengers;
+
+            updateUI(totalCost, fuelNeeded, distance, costPerDist, costPerPerson, passengers, sym, volName, distName);
+        }
+
+        function updateUI(totalCost, fuelNeeded, totalDistance, costPerDist, costPerPerson, passengers, sym, volName, distName) {
+            // Update Main Card
+            document.getElementById('totalCostDisplay').innerText = formatMoney(totalCost, sym);
+            document.getElementById('subtitleDisplay').innerText = `Total Fuel Required: ${fuelNeeded.toFixed(2)} ${volName}`;
+
+            // Update Breakdown
+            document.getElementById('finalDistanceDisplay').innerText = `${totalDistance} ${distName}`;
+            document.getElementById('costPerDistDisplay').innerText = formatMoney(costPerDist, sym);
+            
+            // Handle Passenger Split View
+            const splitRow = document.getElementById('splitRow');
+            if (passengers > 1) {
+                splitRow.style.display = 'flex';
+                document.getElementById('costPerPersonDisplay').innerText = formatMoney(costPerPerson, sym);
+                document.getElementById('mainTitle').innerText = "Total Combined Trip Cost";
+            } else {
+                splitRow.style.display = 'none';
+                document.getElementById('mainTitle').innerText = "Total Trip Cost";
+            }
+
+            renderChart(totalCost, passengers, sym);
+        }
+
+        function renderChart(totalCost, passengers, sym) {
+            const ctx = document.getElementById('fuelChart').getContext('2d');
+            
+            if (fuelChartInstance) {
+                fuelChartInstance.destroy();
+            }
+
+            if (totalCost === 0) return;
+
+            // If 1 person, show a solid circle. If multiple, split the circle into passenger shares.
+            let labels = [];
+            let data = [];
+            let bgColors = [];
+
+            if (passengers === 1) {
+                labels = ['Your Cost'];
+                data = [totalCost];
+                bgColors = ['#dc3545'];
+            } else {
+                const share = totalCost / passengers;
+                for (let i = 1; i <= passengers; i++) {
+                    labels.push(`Passenger ${i}`);
+                    data.push(share);
+                    
+                    // Create an alternating gradient of reds/oranges for the carpool
+                    if (i % 3 === 0) bgColors.push('#9b1c28');
+                    else if (i % 2 === 0) bgColors.push('#fd7e14');
+                    else bgColors.push('#dc3545');
+                }
+            }
+
+            fuelChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: bgColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${formatMoney(context.raw, sym)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function resetCalculator() {
+            document.getElementById('tripDistance').value = 250;
+            document.getElementById('roundTrip').checked = false;
+            document.getElementById('fuelEfficiency').value = 24;
+            document.getElementById('fuelPrice').value = 3.50;
+            document.getElementById('passengerCount').value = 1;
+            calculateFuelCost();
+        }
+    </script>
+</body>
+</html>

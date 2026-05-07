@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleep Cycle Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0dcaf0; 
+            --math-dark-blue: #0d6efd;
+            --math-purple: #6f42c1;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .mode-selector {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-label { font-weight: 700; color: #495057; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 10px; display: block; }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-purple); box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15); }
+        .input-group-custom.disabled { background: #e9ecef; opacity: 0.5; pointer-events: none; }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            width: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        .time-input {
+            flex: 1;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .alert-info-custom {
+            background: rgba(111, 66, 193, 0.05); 
+            color: var(--math-purple);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+            transition: all 0.3s;
+        }
+        
+        .stat-card.optimal { border-color: rgba(25, 135, 84, 0.4); background: rgba(25, 135, 84, 0.05); }
+        .stat-card.good { border-color: rgba(13, 110, 253, 0.4); background: rgba(13, 110, 253, 0.05); }
+        .stat-card.minimum { border-color: rgba(253, 126, 20, 0.4); background: rgba(253, 126, 20, 0.05); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .optimal .stat-val { color: var(--lasu-accent); }
+        .good .stat-val { color: var(--math-dark-blue); }
+        .minimum .stat-val { color: var(--math-orange); }
+
+        .res-unit { font-size: 1rem; color: #adb5bd; margin-left: 2px; }
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* Advanced Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            min-height: 350px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center bottom;
+        }
+
+        #sleepCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .formula-bar span { color: #adb5bd; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; text-transform: uppercase; margin-right: 8px;}
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-moon"></i> Circadian Setup
+            </div>
+
+            <div class="mode-selector">
+                <label class="mode-label">Calculation Mode:</label>
+                <div class="d-flex flex-column gap-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="calcMode" id="modeWake" value="wake" checked onchange="updateMode()">
+                        <label class="form-check-label fw-bold text-primary" for="modeWake">I want to WAKE UP at...</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="calcMode" id="modeSleep" value="sleep" onchange="updateMode()">
+                        <label class="form-check-label fw-bold text-purple" for="modeSleep" style="color: var(--math-purple);">I am going to SLEEP at...</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label" id="inLabel">Target Time</div>
+                <input type="time" class="time-input" id="valTime" value="07:00" onchange="calculateCycles()">
+            </div>
+
+            <button class="btn btn-outline-primary w-100 fw-bold mb-3" onclick="setNow()">
+                <i class="fas fa-clock me-2"></i> Set Time to "Right Now"
+            </button>
+
+            <div class="alert-info-custom mt-auto mb-0">
+                <i class="fas fa-brain mb-2 fa-lg"></i><br>
+                <strong>Sleep Architecture:</strong><br>
+                Humans sleep in 90-minute cycles. Waking up mid-cycle (during deep sleep) leaves you groggy. Waking up <i>between</i> cycles leaves you refreshed. This calculator includes a <strong>15-minute</strong> buffer to fall asleep.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card optimal">
+                    <div class="stat-label" id="lblOptimal">Optimal (6 Cycles)</div>
+                    <div class="stat-val">
+                        <span id="resOptimal">--:--</span>
+                    </div>
+                    <div class="stat-sub">9 Hours of Sleep</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card good">
+                    <div class="stat-label" id="lblGood">Standard (5 Cycles)</div>
+                    <div class="stat-val">
+                        <span id="resGood">--:--</span>
+                    </div>
+                    <div class="stat-sub">7.5 Hours of Sleep</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card minimum">
+                    <div class="stat-label" id="lblMinimum">Minimum (4 Cycles)</div>
+                    <div class="stat-val">
+                        <span id="resMinimum">--:--</span>
+                    </div>
+                    <div class="stat-sub">6 Hours of Sleep</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="simulation-box mt-2">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="sleepCanvas"></canvas>
+            </div>
+            <div class="telemetry-bar">
+                <div class="formula-bar">
+                    <span>Engine:</span> Clinical Hypnogram Visualizer
+                </div>
+                <div class="text-muted fw-bold small text-uppercase"><i class="fas fa-wave-square me-1"></i> Brainwave Phase</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valTime = document.getElementById('valTime');
+    const modeWake = document.getElementById('modeWake');
+    const inLabel = document.getElementById('inLabel');
+
+    const resOptimal = document.getElementById('resOptimal');
+    const resGood = document.getElementById('resGood');
+    const resMinimum = document.getElementById('resMinimum');
+    const lblOptimal = document.getElementById('lblOptimal');
+    const lblGood = document.getElementById('lblGood');
+    const lblMinimum = document.getElementById('lblMinimum');
+
+    const canvas = document.getElementById('sleepCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    let isWakeMode = true;
+    let targetDate = new Date();
+
+    function updateMode() {
+        isWakeMode = modeWake.checked;
+        if (isWakeMode) {
+            inLabel.innerText = "Wake Up At";
+            lblOptimal.innerText = "Bedtime (6 Cycles)";
+            lblGood.innerText = "Bedtime (5 Cycles)";
+            lblMinimum.innerText = "Bedtime (4 Cycles)";
+        } else {
+            inLabel.innerText = "Sleep At";
+            lblOptimal.innerText = "Wake Time (6 Cycles)";
+            lblGood.innerText = "Wake Time (5 Cycles)";
+            lblMinimum.innerText = "Wake Time (4 Cycles)";
+        }
+        calculateCycles();
+    }
+
+    function setNow() {
+        const now = new Date();
+        const hrs = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        valTime.value = `${hrs}:${mins}`;
+        // Automatically switch to "Sleep At" mode if clicking "Right Now"
+        document.getElementById('modeSleep').checked = true;
+        updateMode();
+    }
+
+    function formatTimeAMPM(dateObj) {
+        let h = dateObj.getHours();
+        let m = dateObj.getMinutes();
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12; // 0 should be 12
+        m = m < 10 ? '0' + m : m;
+        return `${h}:${m} ${ampm}`;
+    }
+
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            drawHypnogram(); 
+        }
+    });
+    resizeObserver.observe(container);
+
+    function calculateCycles() {
+        const timeStr = valTime.value; // "HH:MM"
+        if (!timeStr) return;
+
+        const parts = timeStr.split(':');
+        const baseDate = new Date();
+        baseDate.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+
+        const cycleMs = 90 * 60 * 1000;
+        const latencyMs = 15 * 60 * 1000;
+
+        let timeOpt, timeGood, timeMin;
+
+        if (isWakeMode) {
+            // Subtract cycles + latency to find bedtime
+            timeOpt = new Date(baseDate.getTime() - (6 * cycleMs) - latencyMs);
+            timeGood = new Date(baseDate.getTime() - (5 * cycleMs) - latencyMs);
+            timeMin = new Date(baseDate.getTime() - (4 * cycleMs) - latencyMs);
+        } else {
+            // Add latency + cycles to find wake time
+            timeOpt = new Date(baseDate.getTime() + latencyMs + (6 * cycleMs));
+            timeGood = new Date(baseDate.getTime() + latencyMs + (5 * cycleMs));
+            timeMin = new Date(baseDate.getTime() + latencyMs + (4 * cycleMs));
+        }
+
+        resOptimal.innerText = formatTimeAMPM(timeOpt);
+        resGood.innerText = formatTimeAMPM(timeGood);
+        resMinimum.innerText = formatTimeAMPM(timeMin);
+
+        drawHypnogram();
+    }
+
+    // --- KINEMATIC HYPNOGRAM VISUALIZER ---
+    function drawHypnogram() {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        if(cw === 0) return;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const padX = 60;
+        const padY = 50;
+        const graphW = cw - (padX * 2);
+        const graphH = ch - (padY * 2);
+
+        // Y-Axis Levels (Awake, REM, Light, Deep)
+        const levels = {
+            awake: padY,
+            rem: padY + (graphH * 0.25),
+            light: padY + (graphH * 0.6),
+            deep: padY + graphH
+        };
+
+        // Draw horizontal grid lines and labels
+        ctx.fillStyle = '#adb5bd';
+        ctx.font = 'bold 12px "Segoe UI", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        
+        ctx.fillText('Awake', padX - 10, levels.awake);
+        ctx.fillText('REM', padX - 10, levels.rem);
+        ctx.fillText('Light', padX - 10, levels.light);
+        ctx.fillText('Deep', padX - 10, levels.deep);
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        for (let key in levels) {
+            ctx.beginPath();
+            ctx.moveTo(padX, levels[key]);
+            ctx.lineTo(cw - padX, levels[key]);
+            ctx.stroke();
+        }
+
+        // Draw Sleep Cycle Wave (6 Cycles total)
+        // A standard sleep cycle goes: Awake -> Light -> Deep -> Light -> REM
+        const totalCycles = 6;
+        const cycleWidth = graphW / totalCycles;
+
+        ctx.beginPath();
+        ctx.moveTo(padX, levels.awake);
+        
+        let cx = padX;
+        for (let i = 0; i < totalCycles; i++) {
+            let startX = padX + (i * cycleWidth);
+            let endX = startX + cycleWidth;
+            let quarter = cycleWidth / 4;
+
+            if (i === 0) {
+                // First cycle drops from Awake to Deep
+                ctx.bezierCurveTo(startX + quarter, levels.light, startX + quarter, levels.deep, startX + (quarter*2), levels.deep);
+            } else {
+                // Subsequent cycles drop from REM to Deep (less deep over time)
+                let currentDeep = levels.deep - (i * 10); // Less deep sleep in later cycles
+                ctx.bezierCurveTo(startX + quarter, levels.light, startX + quarter, currentDeep, startX + (quarter*2), currentDeep);
+            }
+
+            // Rise up to REM
+            let currentRem = levels.rem;
+            if (i === totalCycles - 1) currentRem = levels.awake; // Final wake up
+            
+            ctx.bezierCurveTo(startX + (quarter*3), levels.light, startX + (quarter*3), currentRem, endX, currentRem);
+        }
+
+        // Stroke the waveform
+        ctx.strokeStyle = '#6f42c1'; // Purple sleep wave
+        ctx.lineWidth = 4;
+        ctx.shadowColor = '#6f42c1';
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Draw Target Nodes at Cycle 4, 5, and 6
+        const nodes = [
+            { cycle: 4, color: '#fd7e14', label: 'Minimum' },
+            { cycle: 5, color: '#0d6efd', label: 'Standard' },
+            { cycle: 6, color: '#198754', label: 'Optimal' }
+        ];
+
+        nodes.forEach(node => {
+            let nx = padX + (node.cycle * cycleWidth);
+            let ny = node.cycle === 6 ? levels.awake : levels.rem; // End points
+
+            // Draw dashed vertical line
+            ctx.beginPath();
+            ctx.moveTo(nx, padY);
+            ctx.lineTo(nx, ch - padY + 20);
+            ctx.strokeStyle = node.color;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw glowing dot
+            ctx.beginPath();
+            ctx.arc(nx, ny, 6, 0, Math.PI*2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = node.color;
+            ctx.stroke();
+            
+            // Draw Label
+            ctx.fillStyle = node.color;
+            ctx.font = 'bold 12px "Fira Code", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(node.label, nx, ch - padY + 35);
+        });
+    }
+
+    // INIT
+    setTimeout(() => { calculateCycles(); }, 100);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Lesson Planner | LASU</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            background-color: #f0f2f5; 
+            font-family: 'Poppins', sans-serif; 
+            color: #333;
+        }
+
+        /* Card Styling */
+        .planner-card { 
+            background: white; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08); 
+            border: none;
+            overflow: hidden; 
+            margin-bottom: 30px;
+        }
+
+        /* Header Gradient */
+        .header-bg { 
+            background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%); 
+            color: white; 
+            padding: 40px 20px; 
+            text-align: center;
+        }
+
+        /* Form Inputs */
+        .form-control, .form-select {
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 2px solid #eee;
+            font-size: 15px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+        }
+        .form-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        /* The Magic Button */
+        .btn-magic {
+            background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: 15px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        .btn-magic:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.3);
+            background: linear-gradient(45deg, #0043a8, #0d6efd);
+            color: white;
+        }
+
+        /* Syllabus Output Box */
+        .syllabus-box { 
+            background: #fff; 
+            padding: 40px; 
+            border-radius: 12px; 
+            border: 1px solid #e1e4e8;
+        }
+        
+        /* Typography for Generated Content */
+        .syllabus-box h3 { 
+            color: #0043a8; 
+            font-weight: 700; 
+            margin-top: 30px; 
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #f0f2f5;
+            font-size: 1.4rem;
+        }
+        .syllabus-box ul { 
+            padding-left: 0; 
+            list-style: none;
+        }
+        .syllabus-box li { 
+            position: relative;
+            padding: 10px 0 10px 25px;
+            border-bottom: 1px dashed #eee;
+            color: #444;
+            line-height: 1.6;
+        }
+        .syllabus-box li::before {
+            content: "➜";
+            position: absolute;
+            left: 0;
+            color: #0d6efd;
+            font-weight: bold;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.95); 
+            z-index: 9999; 
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="fas fa-arrow-left me-2"></i> Back to Dashboard</a>
+        <span class="text-white-50">Lecturer Suite v2.0</span>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <div class="planner-card animate__animated animate__fadeInDown">
+                <div class="header-bg">
+                    <h1 class="fw-bold mb-2"><i class="fas fa-robot me-2"></i>AI Lesson Planner</h1>
+                    <p class="mb-0 opacity-75">Generate a complete 12-week academic curriculum in seconds.</p>
+                </div>
+                <div class="p-5">
+                    <form method="POST" onsubmit="showLoading()">
+                        <div class="row g-4">
+                            <div class="col-md-8">
+                                <label class="form-label">Course Topic / Title</label>
+                                <input type="text" name="course_title" class="form-control" placeholder="e.g. Artificial Intelligence in Medicine" required value="{{ title }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Academic Level</label>
+                                <select name="level" class="form-select">
+                                    <option value="Undergraduate (100-200 Lvl)">Undergraduate (Junior)</option>
+                                    <option value="Undergraduate (300-500 Lvl)">Undergraduate (Senior)</option>
+                                    <option value="Postgraduate (M.Sc)">Masters (M.Sc)</option>
+                                    <option value="PhD Research">PhD Research</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-magic w-100">
+                                    <i class="fas fa-wand-magic-sparkles me-2"></i> GENERATE SYLLABUS
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if syllabus %}
+            <div class="planner-card">
+                <div class="p-4 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold m-0 text-primary">
+                        <i class="fas fa-check-circle me-2"></i>Generated Curriculum
+                    </h5>
+                    <button onclick="window.print()" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                        <i class="fas fa-file-pdf me-2"></i>Save as PDF
+                    </button>
+                </div>
+                <div class="syllabus-box">
+                    {{ syllabus | safe }}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loader">
+    <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+    <h3 class="fw-bold">Designing Curriculum...</h3>
+    <p class="text-muted">Analyzing academic standards & compiling reading lists.</p>
+</div>
+
+<script>
+    function showLoading() {
+        // Show the loader when form is submitted
+        document.getElementById('loader').style.display = 'flex';
+    }
+</script>
+
+</body>
+</html>

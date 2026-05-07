@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2FA Verification | LASU Matrix</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================
+           V70 MASTER THEME ENGINE (CLEAN AUTH)
+           ========================================== */
+        
+        /* DARK MODE */
+        [data-theme="dark"] {
+            --bg-master: #0b0f19;
+            --bg-surface: #111827;
+            --border-core: #1f2937;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --grid-line: rgba(255, 255, 255, 0.03);
+            --shadow-core: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --primary-blue: #0ea5e9;
+            --primary-hover: #0284c7;
+            --danger-red: #ef4444;
+        }
+
+        /* GLOBALS */
+        body {
+            font-family: 'Inter', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-master);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            
+            /* 🟢 THE FIX: Replaced grid with your exact photo filename */
+            background: url("{{ url_for('static', filename='photo-1497366216548-37526070297c.avif') }}") no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        /* AUTH CARD */
+        .auth-card {
+            width: 100%;
+            max-width: 555px; /* 🟢 WIDENED TO MATCH LOGIN PAGE */
+            background: #ffffff; /* 🟢 Solid white so it is readable over the photo */
+            border: 1px solid var(--border-core);
+            border-radius: 16px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4); /* 🟢 Deepened shadow to pop off background */
+            text-align: center;
+            margin: 20px;
+        }
+
+        .auth-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 25px auto;
+            border: 1px solid rgba(14, 165, 233, 0.2);
+        }
+
+        .auth-title {
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #111827; /* Forced dark text for the white card */
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .auth-subtitle {
+            font-size: 0.9rem;
+            color: #6b7280; /* Forced dark text for the white card */
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        /* PREMIUM OTP INPUT */
+        .otp-input {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            color: #111827;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 12px;
+            text-align: center;
+            width: 100%;
+            border-radius: 10px;
+            padding: 12px 0 12px 12px; /* Extra left padding to center text with letter-spacing */
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .otp-input::placeholder {
+            color: #d1d5db;
+        }
+
+        .otp-input:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+            outline: none;
+        }
+
+        /* PRIMARY BUTTON */
+        .btn-primary-v70 {
+            background: var(--primary-blue);
+            color: #ffffff;
+            border: none;
+            font-weight: 700;
+            padding: 14px 20px;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            width: 100%;
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary-v70:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(14, 165, 233, 0.3);
+        }
+
+        /* ALERTS */
+        .v70-alert {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger-red);
+            color: var(--danger-red);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .abort-link {
+            display: inline-block;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .abort-link:hover {
+            color: #111827;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" alt="LASU Logo" style="width: 75px; height: auto;">
+        </div>
+        
+        <h2 class="auth-title">
+            {% if role == 'lecturer' %}
+                Lecturer Security Check
+            {% else %}
+                Admin Security Check
+            {% endif %}
+        </h2>
+        
+        <p class="auth-subtitle">
+            {% if role == 'lecturer' %}
+                A 6-digit access code has been dispatched to the email address you used to register your account:<br>
+                <strong style="color: var(--primary-blue); font-size: 1.05rem; display: block; margin-top: 8px;">{{ email }}</strong><br>
+                Please enter it below.
+            {% else %}
+                A 6-digit access code has been dispatched to the master admin email. Please enter it below.
+            {% endif %}
+        </p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="v70-alert">
+                    <i class="fas fa-exclamation-circle me-2"></i> {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="text" name="otp" class="form-control otp-input" placeholder="000000" maxlength="6" pattern="\d{6}" title="Please enter exactly 6 digits" required autocomplete="off" autofocus>
+            
+            <button type="submit" class="btn-primary-v70">
+                Verify Login
+            </button>
+        </form>
+
+        <a href="{{ url_for('login') }}" class="abort-link">
+            <i class="fas fa-arrow-left me-1"></i> Return to Login
+        </a>
+    </div>
+
+</body>
+</html>

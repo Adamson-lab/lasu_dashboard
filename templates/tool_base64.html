@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 Converter | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --bg-light: #f4f7f6;
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .navbar-custom { background-color: var(--lasu-green); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .back-btn { color: white; text-decoration: none; font-weight: 600; display: flex; align-items: center; }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .tool-container { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; }
+        
+        .card-custom {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            background: white;
+            overflow: hidden;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 600;
+            padding: 15px 25px;
+            border: none;
+            border-bottom: 3px solid transparent;
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--lasu-green);
+            border-bottom: 3px solid var(--lasu-green);
+            background: transparent;
+        }
+
+        textarea {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            min-height: 200px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        textarea:focus { background-color: #fff; border-color: var(--lasu-green); box-shadow: none; }
+
+        .action-btn { width: 120px; font-weight: 600; }
+        
+        #filePreview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            display: none;
+            margin-top: 15px;
+            border: 2px dashed #dee2e6;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENCODER TOOLS</span>
+    </div>
+</nav>
+
+<div class="tool-container">
+    <div class="card card-custom">
+        <div class="card-header bg-white border-bottom-0 p-0">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="text-tab" data-bs-toggle="tab" data-bs-target="#text" type="button"><i class="fas fa-font me-2"></i>Text Converter</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="file-tab" data-bs-toggle="tab" data-bs-target="#file" type="button"><i class="fas fa-image me-2"></i>File to Base64</button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body p-4">
+            <div class="tab-content" id="myTabContent">
+                
+                <div class="tab-pane fade show active" id="text" role="tabpanel">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-muted">Input</label>
+                            <textarea class="form-control" id="TextInput" placeholder="Type here..."></textarea>
+                        </div>
+                        
+                        <div class="col-md-2 d-flex flex-column justify-content-center align-items-center gap-2">
+                            <button class="btn btn-primary action-btn" onclick="encodeText()">Encode <i class="fas fa-arrow-right ms-1"></i></button>
+                            <button class="btn btn-outline-success action-btn" onclick="decodeText()"><i class="fas fa-arrow-left me-1"></i> Decode</button>
+                            <button class="btn btn-sm btn-link text-muted text-decoration-none mt-2" onclick="clearText()">Clear</button>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-muted">Output</label>
+                            <div class="position-relative">
+                                <textarea class="form-control" id="TextOutput" readonly placeholder="Result..."></textarea>
+                                <button class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 border" onclick="copyText()" title="Copy">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="file" role="tabpanel">
+                    <div class="text-center p-4 border rounded bg-light mb-3">
+                        <label for="fileUpload" class="btn btn-primary btn-lg">
+                            <i class="fas fa-upload me-2"></i> Choose Image/File
+                        </label>
+                        <input type="file" id="fileUpload" hidden onchange="processFile()">
+                        <p class="text-muted mt-2 small">Supports Images, PDFs, etc. (Max 5MB recommended)</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-bold">Base64 Output String:</label>
+                        <div class="input-group">
+                            <textarea class="form-control" id="FileOutput" rows="5" readonly></textarea>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyFileString()">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <img id="filePreview" alt="Image Preview">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- TEXT LOGIC ---
+    function encodeText() {
+        const input = document.getElementById('TextInput').value;
+        try {
+            document.getElementById('TextOutput').value = btoa(input);
+        } catch (e) {
+            alert("Error: Input contains characters that cannot be encoded in standard Base64 (e.g., emojis).");
+        }
+    }
+
+    function decodeText() {
+        const input = document.getElementById('TextInput').value;
+        try {
+            document.getElementById('TextOutput').value = atob(input);
+        } catch (e) {
+            alert("Error: Invalid Base64 string.");
+        }
+    }
+
+    function clearText() {
+        document.getElementById('TextInput').value = '';
+        document.getElementById('TextOutput').value = '';
+    }
+
+    function copyText() {
+        const output = document.getElementById('TextOutput');
+        if(!output.value) return;
+        output.select();
+        document.execCommand('copy');
+    }
+
+    // --- FILE LOGIC ---
+    function processFile() {
+        const fileInput = document.getElementById('fileUpload');
+        const file = fileInput.files[0];
+        const output = document.getElementById('FileOutput');
+        const preview = document.getElementById('filePreview');
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const result = e.target.result;
+                output.value = result;
+                
+                // If it's an image, show preview
+                if (file.type.startsWith('image/')) {
+                    preview.src = result;
+                    preview.style.display = 'inline-block';
+                } else {
+                    preview.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function copyFileString() {
+        const output = document.getElementById('FileOutput');
+        if(!output.value) return;
+        output.select();
+        document.execCommand('copy');
+        alert("Base64 string copied!");
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

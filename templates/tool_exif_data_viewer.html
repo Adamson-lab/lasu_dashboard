@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Exif Data Viewer | Tool</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --surface: #ffffff;
+            --background: #f1f5f9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; }
+        .back-link { color: var(--accent); text-decoration: none; font-weight: 600; display: inline-block; margin-bottom: 0.5rem; }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:hover { background: #334155; }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+
+        .drop-zone {
+            background: var(--surface);
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--radius);
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 2rem;
+        }
+        .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: #f8fafc; }
+        input[type="file"] { display: none; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            display: none; /* Hidden until data loads */
+        }
+
+        .visual-column { display: flex; flex-direction: column; gap: 1.5rem; }
+        
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .card h3 { margin-bottom: 1rem; color: var(--primary); font-size: 1.1rem; border-bottom: 2px solid var(--background); padding-bottom: 0.5rem; }
+
+        .image-preview { width: 100%; border-radius: 8px; object-fit: contain; background: #000; max-height: 300px; }
+        
+        #map { height: 300px; width: 100%; border-radius: 8px; z-index: 1; display: none; }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .data-item { background: var(--background); padding: 0.75rem; border-radius: 6px; }
+        .data-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .data-value { font-weight: 500; word-break: break-all; margin-top: 0.2rem; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-muted); font-weight: 500; width: 40%; }
+        
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <div>
+            <a href="{{ url_for('student_portal') }}" class="back-link">← Back To Dashboard</a>
+            <h1>Advanced Exif Engine</h1>
+            <p style="color: var(--text-muted);">Extract spatial intelligence and camera telemetry.</p>
+        </div>
+        <button class="btn btn-outline" id="exportBtn" style="display: none;">Export JSON Payload</button>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+        <i class="fas fa-cloud-upload-alt fa-3x" style="color: #cbd5e1; margin-bottom: 1rem;"></i>
+        <h3>Deploy Image for Analysis</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">Supports JPEG & TIFF formats</p>
+        <button class="btn">Browse Files</button>
+        <input type="file" id="fileInput" accept="image/jpeg, image/tiff">
+    </div>
+
+    <div class="dashboard-grid" id="dashboard">
+        
+        <div class="visual-column">
+            <div class="card">
+                <h3>Asset Verification</h3>
+                <img id="imagePreview" class="image-preview" src="" alt="Preview">
+            </div>
+            
+            <div class="card" id="mapCard" style="display: none;">
+                <h3>Spatial Telemetry (GPS)</h3>
+                <div id="map"></div>
+                <div class="data-grid" style="margin-top: 1rem;">
+                    <div class="data-item">
+                        <div class="data-label">Latitude</div>
+                        <div class="data-value" id="latValue">--</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Longitude</div>
+                        <div class="data-value" id="lngValue">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visual-column">
+            <div class="card">
+                <h3>Primary Telemetry</h3>
+                <div class="data-grid" id="primaryTelemetry">
+                    </div>
+            </div>
+
+            <div class="card">
+                <h3>Raw Metadata Dump</h3>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table>
+                        <tbody id="rawDataTable">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    class ExifEngine {
+        constructor() {
+            this.dropZone = document.getElementById('dropZone');
+            this.fileInput = document.getElementById('fileInput');
+            this.dashboard = document.getElementById('dashboard');
+            this.imagePreview = document.getElementById('imagePreview');
+            this.mapCard = document.getElementById('mapCard');
+            this.exportBtn = document.getElementById('exportBtn');
+            
+            this.mapInstance = null;
+            this.currentExifData = null;
+
+            this.initBindings();
+        }
+
+        initBindings() {
+            this.dropZone.addEventListener('click', () => this.fileInput.click());
+            this.fileInput.addEventListener('change', (e) => this.processAsset(e.target.files));
+            
+            this.dropZone.addEventListener('dragover', (e) => { e.preventDefault(); this.dropZone.classList.add('dragover'); });
+            this.dropZone.addEventListener('dragleave', () => this.dropZone.classList.remove('dragover'));
+            this.dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                this.dropZone.classList.remove('dragover');
+                this.processAsset(e.dataTransfer.files);
+            });
+
+            this.exportBtn.addEventListener('click', () => this.exportJSON());
+        }
+
+        processAsset(files) {
+            if (!files || files.length === 0) return;
+            const file = files[0];
+            
+            if (file.type !== "image/jpeg" && file.type !== "image/tiff") {
+                alert("Architecture violation: Only JPEG/TIFF files contain valid EXIF data.");
+                return;
+            }
+
+            // Set visual preview
+            this.imagePreview.src = URL.createObjectURL(file);
+            
+            // Extract EXIF
+            const self = this;
+            EXIF.getData(file, function() {
+                const tags = EXIF.getAllTags(this);
+                self.currentExifData = tags;
+                self.renderDashboard(tags);
+            });
+        }
+
+        renderDashboard(tags) {
+            this.dashboard.style.display = 'grid';
+            this.exportBtn.style.display = 'inline-block';
+            
+            if (Object.keys(tags).length === 0) {
+                alert("Processing complete: No EXIF metadata detected in this asset.");
+                return;
+            }
+
+            this.processPrimaryTelemetry(tags);
+            this.processSpatialData(tags);
+            this.processRawDump(tags);
+        }
+
+        processPrimaryTelemetry(tags) {
+            const container = document.getElementById('primaryTelemetry');
+            container.innerHTML = '';
+
+            const keyMetrics = [
+                { label: 'Camera Make', val: tags.Make },
+                { label: 'Camera Model', val: tags.Model },
+                { label: 'Lens Info', val: tags.LensModel },
+                { label: 'Date Time', val: tags.DateTimeOriginal },
+                { label: 'Aperture', val: tags.FNumber ? `f/${tags.FNumber.numerator/tags.FNumber.denominator}` : null },
+                { label: 'Exposure', val: tags.ExposureTime ? `${tags.ExposureTime.numerator}/${tags.ExposureTime.denominator} sec` : null },
+                { label: 'ISO', val: tags.ISOSpeedRatings },
+                { label: 'Dimensions', val: tags.PixelXDimension && tags.PixelYDimension ? `${tags.PixelXDimension} x ${tags.PixelYDimension} px` : null }
+            ];
+
+            keyMetrics.forEach(metric => {
+                if (metric.val) {
+                    container.innerHTML += `
+                        <div class="data-item">
+                            <div class="data-label">${metric.label}</div>
+                            <div class="data-value">${metric.val}</div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        processSpatialData(tags) {
+            const latDMS = tags.GPSLatitude;
+            const lngDMS = tags.GPSLongitude;
+            const latRef = tags.GPSLatitudeRef;
+            const lngRef = tags.GPSLongitudeRef;
+
+            if (latDMS && lngDMS && latRef && lngRef) {
+                const lat = this.convertDMSToDD(latDMS, latRef);
+                const lng = this.convertDMSToDD(lngDMS, lngRef);
+
+                document.getElementById('latValue').textContent = lat.toFixed(6);
+                document.getElementById('lngValue').textContent = lng.toFixed(6);
+                
+                this.mapCard.style.display = 'block';
+                document.getElementById('map').style.display = 'block';
+                
+                this.plotMap(lat, lng);
+            } else {
+                this.mapCard.style.display = 'none';
+                document.getElementById('map').style.display = 'none';
+            }
+        }
+
+        convertDMSToDD(dmsArray, ref) {
+            const degrees = dmsArray[0].numerator / dmsArray[0].denominator;
+            const minutes = dmsArray[1].numerator / dmsArray[1].denominator;
+            const seconds = dmsArray[2].numerator / dmsArray[2].denominator;
+            
+            let dd = degrees + (minutes / 60) + (seconds / 3600);
+            if (ref === "S" || ref === "W") { dd = dd * -1; }
+            return dd;
+        }
+
+        plotMap(lat, lng) {
+            if (this.mapInstance) {
+                this.mapInstance.remove();
+            }
+            
+            this.mapInstance = L.map('map').setView([lat, lng], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(this.mapInstance);
+            
+            L.marker([lat, lng]).addTo(this.mapInstance)
+                .bindPopup('Extracted Asset Location')
+                .openPopup();
+                
+            // Fix map rendering bug when unhidden
+            setTimeout(() => this.mapInstance.invalidateSize(), 100);
+        }
+
+        processRawDump(tags) {
+            const tbody = document.getElementById('rawDataTable');
+            tbody.innerHTML = '';
+            
+            const exclude = ['MakerNote', 'thumbnail', 'UserComment'];
+            
+            Object.keys(tags).forEach(key => {
+                if (!exclude.includes(key)) {
+                    let val = tags[key];
+                    if (val && typeof val === 'object' && val.numerator) {
+                        val = `${val.numerator}/${val.denominator}`;
+                    }
+                    tbody.innerHTML += `<tr><th>${key}</th><td>${val}</td></tr>`;
+                }
+            });
+        }
+
+        exportJSON() {
+            if(!this.currentExifData) return;
+            
+            // Clean the data structure for export
+            const cleanData = {};
+            const exclude = ['MakerNote', 'thumbnail'];
+            Object.keys(this.currentExifData).forEach(key => {
+                if(!exclude.includes(key)) {
+                    let val = this.currentExifData[key];
+                    if (val && typeof val === 'object' && val.numerator) {
+                         cleanData[key] = val.numerator / val.denominator;
+                    } else {
+                        cleanData[key] = val;
+                    }
+                }
+            });
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cleanData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `telemetry_payload_${Date.now()}.json`);
+            dlAnchorElem.click();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => new ExifEngine());
+</script>
+
+</body>
+</html>

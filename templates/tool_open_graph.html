@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Graph Previewer | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        /* Controls Pane */
+        .controls-pane {
+            flex: 0 0 450px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .control-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 700;
+            color: var(--lasu-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-area {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .char-counter {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        .char-safe { color: #198754; }
+        .char-warn { color: #dc3545; }
+
+        /* Output Pane */
+        .output-pane {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .preview-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .preview-area {
+            flex-grow: 1;
+            background-color: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+
+        /* Platform Previews Base */
+        .social-card {
+            width: 100%;
+            max-width: 520px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .social-card-img {
+            width: 100%;
+            aspect-ratio: 1.91 / 1;
+            background-color: #e4e6eb;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-bottom: 1px solid #dadde1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #bcc0c4;
+            font-size: 3rem;
+        }
+
+        .social-card-content {
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .sc-domain { text-transform: uppercase; font-size: 12px; color: #606770; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sc-title { font-weight: 600; font-size: 16px; color: #1c1e21; margin: 5px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .sc-desc { font-size: 14px; color: #606770; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* Specific Platforms */
+        /* FACEBOOK */
+        .preview-fb .social-card {
+            border: 1px solid #dadde1;
+            background: #f2f3f5;
+        }
+
+        /* TWITTER */
+        .preview-tw .social-card {
+            border: 1px solid #e1e8ed;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .preview-tw .social-card-img { border-bottom: 1px solid #e1e8ed; }
+        .preview-tw .sc-domain { color: #536471; text-transform: none; display: flex; align-items: center; margin-top: 5px;}
+        .preview-tw .sc-domain::before { content: "\f0c1"; font-family: "Font Awesome 5 Free"; font-weight: 900; margin-right: 5px; font-size: 10px; }
+        .preview-tw .sc-title { font-size: 15px; margin: 0 0 2px 0; color: #0f1419; }
+        .preview-tw .sc-desc { font-size: 15px; color: #536471; -webkit-line-clamp: 2; }
+
+        /* LINKEDIN */
+        .preview-li .social-card {
+            background: #f3f2ef;
+            border-radius: 2px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+        }
+        .preview-li .social-card-img { border-bottom: none; }
+        .preview-li .sc-domain { font-size: 12px; color: rgba(0,0,0,0.6); text-transform: lowercase; margin-top: 4px; }
+        .preview-li .sc-title { font-size: 14px; color: rgba(0,0,0,0.9); margin: 0; }
+        .preview-li .sc-desc { display: none; } /* LinkedIn hides desc on large image cards now */
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .controls-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">SEO TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-pane">
+        <div class="control-header">
+            <i class="fas fa-edit text-primary"></i> Card Details
+        </div>
+
+        <div class="form-area">
+            
+            <div class="mb-3">
+                <label class="form-label">URL / Domain</label>
+                <input type="text" class="form-control" id="ogDomain" placeholder="example.com" value="lasu.edu.ng" oninput="updatePreview()">
+                <div class="text-muted small mt-1">Displayed at the bottom of the card.</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input type="text" class="form-control fw-bold" id="ogTitle" placeholder="Catchy Article Title" value="A Comprehensive Guide to Open Graph" oninput="updatePreview()">
+                <div class="text-end char-counter" id="titleCount">0 / 60</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="ogDesc" rows="3" placeholder="A brief description of the content..." oninput="updatePreview()">Learn how to optimize your web pages for social media sharing with this interactive Open Graph preview tool.</textarea>
+                <div class="text-end char-counter" id="descCount">0 / 110</div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Image URL</label>
+                <input type="url" class="form-control" id="ogImage" placeholder="https://..." oninput="updateImage()">
+                <div class="text-muted small mt-1">Recommended size: 1200 x 630 pixels.</div>
+            </div>
+
+            <div class="alert alert-info py-2 px-3 small mb-0">
+                <i class="fas fa-info-circle me-1"></i> Use this tool to visualize your tags before adding them to your <code>&lt;head&gt;</code>.
+            </div>
+
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="preview-header btn-group" role="group">
+            <input type="radio" class="btn-check" name="platform" id="platFb" value="fb" autocomplete="off" checked onchange="switchPlatform()">
+            <label class="btn btn-outline-primary" for="platFb"><i class="fab fa-facebook me-1"></i> Facebook</label>
+
+            <input type="radio" class="btn-check" name="platform" id="platTw" value="tw" autocomplete="off" onchange="switchPlatform()">
+            <label class="btn btn-outline-info" for="platTw"><i class="fab fa-twitter me-1"></i> Twitter</label>
+
+            <input type="radio" class="btn-check" name="platform" id="platLi" value="li" autocomplete="off" onchange="switchPlatform()">
+            <label class="btn btn-outline-secondary" for="platLi"><i class="fab fa-linkedin me-1"></i> LinkedIn</label>
+        </div>
+        
+        <div class="preview-area preview-fb" id="previewArea">
+            
+            <div class="social-card shadow-sm">
+                <div class="social-card-img" id="cardImg">
+                    <i class="fas fa-image" id="imgPlaceholder"></i>
+                </div>
+                <div class="social-card-content">
+                    <span class="sc-domain" id="cardDomain">lasu.edu.ng</span>
+                    <h5 class="sc-title" id="cardTitle">A Comprehensive Guide to Open Graph</h5>
+                    <p class="sc-desc" id="cardDesc">Learn how to optimize your web pages for social media sharing with this interactive Open Graph preview tool.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Inputs
+    const ogDomain = document.getElementById('ogDomain');
+    const ogTitle = document.getElementById('ogTitle');
+    const ogDesc = document.getElementById('ogDesc');
+    const ogImage = document.getElementById('ogImage');
+    
+    // Counters
+    const titleCount = document.getElementById('titleCount');
+    const descCount = document.getElementById('descCount');
+
+    // Outputs
+    const cardDomain = document.getElementById('cardDomain');
+    const cardTitle = document.getElementById('cardTitle');
+    const cardDesc = document.getElementById('cardDesc');
+    const cardImg = document.getElementById('cardImg');
+    const imgPlaceholder = document.getElementById('imgPlaceholder');
+    const previewArea = document.getElementById('previewArea');
+
+    function updatePreview() {
+        // Domain
+        let domain = ogDomain.value.trim() || 'example.com';
+        domain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]; // Clean up URL to just domain
+        cardDomain.innerText = domain;
+
+        // Title
+        const tLen = ogTitle.value.length;
+        cardTitle.innerText = ogTitle.value || 'Page Title';
+        titleCount.innerText = `${tLen} / 60`;
+        titleCount.className = `char-counter ${tLen > 60 ? 'char-warn' : 'char-safe'}`;
+
+        // Description
+        const dLen = ogDesc.value.length;
+        cardDesc.innerText = ogDesc.value || 'Page Description';
+        descCount.innerText = `${dLen} / 110`;
+        descCount.className = `char-counter ${dLen > 110 ? 'char-warn' : 'char-safe'}`;
+    }
+
+    function updateImage() {
+        const url = ogImage.value.trim();
+        if (url) {
+            // Create a temp image to check if it loads
+            const img = new Image();
+            img.onload = function() {
+                cardImg.style.backgroundImage = `url('${url}')`;
+                imgPlaceholder.style.display = 'none';
+            }
+            img.onerror = function() {
+                cardImg.style.backgroundImage = 'none';
+                imgPlaceholder.style.display = 'block';
+                imgPlaceholder.className = 'fas fa-broken-image text-danger';
+            }
+            img.src = url;
+        } else {
+            cardImg.style.backgroundImage = 'none';
+            imgPlaceholder.style.display = 'block';
+            imgPlaceholder.className = 'fas fa-image';
+        }
+    }
+
+    function switchPlatform() {
+        const selected = document.querySelector('input[name="platform"]:checked').value;
+        previewArea.className = `preview-area preview-${selected}`;
+    }
+
+    // Init
+    updatePreview();
+    updateImage();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

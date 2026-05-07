@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mortgage Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-finance: #0d6efd; /* Mortgage Blue */
+            --brand-finance-light: rgba(13, 110, 253, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-finance);
+            box-shadow: 0 0 0 3px var(--brand-finance-light);
+        }
+        .form-range {
+            height: 6px;
+        }
+        .form-range::-webkit-slider-thumb {
+            background: var(--brand-finance);
+        }
+        .result-card {
+            background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-card::after {
+            content: '\f015'; /* FA House icon silhouette */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -10px;
+            bottom: -30px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+            transform: rotate(-5deg);
+        }
+        .result-value {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 10px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+        .color-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .section-divider {
+            margin: 25px 0 15px 0;
+            border-top: 2px solid #e2e8f0;
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-home me-2" style="color: var(--brand-finance);"></i> Mortgage Calculator</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="input-panel">
+                    
+                    <div class="mb-4">
+                        <label class="form-label d-flex justify-content-between">
+                            <span>Home Price</span>
+                            <span class="text-primary" id="homePriceDisplay">$400,000</span>
+                        </label>
+                        <input type="range" class="form-range mb-2" id="homePriceSlider" min="50000" max="2000000" step="5000" value="400000" oninput="syncInputs('homePrice')">
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" id="homePrice" class="form-control" value="400000" min="0" oninput="syncInputs('homePriceInput')">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label d-flex justify-content-between">
+                            <span>Down Payment</span>
+                            <span class="text-primary" id="downPaymentPctDisplay">20%</span>
+                        </label>
+                        <input type="range" class="form-range mb-2" id="downPaymentSlider" min="0" max="100" step="1" value="20" oninput="syncInputs('downPaymentPct')">
+                        <div class="row g-2">
+                            <div class="col-7">
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" id="downPayment" class="form-control" value="80000" min="0" oninput="syncInputs('downPaymentAmount')">
+                                </div>
+                            </div>
+                            <div class="col-5">
+                                <div class="input-group">
+                                    <input type="number" id="downPaymentPct" class="form-control" value="20" min="0" max="100" step="0.1" oninput="syncInputs('downPaymentPctInput')">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Loan Term</label>
+                            <select id="loanTerm" class="form-select" onchange="calculateMortgage()">
+                                <option value="30" selected>30 Years Fixed</option>
+                                <option value="20">20 Years Fixed</option>
+                                <option value="15">15 Years Fixed</option>
+                                <option value="10">10 Years Fixed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Interest Rate</label>
+                            <div class="input-group">
+                                <input type="number" id="interestRate" class="form-control" value="6.8" min="0" step="0.1" oninput="calculateMortgage()">
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>TAXES & FEES (OPTIONAL)</span></div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted" style="font-size:0.75rem;">Property Tax / Year</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="propertyTax" class="form-control" value="4800" min="0" step="100" oninput="calculateMortgage()">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted" style="font-size:0.75rem;">Home Insurance / Year</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="homeInsurance" class="form-control" value="1200" min="0" step="100" oninput="calculateMortgage()">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted" style="font-size:0.75rem;">HOA Fees / Month</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="hoaFees" class="form-control" value="0" min="0" step="10" oninput="calculateMortgage()">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="result-card">
+                    <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.85;">Total Monthly Payment</div>
+                    <div class="result-value" id="monthlyPaymentDisplay">$0.00</div>
+                    <div id="loanAmountDisplay" style="font-size: 0.95rem; opacity: 0.9; font-weight: 600;">Principal Amount: $0.00</div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="mortgageChart"></canvas>
+                </div>
+
+                <div class="mt-4 px-2">
+                    <div class="breakdown-row">
+                        <div><span class="color-dot" style="background: #0d6efd;"></span> <span class="text-dark">Principal & Interest</span></div>
+                        <span class="fw-bold" id="piDisplay">$0.00</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <div><span class="color-dot" style="background: #198754;"></span> <span class="text-muted">Property Taxes</span></div>
+                        <span class="text-dark" id="taxDisplay">$0.00</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <div><span class="color-dot" style="background: #ffc107;"></span> <span class="text-muted">Home Insurance</span></div>
+                        <span class="text-dark" id="insuranceDisplay">$0.00</span>
+                    </div>
+                    <div class="breakdown-row" id="hoaRow">
+                        <div><span class="color-dot" style="background: #dc3545;"></span> <span class="text-muted">HOA Fees</span></div>
+                        <span class="text-dark" id="hoaDisplay">$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mortgageChartInstance = null;
+
+        // Enterprise Currency Formatter
+        const currencyFormatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            calculateMortgage();
+        });
+
+        // --- Synchronize Sliders and Inputs ---
+        function syncInputs(source) {
+            const priceSlider = document.getElementById('homePriceSlider');
+            const priceInput = document.getElementById('homePrice');
+            const dpSlider = document.getElementById('downPaymentSlider');
+            const dpInput = document.getElementById('downPayment');
+            const dpPctInput = document.getElementById('downPaymentPct');
+
+            let price = parseFloat(priceInput.value) || 0;
+            let dp = parseFloat(dpInput.value) || 0;
+            let dpPct = parseFloat(dpPctInput.value) || 0;
+
+            if (source === 'homePrice') {
+                price = parseFloat(priceSlider.value);
+                priceInput.value = price;
+                dpInput.value = (price * (dpPct / 100)).toFixed(0); // Update DP amount based on locked %
+            } 
+            else if (source === 'homePriceInput') {
+                priceSlider.value = price;
+                dpInput.value = (price * (dpPct / 100)).toFixed(0);
+            }
+            else if (source === 'downPaymentPct' || source === 'downPaymentPctInput') {
+                dpPct = source === 'downPaymentPct' ? parseFloat(dpSlider.value) : parseFloat(dpPctInput.value);
+                if (dpPct > 100) dpPct = 100;
+                dpPctInput.value = dpPct;
+                dpSlider.value = dpPct;
+                dpInput.value = (price * (dpPct / 100)).toFixed(0);
+            }
+            else if (source === 'downPaymentAmount') {
+                if (dp > price) { dp = price; dpInput.value = price; }
+                dpPct = price > 0 ? (dp / price) * 100 : 0;
+                dpPctInput.value = dpPct.toFixed(1);
+                dpSlider.value = dpPct;
+            }
+
+            // Update purely visual UI labels
+            document.getElementById('homePriceDisplay').innerText = currencyFormatter.format(price);
+            document.getElementById('downPaymentPctDisplay').innerText = parseFloat(dpPctInput.value).toFixed(1) + '%';
+
+            // Trigger core math
+            calculateMortgage();
+        }
+
+        // --- Core PITI Mathematical Engine ---
+        function calculateMortgage() {
+            // Fetch clean inputs
+            const homePrice = parseFloat(document.getElementById('homePrice').value) || 0;
+            const downPayment = parseFloat(document.getElementById('downPayment').value) || 0;
+            const annualRate = parseFloat(document.getElementById('interestRate').value) || 0;
+            const years = parseFloat(document.getElementById('loanTerm').value) || 30;
+            
+            const yearlyTax = parseFloat(document.getElementById('propertyTax').value) || 0;
+            const yearlyIns = parseFloat(document.getElementById('homeInsurance').value) || 0;
+            const monthlyHoa = parseFloat(document.getElementById('hoaFees').value) || 0;
+
+            const principal = homePrice - downPayment;
+            document.getElementById('loanAmountDisplay').innerText = `Principal Amount: ${currencyFormatter.format(principal)}`;
+
+            if (principal <= 0) {
+                updateUI(0, 0, 0, 0, 0);
+                return;
+            }
+
+            // 1. Calculate P&I (Principal and Interest)
+            let monthlyPI = 0;
+            const numberOfMonths = years * 12;
+
+            if (annualRate > 0) {
+                const monthlyRate = annualRate / 100 / 12;
+                const factor = Math.pow(1 + monthlyRate, numberOfMonths);
+                monthlyPI = (principal * monthlyRate * factor) / (factor - 1);
+            } else {
+                monthlyPI = principal / numberOfMonths;
+            }
+
+            // 2. Calculate Extra Monthly Costs
+            const monthlyTax = yearlyTax / 12;
+            const monthlyIns = yearlyIns / 12;
+            
+            // 3. Calculate Total PITI + HOA
+            const totalMonthly = monthlyPI + monthlyTax + monthlyIns + monthlyHoa;
+
+            updateUI(totalMonthly, monthlyPI, monthlyTax, monthlyIns, monthlyHoa);
+        }
+
+        function updateUI(total, pi, tax, ins, hoa) {
+            // Format to DOM
+            document.getElementById('monthlyPaymentDisplay').innerText = currencyFormatter.format(total);
+            document.getElementById('piDisplay').innerText = currencyFormatter.format(pi);
+            document.getElementById('taxDisplay').innerText = currencyFormatter.format(tax);
+            document.getElementById('insuranceDisplay').innerText = currencyFormatter.format(ins);
+            document.getElementById('hoaDisplay').innerText = currencyFormatter.format(hoa);
+
+            // Hide HOA row if 0 for cleaner UI
+            document.getElementById('hoaRow').style.display = hoa > 0 ? 'flex' : 'none';
+
+            renderChart(pi, tax, ins, hoa);
+        }
+
+        function renderChart(pi, tax, ins, hoa) {
+            const ctx = document.getElementById('mortgageChart').getContext('2d');
+            
+            if (mortgageChartInstance) {
+                mortgageChartInstance.destroy();
+            }
+
+            if (pi === 0) return;
+
+            // Prepare dynamic arrays based on whether HOA exists
+            const labels = ['Principal & Interest', 'Property Tax', 'Home Insurance'];
+            const data = [pi, tax, ins];
+            const colors = ['#0d6efd', '#198754', '#ffc107'];
+
+            if (hoa > 0) {
+                labels.push('HOA Fees');
+                data.push(hoa);
+                colors.push('#dc3545');
+            }
+
+            mortgageChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 3,
+                        borderColor: '#ffffff',
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%', // Thicker ring than the loan calc
+                    layout: { padding: 10 },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${currencyFormatter.format(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

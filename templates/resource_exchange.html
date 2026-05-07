@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resource Exchange | LASU</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f4f7f6; }
+        .navbar-custom { background-color: #004d40; }
+        .res-card { border: none; border-radius: 15px; transition: 0.3s; background: white; }
+        .res-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .leaderboard-banner { background: linear-gradient(45deg, #004d40, #198754); border: none; color: white; border-radius: 15px; }
+        .filter-pills::-webkit-scrollbar { display: none; }
+        .filter-pills { -ms-overflow-style: none; scrollbar-width: none; }
+        .search-group .form-control { border-radius: 20px 0 0 20px; border: none; }
+        .search-group .btn { border-radius: 0 20px 20px 0; border: none; }
+        .category-badge { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .level-badge { font-size: 0.6rem; font-weight: bold; padding: 2px 8px; border-radius: 10px; background: #e9ecef; color: #495057; }
+        .bookmark-btn { transition: 0.2s; cursor: pointer; }
+        .bookmark-btn:hover { transform: scale(1.2); }
+        .btn-xs { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+        .x-small { font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark navbar-custom px-3 mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-exchange-alt me-2"></i>Peer Resource Exchange
+            <span class="badge rounded-pill bg-warning text-dark ms-2 shadow-sm" style="font-size: 0.7rem; vertical-align: middle;">
+                {{ total_count or 0 }} Shared
+            </span>
+        </a>
+        
+        <div class="d-flex align-items-center gap-2">
+            <form action="{{ url_for('resource_exchange') }}" method="GET" class="input-group input-group-sm search-group d-none d-md-flex" style="width: 250px;">
+                <input type="text" name="search" class="form-control" placeholder="Search resources..." value="{{ search_query or '' }}">
+                <button class="btn btn-light text-success" type="submit"><i class="fas fa-search"></i></button>
+            </form>
+
+            <a href="{{ url_for('student_portal') }}" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <button class="btn btn-sm btn-light text-success fw-bold rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                <i class="fas fa-plus"></i> Share
+            </button>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card leaderboard-banner shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-trophy text-warning me-2"></i>Campus Top Contributors</h5>
+                    <div class="row">
+                        {% if top_contributors %}
+                            {% for name, count in top_contributors %}
+                            <div class="col-4">
+                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 45px; height: 45px;">
+                                    <i class="fas fa-medal {{ 'text-warning' if loop.index == 1 else 'text-secondary' if loop.index == 2 else 'text-danger' }}"></i>
+                                </div>
+                                <p class="small fw-bold mb-0 text-white text-truncate">{{ name.split(' ')[0] }}</p>
+                                <span class="badge bg-light text-dark" style="font-size: 0.6rem;">{{ count }} Shared</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12 text-white opacity-75 small italic">Share a resource to join the leaderboard!</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-2 d-flex overflow-auto pb-1 filter-pills" style="gap: 10px;">
+        <a href="{{ url_for('resource_exchange', level=selected_level) }}" class="btn btn-sm rounded-pill {{ 'btn-success' if not selected_faculty else 'btn-outline-secondary' }}">All Faculties</a>
+        {% for fac in ['Arts', 'Science', 'Law', 'Engineering', 'Management', 'Education', 'Social Sciences'] %}
+        <a href="{{ url_for('resource_exchange', faculty=fac, level=selected_level) }}" class="btn btn-sm rounded-pill {{ 'btn-success' if selected_faculty == fac else 'btn-outline-secondary' }}">{{ fac }}</a>
+        {% endfor %}
+    </div>
+
+    {% if available_depts %}
+    <div class="mb-2 d-flex overflow-auto pb-1 filter-pills" style="gap: 10px;">
+        <a href="{{ url_for('resource_exchange', faculty=selected_faculty, level=selected_level) }}" class="btn btn-xs rounded-pill {{ 'btn-dark' if not selected_dept else 'btn-outline-dark' }}">All Departments</a>
+        {% for dept in available_depts %}
+        <a href="{{ url_for('resource_exchange', faculty=selected_faculty, dept=dept, level=selected_level) }}" class="btn btn-xs rounded-pill {{ 'btn-dark' if selected_dept == dept else 'btn-outline-dark' }}">{{ dept }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="mb-4 d-flex overflow-auto pb-2 filter-pills" style="gap: 10px;">
+        <a href="{{ url_for('resource_exchange', faculty=selected_faculty, dept=selected_dept) }}" class="btn btn-sm rounded-pill {{ 'btn-success' if not selected_level else 'btn-outline-secondary' }}">All Levels</a>
+        {% for lvl in ['100L', '200L', '300L', '400L', '500L'] %}
+        <a href="{{ url_for('resource_exchange', level=lvl, faculty=selected_faculty, dept=selected_dept) }}" class="btn btn-sm rounded-pill {{ 'btn-success' if selected_level == lvl else 'btn-outline-secondary' }}">{{ lvl }}</a>
+        {% endfor %}
+    </div>
+
+    {% set my_bookmarks = Bookmark.query.filter_by(student_id=student.id).all() %}
+    {% if my_bookmarks %}
+    <h5 class="fw-bold mb-3"><i class="fas fa-bookmark text-danger me-2"></i>My Bookmarked Resources</h5>
+    <div class="row g-3 mb-5">
+        {% for bmark in my_bookmarks %}
+        <div class="col-md-4">
+            <div class="card res-card h-100 border-start border-danger border-4 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="fw-bold mb-1">{{ bmark.resource.title }}</h6>
+                        <form action="{{ url_for('toggle_bookmark', res_id=bmark.resource.id) }}" method="POST">
+                            <button type="submit" class="btn btn-sm p-0 border-0"><i class="fas fa-bookmark text-danger"></i></button>
+                        </form>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="badge bg-danger-subtle text-danger" style="font-size: 0.6rem;">{{ bmark.resource.level }}</span>
+                        <a href="{{ url_for('download_peer_resource', res_id=bmark.resource.id) }}" class="btn btn-xs btn-outline-danger rounded-pill px-3">Download</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <hr class="mb-5">
+    {% endif %}
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-dark text-white py-2 fw-bold small">
+                    <i class="fas fa-user-edit me-2"></i>My Contributed Resources
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3">Title</th>
+                                    <th>Category</th>
+                                    <th>Level</th>
+                                    <th>Downloads</th>
+                                    <th class="text-end pe-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set my_count = namespace(v=0) %}
+                                {% for res in resources if res.uploader_id == student.id %}
+                                    {% set my_count.v = my_count.v + 1 %}
+                                    <tr>
+                                        <td class="ps-3 fw-bold">{{ res.title }}</td>
+                                        <td><span class="badge bg-success-subtle text-success">{{ res.category }}</span></td>
+                                        <td><span class="level-badge">{{ res.level or 'N/A' }}</span></td>
+                                        <td><i class="fas fa-download me-1 opacity-50"></i> {{ res.downloads }}</td>
+                                        <td class="text-end pe-3">
+                                            <form action="{{ url_for('delete_peer_resource', res_id=res.id) }}" method="POST" onsubmit="return confirm('Delete permanently?')">
+                                                <button type="submit" class="btn btn-sm text-danger border-0"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                {% if my_count.v == 0 %}
+                                    <tr><td colspan="5" class="text-center py-4 text-muted">You haven't shared any resources yet.</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-3"><i class="fas fa-globe me-2 text-success"></i>Community Resources {% if selected_dept %}<small class="text-muted fw-normal">in {{ selected_dept }}</small>{% endif %}</h5>
+    <div class="row g-3">
+        {% for res in resources %}
+            <div class="col-md-4">
+                <div class="card res-card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-info-subtle text-info category-badge">{{ res.category }}</span>
+                            <form action="{{ url_for('toggle_bookmark', res_id=res.id) }}" method="POST">
+                                {% set bookmarked_ids = Bookmark.query.filter_by(student_id=student.id).all() | map(attribute='resource_id') | list %}
+                                <button type="submit" class="btn btn-sm p-0 border-0 bookmark-btn">
+                                    <i class="{{ 'fas' if res.id in bookmarked_ids else 'far' }} fa-bookmark text-danger"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <h6 class="fw-bold mb-1 text-dark text-truncate" title="{{ res.title }}">{{ res.title }}</h6>
+                        <div class="mb-2">
+                            <span class="level-badge">{{ res.level }}</span>
+                            <small class="text-muted ms-2">{{ res.dept or res.faculty }}</small>
+                        </div>
+                        <p class="x-small text-muted mb-3">By: {{ res.uploader.name }}</p>
+                        
+                        <div class="mt-auto d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted"><i class="fas fa-download me-1"></i> {{ res.downloads }}</small>
+                            <a href="{{ url_for('download_peer_resource', res_id=res.id) }}" class="btn btn-sm btn-outline-success rounded-pill px-3">Download PDF</a>
+                        </div>
+
+                        <div class="pt-2 border-top">
+                            {% set rated_ids = res.ratings | map(attribute='student_id') | list %}
+                            {% if student.id in rated_ids %}
+                                {% for r in res.ratings if r.student_id == student.id %}
+                                    <span class="text-success x-small fw-bold">
+                                        <i class="fas fa-check-circle me-1"></i> Rated {{ r.stars }} ⭐
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <button class="btn btn-sm btn-link text-decoration-none p-0 text-warning x-small fw-bold" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#rateModal{{ res.id }}">
+                                    <i class="fas fa-star me-1"></i> Rate Resource
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="rateModal{{ res.id }}" tabindex="-1">
+                <div class="modal-dialog modal-sm modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header bg-dark text-white">
+                            <h6 class="modal-title fw-bold text-truncate">{{ res.title }}</h6>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="{{ url_for('rate_resource', res_id=res.id) }}" method="POST">
+                            <div class="modal-body text-center">
+                                <select name="stars" class="form-select form-select-sm mb-3" required>
+                                    <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+                                    <option value="4">⭐⭐⭐⭐ (Very Good)</option>
+                                    <option value="3">⭐⭐⭐ (Good)</option>
+                                    <option value="2">⭐⭐ (Fair)</option>
+                                    <option value="1">⭐ (Poor)</option>
+                                </select>
+                                <textarea name="comment" class="form-control form-control-sm" placeholder="Feedback..." rows="2"></textarea>
+                            </div>
+                            <div class="modal-footer border-0 p-2">
+                                <button type="submit" class="btn btn-success btn-sm w-100 fw-bold rounded-pill">Submit Review</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-dark text-white">
+                <h6 class="modal-title fw-bold"><i class="fas fa-file-upload me-2"></i>Share Knowledge</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('resource_exchange') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Document Title</label>
+                        <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g. CSC 405 Past Questions" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Faculty</label>
+                            <select name="faculty" class="form-select form-select-sm" required>
+                                <option value="Arts">Arts</option>
+                                <option value="Science">Science</option>
+                                <option value="Law">Law</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Management">Management</option>
+                                <option value="Education">Education</option>
+                                <option value="Social Sciences">Social Sciences</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Year/Level</label>
+                            <select name="level" class="form-select form-select-sm" required>
+                                <option value="100L">100L</option>
+                                <option value="200L">200L</option>
+                                <option value="300L">300L</option>
+                                <option value="400L">400L</option>
+                                <option value="500L">500L</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Specific Department</label>
+                        <input type="text" name="dept" class="form-control form-control-sm" placeholder="e.g. Computer Science" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Category</label>
+                        <select name="category" class="form-select form-select-sm">
+                            <option value="Past Questions">Past Questions</option>
+                            <option value="Class Notes">Class Notes</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">File (PDF or Image)</label>
+                        <input type="file" name="resource_file" class="form-control form-control-sm" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-2">
+                    <button type="submit" class="btn btn-success btn-sm w-100 fw-bold rounded-pill">Upload & Share</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

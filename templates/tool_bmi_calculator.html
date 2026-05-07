@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0dcaf0; /* Underweight */
+            --math-green: #198754; /* Normal */
+            --math-orange: #fd7e14; /* Overweight */
+            --math-red: #dc3545; /* Obese */
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .system-toggle {
+            display: flex;
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            color: #6c757d;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .toggle-btn.active {
+            background: white;
+            color: var(--lasu-green);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--lasu-green); box-shadow: 0 0 0 4px rgba(0, 77, 64, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            width: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-label {
+            background: #f8f9fa;
+            border-left: 1px solid #ced4da;
+            padding: 0 15px;
+            font-weight: 800;
+            color: var(--lasu-green);
+            display: flex;
+            align-items: center;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            width: 70px;
+            justify-content: center;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS (Mirrors previous tools perfectly) */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+            transition: all 0.3s;
+        }
+        
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .res-unit { font-size: 1rem; color: #adb5bd; margin-left: 2px; }
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* Dynamic Classes applied by JS */
+        .cat-underweight { border-color: rgba(13, 202, 240, 0.5); background: rgba(13, 202, 240, 0.05); }
+        .cat-underweight .stat-val { color: var(--math-blue); }
+        
+        .cat-normal { border-color: rgba(25, 135, 84, 0.5); background: rgba(25, 135, 84, 0.05); }
+        .cat-normal .stat-val { color: var(--math-green); }
+        
+        .cat-overweight { border-color: rgba(253, 126, 20, 0.5); background: rgba(253, 126, 20, 0.05); }
+        .cat-overweight .stat-val { color: var(--math-orange); }
+        
+        .cat-obese { border-color: rgba(220, 53, 69, 0.5); background: rgba(220, 53, 69, 0.05); }
+        .cat-obese .stat-val { color: var(--math-red); }
+
+        .neutral-card { border-color: rgba(73, 80, 87, 0.3); }
+
+        /* Advanced Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            min-height: 350px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: center bottom;
+        }
+
+        #bmiCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+        .formula-bar span { color: #adb5bd; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; text-transform: uppercase; margin-right: 8px;}
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-weight"></i> Physical Metrics
+            </div>
+
+            <div class="system-toggle">
+                <div class="toggle-btn active" id="btnMetric" onclick="setSystem('metric')">Metric (kg/cm)</div>
+                <div class="toggle-btn" id="btnImperial" onclick="setSystem('imperial')">Imperial (lbs/ft)</div>
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid positive numbers.
+            </div>
+
+            <div id="metricInputs">
+                <div class="input-group-custom">
+                    <div class="input-label">Weight</div>
+                    <input type="number" class="num-input" id="valWeightKg" value="70" step="any" oninput="calculateBMI()">
+                    <div class="unit-label">kg</div>
+                </div>
+                <div class="input-group-custom">
+                    <div class="input-label">Height</div>
+                    <input type="number" class="num-input" id="valHeightCm" value="175" step="any" oninput="calculateBMI()">
+                    <div class="unit-label">cm</div>
+                </div>
+            </div>
+
+            <div id="imperialInputs" style="display: none;">
+                <div class="input-group-custom">
+                    <div class="input-label">Weight</div>
+                    <input type="number" class="num-input" id="valWeightLbs" value="154" step="any" oninput="calculateBMI()">
+                    <div class="unit-label">lbs</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <div class="input-group-custom w-50">
+                        <div class="input-label" style="width: 70px;">Height</div>
+                        <input type="number" class="num-input" id="valHeightFt" value="5" step="1" oninput="calculateBMI()">
+                        <div class="unit-label" style="width: 40px; padding: 0;">ft</div>
+                    </div>
+                    <div class="input-group-custom w-50">
+                        <input type="number" class="num-input" id="valHeightIn" value="9" step="any" oninput="calculateBMI()">
+                        <div class="unit-label" style="width: 40px; padding: 0;">in</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-auto mb-0 border-0" style="background: rgba(25, 135, 84, 0.05); color: var(--lasu-accent);">
+                <i class="fas fa-heartbeat mb-2 fa-lg"></i><br>
+                <strong>WHO Guidelines:</strong><br>
+                This engine applies standard World Health Organization criteria. BMI is a population-level metric and does not account for muscle mass vs. body fat composition.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card" id="cardBMI">
+                    <div class="stat-label">Body Mass Index</div>
+                    <div class="stat-val">
+                        <span id="resBMI">22.9</span>
+                        <span class="res-unit">kg/m&sup2;</span>
+                    </div>
+                    <div class="stat-sub">WHO Standard Score</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card" id="cardCategory">
+                    <div class="stat-label">Classification</div>
+                    <div class="stat-val" style="font-size: 1.6rem; font-family: 'Segoe UI', sans-serif;">
+                        <span id="resCategory" style="line-height: 1.2;">Normal Weight</span>
+                    </div>
+                    <div class="stat-sub" id="resRisk">Lowest Health Risk</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card neutral-card">
+                    <div class="stat-label">Healthy Weight Range</div>
+                    <div class="stat-val" style="font-size: 1.6rem;">
+                        <span id="resRange">56.7 - 76.3</span>
+                        <span class="res-unit" id="resRangeUnit">kg</span>
+                    </div>
+                    <div class="stat-sub">For your exact height</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="simulation-box mt-2">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="bmiCanvas"></canvas>
+            </div>
+            <div class="telemetry-bar">
+                <div class="formula-bar">
+                    <span>Formula:</span> BMI = Weight / Height&sup2;
+                </div>
+                <div class="text-muted fw-bold small text-uppercase"><i class="fas fa-tachometer-alt me-1"></i> Live WHO Scale</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // System State
+    let isMetric = true;
+    
+    // Elements
+    const btnMetric = document.getElementById('btnMetric');
+    const btnImperial = document.getElementById('btnImperial');
+    const metricInputs = document.getElementById('metricInputs');
+    const imperialInputs = document.getElementById('imperialInputs');
+    const errorBanner = document.getElementById('errorBanner');
+
+    const cardBMI = document.getElementById('cardBMI');
+    const resBMI = document.getElementById('resBMI');
+    const cardCategory = document.getElementById('cardCategory');
+    const resCategory = document.getElementById('resCategory');
+    const resRisk = document.getElementById('resRisk');
+    const resRange = document.getElementById('resRange');
+    const resRangeUnit = document.getElementById('resRangeUnit');
+
+    const valWeightKg = document.getElementById('valWeightKg');
+    const valHeightCm = document.getElementById('valHeightCm');
+    const valWeightLbs = document.getElementById('valWeightLbs');
+    const valHeightFt = document.getElementById('valHeightFt');
+    const valHeightIn = document.getElementById('valHeightIn');
+
+    const canvas = document.getElementById('bmiCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // Drawing State
+    let currentBMI = 22.9;
+    let targetBMI = 22.9;
+    let animationFrameId = null;
+
+    function setSystem(system) {
+        if (system === 'metric') {
+            isMetric = true;
+            btnMetric.classList.add('active');
+            btnImperial.classList.remove('active');
+            metricInputs.style.display = 'block';
+            imperialInputs.style.display = 'none';
+        } else {
+            isMetric = false;
+            btnMetric.classList.remove('active');
+            btnImperial.classList.add('active');
+            metricInputs.style.display = 'none';
+            imperialInputs.style.display = 'block';
+        }
+        calculateBMI();
+    }
+
+    // FLAWLESS CANVAS SCALING ALGORITHM
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+
+            // Pure 1:1 pixel mapping
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            
+            drawGauge(); 
+        }
+    });
+    resizeObserver.observe(container);
+
+    function calculateBMI() {
+        let weight, heightM, heightInches;
+
+        if (isMetric) {
+            const kg = parseFloat(valWeightKg.value);
+            const cm = parseFloat(valHeightCm.value);
+            if (isNaN(kg) || isNaN(cm) || kg <= 0 || cm <= 0) {
+                showError(); return;
+            }
+            weight = kg;
+            heightM = cm / 100;
+            targetBMI = weight / (heightM * heightM);
+            
+            // Healthy Range: 18.5 to 24.9
+            const minW = 18.5 * (heightM * heightM);
+            const maxW = 24.9 * (heightM * heightM);
+            resRange.innerText = `${minW.toFixed(1)} - ${maxW.toFixed(1)}`;
+            resRangeUnit.innerText = 'kg';
+
+        } else {
+            const lbs = parseFloat(valWeightLbs.value);
+            const ft = parseFloat(valHeightFt.value) || 0;
+            const ins = parseFloat(valHeightIn.value) || 0;
+            heightInches = (ft * 12) + ins;
+
+            if (isNaN(lbs) || heightInches <= 0 || lbs <= 0) {
+                showError(); return;
+            }
+            targetBMI = 703 * (lbs / (heightInches * heightInches));
+
+            const minW = (18.5 * (heightInches * heightInches)) / 703;
+            const maxW = (24.9 * (heightInches * heightInches)) / 703;
+            resRange.innerText = `${minW.toFixed(0)} - ${maxW.toFixed(0)}`;
+            resRangeUnit.innerText = 'lbs';
+        }
+
+        errorBanner.style.display = 'none';
+        updateUI();
+        startAnimation();
+    }
+
+    function showError() {
+        errorBanner.style.display = 'block';
+        resBMI.innerText = '--';
+        resCategory.innerText = 'Invalid Input';
+        resRisk.innerText = '--';
+        resRange.innerText = '--';
+        cardBMI.className = 'card h-100 text-center border-2 p-3 stat-card neutral-card';
+        cardCategory.className = 'card h-100 text-center border-2 p-3 stat-card neutral-card';
+        targetBMI = 0;
+        startAnimation();
+    }
+
+    function updateUI() {
+        resBMI.innerText = targetBMI.toFixed(1);
+
+        let cClass = '';
+        let cName = '';
+        let cRisk = '';
+
+        if (targetBMI < 18.5) {
+            cClass = 'cat-underweight'; cName = 'Underweight'; cRisk = 'Possible nutritional deficiency';
+        } else if (targetBMI < 25) {
+            cClass = 'cat-normal'; cName = 'Normal Weight'; cRisk = 'Lowest health risk';
+        } else if (targetBMI < 30) {
+            cClass = 'cat-overweight'; cName = 'Overweight'; cRisk = 'Moderate health risk';
+        } else {
+            cClass = 'cat-obese'; cName = 'Obese'; cRisk = 'High health risk';
+        }
+
+        resCategory.innerText = cName;
+        resRisk.innerText = cRisk;
+
+        cardBMI.className = `card h-100 text-center border-2 p-3 stat-card ${cClass}`;
+        cardCategory.className = `card h-100 text-center border-2 p-3 stat-card ${cClass}`;
+    }
+
+    // --- KINEMATIC GAUGE ENGINE ---
+    function drawGauge() {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        if(cw === 0) return;
+        ctx.clearRect(0, 0, cw, ch);
+
+        // Bounding Box Logic: Gauge sits at the bottom center
+        const cx = cw / 2;
+        const cy = ch - 40; 
+        const radius = Math.min(cw * 0.4, ch * 0.7);
+
+        ctx.lineWidth = radius * 0.25; // Thickness of the arc
+
+        // WHO Categories: 
+        // We will map BMI 10 to BMI 40 across the half circle (Math.PI to Math.PI*2)
+        // Range = 30 units. Angle per unit = Math.PI / 30
+        const minBMI = 10;
+        const maxBMI = 40;
+        const range = maxBMI - minBMI;
+        const anglePerUnit = Math.PI / range;
+
+        const zones = [
+            { start: 10, end: 18.5, color: '#0dcaf0', label: 'Under' },   // Underweight
+            { start: 18.5, end: 25, color: '#198754', label: 'Normal' },  // Normal
+            { start: 25, end: 30, color: '#fd7e14', label: 'Over' },      // Overweight
+            { start: 30, end: 40, color: '#dc3545', label: 'Obese' }      // Obese
+        ];
+
+        // Draw Zones
+        zones.forEach(z => {
+            const startAngle = Math.PI + ((z.start - minBMI) * anglePerUnit);
+            const endAngle = Math.PI + ((z.end - minBMI) * anglePerUnit);
+            
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, startAngle, endAngle);
+            ctx.strokeStyle = z.color;
+            ctx.stroke();
+
+            // Draw Label in center of arc segment
+            const midAngle = (startAngle + endAngle) / 2;
+            const textRadius = radius + (radius * 0.18); // Push text outside arc
+            const tx = cx + Math.cos(midAngle) * textRadius;
+            const ty = cy + Math.sin(midAngle) * textRadius;
+
+            ctx.fillStyle = z.color;
+            ctx.font = 'bold 14px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(z.label, tx, ty);
+        });
+
+        // Draw Ticks (10, 18.5, 25, 30, 40)
+        ctx.fillStyle = '#adb5bd';
+        ctx.font = 'bold 12px "Fira Code", monospace';
+        const ticks = [10, 18.5, 25, 30, 40];
+        ticks.forEach(t => {
+            const ang = Math.PI + ((t - minBMI) * anglePerUnit);
+            const innerR = radius - (radius * 0.125);
+            const outerR = radius + (radius * 0.125);
+            
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(ang) * innerR, cy + Math.sin(ang) * innerR);
+            ctx.lineTo(cx + Math.cos(ang) * outerR, cy + Math.sin(ang) * outerR);
+            ctx.strokeStyle = '#212529';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            const txtR = innerR - 20;
+            ctx.fillText(t, cx + Math.cos(ang) * txtR, cy + Math.sin(ang) * txtR);
+        });
+
+        // Draw Needle
+        // Clamp currentBMI for display purposes
+        let displayBMI = Math.max(minBMI, Math.min(maxBMI, currentBMI));
+        let needleAngle = Math.PI + ((displayBMI - minBMI) * anglePerUnit);
+        if (targetBMI === 0) needleAngle = Math.PI; // Drop to zero on error
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(needleAngle);
+
+        // Glow
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 10;
+
+        // Needle shape
+        ctx.beginPath();
+        ctx.moveTo(0, 5); // base
+        ctx.lineTo(radius * 0.9, 0); // tip
+        ctx.lineTo(0, -5); // base
+        ctx.closePath();
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+
+        // Center Hub
+        ctx.beginPath();
+        ctx.arc(0, 0, 15, 0, Math.PI * 2);
+        ctx.fillStyle = '#343a40';
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        ctx.restore();
+
+        // Print Current BMI large in center
+        if (targetBMI > 0) {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px "Fira Code", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(currentBMI.toFixed(1), cx, cy - radius * 0.3);
+        }
+    }
+
+    // Smooth Kinematic Animation
+    function animate() {
+        if (Math.abs(currentBMI - targetBMI) < 0.05) {
+            currentBMI = targetBMI;
+            drawGauge();
+            return; // Stop animation loop
+        }
+
+        // Ease towards target
+        currentBMI += (targetBMI - currentBMI) * 0.1;
+        drawGauge();
+
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function startAnimation() {
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        animate();
+    }
+
+    // INIT
+    setTimeout(() => { calculateBMI(); }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

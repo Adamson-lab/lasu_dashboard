@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Molar Mass Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-preset {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 10px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-preset span { font-family: 'Fira Code', monospace; color: var(--math-blue); font-weight: 800; font-size: 1.1rem; }
+        .btn-preset:hover { background: #f8f9fa; border-color: var(--math-blue); }
+
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--lasu-accent); box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15); }
+        
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .text-input {
+            width: 100%;
+            border: none;
+            padding: 20px;
+            font-size: 2.2rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; /* Forces uniform height, absolutely prevents overlap */
+        }
+        
+        .stat-card.mass { border-color: rgba(25, 135, 84, 0.3); background: rgba(25, 135, 84, 0.02); }
+        .stat-card.atoms { border-color: rgba(13, 110, 253, 0.3); background: rgba(13, 110, 253, 0.02); }
+        .stat-card.primary { border-color: rgba(111, 66, 193, 0.3); background: rgba(111, 66, 193, 0.02); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 6px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .mass .stat-val { color: var(--lasu-accent); }
+        .atoms .stat-val { color: var(--math-blue); }
+        .primary .stat-val { color: var(--math-purple); }
+
+        .res-unit { font-size: 1.1rem; color: #adb5bd; margin-left: 2px;}
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* --- Analysis Table & Bar --- */
+        .analysis-box {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 2px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            min-height: 400px;
+        }
+
+        .table-responsive {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chem-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .chem-table th {
+            background: #f8f9fa;
+            color: #495057;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            border-bottom: 2px solid #dee2e6;
+            z-index: 10;
+        }
+
+        .chem-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            color: #212529;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        .chem-table tr:hover { background-color: rgba(13, 110, 253, 0.02); }
+
+        .element-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 35px;
+            height: 35px;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .percent-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .percent-bar-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .composition-bar {
+            height: 30px;
+            width: 100%;
+            display: flex;
+            background: #f8f9fa;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .comp-segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            font-weight: bold;
+            overflow: hidden;
+            transition: width 0.5s ease-in-out;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-vial"></i> Compound Entry
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Invalid Chemical Formula.
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label">
+                    <span>Chemical Formula</span>
+                </div>
+                <input type="text" class="text-input" id="valFormula" value="H2O" placeholder="e.g., C6H12O6" oninput="calculateMolarMass()">
+            </div>
+
+            <div class="pane-header border-0 mb-2 pb-0 mt-2" style="font-size: 0.9rem; color: #6c757d;">
+                <i class="fas fa-flask"></i> Quick Presets
+            </div>
+            
+            <div class="preset-grid">
+                <button class="btn-preset" onclick="setPreset('H2O')">
+                    Water<br><span>H2O</span>
+                </button>
+                <button class="btn-preset" onclick="setPreset('C6H12O6')">
+                    Glucose<br><span>C6H12O6</span>
+                </button>
+                <button class="btn-preset" onclick="setPreset('H2SO4')">
+                    Sulfuric Acid<br><span>H2SO4</span>
+                </button>
+                <button class="btn-preset" onclick="setPreset('C8H10N4O2')">
+                    Caffeine<br><span>C8H10N4O2</span>
+                </button>
+                <button class="btn-preset" onclick="setPreset('NaCl')">
+                    Salt<br><span>NaCl</span>
+                </button>
+                <button class="btn-preset" onclick="setPreset('Mg(OH)2')">
+                    Mg Hydroxide<br><span>Mg(OH)2</span>
+                </button>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-auto" onclick="setPreset('')">
+                <i class="fas fa-eraser me-2"></i> Clear Field
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-success bg-success bg-opacity-10 p-3" style="border-width: 2px; border-radius: 12px; box-shadow: none;">
+                    <div class="text-uppercase fw-bold text-muted mb-2" style="font-size: 0.85rem; letter-spacing: 1px;">Total Molar Mass</div>
+                    <div class="d-flex justify-content-center align-items-baseline mb-1">
+                        <span class="fw-bold text-success" id="resMass" style="font-family: 'Fira Code', monospace; font-size: 2.2rem; line-height: 1;">18.015</span>
+                        <span class="text-muted ms-1 fw-bold" style="font-size: 1.1rem;">g/mol</span>
+                    </div>
+                    <div class="text-muted small fw-bold font-monospace mt-1" id="resSubFormula">H<sub>2</sub>O</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-primary bg-primary bg-opacity-10 p-3" style="border-width: 2px; border-radius: 12px; box-shadow: none;">
+                    <div class="text-uppercase fw-bold text-muted mb-2" style="font-size: 0.85rem; letter-spacing: 1px;">Total Atoms</div>
+                    <div class="d-flex justify-content-center align-items-baseline mb-1">
+                        <span class="fw-bold text-primary" id="resAtoms" style="font-family: 'Fira Code', monospace; font-size: 2.2rem; line-height: 1;">3</span>
+                        <span class="text-muted ms-1 fw-bold" style="font-size: 1.1rem;">atoms</span>
+                    </div>
+                    <div class="text-muted small fw-bold font-monospace mt-1" id="resElementsCount">2 unique elements</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-info bg-info bg-opacity-10 p-3" style="border-width: 2px; border-radius: 12px; box-shadow: none;">
+                    <div class="text-uppercase fw-bold text-muted mb-2" style="font-size: 0.85rem; letter-spacing: 1px;">Most Abundant (Mass)</div>
+                    <div class="d-flex justify-content-center align-items-baseline mb-1">
+                        <span class="fw-bold text-info" id="resPrimary" style="font-family: 'Fira Code', monospace; font-size: 2.2rem; line-height: 1;">O</span>
+                        <span class="text-muted ms-1 fw-bold" style="font-size: 1.1rem;" id="resPrimaryPct">88.8%</span>
+                    </div>
+                    <div class="text-muted small fw-bold font-monospace mt-1">Primary contributor</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="analysis-box mt-2">
+            <div class="table-responsive">
+                <table class="chem-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Element</th>
+                            <th style="text-align: center;">Atomic Mass</th>
+                            <th style="text-align: center;">Count</th>
+                            <th style="text-align: right;">Total Mass</th>
+                            <th style="text-align: right; width: 35%;">Mass %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        </tbody>
+                </table>
+            </div>
+            <div class="composition-bar" id="compBar">
+                </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Comprehensive Atomic Weights Database
+    const periodicTable = {
+        H: 1.008, He: 4.0026, Li: 6.94, Be: 9.0122, B: 10.81, C: 12.011, N: 14.007, O: 15.999, F: 18.998, Ne: 20.180,
+        Na: 22.990, Mg: 24.305, Al: 26.982, Si: 28.085, P: 30.974, S: 32.06, Cl: 35.45, Ar: 39.95, K: 39.098, Ca: 40.078,
+        Sc: 44.956, Ti: 47.867, V: 50.942, Cr: 51.996, Mn: 54.938, Fe: 55.845, Co: 58.933, Ni: 58.693, Cu: 63.546, Zn: 65.38,
+        Ga: 69.723, Ge: 72.630, As: 74.922, Se: 78.971, Br: 79.904, Kr: 83.798, Rb: 85.468, Sr: 87.62, Y: 88.906, Zr: 91.224,
+        Nb: 92.906, Mo: 95.95, Tc: 98, Ru: 101.07, Rh: 102.91, Pd: 106.42, Ag: 107.87, Cd: 112.41, In: 114.82, Sn: 118.71,
+        Sb: 121.76, Te: 127.60, I: 126.90, Xe: 131.29, Cs: 132.91, Ba: 137.33, La: 138.91, Ce: 140.12, Pr: 140.91, Nd: 144.24,
+        Pm: 145, Sm: 150.36, Eu: 151.96, Gd: 157.25, Tb: 158.93, Dy: 162.50, Ho: 164.93, Er: 167.26, Tm: 168.93, Yb: 173.05,
+        Lu: 174.97, Hf: 178.49, Ta: 180.95, W: 183.84, Re: 186.21, Os: 190.23, Ir: 192.22, Pt: 195.08, Au: 196.97, Hg: 200.59,
+        Tl: 204.38, Pb: 207.2, Bi: 208.98, Po: 209, At: 210, Rn: 222, Fr: 223, Ra: 226, Ac: 227, Th: 232.04, Pa: 231.04,
+        U: 238.03, Np: 237, Pu: 244, Am: 243, Cm: 247, Bk: 247, Cf: 251, Es: 252, Fm: 257, Md: 258, No: 259, Lr: 266,
+        Rf: 267, Db: 268, Sg: 269, Bh: 270, Hs: 277, Mt: 278, Ds: 281, Rg: 282, Cn: 285, Nh: 286, Fl: 289, Mc: 290, Lv: 293,
+        Ts: 294, Og: 294
+    };
+
+    // Color Palette for Visualizer
+    const colors = ['#0d6efd', '#198754', '#fd7e14', '#dc3545', '#6f42c1', '#0dcaf0', '#ffc107', '#20c997'];
+
+    const valFormula = document.getElementById('valFormula');
+    const errorBanner = document.getElementById('errorBanner');
+    const resMass = document.getElementById('resMass');
+    const resSubFormula = document.getElementById('resSubFormula');
+    const resAtoms = document.getElementById('resAtoms');
+    const resElementsCount = document.getElementById('resElementsCount');
+    const resPrimary = document.getElementById('resPrimary');
+    const resPrimaryPct = document.getElementById('resPrimaryPct');
+    const tableBody = document.getElementById('tableBody');
+    const compBar = document.getElementById('compBar');
+
+    function setPreset(formula) {
+        valFormula.value = formula;
+        calculateMolarMass();
+    }
+
+    // Helper: Format string to HTML subscripts (H2O -> H<sub>2</sub>O)
+    function formatSubscript(formula) {
+        return formula.replace(/(\d+)/g, '<sub>$1</sub>');
+    }
+
+    // --- RECURSIVE DESCENT CHEMICAL FORMULA PARSER ---
+    function parseFormula(formula) {
+        // Clean string and standardize brackets
+        let f = formula.replace(/\s+/g, '').replace(/\[/g, '(').replace(/\]/g, ')').replace(/\{/g, '(').replace(/\}/g, ')');
+        let i = 0;
+        let isError = false;
+        let invalidChar = '';
+
+        function parseGroup() {
+            let counts = {};
+            while (i < f.length) {
+                let char = f[i];
+
+                if (char === '(') {
+                    i++;
+                    let subCounts = parseGroup();
+                    
+                    // Look for multiplier after closing bracket
+                    let multStr = '';
+                    while (i < f.length && /[0-9]/.test(f[i])) {
+                        multStr += f[i];
+                        i++;
+                    }
+                    let multiplier = multStr.length > 0 ? parseInt(multStr) : 1;
+                    
+                    // Multiply and merge
+                    for (let el in subCounts) {
+                        counts[el] = (counts[el] || 0) + subCounts[el] * multiplier;
+                    }
+                } else if (char === ')') {
+                    i++;
+                    return counts; // Exit recursive group
+                } else if (/[A-Z]/.test(char)) {
+                    let el = char;
+                    i++;
+                    // Check for lowercase second letter (e.g., 'a' in 'Na')
+                    if (i < f.length && /[a-z]/.test(f[i])) {
+                        el += f[i];
+                        i++;
+                    }
+                    
+                    // Validate Element exists in DB
+                    if (!periodicTable[el]) {
+                        isError = true;
+                        invalidChar = el;
+                    }
+
+                    // Look for number after element
+                    let multStr = '';
+                    while (i < f.length && /[0-9]/.test(f[i])) {
+                        multStr += f[i];
+                        i++;
+                    }
+                    let multiplier = multStr.length > 0 ? parseInt(multStr) : 1;
+                    counts[el] = (counts[el] || 0) + multiplier;
+                } else {
+                    // Invalid character encountered (like '+', '-', '.', etc.)
+                    isError = true;
+                    invalidChar = char;
+                    i++;
+                }
+            }
+            return counts;
+        }
+
+        const result = parseGroup();
+        if (isError) return { error: true, char: invalidChar };
+        if (Object.keys(result).length === 0) return { error: true, char: 'Empty' };
+        
+        return { error: false, counts: result };
+    }
+
+    function calculateMolarMass() {
+        const rawFormula = valFormula.value.trim();
+        
+        if (rawFormula === '') {
+            errorBanner.style.display = 'none';
+            resetUI();
+            return;
+        }
+
+        const parsed = parseFormula(rawFormula);
+
+        if (parsed.error) {
+            errorBanner.innerText = `Invalid Element or Format: '${parsed.char}'`;
+            errorBanner.style.display = 'block';
+            resetUI();
+            return;
+        }
+        errorBanner.style.display = 'none';
+
+        const counts = parsed.counts;
+        let totalMass = 0;
+        let totalAtoms = 0;
+        let elementsData = [];
+
+        // Build data arrays
+        for (let el in counts) {
+            let count = counts[el];
+            let mass = periodicTable[el];
+            let elementTotalMass = mass * count;
+            
+            totalMass += elementTotalMass;
+            totalAtoms += count;
+
+            elementsData.push({
+                el: el,
+                mass: mass,
+                count: count,
+                total: elementTotalMass
+            });
+        }
+
+        // Sort elements by mass contribution (Descending)
+        elementsData.sort((a, b) => b.total - a.total);
+
+        // Update Top Stats
+        resMass.innerText = totalMass.toFixed(3);
+        resSubFormula.innerHTML = formatSubscript(rawFormula);
+        resAtoms.innerText = totalAtoms;
+        resElementsCount.innerText = `${elementsData.length} unique element${elementsData.length > 1 ? 's' : ''}`;
+        
+        if (elementsData.length > 0) {
+            resPrimary.innerText = elementsData[0].el;
+            resPrimaryPct.innerText = ((elementsData[0].total / totalMass) * 100).toFixed(1) + '%';
+        }
+
+        // Build UI Table and Bar
+        let tableHTML = '';
+        let barHTML = '';
+
+        elementsData.forEach((item, index) => {
+            let pct = (item.total / totalMass) * 100;
+            let color = colors[index % colors.length];
+
+            // Table Row
+            tableHTML += `
+                <tr>
+                    <td>
+                        <div class="element-badge" style="background-color: ${color};">${item.el}</div>
+                    </td>
+                    <td style="text-align: center; font-family: 'Fira Code', monospace;">${item.mass.toFixed(3)}</td>
+                    <td style="text-align: center; font-family: 'Fira Code', monospace; font-weight: 800;">&times; ${item.count}</td>
+                    <td style="text-align: right; font-family: 'Fira Code', monospace; color: var(--math-blue);">${item.total.toFixed(3)} g</td>
+                    <td style="text-align: right;">
+                        <div class="d-flex flex-column align-items-end">
+                            <span style="font-family: 'Fira Code', monospace; font-weight: 800;">${pct.toFixed(2)}%</span>
+                            <div class="percent-bar-container w-100 mt-1">
+                                <div class="percent-bar-fill" style="width: ${pct}%; background-color: ${color};"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            // Segmented Bar
+            // Only render text inside segment if width is > 5% to prevent overflow
+            let text = pct > 5 ? `${item.el}` : '';
+            barHTML += `<div class="comp-segment" style="width: ${pct}%; background-color: ${color};" title="${item.el}: ${pct.toFixed(1)}%">${text}</div>`;
+        });
+
+        tableBody.innerHTML = tableHTML;
+        compBar.innerHTML = barHTML;
+    }
+
+    function resetUI() {
+        resMass.innerText = '--';
+        resSubFormula.innerHTML = 'Waiting for input...';
+        resAtoms.innerText = '--';
+        resElementsCount.innerText = '--';
+        resPrimary.innerText = '--';
+        resPrimaryPct.innerText = '';
+        tableBody.innerHTML = '';
+        compBar.innerHTML = '';
+    }
+
+    // INIT
+    setTimeout(() => {
+        calculateMolarMass();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

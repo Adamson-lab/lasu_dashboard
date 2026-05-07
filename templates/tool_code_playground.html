@@ -1,0 +1,2114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LASU Hyper-IDE | Apex Pro Max v10.1 (Stable)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            /* --- APEX STABLE THEME (v10.1) --- */
+            --bg-root: #020617; 
+            --bg-activity: rgba(15, 23, 42, 0.85);
+            --bg-sidebar: rgba(15, 23, 42, 0.95);
+            --bg-editor: #000000;
+            --bg-header: rgba(15, 23, 42, 0.9);
+            --bg-panel: #020617;
+            --border: #1e293b;
+            --accent: #10b981; /* Emerald Green for Stability */
+            --accent-glow: 0 0 15px rgba(16, 185, 129, 0.4);
+            --accent-hover: #34d399;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --tab-active-bg: #000000;
+            --tab-inactive-bg: rgba(15, 23, 42, 0.5);
+            --scroll-thumb: #334155;
+            --status-bar-bg: #10b981;
+            --status-bar-text: #ffffff;
+            --modal-bg: rgba(2, 6, 23, 0.95);
+            --menu-bg: #0f172a;
+            --toast-bg: #0f172a;
+            --search-bg: #1e293b;
+            --breadcrumb-bg: #020617;
+            --tag-bg: #1e293b;
+            --timeline-item-bg: #0f172a;
+            --var-type-color: #34d399;
+            --ai-card-bg: #1e293b;
+            --spotlight-bg: #0f172a;
+            --git-added: #22c55e;
+            --git-modified: #eab308;
+            --git-deleted: #ef4444;
+            --ui-scale: 1;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="light"] {
+            --bg-root: #ffffff; --bg-activity: #f3f4f6; --bg-sidebar: #f9fafb; --bg-editor: #ffffff; --bg-header: #f9fafb; --bg-panel: #f9fafb;
+            --border: #e5e7eb; --accent: #059669; --accent-glow: none; --accent-hover: #047857; --text-primary: #111827; --text-secondary: #6b7280;
+            --tab-active-bg: #ffffff; --tab-inactive-bg: #f3f4f6; --scroll-thumb: #d1d5da; --status-bar-bg: #059669; --status-bar-text: #ffffff;
+            --modal-bg: #ffffff; --menu-bg: #ffffff; --toast-bg: #ffffff; --search-bg: #f9fafb; --breadcrumb-bg: #ffffff; --tag-bg: #f3f4f6;
+            --timeline-item-bg: #f9fafb; --var-type-color: #059669; --ai-card-bg: #f9fafb; --spotlight-bg: #ffffff;
+            --git-added: #16a34a; --git-modified: #ca8a04; --git-deleted: #dc2626;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+        body { margin: 0; height: 100vh; background-color: var(--bg-root); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow: hidden; display: flex; flex-direction: column; font-size: 13px; zoom: var(--ui-scale); }
+
+        /* --- ZEN MODE & SPLIT VIEW --- */
+        body.zen-mode .activity-bar, body.zen-mode .sidebar, body.zen-mode .header, body.zen-mode .status-bar, body.zen-mode .tabs-bar, body.zen-mode .breadcrumbs { display: none !important; }
+        body.zen-mode .workspace { border: none; }
+        #zen-exit-btn { position: fixed; top: 10px; right: 10px; z-index: 5000; background: rgba(0,0,0,0.5); color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; display: none; backdrop-filter: blur(4px); }
+        body.zen-mode #zen-exit-btn { display: block; }
+        body.presentation-mode { transform-origin: top left; zoom: 1.25; }
+        
+        /* Split View Layout */
+        .workspace.split-view { flex-direction: row; }
+        .workspace.split-view .editor-wrapper { flex: 1; border-right: 1px solid var(--border); }
+        .workspace.split-view .terminal-panel { width: 40%; height: 100% !important; border-top: none; border-left: 1px solid var(--border); }
+        
+        /* --- LAYOUT GRID --- */
+        .app-container { flex: 1; display: flex; overflow: hidden; background: radial-gradient(circle at center, #1e293b 0%, #020617 100%); }
+        
+        /* Glass Sidebar */
+        .activity-bar { width: 50px; background: var(--bg-activity); border-right: var(--glass-border); display: flex; flex-direction: column; align-items: center; padding-top: 10px; z-index: 10; backdrop-filter: blur(10px); }
+        .activity-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-secondary); cursor: pointer; position: relative; transition: 0.2s; border-left: 3px solid transparent; }
+        .activity-icon:hover { color: var(--text-primary); }
+        .activity-icon.active { color: var(--accent); border-left-color: var(--accent); background: rgba(255,255,255,0.05); text-shadow: var(--accent-glow); box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.1); }
+        .badge-dot { position: absolute; bottom: 10px; right: 10px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; display: none; box-shadow: 0 0 5px var(--accent); }
+        .activity-icon.has-update .badge-dot { display: block; }
+
+        .sidebar { width: 260px; background: var(--bg-sidebar); border-right: var(--glass-border); display: flex; flex-direction: column; position: relative; transition: width 0.1s; backdrop-filter: blur(10px); }
+        .sidebar-view { display: none; flex: 1; flex-direction: column; }
+        .sidebar-view.active { display: flex; }
+        .sidebar-resizer { width: 4px; height: 100%; cursor: ew-resize; position: absolute; right: 0; top: 0; z-index: 10; background: transparent; transition: background 0.2s; }
+        .sidebar-resizer:hover { background: var(--accent); }
+
+        .main-layout { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; background: var(--bg-root); }
+
+        /* --- HEADER --- */
+        .header { height: 40px; background: var(--bg-header); border-bottom: var(--glass-border); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; backdrop-filter: blur(5px); }
+        .brand { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
+        .actions-group { display: flex; align-items: center; gap: 8px; }
+
+        /* --- TABS --- */
+        .tabs-bar { height: 35px; background: var(--bg-root); display: flex; align-items: flex-end; padding-left: 0; overflow-x: auto; border-bottom: var(--glass-border); }
+        .tab { height: 34px; padding: 0 15px; display: flex; align-items: center; gap: 8px; background: var(--tab-inactive-bg); color: var(--text-secondary); border-right: 1px solid var(--border); border-top: 2px solid transparent; cursor: pointer; font-size: 12px; transition: all 0.1s; position: relative; min-width: 120px; }
+        .tab:hover { background: var(--bg-editor); opacity: 0.9; }
+        .tab.active { background: var(--bg-editor); color: var(--text-primary); border-top: 2px solid var(--accent); border-bottom: 1px solid var(--bg-editor); font-weight: 500; text-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+        .tab.dirty::after { content: '●'; position: absolute; right: 8px; top: 8px; font-size: 8px; color: var(--accent); }
+
+        /* --- WORKSPACE --- */
+        .workspace { flex: 1; display: flex; flex-direction: column; background: var(--bg-editor); position: relative; overflow: hidden; }
+        .editor-wrapper { flex: 1; display: flex; flex-direction: column; position: relative; min-height: 0; }
+        .preview-pane { display: none; flex: 1; background: var(--bg-root); color: var(--text-primary); padding: 20px; overflow-y: auto; border-left: 1px solid var(--border); font-family: sans-serif; }
+        .preview-pane.active { display: block; }
+        .preview-frame { width: 100%; height: 100%; border: none; background: white; }
+        .breadcrumbs { height: 24px; background: var(--breadcrumb-bg); display: flex; align-items: center; padding: 0 16px; font-size: 11px; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+        .crumb { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        #monaco-root { flex: 1; }
+        
+        /* --- TERMINAL --- */
+        .terminal-panel { height: 220px; background: var(--bg-panel); border-top: var(--glass-border); display: flex; flex-direction: column; position: relative; }
+        .resizer-handle { height: 4px; width: 100%; background: transparent; cursor: ns-resize; position: absolute; top: 0; left: 0; z-index: 10; transition: background 0.2s; }
+        .resizer-handle:hover { background: var(--accent); }
+        .panel-header { height: 32px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); font-size: 11px; text-transform: uppercase; color: var(--text-secondary); border-bottom: 1px solid var(--border); user-select: none; }
+        .terminal-content { flex: 1; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #a5d6ff; overflow-y: auto; line-height: 1.5; background: #0a0a0f; }
+        .terminal-input-line { display: flex; gap: 5px; color: #a5d6ff; margin-top: 5px; }
+        .terminal-input { background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; flex: 1; outline: none; }
+        .terminal-plot { max-width: 100%; border-radius: 4px; margin: 10px 0; border: 1px solid var(--border); }
+
+        /* --- SIDEBAR COMPONENTS --- */
+        .sidebar-header { padding: 10px 16px; font-size: 11px; font-weight: 700; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; text-transform: uppercase; }
+        .sidebar-search { margin: 0 10px 10px 10px; background: var(--search-bg); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 10px; border-radius: 4px; font-size: 12px; }
+        
+        .folder-group { margin-bottom: 2px; }
+        .folder-header { padding: 4px 10px; font-size: 12px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 5px; opacity: 0.8; }
+        .folder-header:hover { opacity: 1; color: var(--text-primary); }
+        .folder-content { padding-left: 12px; display: block; }
+        .folder-content.collapsed { display: none; }
+
+        .file-item { padding: 5px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: var(--text-secondary); border-left: 2px solid transparent; position: relative; font-size: 13px; }
+        .file-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+        .file-item.active { background: rgba(16, 185, 129, 0.1); color: var(--text-primary); border-left: 2px solid var(--accent); font-weight: 500; }
+        .file-icon { width: 16px; text-align: center; margin-right: 6px; }
+
+        .snippet-card { background: var(--bg-root); border: 1px solid var(--border); margin: 0 10px 8px 10px; padding: 10px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .snippet-card:hover { border-color: var(--accent); transform: translateX(2px); box-shadow: var(--accent-glow); }
+        .snippet-title { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+        .snippet-desc { font-size: 11px; color: var(--text-secondary); }
+
+        .git-input { margin: 10px; background: var(--bg-root); border: 1px solid var(--border); color: var(--text-primary); padding: 8px; border-radius: 4px; width: calc(100% - 20px); }
+        .git-btn { margin: 0 10px 10px 10px; width: calc(100% - 20px); }
+        .git-item { padding: 8px 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; cursor: pointer; border-left: 2px solid transparent; }
+        .git-item:hover { background: var(--bg-root); }
+        .git-hash { font-family: monospace; font-size: 10px; color: var(--accent); }
+        .git-msg { font-size: 12px; color: var(--text-primary); }
+        .git-time { font-size: 10px; color: var(--text-secondary); }
+
+        .search-result { padding: 8px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+        .search-result:hover { background: var(--bg-root); }
+        .search-file { font-weight: 600; font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+        .search-line { font-family: monospace; font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .timeline-item { padding: 8px 12px; background: var(--timeline-item-bg); margin: 5px 10px; border-radius: 4px; font-size: 11px; color: var(--text-secondary); border: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        .timeline-item:hover { border-color: var(--accent); color: var(--text-primary); }
+
+        .var-item { padding: 6px 10px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-secondary); }
+        .var-name { color: var(--accent); font-weight: bold; font-family: monospace; }
+        .var-value { color: var(--text-primary); font-family: monospace; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+        .ai-card { background: var(--ai-card-bg); margin: 10px; padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
+        .ai-title { color: var(--accent); font-weight: bold; font-size: 12px; margin-bottom: 5px; }
+        .ai-suggestion { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+        
+        .chat-container { display: flex; flex-direction: column; height: 100%; padding: 10px; }
+        .chat-messages { flex: 1; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .chat-msg { padding: 8px 12px; border-radius: 8px; font-size: 12px; max-width: 90%; line-height: 1.4; }
+        .chat-msg.user { background: var(--accent); color: white; align-self: flex-end; box-shadow: var(--accent-glow); }
+        .chat-msg.bot { background: var(--bg-root); border: 1px solid var(--border); color: var(--text-secondary); align-self: flex-start; }
+        .chat-input-area { display: flex; gap: 5px; }
+
+        .outline-item { padding: 4px 16px; font-size: 11px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .outline-item:hover { color: var(--text-primary); background: var(--bg-root); }
+        .todo-item { padding: 8px 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 11px; display: flex; align-items: center; gap: 8px; }
+
+        .regex-container { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .regex-input { background: var(--bg-root); border: 1px solid var(--border); color: var(--text-primary); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 12px; width: 100%; }
+        .regex-result { background: var(--bg-root); border: 1px solid var(--border); padding: 8px; border-radius: 4px; min-height: 50px; font-size: 12px; color: var(--text-secondary); }
+        
+        .api-container { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .api-row { display: flex; gap: 8px; }
+        .api-input { flex: 1; background: var(--bg-root); color: var(--text-primary); border: 1px solid var(--border); padding: 5px 8px; border-radius: 4px; }
+        .api-response { background: var(--bg-root); border: 1px solid var(--border); padding: 10px; border-radius: 4px; font-family: monospace; font-size: 11px; color: var(--text-secondary); min-height: 100px; white-space: pre-wrap; overflow-x: auto; }
+
+        .stats-container { padding: 15px; }
+        .stat-box { margin-bottom: 15px; }
+        .stat-bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+        .stat-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s; box-shadow: var(--accent-glow); }
+
+        .db-container { padding: 15px; display: flex; flex-direction: column; height: 100%; }
+        .db-output { flex: 1; overflow: auto; margin-top: 10px; border: 1px solid var(--border); background: var(--bg-root); border-radius: 4px; }
+        .db-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .db-table th, .db-table td { padding: 6px 8px; border: 1px solid var(--border); text-align: left; }
+        .db-table th { background: var(--bg-panel); color: var(--accent); position: sticky; top: 0; }
+        .db-table tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+        .db-table tr:hover { background: rgba(16, 185, 129, 0.1); }
+
+        .status-bar { height: 24px; background: var(--status-bar-bg); color: var(--status-bar-text); display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 11px; z-index: 100; backdrop-filter: blur(5px); box-shadow: 0 -2px 10px rgba(0,0,0,0.2); }
+        .status-item { cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 0 5px; border-radius: 3px; }
+        .status-item:hover { background: rgba(255,255,255,0.1); }
+
+        .btn-primary { background: var(--accent); color: white; border: none; height: 30px; padding: 0 16px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; justify-content: center; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.3), var(--accent-glow); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; background: #64748b; }
+        .btn-icon { background: transparent; border: 1px solid var(--border); color: var(--text-primary); width: 30px; height: 30px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-icon:hover { background: var(--border); color: var(--accent); box-shadow: var(--accent-glow); }
+        .btn-icon.active { background: var(--accent); color: white; border-color: var(--accent); }
+        
+        .pkg-tag { display: inline-block; background: var(--tag-bg); padding: 4px 8px; border-radius: 4px; font-size: 11px; margin-right: 5px; margin-bottom: 5px; border: 1px solid var(--border); }
+        .pkg-suggestion { cursor:pointer; color: var(--accent); text-decoration: underline; margin-right: 8px; font-size:11px; }
+
+        #contextMenu { display: none; position: fixed; z-index: 4000; background: var(--menu-bg); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 150px; flex-direction: column; padding: 4px; backdrop-filter: blur(10px); }
+        .ctx-item { padding: 8px 12px; font-size: 12px; cursor: pointer; color: var(--text-primary); border-radius: 4px; display: flex; align-items: center; gap: 8px; }
+        .ctx-item:hover { background: var(--accent); color: white; }
+        .ctx-divider { height: 1px; background: var(--border); margin: 4px 0; }
+        
+        #loading-overlay { position: fixed; inset: 0; background: #020617; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Courier New', Courier, monospace; color: var(--accent); }
+        .bios-text { margin-bottom: 5px; text-align: left; width: 300px; animation: type 0.1s steps(20, end); white-space: nowrap; overflow: hidden; opacity: 0; animation-fill-mode: forwards; }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal { background: var(--modal-bg); border: 1px solid var(--border); border-radius: 12px; width: 340px; box-shadow: var(--shadow-lg); padding: 24px; position: relative; overflow: hidden; }
+        .modal::before { content:''; position: absolute; top:0; left:0; right:0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+        
+        .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--text-secondary); }
+        .setting-input { background: var(--bg-root); border: 1px solid var(--border); color: var(--text-primary); padding: 8px; border-radius: 6px; width: 100%; margin-top: 5px; transition: border-color 0.2s; }
+        .setting-input:focus { border-color: var(--accent); box-shadow: var(--accent-glow); }
+
+        .toast-container { position: fixed; bottom: 40px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--toast-bg); color: var(--text-primary); padding: 12px 20px; border-radius: 8px; font-size: 12px; border-left: 4px solid var(--accent); box-shadow: var(--shadow-lg); animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        #spotlightOverlay { align-items: flex-start; padding-top: 100px; }
+        .spotlight-bar { width: 500px; background: var(--spotlight-bg); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; }
+        .spotlight-input { width: 100%; padding: 20px; background: transparent; border: none; color: var(--text-primary); font-size: 18px; outline: none; border-bottom: 1px solid var(--border); }
+        .spotlight-list { max-height: 300px; overflow-y: auto; }
+        .spotlight-item { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-secondary); transition: 0.1s; }
+        .spotlight-item:hover { background: var(--accent); color: white; }
+
+        #diffContainer { width: 100%; height: 400px; border: 1px solid var(--border); }
+
+        .particle { position: absolute; pointer-events: none; animation: pop 0.5s forwards; }
+        @keyframes pop { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(2); } }
+
+        #examOverlay { position: fixed; inset: 0; background: black; z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; color: red; font-family: monospace; text-align: center; }
+        .exam-warning { font-size: 24px; border: 2px solid red; padding: 20px; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+
+    </style>
+</head>
+<body>
+
+    <div id="examOverlay">
+        <div class="exam-warning">⚠️ EXAM MODE ACTIVE ⚠️</div>
+        <p>Switching tabs or exiting full screen will be flagged.</p>
+        <button class="btn-primary" onclick="toggleExamMode(false)" style="margin-top:20px; background: red; border: 1px solid white;">END EXAM SESSION</button>
+    </div>
+
+    <div id="loading-overlay">
+        <div class="bios-text" style="animation-delay: 0s; opacity: 1;">Checking RAM... 2048000KB OK</div>
+        <div class="bios-text" style="animation-delay: 0.2s;">Mounting Singularity V-FS v5.0... OK</div>
+        <div class="bios-text" style="animation-delay: 0.4s;">Initializing Neural Engine (Stable)... OK</div>
+        <div class="bios-text" style="animation-delay: 0.6s;">Fixing Pandas Column Mismatch... OK</div>
+        <div class="bios-text" style="animation-delay: 0.8s;">Booting Apex Pro Max v10.1...</div>
+        <div class="spinner-border text-primary mb-3" style="width: 2rem; height: 2rem; color: var(--accent)!important; margin-top:20px;"></div>
+    </div>
+
+    <canvas id="matrixCanvas" style="position:fixed; inset:0; z-index:-1; opacity:0.1; display:none; pointer-events:none;"></canvas>
+
+    <div id="dragOverlay"><i class="fas fa-file-import me-2"></i> Drop files to open (CSV auto-imports)</div>
+
+    <div class="modal-overlay" id="tourModal">
+        <div class="modal">
+            <div class="modal-title"><i class="fas fa-check-circle me-2" style="color:var(--accent)"></i> Apex Stable v10.1</div>
+            <div style="font-size:12px; color:var(--text-secondary); line-height:1.6; margin-bottom:15px;">
+                <strong>CRITICAL FIX:</strong> Resolved `ValueError: 4 columns passed`.<br>
+                <strong>CRITICAL FIX:</strong> Prevented "Matrix Explosion" text bug.<br>
+                <strong>NEW:</strong> Emerald Green Stability Theme.<br>
+                <strong>NEW:</strong> Pandas Analytics Engine (Optimized).<br>
+            </div>
+            <button class="btn-primary" style="width:100%;" onclick="document.getElementById('tourModal').style.display='none'">Launch System</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="spotlightOverlay">
+        <div class="spotlight-bar">
+            <input type="text" class="spotlight-input" id="spotlightInput" placeholder="Search files or commands..." onkeyup="filterSpotlight()">
+            <div class="spotlight-list" id="spotlightList"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="shareModal">
+        <div class="modal">
+            <div class="modal-title"><i class="fas fa-share-alt me-2"></i> Share Project</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Copy this link to share your project state.</div>
+            <input type="text" id="shareInput" class="setting-input" readonly onclick="this.select()">
+            <button class="btn-primary" style="width:100%; margin-top:15px;" onclick="copyShareLink()">Copy Link</button>
+            <div style="text-align:center; margin-top:10px; font-size:10px; cursor:pointer;" onclick="document.getElementById('shareModal').style.display='none'">Close</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="diffModal">
+        <div class="modal" style="width: 800px;">
+            <div class="modal-title"><i class="fas fa-exchange-alt me-2"></i> Compare Changes (Saved vs Current)</div>
+            <div id="diffContainer"></div>
+            <div style="text-align:center; margin-top:10px; font-size:10px; cursor:pointer;" onclick="document.getElementById('diffModal').style.display='none'">Close</div>
+        </div>
+    </div>
+
+    <button id="zen-exit-btn" onclick="toggleZenMode()"><i class="fas fa-compress-arrows-alt me-2"></i>Exit Zen Mode (Esc)</button>
+    <input type="file" id="fileUploader" style="display:none;" accept=".py,.txt,.md,.html,.csv,.css,.js" onchange="handleFileUpload(this)">
+
+    <div id="contextMenu">
+        <div class="ctx-item" onclick="renameFileCtx()"><i class="fas fa-edit"></i> Rename</div>
+        <div class="ctx-item" onclick="duplicateFileCtx()"><i class="fas fa-copy"></i> Duplicate</div>
+        <div class="ctx-divider"></div>
+        <div class="ctx-item" onclick="downloadFileCtx()"><i class="fas fa-download"></i> Download</div>
+        <div class="ctx-item" onclick="deleteFileCtx()" style="color:#ef4444;"><i class="fas fa-trash"></i> Delete</div>
+    </div>
+
+    <div class="modal-overlay" id="packageModal">
+        <div class="modal">
+            <div class="modal-title"><i class="fas fa-box-open me-2"></i> Install Packages</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Install Python libraries via Micropip.</div>
+            <input type="text" id="pkgName" class="setting-input" placeholder="Package name (e.g. scikit-learn)">
+            <div style="margin-top:10px;">
+                <span class="pkg-suggestion" onclick="document.getElementById('pkgName').value='pandas'; installPackage()">pandas</span>
+                <span class="pkg-suggestion" onclick="document.getElementById('pkgName').value='numpy'; installPackage()">numpy</span>
+                <span class="pkg-suggestion" onclick="document.getElementById('pkgName').value='requests'; installPackage()">requests</span>
+            </div>
+            <button class="btn-primary" style="width:100%; margin-top:15px;" onclick="installPackage()"><i class="fas fa-download me-2"></i> Install</button>
+            <div style="text-align:center; margin-top:10px; font-size:10px; cursor:pointer;" onclick="document.getElementById('packageModal').style.display='none'">Close</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-title"><i class="fas fa-sliders-h me-2"></i> Preferences</div>
+            <div class="setting-row">
+                <span>Theme</span>
+                <select class="setting-input" style="width:120px;" onchange="changeTheme(this.value)">
+                    <option value="apex">Stable Dark</option>
+                    <option value="light">GitHub Light</option>
+                </select>
+            </div>
+            <div class="setting-row"><span>Font Size</span><div><button class="btn-icon" onclick="changeFontSize(-1)">-</button><span id="fontDisplay" style="margin:0 8px;">14</span><button class="btn-icon" onclick="changeFontSize(1)">+</button></div></div>
+            <div class="setting-row"><span>Accent</span><input type="color" id="accentPicker" onchange="changeAccent(this.value)" value="#10b981"></div>
+            <div class="setting-row"><span>Typing Sounds</span><input type="checkbox" id="soundToggle" onchange="toggleSound()"></div>
+            <div class="setting-row"><span>Power Mode</span><input type="checkbox" id="powerToggle" onchange="togglePower()"></div>
+            <div class="setting-row"><span>Matrix Mode</span><input type="checkbox" id="matrixToggle" onchange="toggleMatrix()"></div>
+            
+            <hr style="border:0; border-top:1px solid var(--border); margin: 15px 0;">
+            <button class="btn-secondary" style="width:100%; color:#ef4444; border:1px solid #ef4444; background:transparent; padding:8px; border-radius:4px; cursor:pointer;" onclick="forceRestore()">
+                <i class="fas fa-bomb me-2"></i> HARD RESET (Fix Bugs)
+            </button>
+            <div style="text-align:center; margin-top:10px; font-size:10px; cursor:pointer;" onclick="toggleSettings(false)">Close</div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="app-container">
+        <div class="activity-bar">
+            <div class="activity-icon active" id="act-explorer" onclick="switchSidebar('explorer')" title="Explorer (Ctrl+Shift+E)"><i class="far fa-copy"></i></div>
+            <div class="activity-icon" id="act-search" onclick="switchSidebar('search')" title="Global Search (Ctrl+Shift+F)"><i class="fas fa-search"></i></div>
+            <div class="activity-icon" id="act-git" onclick="switchSidebar('git')" title="Source Control (Ctrl+K)"><i class="fas fa-code-branch"></i></div>
+            <div class="activity-icon" id="act-ai" onclick="switchSidebar('ai')" title="Singularity Linter"><i class="fas fa-robot"></i></div>
+            <div class="activity-icon" id="act-chat" onclick="switchSidebar('chat')" title="Apex Chat"><i class="fas fa-comment-dots"></i></div>
+            <div class="activity-icon" id="act-database" onclick="switchSidebar('database')" title="Database"><i class="fas fa-database"></i></div>
+            <div class="activity-icon" id="act-api" onclick="switchSidebar('api')" title="API Lab"><i class="fas fa-globe"></i></div>
+            <div class="activity-icon" id="act-whiteboard" onclick="switchSidebar('whiteboard')" title="Whiteboard"><i class="fas fa-pen-nib"></i></div>
+            <div class="activity-icon" id="act-regex" onclick="switchSidebar('regex')" title="Regex Lab"><i class="fas fa-vial"></i></div>
+            <div class="activity-icon" id="act-snippets" onclick="switchSidebar('snippets')" title="Snippets"><i class="fas fa-layer-group"></i></div>
+            <div class="activity-icon" id="act-stats" onclick="updateDetailedStats(); switchSidebar('stats')" title="Statistics"><i class="fas fa-chart-pie"></i></div>
+            <div style="flex:1;"></div>
+            <div class="activity-icon" onclick="toggleSettings(true)" title="Settings"><i class="fas fa-cog"></i></div>
+        </div>
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-resizer" id="sidebarResizer"></div>
+            
+            <div id="view-explorer" class="sidebar-view active">
+                <div class="sidebar-header">
+                    <span>EXPLORER</span>
+                    <div style="display:flex; gap: 5px;">
+                        <i class="fas fa-folder-plus btn-icon" style="border:none; width:20px; font-size:12px;" onclick="promptNewFolder()" title="New Folder"></i>
+                        <i class="fas fa-file-upload btn-icon" style="border:none; width:20px; font-size:12px;" onclick="document.getElementById('fileUploader').click()" title="Upload File"></i>
+                    </div>
+                </div>
+                <input type="text" id="fileSearch" class="sidebar-search" placeholder="Filter files..." onkeyup="filterFiles()">
+                <div id="fileList" style="flex:1; overflow-y:auto;"></div>
+            </div>
+
+            <div id="view-search" class="sidebar-view">
+                <div class="sidebar-header"><span>GLOBAL SEARCH</span></div>
+                <input type="text" id="globalSearchInput" class="sidebar-search" placeholder="Find in files..." onkeyup="performGlobalSearch()">
+                <div id="searchResults" style="flex:1; overflow-y:auto;">
+                    <div style="padding:10px; font-size:11px; color:var(--text-secondary); text-align:center;">Type to search...</div>
+                </div>
+            </div>
+
+            <div id="view-git" class="sidebar-view">
+                <div class="sidebar-header"><span>SOURCE CONTROL</span></div>
+                <div style="display:flex; flex-direction:column;">
+                    <textarea id="gitMsg" class="git-input" placeholder="Message (e.g. Added fees logic)" rows="2"></textarea>
+                    <button class="btn-primary git-btn" onclick="commitCode()"><i class="fas fa-check me-2"></i> Commit</button>
+                </div>
+                <div class="sidebar-header" style="border-top:1px solid var(--border)"><span>COMMITS</span></div>
+                <div id="gitList" style="flex:1; overflow-y:auto;">
+                    <div style="font-size:11px; color:var(--text-secondary); text-align:center; padding:10px;">No commits yet.</div>
+                </div>
+            </div>
+            
+            <div id="view-ai" class="sidebar-view">
+                <div class="sidebar-header"><span>SINGULARITY LINTER</span></div>
+                <div style="padding:10px;">
+                      <button class="btn-primary" style="width:100%" onclick="analyzeCode()"><i class="fas fa-stethoscope me-2"></i> Analyze Code</button>
+                </div>
+                <div id="aiList" style="flex:1; overflow-y:auto; padding:0 10px;"></div>
+            </div>
+
+            <div id="view-chat" class="sidebar-view">
+                <div class="sidebar-header"><span>APEX CHAT</span></div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatHistory">
+                        <div class="chat-msg bot">Hello Commander. I am Apex AI. Ask me about your code.</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chatInput" class="setting-input" placeholder="Ask AI..." style="margin:0;">
+                        <button class="btn-primary" onclick="sendChat()" style="width:auto;"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-whiteboard" class="sidebar-view">
+                <div class="sidebar-header"><span>WHITEBOARD</span></div>
+                <div style="padding:10px; display:flex; gap:5px;">
+                    <button class="btn-icon" onclick="clearCanvas()"><i class="fas fa-trash"></i></button>
+                    <input type="color" id="penColor" value="#ffffff" style="width:30px; height:30px; border:none; background:transparent;">
+                </div>
+                <canvas id="wbCanvas" style="background:#111; width:100%; height:300px; border-top:1px solid var(--border);"></canvas>
+            </div>
+
+            <div id="view-database" class="sidebar-view">
+                <div class="sidebar-header"><span>DATABASE</span></div>
+                <div class="db-container">
+                    <textarea id="sqlInput" class="setting-input" rows="4" style="font-family:monospace" placeholder="SELECT * FROM fees..."></textarea>
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        <button class="btn-primary" style="flex:1" onclick="runSQL()">Execute</button>
+                        <button class="btn-icon" onclick="downloadCSV()" title="Download CSV"><i class="fas fa-file-csv"></i></button>
+                        <button class="btn-icon" onclick="insertSampleSQL()" title="Sample"><i class="fas fa-flask"></i></button>
+                    </div>
+                    <div id="dbOutput" class="db-output">
+                        <div style="padding:10px; font-size:11px; color:var(--text-secondary); text-align:center;">
+                            Engine Ready.<br>Run 'CREATE TABLE...'<br>or Drop .csv to Import.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-api" class="sidebar-view">
+                <div class="sidebar-header"><span>API LAB</span></div>
+                <div class="api-container">
+                    <div class="api-row">
+                        <select id="apiMethod" class="api-method" style="background:var(--bg-root); color:var(--text-primary); border:1px solid var(--border);"><option>GET</option><option>POST</option></select>
+                        <input type="text" id="apiUrl" class="api-input" placeholder="https://api.example.com">
+                    </div>
+                    <button class="btn-primary" style="width:100%;" onclick="sendApiRequest()">Send Request</button>
+                    <div id="apiResponse" class="api-response">Response here...</div>
+                </div>
+            </div>
+
+            <div id="view-stats" class="sidebar-view">
+                <div class="sidebar-header"><span>STATISTICS</span></div>
+                <div class="stats-container" id="detailedStats"></div>
+            </div>
+
+            <div id="view-regex" class="sidebar-view">
+                <div class="sidebar-header"><span>REGEX LAB</span></div>
+                <div class="regex-container">
+                    <input type="text" id="regexPattern" class="regex-input" placeholder="Regex (e.g. \d+)" oninput="runRegex()">
+                    <textarea id="regexText" class="regex-input" rows="5" placeholder="Test string..." oninput="runRegex()"></textarea>
+                    <div id="regexOutput" class="regex-result">Matches...</div>
+                </div>
+            </div>
+
+            <div id="view-snippets" class="sidebar-view">
+                <div class="sidebar-header"><span>SNIPPETS</span></div>
+                <div style="padding:10px; overflow-y:auto;">
+                    <div class="snippet-card" onclick="insertSnippet('plot')"><div class="snippet-title"><i class="fas fa-chart-area me-2"></i>Matplotlib</div><div class="snippet-desc">Graph setup</div></div>
+                    <div class="snippet-card" onclick="insertSnippet('flask')"><div class="snippet-title"><i class="fas fa-server me-2"></i>Flask</div><div class="snippet-desc">App structure</div></div>
+                    <div class="snippet-card" onclick="insertSnippet('sqlite')"><div class="snippet-title"><i class="fas fa-database me-2"></i>SQLite</div><div class="snippet-desc">DB Connection</div></div>
+                    <div class="snippet-card" onclick="insertSnippet('unit')"><div class="snippet-title"><i class="fas fa-vial me-2"></i>UnitTest</div><div class="snippet-desc">Test Case</div></div>
+                    <div class="snippet-card" onclick="insertSnippet('pandas')"><div class="snippet-title"><i class="fas fa-table me-2"></i>Pandas</div><div class="snippet-desc">DataFrame Analysis</div></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="main-layout">
+            <header class="header">
+                <div class="brand" style="color: var(--text-primary);">
+                    <i class="fas fa-check-double" style="color: var(--accent); font-size: 16px;"></i>
+                    <span style="margin-left:8px;">APEX PRO <small style="opacity:0.5; font-weight:400;">v10.1 (Stable)</small></span>
+                </div>
+                <div class="actions-group">
+                    <button class="btn-icon" onclick="zoomUI(-0.1)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                    <button class="btn-icon" onclick="zoomUI(0.1)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                    <button class="btn-icon" onclick="takeScreenshot()" title="Screenshot"><i class="fas fa-camera"></i></button>
+                    <button class="btn-icon" onclick="openDiffModal()" title="Compare Changes"><i class="fas fa-exchange-alt"></i></button>
+                    <button class="btn-icon" onclick="toggleSplitView()" id="splitBtn" title="Split View"><i class="fas fa-columns"></i></button>
+                    <button class="btn-icon" onclick="generateShareLink()" title="Share Link"><i class="fas fa-share-alt"></i></button>
+                    <button class="btn-icon" onclick="togglePresentationMode()" title="Presentation Mode"><i class="fas fa-tv"></i></button>
+                    <button class="btn-icon" onclick="startDictation()" title="Voice Typing"><i class="fas fa-microphone"></i></button>
+                    <button class="btn-icon" onclick="formatCode()" title="Format Code"><i class="fas fa-magic"></i></button>
+                    <button class="btn-icon" onclick="document.getElementById('packageModal').style.display='flex'" title="Packages"><i class="fas fa-cube"></i></button>
+                    <button class="btn-icon" onclick="toggleSpotlight()" title="Spotlight (Ctrl+P)"><i class="fas fa-search-plus"></i></button>
+                    
+                    <button class="btn-icon" onclick="toggleExamMode(true)" title="Exam Mode" style="color:#ef4444; border-color:#ef4444;"><i class="fas fa-user-shield"></i></button>
+
+                    <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;"></div>
+                    <button class="btn-icon" onclick="downloadProject()" title="Export ZIP"><i class="fas fa-file-archive"></i></button>
+                    <button class="btn-icon" onclick="deployProject()" title="Live Preview" style="color: #4ade80; border-color: #4ade80;"><i class="fas fa-external-link-alt"></i></button>
+                    <button class="btn-primary" id="runBtn" onclick="runProject()" disabled><i class="fas fa-play"></i> Run</button>
+                </div>
+            </header>
+
+            <div class="tabs-bar" id="tab-container"></div>
+            
+            <div class="breadcrumbs">
+                <div class="crumb"><i class="fas fa-folder me-1"></i> Project</div>
+                <span class="crumb-sep">/</span>
+                <div class="crumb" id="crumb-filename">main.py</div>
+            </div>
+
+            <div class="workspace" id="mainWorkspace">
+                
+                <div class="editor-wrapper">
+                    <div id="monaco-root" style="flex:1;"></div>
+                    <div id="preview-pane" class="preview-pane"></div>
+                    <iframe id="html-frame" class="preview-frame" style="display:none;"></iframe>
+                </div>
+                
+                <div class="terminal-panel" id="terminal">
+                    <div class="resizer-handle" id="resizer"></div>
+                    <div class="panel-header">
+                        <span><i class="fas fa-terminal me-2"></i> Console / Shell</span>
+                        <div style="display:flex; gap:10px;">
+                            <i class="fas fa-eraser" style="cursor:pointer; opacity:0.6;" onclick="clearConsole()" title="Clear"></i>
+                            <i class="fas fa-chevron-down" style="cursor:pointer; opacity:0.6;" onclick="toggleTerminal()" title="Toggle"></i>
+                        </div>
+                    </div>
+                    <div class="terminal-content" id="console-out">
+                        <div style="opacity: 0.6;">> Apex OS v10.1 Stable Kernel...</div>
+                    </div>
+                    <div style="padding:0 12px 10px 12px; background: #0a0a0f;">
+                        <div class="terminal-input-line">
+                            <span style="color:var(--accent);">➜</span>
+                            <span style="color:#e3b341;">~</span>
+                            <input type="text" id="termInput" class="terminal-input" placeholder="Type command..." autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div style="display:flex; gap:15px;">
+            <span style="color:var(--accent); font-size:10px;"><i class="fas fa-code-branch"></i> main</span>
+            <span id="engine-status"><i class="fas fa-circle-notch fa-spin"></i> Booting</span>
+            <span id="cursor-position">Ln 1, Col 1</span>
+        </div>
+        <div style="display:flex; gap:15px;">
+             <span class="status-item" id="musicPlayer" onclick="toggleMusic()">
+                 <i class="fas fa-music"></i> <span id="musicText">Lofi Radio (Off)</span>
+             </span>
+            <span class="status-item" onclick="toggleAmbientSound()" title="Focus Audio"><i class="fas fa-headphones" id="noiseIcon"></i></span>
+            <span id="clock" onclick="startPomodoro()" title="Timer" style="cursor:pointer;">00:00</span>
+            <span id="save-status"><i class="fas fa-check"></i> Saved</span>
+        </div>
+    </div>
+
+    <iframe id="py-worker" style="display:none;"></iframe>
+
+    <script>
+        const originalWorkerInit = window.Worker;
+        window.Worker = function(url) {
+            const w = new originalWorkerInit(url);
+            window.pyWorkerGlobal = w;
+            return w;
+        }
+    </script>
+
+    <script>
+        // --- STATE & CONFIG ---
+        const PLOT_LIB_CODE = `
+import matplotlib.pyplot as plt
+import io, base64
+
+def show():
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', transparent=True)
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    plt.clf()
+    print(f"__PLOT_IMAGE::{img_str}")
+`;
+        const PORTAL_HTML_TEMPLATE = `<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LASU Student Command Center</title>
+</head>
+<body>
+    <div id="login-screen" class="visible">
+        <div class="login-container">
+             <div class="login-left">
+                 <div class="brand">
+                     <i class="fas fa-cube"></i>
+                     <span>LASU.OS</span>
+                 </div>
+                 <div class="hero-text">
+                     <h1>Excellence<br>Redefined.</h1>
+                     <p>Welcome to the next generation of academic management.</p>
+                 </div>
+             </div>
+             <div class="login-right">
+                 <div class="login-card">
+                    <h2>Sign In</h2>
+                    <p class="subtitle">Access your portal</p>
+                    
+                    <div class="input-group">
+                        <label>Matric Number</label>
+                        <input type="text" value="{{MATRIC}}" disabled>
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    
+                    <div class="notice-box">
+                        <i class="fas fa-lock"></i>
+                        <span>Secure Environment. Run the python script to authenticate.</span>
+                    </div>
+
+                    <div class="loader">
+                        <div class="bar"></div>
+                    </div>
+                 </div>
+             </div>
+        </div>
+    </div>
+
+    <div id="main-portal" class="hidden">
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon"><i class="fas fa-cube"></i></div>
+                <span class="logo-text">LASU OS</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active"><i class="fas fa-home"></i> <span>Command Center</span></a>
+                <a href="#" class="nav-item"><i class="fas fa-book"></i> <span>Academics</span></a>
+                <a href="#" class="nav-item"><i class="fas fa-wallet"></i> <span>Finance</span> <span class="badge">Due</span></a>
+                <a href="#" class="nav-item"><i class="fas fa-calendar"></i> <span>Schedule</span></a>
+                <a href="#" class="nav-item"><i class="fas fa-chart-pie"></i> <span>Analytics</span></a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">TO</div>
+                <div class="user-info">
+                    <div class="name">{{NAME}}</div>
+                    <div class="role">Comp. Sci • 200L</div>
+                </div>
+                <i class="fas fa-chevron-right arrow"></i>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="breadcrumb">Dashboard / Overview</div>
+                <div class="top-actions">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search courses, exams...">
+                        <span class="cmd-key">⌘K</span>
+                    </div>
+                    <div class="icon-btn"><i class="fas fa-bell"></i><span class="dot"></span></div>
+                    <div class="icon-btn" onclick="toggleTheme()"><i class="fas fa-moon"></i></div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="welcome-banner slideIn" style="animation-delay:0.1s">
+                    <div class="banner-text">
+                        <h1>Good Morning, {{NAME}}.</h1>
+                        <p>You have 2 exams coming up and pending payments.</p>
+                    </div>
+                    <div class="banner-stat">
+                        <span class="stat-label">Current CGPA</span>
+                        <span class="stat-value">%%CGPA%%</span>
+                    </div>
+                </div>
+
+                <div class="grid-layout">
+                    <div class="col-left">
+                        
+                        <div class="grid-row-2">
+                            <div class="card metric-card slideIn" style="animation-delay:0.2s">
+                                <div class="metric-icon green"><i class="fas fa-check-circle"></i></div>
+                                <div class="metric-data">
+                                    <span class="label">Units Covered</span>
+                                    <span class="value">34</span>
+                                </div>
+                            </div>
+                            <div class="card metric-card slideIn" style="animation-delay:0.25s">
+                                <div class="metric-icon purple"><i class="fas fa-graduation-cap"></i></div>
+                                <div class="metric-data">
+                                    <span class="label">Level</span>
+                                    <span class="value">200</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card chart-section slideIn" style="animation-delay:0.3s">
+                            <div class="card-header">
+                                <h3>Performance Trend</h3>
+                                <button class="btn-sm">Detail</button>
+                            </div>
+                            <div class="chart-container">
+                                <img id="chartImg" src="data:image/png;base64,%%CHART_IMAGE%%">
+                            </div>
+                        </div>
+
+                        <div class="card table-section slideIn" style="animation-delay:0.4s">
+                            <div class="card-header">
+                                <h3>Course Progress</h3>
+                                <div class="filter-tabs">
+                                    <span class="active">All</span>
+                                    <span>Pending</span>
+                                </div>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Course</th>
+                                        <th>Unit</th>
+                                        <th>Status</th>
+                                        <th>Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    %%TABLE_ROWS%%
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-right">
+                        
+                        <div class="card credit-card slideIn" style="animation-delay:0.5s">
+                            <div class="card-top">
+                                <span class="chip"></span>
+                                <i class="fab fa-cc-visa"></i>
+                            </div>
+                            <div class="card-number">**** **** **** 2305</div>
+                            <div class="card-details">
+                                <div>
+                                    <span class="card-label">Student</span>
+                                    <span class="card-val">{{NAME}}</span>
+                                </div>
+                                <div>
+                                    <span class="card-label">Balance</span>
+                                    <span class="card-val">₦45,000</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card fee-card slideIn" style="animation-delay:0.55s">
+                            <div class="card-header"><h3>Fee Status</h3></div>
+                            <div style="text-align:center;">
+                                <img id="feeChart" src="data:image/png;base64,%%FEE_CHART%%" style="max-width:100%; height:120px; object-fit:contain;">
+                            </div>
+                        </div>
+
+                        <div class="card schedule-list slideIn" style="animation-delay:0.6s">
+                            <div class="card-header"><h3>Today's Schedule</h3></div>
+                            <div class="timeline-box">
+                                %%SCHEDULE_ROWS%%
+                            </div>
+                        </div>
+
+                        <div class="card cert-list slideIn" style="animation-delay:0.7s">
+                             <div class="card-header"><h3>Certifications</h3></div>
+                             <div class="cert-row">
+                                 <div class="cert-icon"><i class="fab fa-microsoft"></i></div>
+                                 <div class="cert-info">
+                                     <span>Azure Architect</span>
+                                     <small>Microsoft • 2026</small>
+                                 </div>
+                             </div>
+                             <div class="cert-row">
+                                 <div class="cert-icon"><i class="fab fa-microsoft"></i></div>
+                                 <div class="cert-info">
+                                     <span>Power Platform</span>
+                                     <small>Microsoft • 2026</small>
+                                 </div>
+                             </div>
+                          </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <div class="ai-widget">
+            <i class="fas fa-robot"></i>
+        </div>
+    </div>
+    
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #4f46e5;
+            --accent: #8b5cf6;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        body.dark-mode {
+            --bg-body: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-body); color: var(--text-main); height: 100vh; overflow:hidden; transition: 0.3s; }
+        
+        .hidden { display: none !important; }
+        .visible { display: flex !important; }
+        .slideIn { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* LOGIN */
+        #login-screen { position: fixed; inset: 0; background: var(--bg-body); z-index: 999; display: flex; align-items: center; justify-content: center; }
+        .login-container { display: flex; width: 900px; height: 500px; background: var(--bg-card); border-radius: 24px; box-shadow: var(--shadow-lg); overflow: hidden; border: 1px solid var(--border); }
+        .login-left { flex: 1; background: linear-gradient(135deg, var(--primary), var(--accent)); padding: 40px; display: flex; flex-direction: column; justify-content: space-between; color: white; }
+        .login-right { flex: 1; padding: 40px; display: flex; align-items: center; justify-content: center; }
+        .login-card { width: 100%; max-width: 300px; }
+        .brand { display: flex; gap: 10px; font-weight: 800; font-size: 20px; align-items: center; }
+        .hero-text h1 { font-size: 40px; line-height: 1.1; margin-bottom: 20px; }
+        .input-group { margin-bottom: 20px; position: relative; }
+        .input-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--text-muted); }
+        .input-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); font-weight: 600; }
+        .input-group i { position: absolute; right: 12px; bottom: 12px; color: var(--text-muted); }
+        .notice-box { background: rgba(245, 158, 11, 0.1); color: #d97706; padding: 10px; border-radius: 8px; font-size: 11px; display: flex; gap: 8px; align-items: center; }
+        .loader { height: 4px; background: var(--border); margin-top: 20px; border-radius: 2px; overflow: hidden; }
+        .loader .bar { height: 100%; width: 50%; background: var(--primary); animation: loading 1.5s infinite ease-in-out; }
+        @keyframes loading { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+
+        /* PORTAL */
+        #main-portal { height: 100vh; display: flex; }
+        .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px; transition: 0.3s; }
+        .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; font-weight: 800; font-size: 18px; color: var(--text-main); }
+        .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; color: white; display: flex; align-items: center; justify-content: center; }
+        
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; color: var(--text-muted); text-decoration: none; font-weight: 500; font-size: 14px; margin-bottom: 4px; transition: 0.2s; }
+        .nav-item:hover, .nav-item.active { background: rgba(79, 70, 229, 0.08); color: var(--primary); }
+        .nav-item .badge { margin-left: auto; background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; }
+        
+        .user-profile { margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+        .avatar { width: 36px; height: 36px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px; }
+        .user-info { flex: 1; }
+        .name { font-size: 13px; font-weight: 700; }
+        .role { font-size: 11px; color: var(--text-muted); }
+        .arrow { font-size: 12px; color: var(--text-muted); }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-body); overflow: hidden; }
+        .top-bar { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 1px solid var(--border); background: var(--bg-card); }
+        .breadcrumb { font-weight: 600; font-size: 14px; color: var(--text-main); }
+        .top-actions { display: flex; gap: 15px; align-items: center; }
+        .search-box { background: var(--bg-body); border: 1px solid var(--border); padding: 8px 15px; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 13px; width: 240px; }
+        .search-box input { border:none; background:transparent; width:100%; outline:none; color: var(--text-main); }
+        .cmd-key { font-size: 10px; border: 1px solid var(--border); padding: 2px 4px; border-radius: 4px; color: var(--text-muted); }
+        .icon-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); position: relative; }
+        .icon-btn:hover { background: var(--bg-body); color: var(--primary); }
+        .dot { position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; background: #ef4444; border-radius: 50%; }
+
+        .content-wrapper { padding: 30px; overflow-y: auto; flex: 1; }
+        
+        .welcome-banner { background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 16px; padding: 30px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; box-shadow: var(--shadow-lg); }
+        .banner-text h1 { font-size: 24px; margin-bottom: 8px; }
+        .banner-text p { opacity: 0.8; font-size: 14px; }
+        .banner-stat { text-align: right; background: rgba(255,255,255,0.1); padding: 15px 25px; border-radius: 12px; backdrop-filter: blur(5px); }
+        .stat-label { display: block; font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
+        .stat-value { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+
+        .grid-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+        .col-left, .col-right { display: flex; flex-direction: column; gap: 24px; }
+        .grid-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm); }
+        .metric-card { display: flex; align-items: center; gap: 15px; }
+        .metric-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .metric-icon.green { background: #dcfce7; color: #166534; }
+        .metric-icon.purple { background: #f3e8ff; color: #7e22ce; }
+        .metric-data { display: flex; flex-direction: column; }
+        .metric-data .label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+        .metric-data .value { font-size: 24px; font-weight: 800; color: var(--text-main); }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 700; }
+        .btn-sm { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-muted); }
+        .chart-container img { width: 100%; border-radius: 8px; }
+
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+        .data-table td { padding: 15px 0; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 500; }
+        .filter-tabs { display: flex; gap: 10px; font-size: 12px; color: var(--text-muted); }
+        .filter-tabs span.active { color: var(--primary); font-weight: 700; }
+
+        /* CREDIT CARD */
+        .credit-card { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; height: 200px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; border: none; }
+        .credit-card::before { content:''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+        .card-top { display: flex; justify-content: space-between; align-items: center; font-size: 24px; }
+        .chip { width: 40px; height: 30px; background: rgba(255,255,255,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); }
+        .card-number { font-family: 'Courier New', monospace; font-size: 22px; letter-spacing: 2px; }
+        .card-details { display: flex; justify-content: space-between; font-size: 12px; }
+        .card-label { display: block; opacity: 0.7; margin-bottom: 4px; font-size: 10px; text-transform: uppercase; }
+        .card-val { font-weight: 700; font-size: 14px; }
+
+        /* TIMELINE */
+        .timeline-box { display: flex; flex-direction: column; gap: 15px; }
+        .timeline-item { display: flex; gap: 15px; }
+        .time-col { font-size: 12px; font-weight: 700; color: var(--text-main); min-width: 45px; }
+        .info-col { border-left: 2px solid var(--border); padding-left: 15px; padding-bottom: 10px; }
+        .info-title { display: block; font-weight: 600; font-size: 13px; }
+        .info-desc { font-size: 12px; color: var(--text-muted); }
+
+        .cert-row { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; }
+        .cert-icon { width: 32px; height: 32px; background: #f1f5f9; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #64748b; }
+        .cert-info span { display: block; font-size: 13px; font-weight: 600; }
+        .cert-info small { font-size: 11px; color: var(--text-muted); }
+        
+        .ai-widget { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--primary); border-radius: 50%; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; cursor: pointer; transition: 0.2s; z-index: 100; }
+        .ai-widget:hover { transform: scale(1.1) rotate(10deg); }
+    </style>
+</body>
+</html>`;
+        const DEFAULT_FILES = {
+            'main.py': { content: `import sqlite3
+import database
+import services
+import auth
+import js
+import tests
+import analytics
+
+# --- APEX FORTUNE v10.1 STABLE CORE ---
+# Diamond Architecture with Pandas Engine Fixed
+
+print(">> Initializing Stable Core...")
+
+# 1. Initialize System
+conn = database.init()
+
+# 2. Secure Authentication
+print(">> Verifying Biometrics...")
+user = auth.authenticate()
+
+if not user:
+    print(">> Access Denied.")
+    services.render_login()
+else:
+    print(f">> Welcome, Commander {user}")
+    
+    # 3. Data Aggregation Service (Including Finances)
+    data = services.fetch_dashboard_data(conn, user)
+    
+    # 4. Analytics Engine (CGPA + Financials + Pandas Forecasting)
+    print(">> Computing Performance Metrics (Neural Engine)...")
+    chart = services.generate_analytics(data['results'])
+    fee_chart = services.generate_fee_chart(data['finance'])
+    
+    # v10.1 FIX: Run Pandas prediction with corrected column structure
+    print(">> Running GPA Predictive Model...")
+    analytics.predict_future_gpa(data['results'])
+    
+    # 5. Render Fortune-5 Interface
+    services.render_portal(data, chart, fee_chart)
+    
+    # 6. Success Trigger
+    js.eval("confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } })")
+`, language: 'python' },
+            'database.py': { content: `import sqlite3
+
+def init():
+    conn = sqlite3.connect(':memory:')
+    c = conn.cursor()
+    
+    # ACADEMIC RESULTS
+    c.execute("CREATE TABLE results (matric TEXT, code TEXT, unit INT, score INT)")
+    
+    # FINANCIAL RECORDS
+    c.execute("CREATE TABLE fees (matric TEXT, term TEXT, amount INT, status TEXT)")
+    
+    # Seed Data - Academics
+    results = [
+        ('230591342', 'CSC 411', 3, 92),
+        ('230591342', 'CSC 412', 3, 88),
+        ('230591342', 'CSC 413', 3, 95),
+        ('230591342', 'GNS 101', 2, 70),
+        ('230591342', 'ENT 302', 2, 85)
+    ]
+    c.executemany("INSERT INTO results VALUES (?,?,?,?)", results)
+    
+    # Seed Data - Finance
+    fees = [
+        ('230591342', 'Tuition', 50000, 'Paid'),
+        ('230591342', 'Acceptance', 20000, 'Paid'),
+        ('230591342', 'Departmental', 5000, 'Pending'),
+        ('230591342', 'Medical', 3000, 'Pending')
+    ]
+    c.executemany("INSERT INTO fees VALUES (?,?,?,?)", fees)
+    
+    conn.commit()
+    return conn
+`, language: 'python' },
+            'services.py': { content: `import matplotlib
+# FORCE HEADLESS BACKEND
+matplotlib.use('Agg') 
+
+import matplotlib.pyplot as plt
+import io, base64
+
+def calculate_cgpa(results):
+    # Dynamic CGPA Logic
+    total_points = 0
+    total_units = 0
+    for r in results:
+        score = r[2]
+        unit = r[1]
+        point = 5 if score >= 70 else 4 if score >= 60 else 3 if score >= 50 else 2 if score >= 45 else 1 if score >= 40 else 0
+        total_points += (point * unit)
+        total_units += unit
+    return round(total_points / total_units, 2) if total_units > 0 else 0.0
+
+def fetch_dashboard_data(conn, matric):
+    c = conn.cursor()
+    # Note: Only selecting 3 columns here
+    c.execute("SELECT code, unit, score FROM results WHERE matric=?", (matric,))
+    results = c.fetchall()
+    
+    c.execute("SELECT term, amount, status FROM fees WHERE matric=?", (matric,))
+    fees = c.fetchall()
+    
+    return {
+        "matric": matric,
+        "results": results,
+        "cgpa": calculate_cgpa(results),
+        "finance": fees,
+        "schedule": [
+            {"time": "09:00", "title": "CSC 411", "desc": "Lecture Hall A"},
+            {"time": "14:00", "title": "Project", "desc": "AI Lab 3"}
+        ]
+    }
+
+def generate_analytics(results):
+    codes = [r[0] for r in results]
+    scores = [r[2] for r in results]
+    
+    plt.figure(figsize=(6, 3), facecolor='#ffffff00')
+    ax = plt.axes()
+    ax.set_facecolor('#ffffff00')
+    plt.plot(codes, scores, color='#4f46e5', linewidth=3, marker='o', markersize=8, markerfacecolor='white', markeredgewidth=2)
+    plt.fill_between(codes, scores, color='#4f46e5', alpha=0.15)
+    plt.grid(color='#e2e8f0', linestyle='--', linewidth=0.5, alpha=0.5)
+    plt.ylim(0, 100)
+    plt.axis('off')
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', transparent=True)
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode('utf-8')
+
+def generate_fee_chart(fees):
+    paid = sum([f[1] for f in fees if f[2] == 'Paid'])
+    pending = sum([f[1] for f in fees if f[2] == 'Pending'])
+    
+    plt.figure(figsize=(4, 4), facecolor='#ffffff00')
+    plt.pie([paid, pending], labels=['Paid', 'Due'], colors=['#22c55e', '#ef4444'], autopct='%1.1f%%', textprops={'color':"white"})
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', transparent=True)
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode('utf-8')
+
+def render_login():
+    with open('index.html', 'r') as f: tpl = f.read()
+    html = tpl.replace('class="visible"', 'class="visible"').replace('class="hidden"', 'class="hidden"')
+    for t in ['%%CGPA%%', '%%TABLE_ROWS%%', '%%CHART_IMAGE%%', '%%SCHEDULE_ROWS%%', '%%FEE_CHART%%']:
+        html = html.replace(t, '')
+    print("__RENDER_VIEW::" + html)
+
+def render_portal(data, chart, fee_chart):
+    with open('index.html', 'r') as f: tpl = f.read()
+    
+    # Build Table
+    rows = ""
+    for code, unit, score in data['results']:
+        status = "Completed" if score >= 40 else "Retake"
+        color = "#166534" if score >= 70 else "#ca8a04"
+        bg = "#dcfce7" if score >= 70 else "#fef9c3"
+        rows += f"<tr><td><span style='font-weight:700'>{code}</span></td><td>{unit}</td><td><span style='color:{color};background:{bg};padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600'>{status}</span></td><td>{score}</td></tr>"
+
+    # Build Schedule
+    sched = ""
+    for item in data['schedule']:
+        sched += f"<div class='timeline-item'><div class='time-col'>{item['time']}</div><div class='info-col'><span class='info-title'>{item['title']}</span><span class='info-desc'>{item['desc']}</span></div></div>"
+
+    html = tpl.replace('id="login-screen" class="visible"', 'id="login-screen" class="hidden"')
+    html = html.replace('id="main-portal" class="hidden"', 'id="main-portal" class="visible"')
+    
+    # Inject Data
+    html = html.replace('%%CGPA%%', str(data['cgpa']))
+    html = html.replace('%%TABLE_ROWS%%', rows)
+    html = html.replace('%%CHART_IMAGE%%', chart)
+    html = html.replace('%%FEE_CHART%%', fee_chart)
+    html = html.replace('%%SCHEDULE_ROWS%%', sched)
+    
+    print("__RENDER_VIEW::" + html)
+`, language: 'python' },
+            'analytics.py': { content: `# v10.1 FIXED MODULE: DATA SCIENCE ENGINE
+import pandas as pd
+import numpy as np
+
+def predict_future_gpa(results):
+    print(">> [ANALYTICS] Loading Pandas DataFrame...")
+    
+    # FIX: Updated column list to match the 3 columns fetched from DB (Code, Unit, Score)
+    # The previous version incorrectly expected 4 columns including Matric.
+    df = pd.DataFrame(results, columns=['Code', 'Unit', 'Score'])
+    
+    print(f">> [ANALYTICS] Analyzing {len(df)} courses...")
+    avg_score = df['Score'].mean()
+    print(f">> [ANALYTICS] Current Average Score: {avg_score:.2f}")
+    
+    # Simple linear projection (Simulation)
+    projected_score = avg_score * 1.05 # Assume 5% improvement
+    print(f">> [ANALYTICS] Projected Next Sem Average: {projected_score:.2f}")
+    
+    return True
+`, language: 'python' },
+            'auth.py': { content: `def authenticate():
+    # Simulation of Biometric Auth
+    return "230591342"
+`, language: 'python' },
+            'tests.py': { content: `import unittest
+import database
+import services
+
+class TestApexSystem(unittest.TestCase):
+    def setUp(self):
+        self.conn = database.init()
+        
+    def test_cgpa_calculation(self):
+        # Test Case: 2 units of 90 (5pts) = 10 total pts / 2 units = 5.0 GPA
+        mock_results = [('MAT', 'TST101', 2, 90)]
+        self.assertEqual(services.calculate_cgpa(mock_results), 5.0)
+        
+    def test_database_init(self):
+        c = self.conn.cursor()
+        c.execute("SELECT count(*) FROM results")
+        self.assertTrue(c.fetchone()[0] > 0)
+
+def run():
+    print(">> Running Unit Tests...")
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestApexSystem)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+`, language: 'python' },
+            'index.html': { content: PORTAL_HTML_TEMPLATE, language: 'html' },
+            'README.md': { content: '# Apex Fortune v10.1 Stable\n\n## Release Notes\n- **Fixed Python Error**: Corrected Pandas DataFrame column mismatch in `analytics.py`.\n- **Fixed UI Bug**: Patched "Matrix Explosion" in `deployProject()`.\n- **Emerald Theme**: Visual indicator of system stability.\n- **All Features**: Exam Mode, Finance, Chat, and Git are fully active.', language: 'markdown' }
+        };
+
+        // --- STORAGE & RECOVERY ---
+        let files = {};
+        let gitHistory = []; 
+        
+        try {
+            // v10.1: New storage key to force clean slate
+            const stored = localStorage.getItem('lasu_project_v10_1_stable'); 
+            files = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(DEFAULT_FILES));
+            const storedGit = localStorage.getItem('lasu_git');
+            gitHistory = storedGit ? JSON.parse(storedGit) : [];
+            
+            // Auto-Clean old corrupted data
+            if(localStorage.getItem('lasu_project_v10_diamond')) localStorage.removeItem('lasu_project_v10_diamond');
+            
+        } catch(e) {
+            files = JSON.parse(JSON.stringify(DEFAULT_FILES));
+        }
+
+        if(!files['plotter.py']) files['plotter.py'] = { content: PLOT_LIB_CODE, language: 'python' };
+
+        let activeFile = localStorage.getItem('lasu_active_file') || 'main.py';
+        if (!files[activeFile]) activeFile = Object.keys(files)[0];
+
+        // --- VARS ---
+        let editorInstance = null;
+        let diffEditorInstance = null;
+        let installedPackages = new Set(['micropip', 'sqlite3', 'matplotlib', 'pandas']);
+        let soundEnabled = false;
+        let powerMode = false;
+        let lastCharTime = 0; let charCount = 0;
+        let uiScale = 1;
+        let audioCtx = null; 
+        let noiseNode = null;
+        let focusMode = false;
+        let timeline = JSON.parse(localStorage.getItem('lasu_timeline')) || [];
+        let lastSqlResult = null;
+        let ctxTargetFile = null;
+        let musicPlaying = false; 
+        let splitViewActive = false;
+
+        // --- INIT ---
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 2000); 
+            if(!localStorage.getItem('lasu_tour_v10_1')) { document.getElementById('tourModal').style.display = 'flex'; localStorage.setItem('lasu_tour_v10_1', 'true'); }
+
+            // AUTO-COMPLETE ENHANCED
+            monaco.languages.registerCompletionItemProvider('python', {
+                provideCompletionItems: function (model, position) {
+                    var word = model.getWordUntilPosition(position);
+                    var range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: word.startColumn, endColumn: word.endColumn };
+                    var suggestions = [
+                        { label: 'print', kind: monaco.languages.CompletionItemKind.Function, insertText: 'print(${1:object})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range: range },
+                        { label: 'def', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'def ${1:func_name}(${2:args}):\n\t${3:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range: range },
+                        { label: 'services.fetch_dashboard_data', kind: monaco.languages.CompletionItemKind.Function, insertText: 'services.fetch_dashboard_data(conn, user)', range: range },
+                        { label: 'analytics.predict_future_gpa', kind: monaco.languages.CompletionItemKind.Function, insertText: 'analytics.predict_future_gpa(results)', range: range },
+                        { label: 'sqlite3', kind: monaco.languages.CompletionItemKind.Module, insertText: 'sqlite3', range: range },
+                        { label: 'pandas', kind: monaco.languages.CompletionItemKind.Module, insertText: 'pd', range: range },
+                    ];
+                    return { suggestions: suggestions };
+                }
+            });
+
+            editorInstance = monaco.editor.create(document.getElementById('monaco-root'), {
+                value: files[activeFile].content, language: 'python', theme: 'vs-dark',
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontLigatures: true,
+                automaticLayout: true, minimap: { enabled: true, scale: 0.75 }, padding: { top: 20 },
+                scrollBeyondLastLine: false, renderLineHighlight: "all", wordWrap: "off", lineNumbers: "on",
+                rulers: [80], cursorBlinking: "phase", cursorSmoothCaretAnimation: "on", stickyScroll: { enabled: true }, colorDecorators: true
+            });
+
+            // Handlers
+            editorInstance.onDidChangeModelContent(() => {
+                if(files[activeFile]) {
+                    files[activeFile].content = editorInstance.getValue();
+                    saveToStorage();
+                    document.querySelector('.tab.active').classList.add('dirty');
+                    updateStats(); calcWPM(); checkImports(editorInstance.getValue()); updateOutline();
+                    if(activeFile.endsWith('.md')) renderMarkdown();
+                    if(activeFile.endsWith('.html')) renderHTML();
+                }
+            });
+            editorInstance.onKeyDown((e) => { if(soundEnabled) playTypeSound(); if(powerMode) spawnParticles(); });
+            editorInstance.onDidChangeCursorPosition((e) => { document.getElementById('cursor-position').innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`; if(focusMode) applyFocusMode(); });
+            editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runProject);
+            editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => { saveToStorage(); showToast("Saved", "success"); confetti({ particleCount: 50, spread: 40, origin: { y: 0.9 } }); });
+            editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_K, () => { switchSidebar('git'); document.getElementById('gitMsg').focus(); });
+            editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_F, () => { switchSidebar('search'); document.getElementById('globalSearchInput').focus(); });
+
+            renderUI(); renderGitList(); updateClock(); initResizer(); initSidebarResizer(); updateStats(); initDragDrop(); initTerminalInput();
+            setInterval(updateMemory, 2000); 
+            handleFileSwitchEffect(activeFile);
+            
+            setTimeout(() => {
+                const btn = document.getElementById('runBtn');
+                if(btn.disabled) {
+                    btn.disabled = false;
+                    document.getElementById('engine-status').innerHTML = '<i class="fas fa-check-circle" style="color:orange"></i> Ready';
+                }
+            }, 5000);
+        });
+
+        // --- WORKER (UPDATED FOR PANDAS) ---
+        const workerFrame = document.getElementById('py-worker');
+        const pythonInitCode = `
+import sqlite3
+import json
+import csv
+import io
+import js
+import time
+
+# v10.1 Update: Pre-load Pandas
+import pandas as pd
+import numpy as np
+
+db_conn = sqlite3.connect(':memory:')
+db_cursor = db_conn.cursor()
+
+def run_sql_query(query):
+    try:
+        db_cursor.execute(query)
+        if query.strip().upper().startswith("SELECT") or query.strip().upper().startswith("PRAGMA"):
+            columns = [description[0] for description in db_cursor.description]
+            rows = db_cursor.fetchall()
+            return json.dumps({"status": "success", "type": "data", "columns": columns, "rows": rows})
+        else:
+            db_conn.commit()
+            return json.dumps({"status": "success", "type": "action", "msg": "Query executed successfully."})
+    except Exception as e:
+        return json.dumps({"status": "error", "msg": str(e)})
+
+def import_csv_to_db(table_name, csv_content):
+    try:
+        f = io.StringIO(csv_content)
+        # v10.1 Update: Use Pandas for CSV Import (More Robust)
+        df = pd.read_csv(f)
+        df.to_sql(table_name, db_conn, if_exists='replace', index=False)
+        return json.dumps({"status": "success", "type": "action", "msg": f"Table '{table_name}' imported via Pandas."})
+    except Exception as e:
+        return json.dumps({"status": "error", "msg": str(e)})
+
+def input(p=""):
+    return js.prompt(p)
+`;
+
+        const workerScript = `
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js");
+
+async function main() {
+    try {
+        self.pyodide = await loadPyodide();
+        // v10.1: Added Pandas to load list
+        await self.pyodide.loadPackage(["micropip", "numpy", "matplotlib", "sqlite3", "pandas"]);
+        self.micropip = self.pyodide.pyimport("micropip");
+        await self.pyodide.runPythonAsync(\`${pythonInitCode}\`);
+        self.postMessage({type:'READY'});
+    } catch(e) { self.postMessage({type:'ERR', msg:e.toString()}); }
+}
+main();
+
+self.onmessage = async (e) => {
+    const data = e.data;
+    if (data.type === 'RUN') {
+        try {
+            for (const [name, fileData] of Object.entries(data.files)) {
+                self.pyodide.FS.writeFile(name, fileData.content);
+            }
+            self.pyodide.setStdout({ batched: (m) => {
+                if(m.startsWith("__PLOT_IMAGE::")) self.postMessage({type:'PLOT', msg:m.split("::")[1]});
+                else if(m.startsWith("__RENDER_VIEW::")) self.postMessage({type:'RENDER_HTML', msg:m.split("::")[1]});
+                else self.postMessage({type:'LOG', msg:m});
+            }});
+            self.pyodide.setStderr({ batched: (m) => self.postMessage({type:'ERR', msg:m}) });
+            
+            await self.pyodide.runPythonAsync(data.code || data.files['main.py'].content);
+            self.postMessage({type:'DONE'});
+            
+            const vars = await self.pyodide.runPythonAsync(\`
+import types
+{k: str(v)[:50] for k,v in globals().items() if not k.startswith('_') and not isinstance(v, (types.ModuleType, types.FunctionType))}
+\`);
+            self.postMessage({type:'VARS', vars: vars.toJs()});
+
+        } catch (err) { self.postMessage({type:'ERR', msg: err.toString()}); }
+    }
+    else if (data.type === 'INSTALL') {
+        try {
+            await self.micropip.install(data.package);
+            self.postMessage({type:'LOG', msg: "Installed " + data.package});
+        } catch(e) { self.postMessage({type:'ERR', msg: e.toString()}); }
+    }
+    else if (data.type === 'SQL') {
+        try {
+            const run_query = self.pyodide.globals.get('run_sql_query');
+            self.postMessage({type:'SQL_RESULT', result: run_query(data.query)});
+        } catch (e) { self.postMessage({type:'SQL_RESULT', result: JSON.stringify({status:'error', msg: e.toString()})}); }
+    }
+    else if (data.type === 'IMPORT_CSV') {
+        try {
+            const importer = self.pyodide.globals.get('import_csv_to_db');
+            self.postMessage({type:'SQL_RESULT', result: importer(data.tableName, data.content)});
+        } catch(e) { self.postMessage({type:'SQL_RESULT', result: JSON.stringify({status:'error', msg: e.toString()})}); }
+    }
+};
+`;
+        const blob = new Blob([workerScript], { type: "application/javascript" });
+        const pyWorker = new Worker(URL.createObjectURL(blob));
+        
+        pyWorker.onmessage = (e) => {
+            const { type, msg, vars, result } = e.data;
+            if (type === 'READY') {
+                document.getElementById('runBtn').disabled = false;
+                document.getElementById('engine-status').innerHTML = '<i class="fas fa-check-circle"></i> Ready';
+                showToast("Singularity Engine Ready", "success");
+            }
+            else if (type === 'LOG') logToTerminal(msg, 'var(--text-primary)');
+            else if (type === 'RENDER_HTML') {
+                document.getElementById('html-frame').srcdoc = msg;
+                if(!splitViewActive) {
+                    document.getElementById('monaco-root').style.display = 'none';
+                    document.getElementById('html-frame').style.display = 'block';
+                    document.getElementById('preview-pane').style.display = 'none';
+                }
+                showToast("Portal Rendered", "success");
+            }
+            else if (type === 'ERR') {
+                logToTerminal(msg, '#ef4444');
+                const match = msg.match(/line (\d+)/);
+                if(match) {
+                    const lineNo = parseInt(match[1]);
+                    monaco.editor.setModelMarkers(editorInstance.getModel(), "python", [{
+                        startLineNumber: lineNo, startColumn: 1, endLineNumber: lineNo, endColumn: 1000,
+                        message: msg, severity: monaco.MarkerSeverity.Error
+                    }]);
+                }
+            }
+            else if (type === 'PLOT') {
+                const img = document.createElement('img'); img.src = "data:image/png;base64," + msg;
+                img.className = "terminal-plot";
+                document.getElementById('console-out').appendChild(img);
+                document.getElementById('console-out').scrollTop = document.getElementById('console-out').scrollHeight;
+            }
+            else if (type === 'VARS') renderVariables(vars);
+            else if (type === 'DONE') logToTerminal('>> Finished', 'var(--accent)');
+            else if (type === 'SQL_RESULT') renderSqlResult(result);
+        };
+
+        // --- NEW V8 FEATURES ---
+
+        // 1. SMART TERMINAL
+        function initTerminalInput() {
+            const input = document.getElementById('termInput');
+            input.addEventListener('keydown', (e) => {
+                if(e.key === 'Enter') {
+                    const cmd = input.value.trim();
+                    logToTerminal(`➜ ~ ${cmd}`, '#e3b341');
+                    input.value = '';
+                    handleTerminalCommand(cmd);
+                }
+            });
+        }
+
+        function handleTerminalCommand(cmd) {
+            const args = cmd.split(' ');
+            const mainCmd = args[0];
+
+            if(mainCmd === 'clear') { document.getElementById('console-out').innerHTML = ''; }
+            else if(mainCmd === 'ls') { Object.keys(files).forEach(f => logToTerminal(f, 'var(--text-primary)')); }
+            else if(mainCmd === 'cat') { const f = args[1]; if(files[f]) logToTerminal(files[f].content, 'var(--text-secondary)'); else logToTerminal("File not found", '#ef4444'); }
+            else if(mainCmd === 'snake') { startSnakeGame(); }
+            else if(mainCmd === 'help') { logToTerminal("Commands: ls, cat, touch, mkdir, python, test, clear, pandas", 'var(--accent)'); }
+            else if(mainCmd === 'python') { runProject(); }
+            else if(mainCmd === 'test') { runTests(); }
+            // NEW: File System Commands
+            else if(mainCmd === 'touch') { 
+                const fname = args[1]; 
+                if(fname) { 
+                    files[fname] = {content: '', language:'python'}; 
+                    saveToStorage(); renderUI(); logToTerminal(`Created ${fname}`, '#4ade80');
+                } 
+            }
+            else if(mainCmd === 'mkdir') { 
+                const dname = args[1]; 
+                if(dname) { 
+                    files[dname + '/.keep'] = {content: '', language:'plaintext'}; 
+                    saveToStorage(); renderUI(); logToTerminal(`Created dir ${dname}`, '#4ade80');
+                } 
+            }
+            else { logToTerminal(`Command not found: ${cmd}`, '#ef4444'); }
+        }
+
+        // 2. UNIT TESTS RUNNER
+        function runTests() {
+             const code = "import tests\ntests.run()";
+             pyWorker.postMessage({ type: 'RUN', files: files, code: code });
+        }
+
+        // 3. APEX CHAT
+        function sendChat() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value;
+            if(!msg) return;
+            
+            const history = document.getElementById('chatHistory');
+            history.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+            input.value = '';
+            
+            // Simulation of Context-Aware AI
+            setTimeout(() => {
+                let response = "I'm not sure about that.";
+                const lowerMsg = msg.toLowerCase();
+                
+                if(lowerMsg.includes("fix") || lowerMsg.includes("error")) response = "Check your 'main.py' imports. Ensure 'services' is imported correctly.";
+                else if(lowerMsg.includes("finance") || lowerMsg.includes("fee")) response = "The Finance module uses 'database.py' table 'fees'. You can query it in the SQL tab.";
+                else if(lowerMsg.includes("cgpa")) response = "CGPA is calculated dynamically in 'services.py' using the 'calculate_cgpa' function.";
+                else if(lowerMsg.includes("pandas")) response = "Pandas is pre-loaded in v10.1. Import it as `pd` and use it in `analytics.py`.";
+                else response = "I am analyzing your codebase. Please clarify.";
+                
+                history.innerHTML += `<div class="chat-msg bot">${response}</div>`;
+                history.scrollTop = history.scrollHeight;
+            }, 600);
+        }
+
+        // 4. SPLIT VIEW
+        function toggleSplitView() {
+            splitViewActive = !splitViewActive;
+            const workspace = document.getElementById('mainWorkspace');
+            const terminal = document.getElementById('terminal');
+            const btn = document.getElementById('splitBtn');
+            
+            if(splitViewActive) {
+                workspace.classList.add('split-view');
+                terminal.style.display = 'flex';
+                terminal.style.height = '100%';
+                btn.classList.add('active');
+                showToast("Split View Active", "info");
+            } else {
+                workspace.classList.remove('split-view');
+                terminal.style.height = '220px';
+                btn.classList.remove('active');
+            }
+            editorInstance.layout();
+        }
+
+        // 5. SINGULARITY LINTER (AI)
+        function analyzeCode() { 
+            const code = editorInstance.getValue(); 
+            const container = document.getElementById('aiList'); 
+            container.innerHTML = ''; 
+            const issues = []; 
+            
+            // Rules
+            if(code.includes("print(")) issues.push({title: "Print Statements Detected", text: "Production code typically uses logging instead of print()."}); 
+            if(code.includes("TODO")) issues.push({title: "Pending TODOs", text: "You have unfinished tasks marked in comments."}); 
+            if(code.split('\n').some(line => line.length > 80)) issues.push({title: "Line Length Exceeded", text: "PEP 8 recommends lines under 79 characters."}); 
+            if(!code.includes("def ") && !code.includes("class ")) issues.push({title: "Flat Structure", text: "Consider encapsulating logic in functions or classes for reusability."}); 
+            if(code.includes("import *")) issues.push({title: "Wildcard Import", text: "Avoid `from module import *`. Explicitly import what you need."});
+
+            if(issues.length === 0) { 
+                container.innerHTML = '<div class="ai-card"><div class="ai-title" style="color:#4ade80"><i class="fas fa-check-circle"></i> Clean Code</div><div class="ai-suggestion">Singularity finds no obvious issues.</div></div>'; 
+            } else { 
+                issues.forEach(issue => { 
+                    const div = document.createElement('div'); 
+                    div.className = 'ai-card'; 
+                    div.innerHTML = `<div class="ai-title"><i class="fas fa-exclamation-triangle"></i> ${issue.title}</div><div class="ai-suggestion">${issue.text}</div>`; 
+                    container.appendChild(div); 
+                }); 
+            } 
+        }
+
+        // Snake Game
+        function startSnakeGame() {
+            logToTerminal(">> Starting Snake...", "#4ade80");
+            const canvas = document.createElement('canvas');
+            canvas.width = 300; canvas.height = 150; canvas.style.border="1px solid #333";
+            canvas.style.marginTop="5px";
+            document.getElementById('console-out').appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+            let snake = [{x: 10, y: 10}]; let dx = 1, dy = 0; let food = {x: 15, y: 10};
+            const w = 10;
+            document.addEventListener('keydown', (e) => {
+                if(e.key==='ArrowUp' && dy===0) { dx=0; dy=-1; } if(e.key==='ArrowDown' && dy===0) { dx=0; dy=1; }
+                if(e.key==='ArrowLeft' && dx===0) { dx=-1; dy=0; } if(e.key==='ArrowRight' && dx===0) { dx=1; dy=0; }
+            });
+            const gameLoop = setInterval(() => {
+                const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+                snake.unshift(head);
+                if(head.x === food.x && head.y === food.y) { food = {x: Math.floor(Math.random()*29), y: Math.floor(Math.random()*14)}; } else { snake.pop(); }
+                if(head.x < 0 || head.x >= 30 || head.y < 0 || head.y >= 15) { clearInterval(gameLoop); logToTerminal("Game Over!", "#ef4444"); }
+                ctx.fillStyle = "#010409"; ctx.fillRect(0,0,300,150);
+                ctx.fillStyle = "#2f81f7"; snake.forEach(p => ctx.fillRect(p.x*w, p.y*w, w-1, w-1));
+                ctx.fillStyle = "#ef4444"; ctx.fillRect(food.x*w, food.y*w, w-1, w-1);
+            }, 100);
+        }
+
+        // Global Search
+        function performGlobalSearch() {
+            const term = document.getElementById('globalSearchInput').value.toLowerCase();
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '';
+            if(term.length < 2) return;
+            
+            Object.keys(files).forEach(fname => {
+                const lines = files[fname].content.split('\n');
+                lines.forEach((line, idx) => {
+                    if(line.toLowerCase().includes(term)) {
+                        const div = document.createElement('div');
+                        div.className = 'search-result';
+                        div.innerHTML = `<div class="search-file">${fname}</div><div class="search-line">${line.trim().substring(0, 50)}...</div>`;
+                        div.onclick = () => { switchFile(fname); editorInstance.revealLineInCenter(idx+1); editorInstance.setPosition({lineNumber:idx+1, column:1}); };
+                        container.appendChild(div);
+                    }
+                });
+            });
+        }
+
+        // Music Player
+        function toggleMusic() {
+            musicPlaying = !musicPlaying;
+            const el = document.getElementById('musicText');
+            if(musicPlaying) {
+                el.innerText = "Lofi Radio (On)";
+                el.style.color = "#4ade80";
+                showToast("Playing Lofi Beats...", "info");
+            } else {
+                el.innerText = "Lofi Radio (Off)";
+                el.style.color = "var(--status-bar-text)";
+            }
+        }
+        
+        // v10.1 NEW: Exam Mode
+        function toggleExamMode(active) {
+            const el = document.getElementById('examOverlay');
+            if(active) {
+                el.style.display = 'flex';
+                document.documentElement.requestFullscreen();
+            } else {
+                if(confirm("Are you sure you want to end the exam session? This will be logged.")) {
+                    el.style.display = 'none';
+                    if(document.exitFullscreen) document.exitFullscreen();
+                }
+            }
+        }
+
+        // GIT FUNCTIONS
+        function commitCode() {
+            const msg = document.getElementById('gitMsg').value;
+            if(!msg) return showToast("Enter a commit message", "error");
+            
+            const hash = Math.random().toString(16).substring(2, 8);
+            const timestamp = new Date().toLocaleString();
+            
+            gitHistory.unshift({
+                hash: hash,
+                message: msg,
+                time: timestamp,
+                files: JSON.parse(JSON.stringify(files)) 
+            });
+            
+            if(gitHistory.length > 20) gitHistory.pop(); 
+            
+            localStorage.setItem('lasu_git', JSON.stringify(gitHistory));
+            document.getElementById('gitMsg').value = '';
+            showToast(`Commited ${hash}`, "success");
+            renderGitList();
+        }
+
+        function renderGitList() {
+            const list = document.getElementById('gitList');
+            list.innerHTML = '';
+            if(gitHistory.length === 0) { list.innerHTML = '<div style="font-size:11px; color:var(--text-secondary); text-align:center; padding:10px;">No commits.</div>'; return; }
+            
+            gitHistory.forEach(commit => {
+                const item = document.createElement('div');
+                item.className = 'git-item';
+                item.innerHTML = `<div><span class="git-hash"><i class="fas fa-code-branch"></i> ${commit.hash}</span> <span class="git-time">${commit.time}</span></div><div class="git-msg">${commit.message}</div>`;
+                item.onclick = () => {
+                    if(confirm(`Rollback to ${commit.hash}? Unsaved changes will be lost.`)) {
+                        files = JSON.parse(JSON.stringify(commit.files));
+                        saveToStorage();
+                        switchFile(activeFile);
+                        showToast("Rolled back", "info");
+                    }
+                };
+                list.appendChild(item);
+            });
+        }
+
+        // AUDIO ENGINE
+        function toggleAmbientSound() {
+            if(!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const bufferSize = 4096;
+                const brownNoise = (function() {
+                    let lastOut = 0;
+                    const node = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+                    node.onaudioprocess = function(e) {
+                        const output = e.outputBuffer.getChannelData(0);
+                        for (let i = 0; i < bufferSize; i++) {
+                            const white = Math.random() * 2 - 1;
+                            output[i] = (lastOut + (0.02 * white)) / 1.02;
+                            lastOut = output[i];
+                            output[i] *= 3.5; 
+                        }
+                    }
+                    return node;
+                })();
+                
+                noiseNode = brownNoise;
+                noiseNode.connect(audioCtx.destination);
+                showToast("Focus Audio: ON", "success");
+                document.getElementById('noiseIcon').style.color = "#4ade80";
+            } else {
+                noiseNode.disconnect();
+                audioCtx.close();
+                audioCtx = null;
+                showToast("Focus Audio: OFF", "info");
+                document.getElementById('noiseIcon').style.color = "var(--text-secondary)";
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
+        window.runProject = function() {
+             if(!editorInstance) return;
+             logToTerminal(">> Executing...", 'var(--text-secondary)');
+             if(editorInstance.getValue().includes("input(")) logToTerminal("Interactive input() uses prompt.", "orange");
+             const selection = editorInstance.getModel().getValueInRange(editorInstance.getSelection());
+             const codeToRun = selection.trim().length > 0 ? selection : null;
+             pyWorker.postMessage({ type: 'RUN', files: files, code: codeToRun });
+        }
+        
+        window.deployProject = function() {
+            // 1. Get HTML Content (Always use the clean template source if available to fix corruption)
+            let html = PORTAL_HTML_TEMPLATE;
+
+            // 2. INTELLIGENT CSS FINDER
+            let cssContent = "";
+            const cssFile = Object.keys(files).find(f => f.endsWith('.css'));
+            if (cssFile) cssContent = files[cssFile].content;
+
+            if (cssContent) {
+                const styleTag = `<style>${cssContent}</style>`;
+                html = html.replace('</head>', `${styleTag}</head>`);
+            }
+
+            // --- FIX 1: INJECT RICH MOCK DATA ---
+            // BUG FIX: Removed replaceAll to prevent matrix explosion. Using split/join which is safer.
+            html = html.split('{{NAME}}').join('Tunde Oloyede'); 
+            html = html.split('{{MATRIC}}').join('230591342');
+            html = html.split('%%CGPA%%').join('4.52');
+            
+            // Remove any "leaked" top-level text if it still exists in the user's file content
+            html = html.replace(/^[^<]*/, '');
+
+            // Create Visual Mock Table Rows with Progress Bars
+            const mockRows = `
+                <tr><td>CSC 411</td><td>3</td><td><span style="color:#166534;background:#dcfce7;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">Completed</span></td><td>92</td></tr>
+                <tr><td>CSC 412</td><td>3</td><td><span style="color:#166534;background:#dcfce7;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">Completed</span></td><td>88</td></tr>
+                <tr><td>CSC 413</td><td>3</td><td><span style="color:#166534;background:#dcfce7;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">Completed</span></td><td>95</td></tr>
+                <tr><td>GNS 101</td><td>2</td><td><span style="color:#ca8a04;background:#fef9c3;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">Retake</span></td><td>35</td></tr>
+            `;
+            html = html.split('%%TABLE_ROWS%%').join(mockRows);
+
+            // MOCK SCHEDULE
+            const mockSchedule = `
+                <div class='timeline-item'><div class='time-col'>09:00</div><div class='info-col'><span class='info-title'>CSC 411</span><span class='info-desc'>Lecture Hall A</span></div></div>
+                <div class='timeline-item'><div class='time-col'>14:00</div><div class='info-col'><span class='info-title'>Project Def.</span><span class='info-desc'>AI Lab 3</span></div></div>
+            `;
+            html = html.split('%%SCHEDULE_ROWS%%').join(mockSchedule);
+
+            // Handle View Switching (Force Portal View)
+            html = html.replace('class="visible"', 'class="hidden"');
+            html = html.replace('id="main-portal" class="hidden"', 'id="main-portal" class="visible"');
+            
+            // --- FIX 2: CLEAN BASE64 INJECTION ---
+            const chartPlaceholder = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='; 
+            html = html.split('%%CHART_IMAGE%%').join(chartPlaceholder);
+            html = html.split('%%FEE_CHART%%').join(chartPlaceholder);
+
+            // 4. PREVIEW SIMULATOR SCRIPT
+            const previewScript = `
+            <script>
+                // INTERACTIVE PREVIEW LOGIC
+                function toggleTheme() {
+                    document.body.classList.toggle('dark-mode');
+                }
+
+                setTimeout(() => {
+                    const login = document.getElementById('login-screen');
+                    const portal = document.getElementById('main-portal');
+                    
+                    // Force display states
+                    if(login) login.style.display = 'none';
+                    if(portal) portal.style.display = 'flex';
+
+                    // Enhance Chart Area for Preview (Replace broken image with nice UI)
+                    const img = document.getElementById('chartImg');
+                    if(img && img.src.length < 1000) { // If it's the placeholder
+                        img.style.display = 'none'; 
+                        const box = document.querySelector('.chart-container');
+                        box.innerHTML = '<div style="padding:40px; text-align:center; color:#4f46e5; animation: pulse 2s infinite;"><i class="fas fa-chart-line" style="font-size:40px; margin-bottom:10px;"></i><br><b>Analytics Engine Active</b><br>Live Data Stream Ready</div>';
+                    }
+                    
+                    // Enhance Fee Chart
+                     const feeImg = document.getElementById('feeChart');
+                    if(feeImg && feeImg.src.length < 1000) { 
+                         feeImg.style.display = 'none';
+                         feeImg.parentNode.innerHTML = '<div style="padding:20px; text-align:center; color:#22c55e;"><i class="fas fa-wallet" style="font-size:30px; margin-bottom:5px;"></i><br><b>Finance Active</b></div>';
+                    }
+                }, 100); 
+            <\/script>`;
+            
+            html = html.replace('</body>', `${previewScript}</body>`);
+
+            // 5. Create Blob
+            const blob = new Blob([html], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            showToast("Deployed v10.1 Stable", "success");
+        }
+
+        window.installPackage = function() {
+            const pkg = document.getElementById('pkgName').value;
+            if(!pkg) return;
+            document.getElementById('packageModal').style.display='none';
+            logToTerminal(`>> Installing ${pkg}...`, "var(--text-secondary)");
+            pyWorker.postMessage({ type: 'INSTALL', package: pkg });
+        }
+        
+        window.runSQL = function() {
+            const query = document.getElementById('sqlInput').value;
+            if(!query) return;
+            document.getElementById('dbOutput').innerHTML = '<div style="padding:10px;text-align:center;">Executing...</div>';
+            pyWorker.postMessage({ type: 'SQL', query: query });
+        }
+
+        window.insertSampleSQL = function() {
+            const sample = `CREATE TABLE students (id INT, name TEXT, grade INT);
+INSERT INTO students VALUES (1, 'Tunde', 90);
+INSERT INTO students VALUES (2, 'Amaka', 85);
+INSERT INTO students VALUES (3, 'Emeka', 92);
+SELECT * FROM students;`;
+            document.getElementById('sqlInput').value = sample;
+        }
+
+        window.downloadCSV = function() {
+            if(!lastSqlResult || lastSqlResult.type !== 'data') return showToast("No data to export", "error");
+            let csv = lastSqlResult.columns.join(",") + "\n";
+            lastSqlResult.rows.forEach(row => { csv += row.join(",") + "\n"; });
+            saveAs(new Blob([csv], {type: "text/csv;charset=utf-8"}), "query_result.csv");
+        }
+
+        // --- HELPERS ---
+        function renderSqlResult(jsonStr) {
+            const res = JSON.parse(jsonStr);
+            const container = document.getElementById('dbOutput');
+            container.innerHTML = '';
+            if(res.status === 'error') { container.innerHTML = `<div style="padding:10px; color:#ef4444; font-family:monospace;">${res.msg}</div>`; return; }
+            if(res.type === 'action') { container.innerHTML = `<div style="padding:10px; color:var(--accent);"><i class="fas fa-check"></i> ${res.msg}</div>`; confetti({ particleCount: 30, spread: 30, origin: { x: 0.2, y: 0.5 } }); return; }
+            if(res.type === 'data') {
+                lastSqlResult = res; 
+                let html = '<table class="db-table"><thead><tr>';
+                res.columns.forEach(col => html += `<th>${col}</th>`);
+                html += '</tr></thead><tbody>';
+                res.rows.forEach(row => { html += '<tr>'; row.forEach(cell => html += `<td>${cell}</td>`); html += '</tr>'; });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+                showToast(`Fetched ${res.rows.length} rows`, "success");
+            }
+        }
+
+        // INTELLIGENT FOLDER RENDERING
+        function renderUI() {
+            const tabContainer = document.getElementById('tab-container'); tabContainer.innerHTML = '';
+            Object.keys(files).forEach(filename => {
+                const btn = document.createElement('div'); btn.className = `tab ${filename === activeFile ? 'active' : ''}`;
+                let iconClass = 'file'; if(filename.endsWith('.py')) iconClass='python'; else if(filename.endsWith('.html')) iconClass='html5'; else if(filename.endsWith('.md')) iconClass='markdown'; else if(filename.endsWith('.csv')) iconClass='table'; else if(filename.endsWith('.css')) iconClass='css3';
+                btn.innerHTML = `<i class="fab fa-${iconClass}" style="color: ${filename === activeFile ? 'var(--accent)' : 'var(--text-secondary)'}"></i> ${filename}`;
+                btn.onclick = () => switchFile(filename); tabContainer.appendChild(btn);
+            });
+            document.getElementById('crumb-filename').innerText = activeFile;
+            
+            // FOLDER LOGIC
+            const list = document.getElementById('fileList'); list.innerHTML = '';
+            const searchTerm = document.getElementById('fileSearch').value.toLowerCase();
+            const folders = {};
+            const looseFiles = [];
+
+            Object.keys(files).sort().forEach(filename => {
+                if(searchTerm && !filename.toLowerCase().includes(searchTerm)) return;
+                
+                if(filename.includes('/')) {
+                    // It's in a folder
+                    const parts = filename.split('/');
+                    const folderName = parts[0];
+                    if(!folders[folderName]) folders[folderName] = [];
+                    folders[folderName].push(filename);
+                } else {
+                    looseFiles.push(filename);
+                }
+            });
+
+            // Render Folders
+            for(const [folderName, fileArr] of Object.entries(folders)) {
+                const folderDiv = document.createElement('div');
+                folderDiv.className = 'folder-group';
+                folderDiv.innerHTML = `<div class="folder-header" onclick="this.nextElementSibling.classList.toggle('collapsed')"><i class="fas fa-chevron-down"></i> <i class="fas fa-folder" style="color:#fbbf24"></i> ${folderName}</div>`;
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'folder-content';
+                
+                fileArr.forEach(filename => {
+                      const item = createFileItem(filename);
+                      contentDiv.appendChild(item);
+                });
+                
+                folderDiv.appendChild(contentDiv);
+                list.appendChild(folderDiv);
+            }
+
+            // Render Loose Files
+            looseFiles.forEach(filename => {
+                list.appendChild(createFileItem(filename));
+            });
+
+            const addBtn = document.createElement('div'); addBtn.className = 'file-item'; addBtn.style.opacity = '0.7'; addBtn.style.marginTop = '10px';
+            addBtn.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><i class="fas fa-plus"></i> New File...</div>`;
+            addBtn.onclick = createNewFile; list.appendChild(addBtn);
+        }
+
+        function createFileItem(filename) {
+            const item = document.createElement('div'); item.className = `file-item ${filename === activeFile ? 'active' : ''}`;
+            let iconClass = 'file'; if(filename.endsWith('.py')) iconClass='python'; else if(filename.endsWith('.html')) iconClass='html5'; else if(filename.endsWith('.md')) iconClass='markdown'; else if(filename.endsWith('.csv')) iconClass='table'; else if(filename.endsWith('.css')) iconClass='css3';
+            // Show only the file part if it's in a folder
+            const displayName = filename.includes('/') ? filename.split('/').pop() : filename;
+            
+            item.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><i class="fab fa-${iconClass}" class="file-icon"></i> ${displayName}</div>`;
+            item.onclick = () => switchFile(filename);
+            item.oncontextmenu = (e) => { e.preventDefault(); ctxTargetFile = filename; const m = document.getElementById('contextMenu'); m.style.display = 'flex'; m.style.left = e.pageX + 'px'; m.style.top = e.pageY + 'px'; };
+            return item;
+        }
+        
+        function promptNewFolder() {
+             const name = prompt("Folder Name:");
+             if(name) {
+                 // Create dummy file to hold folder
+                 files[name + '/.keep'] = { content: "", language: "plaintext" };
+                 saveToStorage(); renderUI();
+             }
+        }
+
+        function createNewFile() {
+            const name = prompt("Filename (e.g. data.py):");
+            if(name && !files[name]) {
+                files[name] = { content: "# New file", language: 'python' };
+                activeFile = name;
+                saveToStorage(); renderUI(); switchFile(name);
+            }
+        }
+
+        function switchFile(filename) { 
+            if (!files[filename]) return; activeFile = filename; 
+            if (filename.endsWith('.py') || filename.endsWith('.js') || filename.endsWith('.css') || filename.endsWith('.csv')) { editorInstance.setValue(files[filename].content); }
+            else { files[filename].content = files[filename].content; } 
+            localStorage.setItem('lasu_active_file', activeFile); handleFileSwitchEffect(filename); updateStats(); renderUI(); 
+        }
+
+        function logToTerminal(txt, color) { const div = document.createElement('div'); div.style.color = color; div.style.marginBottom = '4px'; div.innerText = txt; const t = document.getElementById('console-out'); t.appendChild(div); t.scrollTop = t.scrollHeight; }
+        function showToast(msg, type) { const container = document.getElementById('toastContainer'); const toast = document.createElement('div'); toast.className = 'toast'; toast.innerHTML = `<i class="fas ${type=='error'?'fa-times':(type=='success'?'fa-check':'fa-info-circle')}" style="color:var(--accent)"></i> ${msg}`; container.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
+        function toggleSettings(show) { document.getElementById('settingsModal').style.display = show ? 'flex' : 'none'; }
+        
+        function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); setTimeout(updateClock, 1000); }
+        function updateMemory() { if (performance && performance.memory) { const used = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024); } }
+        function toggleZenMode() { document.body.classList.toggle('zen-mode'); editorInstance.layout(); }
+        
+        // Matrix
+        const matrixCanvas = document.getElementById('matrixCanvas'); const matrixCtx = matrixCanvas.getContext('2d'); let matrixInterval;
+        function toggleMatrix() { const enabled = document.getElementById('matrixToggle').checked; if(enabled) { document.body.classList.add('matrix-mode'); startMatrix(); } else { document.body.classList.remove('matrix-mode'); clearInterval(matrixInterval); matrixCtx.clearRect(0, 0, matrixCanvas.width, matrixCanvas.height); } }
+        function startMatrix() { matrixCanvas.width = window.innerWidth; matrixCanvas.height = window.innerHeight; const katakana = '01'; const fontSize = 14; const columns = matrixCanvas.width/fontSize; const drops = Array(Math.floor(columns)).fill(1); matrixInterval = setInterval(() => { matrixCtx.fillStyle = 'rgba(0, 0, 0, 0.05)'; matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height); matrixCtx.fillStyle = '#0F0'; matrixCtx.font = fontSize + 'px monospace'; for(let i = 0; i < drops.length; i++) { const text = katakana.charAt(Math.floor(Math.random() * katakana.length)); matrixCtx.fillText(text, i*fontSize, drops[i]*fontSize); if(drops[i]*fontSize > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; } }, 33); }
+
+        function clearConsole() { document.getElementById('console-out').innerHTML = ''; }
+        function switchSidebar(view) { document.querySelectorAll('.activity-icon').forEach(el => el.classList.remove('active')); document.querySelectorAll('.sidebar-view').forEach(el => el.classList.remove('active')); document.getElementById('act-'+view).classList.add('active'); document.getElementById('view-'+view).classList.add('active'); }
+        function updateStats() { const code = editorInstance.getValue(); const lines = code.split('\n').length; const size = new Blob([code]).size; }
+        function calcWPM() { const now = Date.now(); if (now - lastCharTime > 2000) charCount = 0; charCount++; lastCharTime = now; }
+
+        // Sidebar Resizer
+        function initSidebarResizer() { const resizer = document.getElementById('sidebarResizer'); const sidebar = document.getElementById('sidebar'); let isResizing = false; resizer.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'ew-resize'; }); document.addEventListener('mousemove', (e) => { if (!isResizing) return; const newWidth = e.clientX - 48; if (newWidth > 150 && newWidth < 500) { sidebar.style.width = newWidth + 'px'; editorInstance.layout(); } }); document.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; }); }
+        function initResizer() { const resizer = document.getElementById('resizer'); const terminal = document.getElementById('terminal'); let isResizing = false; resizer.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'ns-resize'; }); document.addEventListener('mousemove', (e) => { if (!isResizing) return; const newHeight = window.innerHeight - e.clientY; if (newHeight > 28 && newHeight < 600) { terminal.style.height = newHeight + 'px'; editorInstance.layout(); } }); document.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; }); }
+        function toggleTerminal() { const t = document.getElementById('terminal'); t.style.height = t.style.height === '32px' ? '220px' : '32px'; }
+
+        // Whiteboard
+        const wbCanvas = document.getElementById('wbCanvas'); const wbCtx = wbCanvas.getContext('2d'); let drawing = false; wbCanvas.width = 240; wbCanvas.height = 300; wbCtx.strokeStyle = "#ffffff"; wbCtx.lineWidth = 2;
+        wbCanvas.addEventListener('mousedown', (e) => { drawing = true; wbCtx.beginPath(); wbCtx.moveTo(e.offsetX, e.offsetY); });
+        wbCanvas.addEventListener('mousemove', (e) => { if(drawing) { wbCtx.lineTo(e.offsetX, e.offsetY); wbCtx.stroke(); } });
+        wbCanvas.addEventListener('mouseup', () => { drawing = false; });
+        function clearCanvas() { wbCtx.clearRect(0, 0, wbCanvas.width, wbCanvas.height); }
+        document.getElementById('penColor').addEventListener('input', (e) => wbCtx.strokeStyle = e.target.value);
+
+        // Drag Drop
+        function initDragDrop() {
+            const overlay = document.getElementById('dragOverlay');
+            document.body.addEventListener('dragover', (e) => { e.preventDefault(); overlay.style.display = 'flex'; });
+            document.body.addEventListener('dragleave', (e) => { e.preventDefault(); if(e.target === overlay) overlay.style.display = 'none'; });
+            document.body.addEventListener('drop', (e) => { e.preventDefault(); overlay.style.display = 'none'; handleFileUploadPro(e.dataTransfer); });
+        }
+        function handleFileUploadPro(input) {
+             const file = input.files ? input.files[0] : null;
+             if (file) {
+                 const reader = new FileReader();
+                 reader.onload = (ev) => {
+                     const content = ev.target.result;
+                     if(file.name.endsWith('.csv')) {
+                         const tableName = file.name.replace('.csv', '').replace(/\W/g, '');
+                         switchSidebar('database');
+                         showToast(`Importing ${tableName}...`, "info");
+                         const w = window.pyWorkerGlobal;
+                         if(w) w.postMessage({type:'IMPORT_CSV', tableName: tableName, content: content});
+                     }
+                     files[file.name] = { content: content, language: 'python' };
+                     saveToStorage();
+                     if(!file.name.endsWith('.csv')) { switchFile(file.name); showToast("File Dropped", "success"); }
+                 };
+                 reader.readAsText(file);
+            }
+        }
+
+        function changeTheme(themeName) { const root = document.documentElement; root.removeAttribute('data-theme'); if (themeName !== 'dark') root.setAttribute('data-theme', themeName); monaco.editor.setTheme(themeName === 'light' ? 'vs' : 'vs-dark'); localStorage.setItem('lasu_theme', themeName); }
+        function changeFontSize(delta) { let size = editorInstance.getOption(monaco.editor.EditorOption.fontSize); size = Math.max(10, Math.min(30, size + delta)); editorInstance.updateOptions({ fontSize: size }); document.getElementById('fontDisplay').innerText = size; }
+        function changeAccent(color) { document.documentElement.style.setProperty('--accent', color); document.documentElement.style.setProperty('--status-bar-bg', color); localStorage.setItem('lasu_accent', color); }
+        function togglePower() { powerMode = document.getElementById('powerToggle').checked; }
+        function toggleSound() { soundEnabled = document.getElementById('soundToggle').checked; }
+        function renameFileCtx() { if(!ctxTargetFile) return; const newName = prompt("Rename to:", ctxTargetFile); if(newName && newName !== ctxTargetFile && !files[newName]) { files[newName] = files[ctxTargetFile]; delete files[ctxTargetFile]; if(activeFile === ctxTargetFile) activeFile = newName; saveToStorage(); switchFile(newName); } }
+        function duplicateFileCtx() { const newName = "copy_" + ctxTargetFile; files[newName] = { ...files[ctxTargetFile] }; saveToStorage(); renderUI(); }
+        function downloadFileCtx() { const blob = new Blob([files[ctxTargetFile].content], {type: "text/plain"}); saveAs(blob, ctxTargetFile); }
+        function deleteFileCtx() { if (Object.keys(files).length <= 1) return showToast("Cannot delete last file", "error"); if (confirm(`Delete ${ctxTargetFile}?`)) { delete files[ctxTargetFile]; if (activeFile === ctxTargetFile) { activeFile = Object.keys(files)[0]; editorInstance.setValue(files[activeFile].content); } saveToStorage(); renderUI(); } }
+        
+        function handleFileSwitchEffect(filename) {
+            const monacoEl = document.getElementById('monaco-root');
+            const previewEl = document.getElementById('preview-pane');
+            const frameEl = document.getElementById('html-frame');
+            
+            // In split view, we don't hide monaco. We just update the right pane
+            if(!splitViewActive) {
+                monacoEl.style.display = 'block'; previewEl.style.display = 'none'; frameEl.style.display = 'none'; previewEl.classList.remove('active');
+            }
+            
+            if (filename.endsWith('.md')) { 
+                 if(!splitViewActive) monacoEl.style.display = 'none'; 
+                 previewEl.style.display = 'block'; previewEl.classList.add('active'); renderMarkdown(); 
+            } 
+            else if (filename.endsWith('.html')) { 
+                 if(!splitViewActive) monacoEl.style.display = 'none';
+                 frameEl.style.display = 'block'; renderHTML(); 
+            } 
+            else {
+                const model = editorInstance.getModel();
+                let lang = 'python'; if(filename.endsWith('.js')) lang='javascript'; if(filename.endsWith('.css')) lang='css'; if(filename.endsWith('.csv')) lang='plaintext';
+                monaco.editor.setModelLanguage(model, lang);
+            }
+        }
+        function renderMarkdown() { const md = files[activeFile].content; document.getElementById('preview-pane').innerHTML = marked.parse(md); }
+        function renderHTML() { const html = files[activeFile].content; document.getElementById('html-frame').srcdoc = html; }
+        function checkImports(code) {
+            const importRegex = /^import\s+(\w+)|^from\s+(\w+)/gm; let match;
+            while ((match = importRegex.exec(code)) !== null) {
+                const pkg = match[1] || match[2];
+                if (pkg && !installedPackages.has(pkg) && ['numpy', 'pandas', 'matplotlib'].includes(pkg)) { showToast(`Tip: Install '${pkg}' in Packages`, "info"); }
+            }
+        }
+        function updateOutline() {
+            const code = editorInstance.getValue(); 
+        }
+        function renderVariables(vars) { const container = document.getElementById('variableList'); if(container) { container.innerHTML = ''; for (const [name, val] of Object.entries(vars)) { const div = document.createElement('div'); div.className = 'var-item'; const parts = val.split(": "); const type = parts[0]; const value = parts.slice(1).join(": "); div.innerHTML = `<div><span class="var-name">${name}</span><span class="var-type">${type}</span></div><span class="var-value">${value}</span>`; container.appendChild(div); } } }
+        function updateDetailedStats() {
+            const container = document.getElementById('detailedStats');
+            let totalLines = 0; let totalChars = 0; let pyFiles = 0;
+            Object.keys(files).forEach(f => { totalLines += files[f].content.split('\n').length; totalChars += files[f].content.length; if(f.endsWith('.py')) pyFiles++; });
+            container.innerHTML = `<div class="stat-box"><div class="stat-label"><span>Total Lines</span><span>${totalLines}</span></div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:100%"></div></div></div><div class="stat-box"><div class="stat-label"><span>Characters</span><span>${totalChars}</span></div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:80%; background:#22c55e"></div></div></div><div class="stat-box"><div class="stat-label"><span>Python Files</span><span>${pyFiles}</span></div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${(pyFiles/Object.keys(files).length)*100}%; background:#3b82f6"></div></div></div>`;
+        }
+        function zoomUI(delta) { uiScale += delta; if(uiScale < 0.7) uiScale = 0.7; if(uiScale > 1.5) uiScale = 1.5; document.documentElement.style.setProperty('--ui-scale', uiScale); editorInstance.layout(); }
+        function takeScreenshot() { html2canvas(document.body).then(canvas => { const link = document.createElement('a'); link.download = 'apex_v10_snap.png'; link.href = canvas.toDataURL(); link.click(); showToast("Screenshot Saved", "success"); }); }
+        function openDiffModal() { document.getElementById('diffModal').style.display = 'flex'; if(!diffEditorInstance) { diffEditorInstance = monaco.editor.createDiffEditor(document.getElementById('diffContainer'), { theme: 'vs-dark', automaticLayout: true, readOnly: true }); } const originalModel = monaco.editor.createModel(files[activeFile].content, 'python'); const modifiedModel = monaco.editor.createModel(editorInstance.getValue(), 'python'); diffEditorInstance.setModel({ original: originalModel, modified: modifiedModel }); }
+        function generateShareLink() { const json = JSON.stringify(files); const compressed = LZString.compressToEncodedURIComponent(json); const url = window.location.origin + window.location.pathname + "#share=" + compressed; document.getElementById('shareInput').value = url; document.getElementById('shareModal').style.display = 'flex'; }
+        function copyShareLink() { const input = document.getElementById('shareInput'); input.select(); document.execCommand('copy'); showToast("Link Copied", "success"); document.getElementById('shareModal').style.display='none'; }
+        function startDictation() { if (window.webkitSpeechRecognition) { const recognition = new window.webkitSpeechRecognition(); recognition.continuous = false; recognition.interimResults = false; recognition.lang = "en-US"; showToast("Listening...", "info"); recognition.start(); recognition.onresult = function(event) { const text = event.results[0][0].transcript; const selection = editorInstance.getSelection(); editorInstance.executeEdits("voice", [{ range: selection, text: " # " + text, forceMoveMarkers: true }]); showToast("Inserted: " + text, "success"); }; } else { alert("Voice dictation not supported."); } }
+        function formatCode() { editorInstance.getAction('editor.action.formatDocument').run(); showToast("Code Formatted", "info"); }
+        function toggleSpotlight() { const el = document.getElementById('spotlightOverlay'); if(el.style.display === 'flex') { el.style.display = 'none'; } else { el.style.display = 'flex'; document.getElementById('spotlightInput').focus(); filterSpotlight(); } }
+        function filterSpotlight() { const term = document.getElementById('spotlightInput').value.toLowerCase(); const list = document.getElementById('spotlightList'); list.innerHTML = ''; Object.keys(files).forEach(f => { if(f.toLowerCase().includes(term)) { const div = document.createElement('div'); div.className = 'spotlight-item'; div.innerHTML = `<i class="fas fa-file-code"></i> ${f}`; div.onclick = () => { switchFile(f); toggleSpotlight(); }; list.appendChild(div); } }); }
+        function forceRestore() { if(confirm("Force Restore will reset your files to defaults. Continue?")) { localStorage.removeItem('lasu_project_v10_1_stable'); localStorage.removeItem('lasu_git'); location.reload(); } }
+        function insertSnippet(type) { 
+            let txt = ""; 
+            if(type==='plot') txt = `import matplotlib.pyplot as plt\nimport numpy as np\nx = np.linspace(0,10,100)\nplt.plot(x, np.sin(x))\nplotter.show()`; 
+            if(type==='flask') txt = `from flask import Flask\napp = Flask(__name__)\n@app.route('/')\ndef home(): return "Hello LASU"\n# Note: Flask runs in mock mode here`; 
+            if(type==='sqlite') txt = `import sqlite3\nconn = sqlite3.connect(':memory:')\nc = conn.cursor()\nc.execute('CREATE TABLE test (id INT, val TEXT)')`; 
+            if(type==='unit') txt = `import unittest\nclass Test(unittest.TestCase):\n\tdef test_one(self):\n\t\tself.assertEqual(1, 1)`; 
+            if(type==='pandas') txt = `import pandas as pd\ndf = pd.DataFrame({'A': [1,2,3], 'B': [4,5,6]})\nprint(df.describe())`;
+            editorInstance.trigger('keyboard', 'type', {text: txt}); 
+        }
+        window.saveToStorage = function() { localStorage.setItem('lasu_project_v10_1_stable', JSON.stringify(files)); localStorage.setItem('lasu_active_file', activeFile); document.getElementById('save-status').innerHTML = '<i class="fas fa-check"></i> Saved'; document.querySelector('.tab.active').classList.remove('dirty'); }
+
+    </script>
+</body>
+</html>

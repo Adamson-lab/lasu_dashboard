@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAML to JSON Converter | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --bg-light: #f4f7f6;
+            --editor-bg: #ffffff;
+            --editor-fg: #2c3e50;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        /* Split Screen Layout */
+        .split-container {
+            flex: 1;
+            display: flex;
+            padding: 1rem;
+            gap: 1rem;
+            height: calc(100vh - 70px); /* Fill remaining height */
+        }
+
+        .editor-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .pane-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        textarea {
+            flex-grow: 1;
+            border: none;
+            resize: none;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            width: 100%;
+            outline: none;
+            background-color: var(--editor-bg);
+            color: var(--editor-fg);
+        }
+        textarea:focus { background-color: #fefefe; }
+        
+        /* Middle Action Bar (Vertical on Desktop) */
+        .action-bar {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 10px;
+            width: 60px;
+            align-items: center;
+        }
+
+        .convert-btn {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--lasu-green);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .convert-btn:hover { transform: scale(1.1); background: #00382e; color: white; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .split-container { flex-direction: column; height: auto; }
+            .editor-pane { height: 40vh; }
+            .action-bar { flex-direction: row; width: 100%; padding: 10px; }
+            .convert-btn { transform: rotate(90deg); }
+        }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 99;
+            display: none; min-width: 250px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">DEVOPS TOOLS</span>
+    </div>
+</nav>
+
+<div class="split-container">
+    
+    <div class="editor-pane">
+        <div class="pane-header">
+            <span><i class="fab fa-markdown me-2 text-danger"></i>YAML Input</span>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-light border" onclick="pasteClip()" title="Paste">
+                    <i class="fas fa-paste"></i>
+                </button>
+                <button class="btn btn-sm btn-light border" onclick="clearAll()" title="Clear">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <textarea id="yamlInput" placeholder="version: '3'&#10;services:&#10;  web:&#10;    image: nginx:latest" spellcheck="false"></textarea>
+    </div>
+
+    <div class="action-bar">
+        <button class="convert-btn" onclick="convertYaml()" title="Convert YAML to JSON">
+            <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <div class="editor-pane">
+        <div class="pane-header">
+            <span><i class="fas fa-code me-2 text-primary"></i>JSON Output</span>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-light border" onclick="copyJson()" title="Copy JSON">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="btn btn-sm btn-light border" onclick="downloadJson()" title="Download .json">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+        </div>
+        <textarea id="jsonOutput" readonly placeholder="{ ... }" style="background:#fafafa;"></textarea>
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+
+<script>
+    const yamlInput = document.getElementById('yamlInput');
+    const jsonOutput = document.getElementById('jsonOutput');
+    const toastBox = document.getElementById('toastBox');
+
+    // Auto-convert on typing (with debounce)
+    let timeout = null;
+    yamlInput.addEventListener('input', () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(convertYaml, 800); // Wait 800ms after typing stops
+    });
+
+    function convertYaml() {
+        const raw = yamlInput.value.trim();
+        if (!raw) return;
+
+        try {
+            // Use the jsyaml library loaded from CDN
+            const obj = jsyaml.load(raw);
+            const jsonStr = JSON.stringify(obj, null, 4); // 4 spaces indent
+            jsonOutput.value = jsonStr;
+            showToast('Converted successfully!', 'success');
+        } catch (e) {
+            jsonOutput.value = ""; // Clear output if invalid
+            showToast('Invalid YAML: ' + e.reason, 'danger');
+        }
+    }
+
+    // --- Utilities ---
+
+    async function pasteClip() {
+        try {
+            const text = await navigator.clipboard.readText();
+            yamlInput.value = text;
+            convertYaml();
+        } catch(err) { showToast('Clipboard access denied', 'warning'); }
+    }
+
+    function copyJson() {
+        if(!jsonOutput.value) return;
+        jsonOutput.select();
+        document.execCommand('copy');
+        showToast('JSON copied to clipboard!', 'success');
+    }
+
+    function clearAll() {
+        yamlInput.value = '';
+        jsonOutput.value = '';
+        yamlInput.focus();
+    }
+
+    function downloadJson() {
+        if(!jsonOutput.value) return;
+        const blob = new Blob([jsonOutput.value], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'config.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function showToast(msg, type='info') {
+        toastBox.innerText = msg;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

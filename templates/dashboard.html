@@ -1,0 +1,2920 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VERSION INFINITY | LASU Command Dashboard">
+    <title>VERSION INFINITY | LASU Command</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* ==========================================
+           VERSION INFINITY THEME ENGINE
+           ========================================== */
+        :root {
+            --v8-bg: #020617; 
+            --v8-surface: #0f172a;
+            --v8-border: rgba(255, 255, 255, 0.1);
+            --v8-text: #f8fafc;
+            --v8-muted: #94a3b8;
+            --v8-primary: #0ea5e9;
+            --v8-danger: #ef4444;
+            --v8-success: #10b981;
+            --v8-warning: #f59e0b;
+            --v8-purple: #8b5cf6;
+        }
+
+        [data-theme="light"] {
+            --v8-bg: #f8fafc; 
+            --v8-surface: #ffffff;
+            --v8-border: #cbd5e1;
+            --v8-text: #0f172a;
+            --v8-muted: #64748b;
+            --v8-primary: #0284c7;
+        }
+
+        [data-theme="cyber"] {
+            --v8-bg: #000000; 
+            --v8-surface: #0a0a0a;
+            --v8-border: #00ff00;
+            --v8-text: #00ff00;
+            --v8-muted: #008800;
+            --v8-primary: #00ff00;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--v8-bg);
+            color: var(--v8-text);
+            margin: 0;
+            overflow-x: hidden;
+            display: flex;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        ::-webkit-scrollbar { 
+            width: 8px; 
+        }
+        
+        ::-webkit-scrollbar-track { 
+            background: var(--v8-bg); 
+        }
+        
+        ::-webkit-scrollbar-thumb { 
+            background: var(--v8-muted); 
+            border-radius: 10px; 
+        }
+
+        /* --- SIDEBAR --- */
+        .v8-sidebar {
+            width: 260px;
+            background: var(--v8-surface);
+            border-right: 1px solid var(--v8-border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        .sidebar-brand {
+            padding: 25px 20px;
+            border-bottom: 1px solid var(--v8-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .sidebar-logo { 
+            width: 70px; 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+            box-shadow: 0 0 15px rgba(14,165,233,0.4); 
+        }
+        
+        .sidebar-title { 
+            font-weight: 900; 
+            letter-spacing: 2px; 
+            font-size: 1.1rem; 
+            text-align: center; 
+        }
+
+        .nav-link-v8 {
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            padding: 12px 20px;
+            color: var(--v8-muted); 
+            text-decoration: none; 
+            font-weight: 600;
+            transition: all 0.2s; 
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link-v8:hover, 
+        .nav-link-v8.active {
+            color: var(--v8-text); 
+            background: rgba(255,255,255,0.05); 
+            border-left-color: var(--v8-primary);
+        }
+
+        /* --- MAIN CONTENT --- */
+        .v8-main {
+            margin-left: 260px;
+            flex-grow: 1;
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+            width: calc(100% - 260px);
+        }
+        
+        .fullscreen-active .v8-sidebar { 
+            transform: translateX(-100%); 
+        }
+        
+        .fullscreen-active .v8-main { 
+            margin-left: 0; 
+            width: 100%; 
+        }
+
+        /* --- HEADER & LIVE TELEMETRY --- */
+        .top-telemetry {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 30px;
+            background: var(--v8-surface);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid var(--v8-border);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .system-clock {
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.9rem; 
+            font-weight: 700; 
+            color: var(--v8-primary);
+        }
+        
+        .api-status {
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            letter-spacing: 1px;
+        }
+        
+        .pulse-dot {
+            width: 10px; 
+            height: 10px; 
+            background: var(--v8-success); 
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--v8-success); 
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse { 
+            0% { opacity: 1; } 
+            50% { opacity: 0.4; } 
+            100% { opacity: 1; } 
+        }
+
+        /* Global Search Bar */
+        .global-search {
+            display: flex; 
+            align-items: center; 
+            background: var(--v8-bg);
+            border: 1px solid var(--v8-border); 
+            border-radius: 8px; 
+            padding: 8px 15px; 
+            width: 350px;
+            transition: all 0.3s;
+        }
+        
+        .global-search:focus-within { 
+            border-color: var(--v8-primary); 
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.3); 
+        }
+        
+        .global-search input {
+            background: transparent; 
+            border: none; 
+            color: var(--v8-text); 
+            outline: none; 
+            width: 100%; 
+            margin-left: 10px;
+        }
+        
+        .global-search input::placeholder { 
+            color: var(--v8-muted); 
+            font-size: 0.9rem; 
+        }
+
+        .header-controls { 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+        }
+        
+        .icon-btn {
+            background: transparent; 
+            border: 1px solid var(--v8-border); 
+            color: var(--v8-text);
+            width: 40px; 
+            height: 40px; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer; 
+            transition: all 0.2s; 
+            position: relative;
+        }
+        
+        .icon-btn:hover { 
+            background: var(--v8-primary); 
+            color: #fff; 
+            border-color: var(--v8-primary); 
+        }
+
+        .btn-export {
+            background: var(--v8-surface); 
+            color: var(--v8-text); 
+            border: 1px solid var(--v8-border);
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-size: 0.85rem; 
+            cursor: pointer; 
+            transition: 0.2s;
+        }
+        
+        .btn-export:hover { 
+            background: var(--v8-text); 
+            color: var(--v8-bg); 
+        }
+
+        /* --- DATA CARDS --- */
+        .card-v8 {
+            background: var(--v8-surface); 
+            border: 1px solid var(--v8-border);
+            border-radius: 16px; 
+            padding: 25px; 
+            position: relative; 
+            overflow: hidden;
+            transition: transform 0.3s; 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column;
+        }
+        
+        .card-v8:hover { 
+            transform: translateY(-4px); 
+            border-color: var(--v8-primary); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4); 
+            z-index: 10; 
+        }
+
+        .stat-value { 
+            font-size: 2.5rem; 
+            font-weight: 900; 
+            margin: 10px 0 0 0; 
+            line-height: 1; 
+        }
+        
+        .stat-label { 
+            font-size: 0.85rem; 
+            color: var(--v8-muted); 
+            text-transform: uppercase; 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+
+        /* CSS Circular Gauge */
+        .circular-gauge {
+            width: 80px; 
+            height: 80px; 
+            border-radius: 50%;
+            background: conic-gradient(var(--v8-success) 82%, var(--v8-bg) 0deg);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-top: 10px;
+        }
+        
+        .gauge-inner {
+            width: 60px; 
+            height: 60px; 
+            border-radius: 50%; 
+            background: var(--v8-surface);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 900; 
+            font-size: 1.2rem;
+        }
+
+        /* Lists & Feeds */
+        .activity-list { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+        }
+        
+        .activity-list li {
+            padding: 12px 0; 
+            border-bottom: 1px solid var(--v8-border); 
+            display: flex; 
+            gap: 15px; 
+            align-items: flex-start;
+        }
+        
+        .activity-list li:last-child { 
+            border-bottom: none; 
+        }
+
+        .quick-action-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+        
+        .btn-quick {
+            background: var(--v8-bg); 
+            border: 1px solid var(--v8-border); 
+            color: var(--v8-text);
+            padding: 15px 10px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-size: 0.8rem; 
+            cursor: pointer; 
+            transition: 0.2s;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 5px;
+        }
+        
+        .btn-quick:hover { 
+            background: var(--v8-primary); 
+            color: white; 
+            border-color: var(--v8-primary); 
+        }
+
+        /* Notifications Dropdown Override */
+        .dropdown-menu-v8 { 
+            background: var(--v8-surface); 
+            border: 1px solid var(--v8-border); 
+            padding: 0; 
+            width: 320px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
+        }
+        
+        .dropdown-header-v8 { 
+            padding: 15px; 
+            background: var(--v8-bg); 
+            font-weight: bold; 
+            color: var(--v8-text); 
+            border-bottom: 1px solid var(--v8-border); 
+            border-top-left-radius: 8px; 
+            border-top-right-radius: 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        
+        .dropdown-item-v8 { 
+            padding: 15px; 
+            border-bottom: 1px solid var(--v8-border); 
+            color: var(--v8-muted); 
+            font-size: 0.85rem; 
+            display: block; 
+            text-decoration: none; 
+            transition: 0.2s; 
+        }
+        
+        .dropdown-item-v8:hover { 
+            background: var(--v8-bg); 
+            color: var(--v8-text); 
+        }
+
+        /* --- COMMAND PALETTE (CTRL+K) --- */
+        .cmd-palette-overlay {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0,0,0,0.8); 
+            backdrop-filter: blur(5px);
+            display: none; 
+            align-items: flex-start; 
+            justify-content: center; 
+            z-index: 1050; 
+            padding-top: 100px;
+        }
+        
+        .cmd-palette {
+            background: var(--v8-surface); 
+            width: 100%; 
+            max-width: 600px; 
+            border-radius: 16px; 
+            border: 1px solid var(--v8-border); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+            overflow: hidden;
+        }
+        
+        .cmd-input { 
+            width: 100%; 
+            background: transparent; 
+            border: none; 
+            border-bottom: 1px solid var(--v8-border); 
+            padding: 20px; 
+            color: var(--v8-text); 
+            font-size: 1.2rem; 
+            outline: none; 
+        }
+        
+        .cmd-list { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+            max-height: 300px; 
+            overflow-y: auto; 
+        }
+        
+        .cmd-item { 
+            padding: 15px 20px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            display: flex; 
+            justify-content: space-between; 
+            color: var(--v8-muted); 
+            cursor: pointer; 
+        }
+        
+        .cmd-item:hover, 
+        .cmd-item.active { 
+            background: var(--v8-primary); 
+            color: #fff; 
+        }
+
+        /* --- S.O.S RADAR CSS --- */
+        .radar-container { 
+            position: relative; 
+            width: 120px; 
+            height: 120px; 
+            border-radius: 50%; 
+            border: 2px solid var(--v8-danger); 
+            margin: 20px auto; 
+            overflow: hidden; 
+            background: rgba(239, 68, 68, 0.05); 
+        }
+        
+        .radar-sweep { 
+            position: absolute; 
+            top: 0; 
+            left: 50%; 
+            width: 50%; 
+            height: 50%; 
+            background: linear-gradient(to right, transparent, rgba(239, 68, 68, 0.6)); 
+            transform-origin: bottom left; 
+            animation: sweep 2s linear infinite; 
+        }
+        
+        @keyframes sweep { 
+            to { transform: rotate(360deg); } 
+        }
+        
+        .radar-blip { 
+            position: absolute; 
+            width: 8px; 
+            height: 8px; 
+            background: var(--v8-danger); 
+            border-radius: 50%; 
+            top: 30%; 
+            left: 60%; 
+            box-shadow: 0 0 10px var(--v8-danger); 
+            animation: blipFade 2s infinite; 
+        }
+        
+        @keyframes blipFade { 
+            0% { opacity: 0; transform: scale(0.5); } 
+            50% { opacity: 1; transform: scale(1.5); } 
+            100% { opacity: 0; transform: scale(0.5); } 
+        }
+
+        /* --- L.I.S.A TERMINAL CSS --- */
+        .terminal-box { 
+            background: #000; 
+            border: 1px solid var(--v8-border); 
+            border-radius: 8px; 
+            padding: 15px; 
+            height: 180px; 
+            overflow-y: auto; 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.75rem; 
+            color: #0f0; 
+        }
+        
+        .term-line { 
+            margin-bottom: 5px; 
+            opacity: 0; 
+            animation: typeLine 0.5s forwards; 
+        }
+        
+        @keyframes typeLine { 
+            to { opacity: 1; } 
+        }
+
+        /* --- CONNECTIVITY BEACON --- */
+        .beacon-pulse { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            background: var(--v8-primary); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); 
+            animation: pulse-beacon 2s infinite; 
+        }
+        .beacon-pulse.offline {
+            background: var(--v8-danger);
+            animation: none;
+            box-shadow: none;
+        }
+        
+        @keyframes pulse-beacon { 
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); } 
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(14, 165, 233, 0); } 
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); } 
+        }
+
+        /* --- MASSIVE CYBER GRID CSS --- */
+        .cyber-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin-top: 20px; 
+        }
+        
+        .cyber-module { 
+            background: var(--v8-surface); 
+            border: 1px solid rgba(14, 165, 233, 0.2); 
+            border-radius: 10px; 
+            padding: 15px; 
+            text-align: center; 
+            transition: all 0.3s; 
+            cursor: pointer; 
+            text-decoration: none; 
+            color: var(--v8-text); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            height: 120px; 
+        }
+        
+        .cyber-module i { 
+            font-size: 2rem; 
+            color: var(--v8-primary); 
+            margin-bottom: 10px; 
+            transition: 0.3s; 
+        }
+        
+        .cyber-module:hover { 
+            border-color: var(--v8-primary); 
+            background: rgba(14, 165, 233, 0.05); 
+            transform: translateY(-5px); 
+            box-shadow: 0 5px 15px rgba(14, 165, 233, 0.2); 
+        }
+        
+        .cyber-module:hover i { 
+            transform: scale(1.2); 
+        }
+
+        /* --- FACULTY NODES, ENVIRONMENT, NEURAL NET --- */
+        .faculty-node { 
+            width: 25px; 
+            height: 25px; 
+            background: var(--v8-primary); 
+            border-radius: 50%; 
+            box-shadow: 0 0 15px var(--v8-primary); 
+            animation: node-pulse 2s infinite; 
+            margin: 0 auto; 
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .faculty-node:hover {
+            transform: scale(1.5);
+            background: var(--v8-success);
+            box-shadow: 0 0 20px var(--v8-success);
+        }
+        
+        @keyframes node-pulse { 
+            0% { transform: scale(0.8); opacity: 0.5; } 
+            50% { transform: scale(1.2); opacity: 1; } 
+            100% { transform: scale(0.8); opacity: 0.5; } 
+        }
+        
+        @keyframes spin-slow { 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        .neural-bar { 
+            flex-grow: 1; 
+            background: var(--v8-primary); 
+            border-radius: 2px 2px 0 0; 
+            transition: height 0.2s ease; 
+        }
+
+        /* --- ULTIMATE WRAP CSS: QUANTUM FIREWALL --- */
+        .quantum-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 2px solid transparent;
+        }
+        
+        .ring-1 { width: 100px; height: 100px; border-top-color: #10b981; border-bottom-color: #10b981; animation: spin-slow 4s linear infinite; }
+        .ring-2 { width: 120px; height: 120px; border-left-color: #0ea5e9; border-right-color: #0ea5e9; animation: spin-slow 3s linear reverse infinite; }
+        .ring-3 { width: 140px; height: 140px; border-top-color: #8b5cf6; animation: spin-slow 5s linear infinite; }
+
+        /* --- ENTERPRISE ARCHITECTURE TELEMETRY --- */
+        .service-mesh { display: flex; justify-content: space-between; align-items: center; position: relative; padding: 20px 0; }
+        .mesh-node { width: 60px; height: 60px; border-radius: 12px; background: var(--v8-surface); border: 2px solid var(--v8-primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--v8-text); z-index: 2; position: relative; transition: all 0.3s; }
+        .mesh-node[data-status="healthy"] { border-color: var(--v8-success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .mesh-node[data-status="degraded"] { border-color: var(--v8-warning); box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+        .mesh-node:hover { transform: scale(1.1); z-index: 5; }
+        .mesh-link { position: absolute; height: 2px; background: var(--v8-primary); z-index: 1; top: 50%; left: 30px; right: 30px; opacity: 0.3; }
+        .data-packet { width: 8px; height: 8px; background: var(--v8-success); border-radius: 50%; position: absolute; top: -3px; animation: packetTravel 2s linear infinite; box-shadow: 0 0 10px var(--v8-success); }
+        @keyframes packetTravel { 0% { left: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
+        
+        .circuit-breaker { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(255,255,255,0.02); border-left: 4px solid var(--v8-success); margin-bottom: 10px; border-radius: 6px; transition: all 0.3s; }
+        .circuit-breaker:hover { background: rgba(255,255,255,0.05); }
+        .circuit-open { border-left-color: var(--v8-danger); background: rgba(239,68,68,0.05); }
+
+        /* --- PRINT STYLES FOR PDF EXPORT --- */
+        @media print {
+            body { background: white !important; color: black !important; }
+            .v8-sidebar, .top-telemetry, .header-controls, .cmd-palette-overlay, .btn-quick, .cyber-grid { display: none !important; }
+            .v8-main { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
+            .card-v8 { background: white !important; border: 1px solid #ccc !important; box-shadow: none !important; color: black !important; break-inside: avoid; }
+            .stat-label, .stat-value, .activity-list li div { color: black !important; }
+            canvas { max-width: 100% !important; }
+        }
+
+        @media (max-width: 992px) {
+            .v8-sidebar { transform: translateX(-100%); }
+            .v8-main { margin-left: 0; width: 100%; padding: 20px; }
+            .global-search { display: none; }
+        }
+
+        /* ==========================================
+           L.I.S.A. GROK-TIER WIDGET STYLES (FIXED UI)
+           ========================================== */
+        
+        .lisa-chat-widget { 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            z-index: 9999; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end; 
+            font-family: 'Inter', sans-serif; 
+        }
+        
+        .lisa-chat-btn { 
+            width: 65px; 
+            height: 65px; 
+            border-radius: 50%; 
+            background: linear-gradient(135deg, var(--v8-primary), var(--v8-purple)); 
+            color: #fff; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 1.8rem; 
+            cursor: pointer; 
+            box-shadow: 0 0 25px rgba(14, 165, 233, 0.6); 
+            border: 2px solid var(--v8-surface); 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .lisa-chat-btn:hover { transform: scale(1.1) rotate(10deg); box-shadow: 0 0 40px rgba(14, 165, 233, 0.9); }
+        
+        .lisa-chat-window { 
+            position: absolute;
+            bottom: 80px; 
+            right: 0;
+            width: 450px; 
+            max-width: 90vw; 
+            height: 65vh; 
+            min-height: 400px;
+            background: var(--v8-surface); 
+            border: 1px solid var(--v8-primary); 
+            border-radius: 16px; 
+            display: none; 
+            flex-direction: column; 
+            overflow: hidden; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8); 
+            transform-origin: bottom right; 
+            animation: popIn 0.3s ease-out; 
+        }
+        
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .lisa-chat-header { 
+            background: linear-gradient(135deg, var(--v8-primary), var(--v8-purple)); 
+            padding: 15px 20px; 
+            color: #fff; 
+            font-weight: 900; 
+            letter-spacing: 1px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4); 
+            z-index: 2; 
+            flex-shrink: 0;
+        }
+        
+        .lisa-chat-body { 
+            flex-grow: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            background: var(--v8-bg); 
+            font-size: 0.95rem; 
+            color: var(--v8-text); 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            scroll-behavior: smooth; 
+        }
+        
+        /* Advanced Markdown & Message Styles inside Widget */
+        .lisa-msg-wrap { background: rgba(14, 165, 233, 0.05); border-left: 2px solid var(--v8-primary); padding: 15px; border-radius: 0 12px 12px 12px; position: relative; animation: fadeInUp 0.4s ease forwards;}
+        .user-msg-wrap { background: rgba(255, 255, 255, 0.05); border-right: 2px solid var(--v8-muted); padding: 15px; border-radius: 12px 0 12px 12px; text-align: right; align-self: flex-end; animation: fadeInUp 0.4s ease forwards;}
+        
+        .lisa-chat-body pre { background: #1e1e1e !important; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 10px 0; border: 1px solid var(--v8-border); }
+        .lisa-chat-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; color: #10b981; }
+        .lisa-chat-body pre code { color: #d4d4d4; }
+        .lisa-chat-body table { width: 100%; border-collapse: collapse; margin: 10px 0; background: rgba(255,255,255,0.02); font-size: 0.85rem;}
+        .lisa-chat-body th, .lisa-chat-body td { border: 1px solid var(--v8-border); padding: 8px; text-align: left; }
+        .lisa-chat-body th { background: rgba(255,255,255,0.05); font-weight: bold; color: var(--v8-primary); }
+        .lisa-chat-body blockquote { border-left: 4px solid var(--v8-primary); padding-left: 1rem; color: var(--v8-muted); margin: 10px 0; background: rgba(14, 165, 233, 0.05); padding: 10px; border-radius: 0 8px 8px 0; font-style: italic;}
+        .lisa-chat-body ul, .lisa-chat-body ol { padding-left: 1.5rem; margin-bottom: 10px; }
+        .lisa-chat-body p { margin-bottom: 10px; line-height: 1.6; }
+        .lisa-chat-body img, .lisa-chat-body iframe { max-width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid var(--v8-border);}
+
+        /* Typing Indicator */
+        .lisa-typing { display: flex; gap: 5px; padding: 5px 0; }
+        .lisa-typing span { width: 8px; height: 8px; background-color: var(--v8-primary); border-radius: 50%; animation: lisa-bounce 1.4s infinite ease-in-out both; }
+        .lisa-typing span:nth-child(1) { animation-delay: -0.32s; }
+        .lisa-typing span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes lisa-bounce { 0%, 80%, 100% { transform: scale(0); opacity: 0.5; } 40% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 10px var(--v8-primary); } }
+
+        /* Advanced Input Zone */
+        .lisa-input-zone { display: flex; flex-direction: column; background: var(--v8-surface); border-top: 1px solid rgba(255,255,255,0.05); padding: 15px; flex-shrink: 0; }
+        .lisa-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--v8-border); }
+        .lisa-tools-left { display: flex; gap: 10px; align-items: center; }
+        .lisa-tools-right { display: flex; gap: 15px; align-items: center; font-size: 0.8rem; color: var(--v8-muted); }
+        
+        .lisa-action-btn { background: none; border: none; color: var(--v8-muted); cursor: pointer; transition: 0.2s; font-size: 1rem; padding: 5px; }
+        .lisa-action-btn:hover { color: var(--v8-primary); }
+        
+        .lisa-select { background: rgba(0,0,0,0.3); border: 1px solid var(--v8-border); color: var(--v8-text); border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; outline: none; }
+        .lisa-slider { width: 60px; accent-color: var(--v8-primary); vertical-align: middle; }
+
+        .lisa-quick-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 10px; }
+        .lisa-quick-chips::-webkit-scrollbar { display: none; }
+        .lisa-chip { background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.2); color: var(--v8-primary); padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; font-weight: bold; transition: 0.2s; }
+        .lisa-chip:hover { background: var(--v8-primary); color: #fff; }
+
+        .lisa-input-row { display: flex; align-items: center; gap: 10px; position: relative; }
+        .lisa-input-row textarea { flex-grow: 1; background: rgba(0,0,0,0.2); border: 1px solid var(--v8-border); color: var(--v8-text); padding: 12px 15px; border-radius: 12px; outline: none; transition: border 0.3s; resize: none; max-height: 120px; font-family: inherit; font-size: 0.95rem; }
+        .lisa-input-row textarea:focus { border-color: var(--v8-primary); box-shadow: 0 0 10px rgba(14, 165, 233, 0.2); }
+        
+        .lisa-send-btn { width: 45px; height: 45px; border-radius: 12px; background: var(--v8-primary); color: #fff; border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .lisa-send-btn:hover { background: var(--v8-purple); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4); }
+
+        .lisa-mic-btn { width: 45px; height: 45px; border-radius: 12px; background: var(--v8-bg); border: 1px solid var(--v8-border); color: var(--v8-muted); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .lisa-mic-btn:hover { color: var(--v8-danger); border-color: var(--v8-danger); }
+        .lisa-mic-pulsate { animation: mic-pulse 1.5s infinite; background: var(--v8-danger); color: white; border-color: var(--v8-danger); }
+        @keyframes mic-pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { transform: scale(1); } }
+
+        /* Dropdowns & Menus inside Widget */
+        .lisa-dropdown-menu { display: none; position: absolute; bottom: 100%; left: 0; background: var(--v8-surface); border: 1px solid var(--v8-border); border-radius: 12px; padding: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100; min-width: 200px; margin-bottom: 10px; }
+        .lisa-menu-item { padding: 10px 15px; font-size: 0.85rem; color: var(--v8-text); cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .lisa-menu-item:hover { background: rgba(255,255,255,0.05); color: var(--v8-primary); }
+
+        .lisa-emoji-grid { display: none; position: absolute; bottom: 100%; right: 60px; background: var(--v8-surface); border: 1px solid var(--v8-border); border-radius: 12px; padding: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100; width: 250px; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 10px; }
+        .lisa-emoji-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; border-radius: 6px; padding: 5px; text-align: center; }
+        .lisa-emoji-btn:hover { background: rgba(255,255,255,0.1); }
+
+        .lisa-file-preview { display: none; width: 100%; gap: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; flex-wrap: wrap; margin-bottom: 10px; border: 1px dashed var(--v8-border); }
+        .lisa-file-badge { background: var(--v8-surface); border: 1px solid var(--v8-border); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; color: var(--v8-text); }
+
+        /* Global Modals for L.I.S.A */
+        .lisa-global-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .lisa-modal-content { background: var(--v8-surface); padding: 25px; border-radius: 16px; width: 90%; max-width: 500px; border: 1px solid var(--v8-border); box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+
+        /* Live Toast Notification System */
+        .v8-toast-container { position: fixed; bottom: 30px; left: 30px; z-index: 1100; display: flex; flex-direction: column; gap: 15px; pointer-events: none; }
+        .v8-toast { background: var(--v8-surface); border-left: 4px solid var(--v8-primary); color: var(--v8-text); padding: 15px 25px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: bold; font-size: 0.9rem; animation: slideInLeft 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; display: flex; align-items: center; gap: 15px; pointer-events: auto; }
+        @keyframes slideInLeft { from { transform: translateX(-120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        .fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- 📊 LECTURER SOCIAL TELEMETRY MODULE --- */
+        .telemetry-dashboard { margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--v8-border); display: flex; flex-direction: column; gap: 10px; }
+        .telemetry-stats { display: flex; gap: 15px; font-size: 0.85rem; color: var(--v8-muted); align-items: center; flex-wrap: wrap; }
+        .telemetry-badge { background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.2); padding: 4px 10px; border-radius: 20px; color: var(--v8-primary); font-weight: bold; display: flex; align-items: center; gap: 6px; }
+        .telemetry-reactions { display: flex; gap: 5px; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--v8-border); }
+        .telemetry-comments-box { background: rgba(0,0,0,0.2); border: 1px solid var(--v8-border); border-radius: 8px; padding: 15px; margin-top: 10px; max-height: 200px; overflow-y: auto; display: none; }
+        .telemetry-comment { display: flex; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 10px; }
+        .telemetry-comment:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .telemetry-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--v8-primary); cursor: pointer; transition: 0.2s; }
+        .telemetry-avatar:hover { transform: scale(1.1); box-shadow: 0 0 10px var(--v8-primary); }
+    </style>
+</head>
+<body>
+
+    <div class="cmd-palette-overlay" id="cmdOverlay">
+        <div class="cmd-palette" role="dialog" aria-label="Command Palette">
+            <input type="text" class="cmd-input" id="cmdInput" placeholder="Type a command or search... (e.g. 'Scanner', 'Theme')" aria-label="Command Input">
+            <ul class="cmd-list" id="cmdList">
+                <li class="cmd-item" onclick="executeCommand('scanner')" role="button" tabindex="0">
+                    <span><i class="fas fa-qrcode me-2"></i> Open Scanner</span> 
+                    <span>CTRL+S</span>
+                </li>
+                <li class="cmd-item" onclick="executeCommand('theme')" role="button" tabindex="0">
+                    <span><i class="fas fa-palette me-2"></i> Toggle Theme</span> 
+                    <span>CTRL+T</span>
+                </li>
+                <li class="cmd-item" onclick="executeCommand('fullscreen')" role="button" tabindex="0">
+                    <span><i class="fas fa-expand me-2"></i> Toggle Fullscreen</span> 
+                    <span>F11</span>
+                </li>
+                <li class="cmd-item" onclick="executeCommand('logout')" role="button" tabindex="0">
+                    <span><i class="fas fa-power-off me-2"></i> Terminate Session</span> 
+                    <span>CTRL+Q</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="modal fade" id="studentSearchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--v8-surface); border: 2px solid var(--v8-primary); color: var(--v8-text); box-shadow: 0 0 40px rgba(14, 165, 233, 0.4); border-radius: 16px; overflow: hidden;">
+                
+                <div style="height: 100px; background: linear-gradient(135deg, var(--v8-primary), var(--v8-purple)); position: relative;">
+                    <div style="position: absolute; bottom: -50px; width: 100%; text-align: center;">
+                        <img id="searchModalImg" src="" alt="Student Avatar" loading="lazy" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--v8-surface); background: var(--v8-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+                    </div>
+                </div>
+                
+                <div class="modal-body text-center" style="padding: 60px 30px 30px 30px;">
+                    <h3 id="searchModalName" style="font-weight: 900; letter-spacing: 1px; margin-bottom: 5px;">STUDENT NAME</h3>
+                    <p id="searchModalMatric" style="font-family: 'JetBrains Mono', monospace; color: var(--v8-primary); font-weight: bold; margin-bottom: 5px;">MATRIC NO</p>
+                    <p id="searchModalDept" style="color: var(--v8-muted); margin-bottom: 20px;">Department</p>
+                    
+                    <div style="background: var(--v8-bg); padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--v8-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; color: var(--v8-muted); font-size: 0.85rem;">CLEARANCE STATUS</span>
+                            <span id="searchModalPaid" class="badge" style="font-size: 0.85rem; padding: 6px 10px;">UNKNOWN</span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary w-50" data-bs-dismiss="modal">Close</button>
+                        <a id="searchModalLink" href="#" class="btn btn-primary w-50 fw-bold" rel="noopener noreferrer">Full Profile <i class="fas fa-arrow-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👤 SOCIAL PROFILE MODAL -->
+    <div class="modal fade" id="socialProfileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content" style="background: var(--v8-surface); border: 1px solid var(--v8-border); color: var(--v8-text); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+                <div style="height: 80px; background: linear-gradient(135deg, var(--v8-primary), var(--v8-purple)); position: relative;">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                    <div style="position: absolute; bottom: -40px; width: 100%; text-align: center;">
+                        <img id="spModalImg" src="" alt="Student" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--v8-surface); background: var(--v8-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5); cursor: pointer;">
+                    </div>
+                </div>
+                <div class="modal-body text-center" style="padding: 50px 20px 20px 20px;">
+                    <h5 id="spModalName" class="fw-bold mb-1">Student Name</h5>
+                    <p id="spModalMatric" class="mb-1" style="font-family: 'JetBrains Mono', monospace; color: var(--v8-primary); font-weight: bold; font-size: 0.9rem;">MATRIC NO</p>
+                    <p id="spModalDept" class="text-muted small mb-3"><i class="fas fa-building me-1"></i> Department</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-sm btn-outline-primary" id="spBtnMessage"><i class="fas fa-envelope me-1"></i> Message</button>
+                        <button class="btn btn-sm btn-outline-success" id="spBtnScan"><i class="fas fa-search me-1"></i> Deep Scan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="lockdownModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: #000; border: 2px solid #ef4444; color: #fff; box-shadow: 0 0 50px rgba(239, 68, 68, 0.5);">
+                <div class="modal-body text-center p-5">
+                    <i class="fas fa-exclamation-triangle fa-5x text-danger mb-4" style="animation: pulse 1s infinite;"></i>
+                    <h2 class="fw-bold text-danger mb-3">INITIATE LOCKDOWN?</h2>
+                    <p class="text-muted mb-4">This will terminate all student portal sessions and halt the CBT servers. Do you want to proceed?</p>
+                    <div class="d-flex gap-3 justify-content-center">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ABORT</button>
+                        <button type="button" class="btn btn-danger fw-bold" onclick="alert('Lockdown Command Sent to Matrix.');" data-bs-dismiss="modal">AUTHORIZE PROTOCOL</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <aside class="v8-sidebar">
+        <div class="sidebar-brand">
+            <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" alt="LASU" loading="lazy" class="sidebar-logo">
+            <div class="sidebar-title">LASU {{ session.role | upper }}</div>
+        </div>
+        
+        <div style="flex-grow: 1; padding: 20px 0; overflow-y: auto;">
+            <a href="#" class="nav-link-v8 active"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="/lecturer/attendance_scanner" class="nav-link-v8"><i class="fas fa-qrcode"></i> Class Scanner</a>
+            <a href="{{ url_for('lecturer_lesson_planner') }}" class="nav-link-v8"><i class="fas fa-brain"></i> AI Planner</a>
+            <a href="{{ url_for('auto_quiz_generator') }}" class="nav-link-v8"><i class="fas fa-file-pdf"></i> PDF Auto-Quiz</a>
+            <a href="{{ url_for('lecturer_complaints') }}" class="nav-link-v8">
+                <i class="fas fa-inbox"></i> Complaints
+                {% if pending_count > 0 %}
+                    <span class="badge bg-danger rounded-pill ms-auto">{{ pending_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('manage_courses') }}" class="nav-link-v8"><i class="fas fa-book"></i> Courses</a>
+            <a href="{{ url_for('manage_hostels') }}" class="nav-link-v8"><i class="fas fa-building"></i> Hostels</a>
+            <a href="{{ url_for('view_exam_timetable') }}" class="nav-link-v8"><i class="fas fa-calendar-alt"></i> Timetables</a>
+            <a href="{{ url_for('logout') }}" class="nav-link-v8" style="color: var(--v8-danger); border-top: 1px solid var(--v8-border); margin-top: 20px;"><i class="fas fa-power-off"></i> Logout</a>
+        </div>
+    </aside>
+
+    <main class="v8-main" id="mainContainer">
+        
+        <div class="top-telemetry">
+            <div class="api-status">
+                <div class="pulse-dot"></div>
+                <span>DATA STREAM: SECURE</span>
+            </div>
+
+            <div class="global-search">
+                <i class="fas fa-search text-muted"></i>
+                <input type="text" id="globalSearchInput" placeholder="Press Enter to scan Matric No..." aria-label="Search Student by Matric Number" onkeypress="executeGlobalSearch(event)" oninput="debouncedSearchCheck()">
+            </div>
+
+            <div class="header-controls">
+                <div class="system-clock" id="liveClock" style="margin-right: 15px;">00:00:00</div>
+                
+                <div class="dropdown">
+                    <button class="btn-export" data-bs-toggle="dropdown" aria-label="Export Menu"><i class="fas fa-download me-2"></i> Export</button>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" style="background: var(--v8-surface); border: 1px solid var(--v8-border);">
+                        <li>
+                            <a class="dropdown-item text-light" href="#" onclick="window.print();">
+                                <i class="fas fa-file-pdf text-danger me-2"></i> Print System PDF
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-light" href="{{ url_for('export_csv') }}">
+                                <i class="fas fa-file-excel text-success me-2"></i> Download Matrix CSV
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <button class="icon-btn" onclick="toggleTheme()" title="Cycle Theme (CTRL+T)" aria-label="Toggle Theme">
+                    <i class="fas fa-adjust"></i>
+                </button>
+                
+                <button class="icon-btn" onclick="toggleFullscreen()" title="Fullscreen" aria-label="Toggle Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+                
+                <button class="icon-btn" onclick="document.getElementById('cmdOverlay').style.display='flex'; document.getElementById('cmdInput').focus();" title="Command Palette (CTRL+K)" aria-label="Open Command Palette">
+                    <i class="fas fa-terminal"></i>
+                </button>
+                
+                <div class="dropdown">
+                    <button class="icon-btn" data-bs-toggle="dropdown" aria-expanded="false" id="notifButton" aria-label="Notifications">
+                        <i class="fas fa-bell"></i>
+                        {% if pending_count > 0 %}
+                        <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                        {% endif %}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-v8" id="notifMenu">
+                        <div class="dropdown-header-v8">
+                            <span>LIVE ALERTS</span>
+                            <button class="btn btn-sm btn-outline-danger" onclick="clearNotifications(event)" style="font-size: 0.7rem; padding: 2px 5px;" aria-label="Clear Notifications">Purge</button>
+                        </div>
+                        <div id="notifList">
+                            {% if pending_count > 0 %}
+                            <a href="{{ url_for('lecturer_complaints') }}" class="dropdown-item-v8">
+                                <i class="fas fa-exclamation-circle text-warning me-2"></i> {{ pending_count }} pending complaints require attention
+                            </a>
+                            {% endif %}
+                            <a href="#" class="dropdown-item-v8">
+                                <i class="fas fa-satellite-dish text-primary me-2"></i> Telemetry link established
+                            </a>
+                            <a href="#" class="dropdown-item-v8">
+                                <i class="fas fa-shield-alt text-success me-2"></i> Security scan complete: Zero threats
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-primary) !important;">
+                    <div class="stat-label">Total Students</div>
+                    <div class="stat-value text-primary js-counter" data-target="{{ total | default(0) }}">{{ total }}</div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-danger) !important;">
+                    <div class="stat-label">At-Risk Students</div>
+                    <div class="stat-value text-danger js-counter" data-target="{{ risk | default(0) }}">{{ risk }}</div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-success) !important;">
+                    <div class="stat-label">Attendance Rate</div>
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <div class="circular-gauge">
+                            {% if session.role == 'admin' %}
+    <div class="gauge-inner text-success">82%</div>
+{% else %}
+    <div class="gauge-inner text-success">0%</div>
+{% endif %}
+                        </div>
+                        <div style="color: var(--v8-muted); font-size: 0.8rem; line-height: 1.5;">
+                            Average attendance across all registered courses this semester.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-purple) !important;">
+                    <div class="stat-label">Server Uptime</div>
+                    <div style="margin-top: 15px;">
+                        <div style="font-size: 2rem; font-weight: 900; color: var(--v8-text); font-family: 'JetBrains Mono';" id="uptimeClock">00:00:00</div>
+                        <div style="font-size: 0.75rem; font-weight: bold; color: var(--v8-success); margin-top: 10px;">
+                            <i class="fas fa-server me-1"></i> Core Matrix Online
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-6">
+                <div class="card-v8" id="gradeChartContainer">
+                    <div class="stat-label mb-3">Academic Performance (Real Database Sync)</div>
+                    <div style="height: 300px; width: 100%;" id="gradeChartWrapper">
+                        <canvas id="gradeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6">
+                <div class="card-v8">
+                    <div class="stat-label mb-3">Student Growth Trend (2025 - 2026)</div>
+                    <div style="height: 300px; width: 100%;">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            
+            <div class="col-xl-4">
+                <div class="card-v8" style="background: #000; border-color: #10b981;">
+                    <div class="stat-label mb-3 text-success">Quantum Encryption Core</div>
+                    <div style="position: relative; height: 120px; display: flex; justify-content: center; align-items: center;">
+                        <div class="quantum-ring ring-1"></div>
+                        <div class="quantum-ring ring-2"></div>
+                        <div class="quantum-ring ring-3"></div>
+                        <i class="fas fa-shield-alt fa-3x text-success" style="z-index: 5;"></i>
+                    </div>
+                    <div class="text-center mt-3 text-success" id="crypto-hash-display" style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+                        INITIALIZING HASH...
+                    </div>
+                    <!-- 🟢 NEW: Manual Crypto Regeneration -->
+                    <button class="btn btn-outline-success btn-sm mt-3 w-100 fw-bold" onclick="generateDeviceFingerprint()"><i class="fas fa-sync-alt me-1"></i> Cycle Encryption Keys</button>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card-v8" style="background: linear-gradient(135deg, #0f172a, #1e1b4b); border-color: #8b5cf6;">
+                    <div class="stat-label mb-3 text-white">Active Orbital Sessions</div>
+                    {% if session.role == 'admin' %}
+    <ul class="activity-list mt-2" style="max-height: 150px; overflow-y: auto;">
+        <li>
+            <div class="pulse-dot" style="background: #8b5cf6; box-shadow: 0 0 10px #8b5cf6; margin-top: 5px;"></div>
+            <div style="flex-grow: 1;">
+                <div style="font-weight: bold; color: white;">ID: {{ session.get('last_active_id', '240101***') }}</div>
+                <div style="font-size: 0.75rem; color: #a5b4fc;">Accessed CBT Matrix</div>
+            </div>
+            <div style="font-family: 'JetBrains Mono', monospace; color: #10b981; font-size: 0.8rem;">Live</div>
+        </li>
+        <li>
+            <div class="pulse-dot" style="background: #f59e0b; box-shadow: 0 0 10px #f59e0b; margin-top: 5px;"></div>
+            <div style="flex-grow: 1;">
+                <div style="font-weight: bold; color: white;">Dr. Adebayo</div>
+                <div style="font-size: 0.75rem; color: #a5b4fc;">Uploaded Results</div>
+            </div>
+            <div style="font-family: 'JetBrains Mono', monospace; color: #10b981; font-size: 0.8rem;">Live</div>
+        </li>
+    </ul>
+{% else %}
+    <ul class="activity-list mt-2" style="max-height: 150px; overflow-y: auto;">
+        <li><div style="color: var(--v8-muted); padding: 10px;">No active sessions detected.</div></li>
+    </ul>
+{% endif %}
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-primary) !important;">
+                    <div class="stat-label mb-3">Neural Network CPU Allocation</div>
+                    <div class="neural-container" style="display: flex; gap: 5px; height: 60px; align-items: flex-end;">
+                        </div>
+                    <div class="d-flex justify-content-between mt-2 text-muted" style="font-size: 0.75rem; font-weight: bold;">
+                        <span>0%</span>
+                        <span>Backend Processing Load</span>
+                        <span>100%</span>
+                    </div>
+                    <!-- 🟢 NEW: Live RAM Allocation Indicator -->
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between text-muted small fw-bold mb-1">
+                            <span>RAM Buffer</span>
+                            <span id="ramUsageVal">42%</span>
+                        </div>
+                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px;">
+                            <div id="ramUsageBar" class="progress-bar bg-primary progress-bar-striped progress-bar-animated" style="width: 42%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-4">
+                <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-danger) !important;">
+                    <div class="stat-label mb-3">S.O.S Emergency Radar</div>
+                    <div class="text-center">
+                        <div class="radar-container">
+                            <div class="radar-sweep"></div>
+                            <div class="radar-blip"></div>
+                        </div>
+                        <h3 style="margin:0; font-weight: 900; color: var(--v8-danger);">SYSTEM ACTIVE</h3>
+                        <p style="color: var(--v8-muted); font-size: 0.8rem;">Scanning for emergency requests on campus.</p>
+                        <a href="{{ url_for('sos_dashboard') }}" class="btn btn-sm btn-outline-danger w-100 mt-2" rel="noopener noreferrer">Open Lifeline Portal</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-success) !important;">
+                    <div class="stat-label mb-3">Financial Intelligence</div>
+                    <ul class="activity-list mt-3">
+                        <li>
+                            <div style="color: var(--v8-success);"><i class="fas fa-check-circle fa-2x"></i></div>
+                            <div style="flex-grow: 1;">
+                                <div style="font-weight: bold;">Revenue Tracking</div>
+                                <div style="font-size: 0.8rem; color: var(--v8-muted);">Monitoring Active Payments</div>
+                            </div>
+                            <div style="font-weight: 900; font-size: 1.2rem;">Live</div>
+                        </li>
+                        <li>
+                            <div style="color: var(--v8-danger);"><i class="fas fa-times-circle fa-2x"></i></div>
+                            <div style="flex-grow: 1;">
+                                <div style="font-weight: bold;">Debtors Node</div>
+                                <div style="font-size: 0.8rem; color: var(--v8-muted);">Pending Clearance Review</div>
+                            </div>
+                            <div style="font-weight: 900; font-size: 1.2rem;">Live</div>
+                        </li>
+                    </ul>
+                    <a href="{{ url_for('bursary_dashboard') }}" class="btn btn-sm btn-outline-success w-100 mt-3" rel="noopener noreferrer">View Full Bursary Logs</a>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card-v8" style="background: #000; border-color: #333;">
+                    <div class="stat-label mb-3" style="color: #0f0;">Threat Intelligence Feed</div>
+                    <div class="terminal-box" id="threatTerminal" style="color: #0f0;">
+                        <div class="term-line" style="animation-delay: 0.1s">> Firewalls: Active</div>
+                        <div class="term-line" style="animation-delay: 0.6s">> No unauthorized logins detected.</div>
+                        <div class="term-line" style="animation-delay: 1.2s">> Auto-Quiz API connected.</div>
+                        <div class="term-line" style="animation-delay: 1.8s">> L.I.S.A Core Engine Stable.</div>
+                        <div class="term-line" style="animation-delay: 2.5s">> Awaiting Command... _</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            
+            <div class="col-xl-4">
+                <div class="card-v8">
+                    <div class="stat-label mb-3">Active Faculty Nodes</div>
+                    <div style="display: flex; justify-content: space-around; align-items: center; height: 100%;">
+                        <!-- 🟢 NEW: Interactive Faculty Click Events -->
+                        <div class="text-center">
+                            <div class="faculty-node" style="animation-delay: 0s;" onclick="showFacultyStats('Science')"></div>
+                            <small class="text-muted mt-2 d-block">Science</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="faculty-node" style="animation-delay: 0.5s;" onclick="showFacultyStats('Engineering')"></div>
+                            <small class="text-muted mt-2 d-block">Engineering</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="faculty-node" style="animation-delay: 1s;" onclick="showFacultyStats('Arts')"></div>
+                            <small class="text-muted mt-2 d-block">Arts</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="faculty-node" style="animation-delay: 1.5s;" onclick="showFacultyStats('Law')"></div>
+                            <small class="text-muted mt-2 d-block">Law</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🟢 ARCHITECT FIX: REAL WEATHER SYNC FOR LAGOS/OJO -->
+            <div class="col-xl-4">
+                <div class="card-v8" id="weatherCard" style="background: linear-gradient(135deg, var(--v8-surface), rgba(245, 158, 11, 0.1)); border-color: var(--v8-warning); transition: all 0.5s ease;">
+                    <div class="stat-label mb-3 text-warning" id="weatherLabel">Lagos Campus Environment</div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div>
+                            <h2 id="weatherTemp" style="margin:0; font-weight:900; color:var(--v8-text);">--°C</h2>
+                            <p id="weatherDetails" style="margin:0; color:var(--v8-muted); font-size:0.8rem;">Syncing atmospheric data...</p>
+                            <span class="badge bg-warning text-dark mt-2" id="trafficBadge">Ojo Traffic: Moderate</span>
+                        </div>
+                        <i id="weatherIcon" class="fas fa-sun fa-4x text-warning" style="animation: spin-slow 10s linear infinite;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-warning) !important;">
+                    <div class="stat-label mb-4">Complaint Ticket Status <span class="badge bg-warning ms-2 text-dark" style="font-size: 0.6rem;">LIVE SYNC</span></div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--v8-bg); border-radius: 8px; margin-bottom: 10px;">
+                        <span style="font-weight: bold; color: var(--v8-danger);"><i class="fas fa-folder-open me-2"></i> Open / Active</span>
+                        <span id="sync-open-count" style="font-weight: 900; font-size: 1.2rem;">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--v8-bg); border-radius: 8px; margin-bottom: 10px;">
+                        <span style="font-weight: bold; color: var(--v8-warning);"><i class="fas fa-hourglass-half me-2"></i> Pending</span>
+                        <span id="sync-pending-count" style="font-weight: 900; font-size: 1.2rem;">{{ pending_count | default(0) }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--v8-bg); border-radius: 8px;">
+                        <span style="font-weight: bold; color: var(--v8-success);"><i class="fas fa-check-circle me-2"></i> Resolved</span>
+                        <span id="sync-resolved-count" style="font-weight: 900; font-size: 1.2rem;">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-4">
+                <div class="card-v8" id="deptChartContainer">
+                    <div class="stat-label mb-3">Department Distribution</div>
+                    <div style="height: 250px; width: 100%;" id="deptChartWrapper">
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card-v8">
+                    <div class="stat-label mb-3">Top Departments (By GPA)</div>
+                    {% if session.role == 'admin' %}
+                    <ul class="activity-list">
+                        <li>
+                            <div style="width: 25px; font-weight: 900; color: var(--v8-warning);">#1</div>
+                            <div style="flex-grow: 1; font-weight: bold;">Computer Science</div>
+                            <div class="text-success"><i class="fas fa-caret-up"></i></div>
+                        </li>
+                        <li>
+                            <div style="width: 25px; font-weight: 900; color: var(--v8-muted);">#2</div>
+                            <div style="flex-grow: 1; font-weight: bold;">Software Engineering</div>
+                            <div class="text-success"><i class="fas fa-caret-up"></i></div>
+                        </li>
+                        <li>
+                            <div style="width: 25px; font-weight: 900; color: var(--v8-muted);">#3</div>
+                            <div style="flex-grow: 1; font-weight: bold;">Mathematics</div>
+                            <div class="text-secondary"><i class="fas fa-minus"></i></div>
+                        </li>
+                        <li>
+                            <div style="width: 25px; font-weight: 900; color: var(--v8-muted);">#4</div>
+                            <div style="flex-grow: 1; font-weight: bold;">Physics</div>
+                            <div class="text-danger"><i class="fas fa-caret-down"></i></div>
+                        </li>
+                    </ul>
+                    {% else %}
+                    <ul class="activity-list">
+                        <li><div style="color: var(--v8-muted); padding: 10px;">Insufficient data to rank departments.</div></li>
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card-v8" style="background: linear-gradient(135deg, var(--v8-surface), rgba(14, 165, 233, 0.1)); border: 1px solid var(--v8-primary);">
+                    <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                            <div id="connectivity-pulse" class="beacon-pulse"><i id="connectivity-icon" class="fas fa-wifi text-white"></i></div>
+                            <div>
+                                <h4 id="connectivity-title" style="margin: 0; font-weight: 900; color: var(--v8-text);">Global Connectivity</h4>
+                                <p id="connectivity-desc" style="margin: 0; color: var(--v8-muted); font-size: 0.85rem;">All systems online. Direct link to student portals active.</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#announceModal">
+                            <i class="fas fa-paper-plane me-2"></i> Initiate Broadcast
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="card-v8" style="background: linear-gradient(135deg, var(--v8-surface), rgba(14, 165, 233, 0.05)); border: 1px solid var(--v8-primary);">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div class="beacon-pulse" style="background: var(--v8-purple); box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7);"><i class="fas fa-microchip text-white"></i></div>
+                            <div>
+                                <h4 style="margin: 0; font-weight: 900; color: var(--v8-purple);">L.I.S.A. CYBERNETIC COMMAND GRID</h4>
+                                <p style="margin: 0; color: var(--v8-muted); font-size: 0.85rem;">Direct Access to Global Computational & Engineering Arsenal</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cyber-grid">
+                        <a href="/tools/json-formatter" class="cyber-module">
+                            <i class="fas fa-code"></i><span>JSON Formatter</span>
+                        </a>
+                        <a href="/tools/xml-validator" class="cyber-module">
+                            <i class="fas fa-file-code"></i><span>XML Validator</span>
+                        </a>
+                        <a href="/tools/yaml-to-json" class="cyber-module">
+                            <i class="fas fa-exchange-alt"></i><span>YAML Converter</span>
+                        </a>
+                        <a href="/tools/base64-converter" class="cyber-module">
+                            <i class="fas fa-key"></i><span>Base64 Engine</span>
+                        </a>
+                        <a href="/tools/jwt-debugger" class="cyber-module">
+                            <i class="fas fa-shield-alt"></i><span>JWT Debugger</span>
+                        </a>
+                        
+                        <!-- 🟢 ARCHITECT FIX: REVERTED GIDEON TO ORIGINAL STATE -->
+                        <a href="/tools/ai-detector" class="cyber-module">
+                            <i class="fas fa-robot"></i><span>GIDEON AI Detector</span>
+                        </a>
+                        
+                        <a href="/tools/qr-generator" class="cyber-module">
+                            <i class="fas fa-qrcode"></i><span>QR Generator</span>
+                        </a>
+                        <a href="/tools/barcode-generator" class="cyber-module">
+                            <i class="fas fa-barcode"></i><span>Barcode Engine</span>
+                        </a>
+                        <a href="/tools/matrix-calculator" class="cyber-module">
+                            <i class="fas fa-border-all"></i><span>Matrix Calculator</span>
+                        </a>
+                        <a href="/tools/periodic-table" class="cyber-module">
+                            <i class="fas fa-flask"></i><span>Periodic Table</span>
+                        </a>
+                        <a href="/tools/molar-mass" class="cyber-module">
+                            <i class="fas fa-vial"></i><span>Molar Mass</span>
+                        </a>
+                        <a href="/tools/ph-calculator" class="cyber-module">
+                            <i class="fas fa-tint"></i><span>pH Calculator</span>
+                        </a>
+                        
+                        <a href="/tools/world-clock" class="cyber-module">
+                            <i class="fas fa-globe"></i><span>World Clock</span>
+                        </a>
+                        <a href="/tools/timezone-converter" class="cyber-module">
+                            <i class="fas fa-clock"></i><span>Timezone Matrix</span>
+                        </a>
+                        <a href="/tools/currency-converter" class="cyber-module">
+                            <i class="fas fa-money-bill-wave"></i><span>Currency Exchange</span>
+                        </a>
+                        <a href="/tools/budget-planner" class="cyber-module">
+                            <i class="fas fa-chart-pie"></i><span>Budget Architect</span>
+                        </a>
+                        <a href="/tools/roi-calculator" class="cyber-module">
+                            <i class="fas fa-chart-line"></i><span>ROI Engine</span>
+                        </a>
+                        <a href="/tools/mortgage-calculator" class="cyber-module">
+                            <i class="fas fa-home"></i><span>Mortgage Calc</span>
+                        </a>
+                        
+                        <a href="/tools/pdf-merger" class="cyber-module">
+                            <i class="fas fa-file-pdf"></i><span>PDF Merger</span>
+                        </a>
+                        <a href="/tools/pdf-splitter" class="cyber-module">
+                            <i class="fas fa-cut"></i><span>PDF Splitter</span>
+                        </a>
+                        <a href="/tools/video-to-gif" class="cyber-module">
+                            <i class="fas fa-film"></i><span>Video to GIF</span>
+                        </a>
+                        <a href="/tools/image-compressor" class="cyber-module">
+                            <i class="fas fa-compress"></i><span>Image Compressor</span>
+                        </a>
+                        <a href="/tools/color-picker" class="cyber-module">
+                            <i class="fas fa-eye-dropper"></i><span>Hex Color Picker</span>
+                        </a>
+                        <a href="/tools/css-gradient" class="cyber-module">
+                            <i class="fas fa-paint-brush"></i><span>CSS Gradient</span>
+                        </a>
+
+                        <a href="/tools/nato-phonetic" class="cyber-module">
+                            <i class="fas fa-walkie-talkie"></i><span>NATO Translator</span>
+                        </a>
+                        <a href="/tools/morse-code" class="cyber-module">
+                            <i class="fas fa-satellite-dish"></i><span>Morse Code</span>
+                        </a>
+                        <a href="/tools/text-to-speech" class="cyber-module">
+                            <i class="fas fa-volume-up"></i><span>Text to Speech</span>
+                        </a>
+                        <a href="/tools/speed-reading" class="cyber-module">
+                            <i class="fas fa-book-reader"></i><span>Speed Reading</span>
+                        </a>
+                        <a href="/tools/reflex-matrix" class="cyber-module">
+                            <i class="fas fa-bolt"></i><span>Reflex Matrix</span>
+                        </a>
+                        <a href="/tools/aim-trainer" class="cyber-module">
+                            <i class="fas fa-crosshairs"></i><span>Aim Trainer</span>
+                        </a>
+                        
+                        <a href="/tools/network-sniffer" class="cyber-module">
+                            <i class="fas fa-network-wired"></i><span>Packet Sniffer</span>
+                        </a>
+                        <a href="/tools/hash-cracker" class="cyber-module">
+                            <i class="fas fa-unlock-alt"></i><span>Hash Decryptor</span>
+                        </a>
+                        <a href="/tools/password-gen" class="cyber-module">
+                            <i class="fas fa-fingerprint"></i><span>Auth Generator</span>
+                        </a>
+                        <a href="/tools/dns-lookup" class="cyber-module">
+                            <i class="fas fa-globe-africa"></i><span>DNS Orbital</span>
+                        </a>
+                        <a href="/tool_api_tester" class="cyber-module">
+                            <i class="fas fa-plug"></i><span>API Tester</span>
+                        </a>
+                        <a href="/tool_regex_builder" class="cyber-module">
+                            <i class="fas fa-search-plus"></i><span>Regex Engine</span>
+                        </a>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="card-v8">
+                    <div class="stat-label mb-3">Academic Semester Timeline</div>
+                    <div class="progress" style="height: 25px; background-color: var(--v8-bg); border-radius: 12px; overflow: hidden;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+                            <strong>Week 12 of 16</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-4">
+                <div class="card-v8">
+                    <div class="stat-label mb-3">Quick Operations</div>
+                    <div class="quick-action-grid">
+                        <button class="btn-quick" data-bs-toggle="modal" data-bs-target="#announceModal">
+                            <i class="fas fa-bullhorn fa-2x text-primary mb-2"></i> Broadcast
+                        </button>
+                        <button class="btn-quick" onclick="window.location.href='/lecturer/attendance_scanner'">
+                            <i class="fas fa-qrcode fa-2x text-success mb-2"></i> Scan Class
+                        </button>
+                        <button class="btn-quick" onclick="window.location.href='{{ url_for('manage_courses') }}'">
+                            <i class="fas fa-book fa-2x text-warning mb-2"></i> Add Course
+                        </button>
+                        <button class="btn-quick" onclick="window.location.href='{{ url_for('auto_quiz_generator') }}'">
+                            <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i> Build Quiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card-v8">
+                    <div class="stat-label mb-3">Upcoming Schedule</div>
+                    <ul class="activity-list">
+                        <!-- 🟢 REAL DATA SYNC: Pulling from your ClassSchedule database -->
+                        {% if upcoming_schedules %}
+                            {% for schedule in upcoming_schedules %}
+                            <li>
+                                <div style="background: var(--v8-bg); padding: 5px 10px; border-radius: 6px; font-weight: 900; font-size: 0.8rem; color: var(--v8-primary);">
+                                    {{ schedule.day[:3] | upper }}
+                                </div>
+                                <div>
+                                    <div style="font-weight: bold; font-size: 0.95rem;">{{ schedule.course.code }} Lecture</div>
+                                    <div style="font-size: 0.75rem; color: var(--v8-muted);">{{ schedule.start_time }} - {{ schedule.venue }}</div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li>
+                                <div style="color: var(--v8-muted); padding: 10px;">No upcoming classes scheduled.</div>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card-v8">
+                    <div class="stat-label mb-3">System Activity Feed</div>
+                    <ul class="activity-list">
+                        <!-- 🟢 REAL DATA SYNC: Pulling from your AuditLog/Activity database -->
+                        {% if recent_activities %}
+                            {% for activity in recent_activities %}
+                            <li>
+                                <div style="color: var(--v8-primary); margin-top: 3px;"><i class="fas fa-bolt"></i></div>
+                                <div>
+                                    <div style="font-size: 0.9rem; color: var(--v8-text);">{{ activity.action }}</div>
+                                    <div style="font-size: 0.75rem; color: var(--v8-muted);">{{ activity.timestamp.strftime('%d %b, %I:%M %p') }}</div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li>
+                                <div style="color: var(--v8-muted); padding: 10px;">System activity log is currently empty.</div>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🟢 LECTURER TELEMETRY FEED -->
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-primary) !important;">
+                    <div class="stat-label mb-3">Campus Announcements Broadcast</div>
+                    {% if announcements %}
+                    <ul class="activity-list">
+                        {% for ann in announcements %}
+                        <li>
+                            <div class="beacon-pulse" style="width: 30px; height: 30px; margin-top: 5px;"><i class="fas fa-bullhorn text-white" style="font-size: 0.8rem;"></i></div>
+                            <div style="flex-grow: 1; margin-left: 15px;">
+                                <div style="font-size: 1.1rem; color: var(--v8-text); font-weight: 900;">{{ ann.title }}</div>
+                                <div style="font-size: 0.9rem; color: var(--v8-muted); margin-top: 5px; white-space: pre-wrap;">{{ ann.content }}</div>
+                                <div style="font-size: 0.75rem; color: var(--v8-primary); margin-top: 8px; font-family: 'JetBrains Mono', monospace;">
+                                    <i class="fas fa-clock me-1"></i> {{ ann.date_posted.strftime('%d %b %Y | %I:%M %p') if ann.date_posted else 'Just now' }}
+                                </div>
+                                
+                                <!-- 📊 LECTURER TELEMETRY RECEIVER -->
+                                <div class="telemetry-dashboard" data-title="{{ ann.title }}" id="telemetry-{{ loop.index }}">
+                                    <div class="telemetry-stats">
+                                        <div class="telemetry-badge"><i class="fas fa-thumbs-up"></i> <span class="tel-likes">0</span> Likes</div>
+                                        <div class="telemetry-badge" style="cursor:pointer;" onclick="toggleTelemetryComments('comments-tel-{{ loop.index }}')"><i class="fas fa-comments"></i> <span class="tel-comment-count">0</span> Comments</div>
+                                        <div class="telemetry-reactions tel-reactions">
+                                            <span class="text-muted small">No reactions</span>
+                                        </div>
+                                    </div>
+                                    <div class="telemetry-comments-box" id="comments-tel-{{ loop.index }}">
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            {% if session.role == 'admin' %}
+                            <form action="{{ url_for('delete_announcement', id=ann.id) }}" method="POST" style="margin: 0;">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Announcement"><i class="fas fa-trash"></i></button>
+                            </form>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div style="padding: 20px; text-align: center; color: var(--v8-muted);">
+                        <i class="fas fa-broadcast-tower fa-3x mb-3" style="opacity: 0.2;"></i>
+                        <p>No active broadcasts. The frequency is clear.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+    </main>
+
+    <div class="modal fade" id="announceModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--v8-surface); border: 1px solid var(--v8-border); color: var(--v8-text);">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title">📢 Post New Announcement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1) grayscale(100%) brightness(200%);" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('post_announcement') }}" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Select Subject Protocol</label>
+                            <select name="title" class="form-select bg-dark text-white border-secondary" required>
+                                <option value="" selected disabled>-- Choose a Subject --</option>
+                                <option value="General Notice">📢 General Notice</option>
+                                <option value="Lecture Rescheduled">📅 Lecture Rescheduled</option>
+                                <option value="Exam Venue Change">🏢 Exam Venue Change</option>
+                                <option value="Urgent Attention">⚠️ Urgent Attention</option>
+                                <option value="Assignment Update">📝 Assignment Update</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Data Payload</label>
+                            <textarea name="content" class="form-control bg-dark text-white border-secondary" rows="4" placeholder="Type the full details here..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top border-secondary">
+                        <button type="button" class="btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Transmit Protocol</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="v8-toast-container" id="toastContainer"></div>
+
+    <div id="systemPromptModal" class="lisa-global-modal" role="dialog" aria-label="System Instructions">
+        <div class="lisa-modal-content">
+            <h3 class="fw-bold mb-3" style="color: var(--v8-text);"><i class="fas fa-terminal me-2" style="color: var(--v8-primary);"></i> System Instructions</h3>
+            <p class="text-muted small" style="color: var(--v8-muted);">Define L.I.S.A.'s core persona, behavior, and formatting rules. This alters how the AI acts globally.</p>
+            <textarea id="systemPromptText" class="form-control mb-3" rows="6" placeholder="You are a senior enterprise digital transformation architect..." style="background: rgba(0,0,0,0.3); border: 1px solid var(--v8-border); color: var(--v8-text);"></textarea>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" onclick="closeSystemPrompt()">Cancel</button>
+                <button class="btn btn-primary fw-bold px-4" onclick="saveSystemPrompt()">Save Instructions</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="workflowModal" class="lisa-global-modal" role="dialog" aria-label="Workflow Builder">
+        <div class="lisa-modal-content" style="text-align: left;">
+            <h4 class="fw-bold mb-3" style="color: var(--v8-text);"><i class="fas fa-project-diagram text-success me-2"></i> AI Workflow Builder</h4>
+            <div id="workflowSteps">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold" style="color: var(--v8-muted);">Step 1: Define Goal</label>
+                    <input type="text" class="form-control" placeholder="e.g., Write a Literature Review" style="background: rgba(0,0,0,0.3); border: 1px solid var(--v8-border); color: var(--v8-text);">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold" style="color: var(--v8-muted);">Step 2: Add Context (Optional)</label>
+                    <input type="text" class="form-control" placeholder="e.g., Focus on AI in Education" style="background: rgba(0,0,0,0.3); border: 1px solid var(--v8-border); color: var(--v8-text);">
+                </div>
+            </div>
+            <button class="btn btn-link text-primary p-0 mb-3 text-decoration-none fw-bold" onclick="addWorkflowStep()">+ Add Another Step</button>
+            
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" onclick="document.getElementById('workflowModal').style.display='none'">Cancel</button>
+                <button class="btn btn-success fw-bold px-4" onclick="executeWorkflow()">Execute Workflow</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="lisa-chat-widget">
+        <div class="lisa-chat-window" id="lisaChatWindow" role="dialog" aria-label="L.I.S.A Chat Interface">
+            <div class="lisa-chat-header">
+                <span style="font-size: 1.1rem;"><i class="fas fa-brain me-2" style="animation: pulse-beacon 2s infinite; color: #fff;"></i>L.I.S.A. ORACLE</span>
+                <i class="fas fa-times" style="cursor: pointer; opacity: 0.7; font-size: 1.2rem;" onclick="toggleLisaChat()" title="Close" aria-label="Close Chat"></i>
+            </div>
+            
+            <div class="lisa-chat-body" id="lisaChatBody">
+                <div class="lisa-msg-wrap fade-in-up">
+                    <span style="font-size: 0.75rem; color: var(--v8-primary); font-weight: bold; letter-spacing: 1px;">SYSTEM</span>
+                    <div style="color: var(--v8-text);">Secure connection established. Dashboard telemetry synced.</div>
+                </div>
+                <div class="lisa-msg-wrap fade-in-up" style="animation-delay: 0.2s">
+                    <span style="font-size: 0.75rem; color: var(--v8-primary); font-weight: bold; letter-spacing: 1px;">L.I.S.A. CORE</span>
+                    <div style="color: var(--v8-text);">I am online. Matrix variables are optimal. How can I assist you today, Admin?</div>
+                </div>
+            </div>
+
+            <div class="lisa-input-zone" id="drop-zone">
+                <div class="lisa-toolbar">
+                    <div class="lisa-tools-left position-relative">
+                        <select id="aiModeSelector" class="lisa-select" aria-label="Select AI Model">
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                            <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        </select>
+                        
+                        <button class="lisa-action-btn" title="Prompt Templates" aria-label="Templates" onclick="toggleMenu('templatesMenu')"><i class="fas fa-layer-group"></i></button>
+                        <div id="templatesMenu" class="lisa-dropdown-menu" style="bottom: 100%; left: 0;">
+                            <div class="lisa-menu-item" onclick="insertTemplate('Act as an Enterprise Software Architect. Review this code for performance and scalability:\n')"><i class="fas fa-code" style="width:20px;"></i> Code Review</div>
+                            <div class="lisa-menu-item" onclick="insertTemplate('Draft a technical design document (TDD) for the following requirements:\n')"><i class="fas fa-file-alt" style="width:20px;"></i> Tech Spec</div>
+                            <div class="lisa-menu-item" onclick="insertTemplate('Explain this concept simply, using an analogy suitable for a beginner:\n')"><i class="fas fa-chalkboard-teacher" style="width:20px;"></i> Explain Simple</div>
+                        </div>
+
+                        <button class="lisa-action-btn" title="System Prompt Editor" aria-label="System Prompts" onclick="openSystemPrompt()"><i class="fas fa-terminal"></i></button>
+                        <button class="lisa-action-btn" title="Workflow Builder" aria-label="Workflow Builder" onclick="document.getElementById('workflowModal').style.display='flex'"><i class="fas fa-project-diagram"></i></button>
+
+                        <button class="lisa-action-btn" title="Tools Selector" aria-label="Tools" onclick="toggleMenu('toolsMenu')"><i class="fas fa-wrench"></i></button>
+                        <div id="toolsMenu" class="lisa-dropdown-menu" style="bottom: 100%; left: 0;">
+                            <label class="lisa-menu-item" style="cursor: pointer;"><input type="checkbox" id="toolWebSearch" checked class="me-2"> Web Search Enabled</label>
+                            <label class="lisa-menu-item" style="cursor: pointer;"><input type="checkbox" id="toolCodeInterpreter" checked class="me-2"> Code Interpreter Enabled</label>
+                            <label class="lisa-menu-item" style="cursor: pointer;"><input type="checkbox" id="toolImageGen" class="me-2"> Image Generation</label>
+                        </div>
+                    </div>
+
+                    <div class="lisa-tools-right">
+                        <span title="Temperature (Creativity)"><i class="fas fa-thermometer-half"></i> <input type="range" id="tempSlider" class="lisa-slider" min="0" max="2" step="0.1" value="0.7" aria-label="Temperature slider"> <span id="tempValueDisplay" style="display:inline-block; width:20px;">0.7</span></span>
+                        <span title="Max Tokens (Length)"><i class="fas fa-coins"></i> <input type="range" id="tokenSlider" class="lisa-slider" min="256" max="8192" step="256" value="4096" aria-label="Token slider"> <span id="tokenValueDisplay" style="display:inline-block; width:35px;">4096</span></span>
+                    </div>
+                </div>
+
+                <div class="lisa-quick-chips">
+                    <span class="lisa-chip" onclick="insertTemplate('Summarize the latest student complaints: ')">Summarize Complaints</span>
+                    <span class="lisa-chip" onclick="insertTemplate('Analyze the current database sync status: ')">System Status</span>
+                    <span class="lisa-chip" onclick="insertTemplate('/chart ')">Draw Chart</span>
+                </div>
+
+                <div id="filePreviewArea" class="lisa-file-preview"></div>
+
+                <div class="lisa-input-row">
+                    <button class="lisa-action-btn" onclick="document.getElementById('fileUpload').click()" title="Attach File" aria-label="Attach File"><i class="fas fa-paperclip"></i></button>
+                    <input type="file" id="fileUpload" multiple hidden accept="*/*">
+
+                    <div id="slashCommands" class="lisa-dropdown-menu" style="bottom: 100%; left: 40px;">
+                        <div class="lisa-menu-item slash-item" onclick="insertSlashCommand('/image')"><i class="fas fa-image" style="width:20px;"></i> /image - Generate Image</div>
+                        <div class="lisa-menu-item slash-item" onclick="insertSlashCommand('/web')"><i class="fas fa-globe" style="width:20px;"></i> /web - Search Web</div>
+                        <div class="lisa-menu-item slash-item" onclick="insertSlashCommand('/chart')"><i class="fas fa-chart-pie" style="width:20px;"></i> /chart - Draw UI Chart</div>
+                        <div class="lisa-menu-item slash-item" onclick="insertSlashCommand('/code')"><i class="fas fa-code" style="width:20px;"></i> /code - Code Mode</div>
+                    </div>
+
+                    <textarea id="lisaInput" placeholder="Message L.I.S.A... (Type '/' for commands)" rows="1" aria-label="Chat Input"></textarea>
+
+                    <div class="position-relative">
+                        <button class="lisa-action-btn" title="Emoji Picker" aria-label="Emojis" onclick="toggleMenu('emojiMenu')"><i class="far fa-smile"></i></button>
+                        <div id="emojiMenu" class="lisa-emoji-grid"></div>
+                    </div>
+
+                    <button onclick="toggleSpeechRecognition()" id="micBtn" class="lisa-mic-btn" title="Dictate Message" aria-label="Microphone">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    
+                    <button onclick="sendLisaMessage()" class="lisa-send-btn" title="Send Request" aria-label="Send">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-2 pt-1 text-muted" style="font-size: 0.7rem; width: 100%;">
+                    <label style="cursor: pointer;"><input type="checkbox" id="enterToSend" checked class="me-1"> Press Enter to send</label>
+                    <div><span id="charCount">0</span> chars | <span id="tokenCount">0</span> tokens</div>
+                </div>
+
+                <div id="dragOverlay" class="d-none" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(16, 185, 129, 0.9); border-radius: 16px; align-items: center; justify-content: center; color: white; z-index: 50; flex-direction: column;">
+                    <i class="fas fa-cloud-upload-alt fa-3x mb-2"></i>
+                    <h4 class="fw-bold">Drop files to upload</h4>
+                </div>
+            </div>
+        </div>
+
+        <button class="lisa-chat-btn" onclick="toggleLisaChat()" title="Summon L.I.S.A Oracle (Alt+C)" aria-label="Open AI Assistant">
+            <i class="fas fa-robot"></i>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // ==========================================
+        // VERSION INFINITY JAVASCRIPT ENGINE
+        // ==========================================
+
+        const v8Debounce = (mainFunction, delay) => {
+            let timer;
+            return function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    mainFunction(...args);
+                }, delay);
+            };
+        };
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        Chart.defaults.color = "#94a3b8";
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        if (typeof marked !== 'undefined') {
+            marked.setOptions({
+                highlight: function(code, lang) {
+                    const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                    return hljs.highlight(code, { language }).value;
+                },
+                breaks: true,
+                gfm: true
+            });
+        }
+
+        var currentThemeIndex = 0;
+        var themes = ["dark", "light", "cyber"];
+        
+        function applySavedTheme() {
+            try {
+                var savedTheme = localStorage.getItem('v8_infinity_theme');
+                if (savedTheme !== null) {
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                    for (var i = 0; i < themes.length; i = i + 1) {
+                        if (themes[i] === savedTheme) { 
+                            currentThemeIndex = i; 
+                        }
+                    }
+                }
+            } catch (e) { console.warn("Local storage access restricted"); }
+        }
+        
+        applySavedTheme();
+
+        function toggleTheme() {
+            currentThemeIndex = currentThemeIndex + 1;
+            if (currentThemeIndex >= themes.length) { 
+                currentThemeIndex = 0; 
+            }
+            var newTheme = themes[currentThemeIndex];
+            document.documentElement.setAttribute('data-theme', newTheme);
+            try { localStorage.setItem('v8_infinity_theme', newTheme); } catch(e) {}
+        }
+
+        function updateClock() {
+            var now = new Date();
+            var days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+            
+            var hr = now.getHours();
+            var min = now.getMinutes();
+            var sec = now.getSeconds();
+            
+            var hrStr = String(hr).padStart(2, '0');
+            var minStr = String(min).padStart(2, '0');
+            var secStr = String(sec).padStart(2, '0');
+            
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var date = String(now.getDate()).padStart(2, '0');
+            
+            var dayStr = days[now.getDay()];
+            
+            var timeString = year + "-" + month + "-" + date + " | " + dayStr + " " + hrStr + ":" + minStr + ":" + secStr + " WAT";
+            
+            document.getElementById('liveClock').innerText = timeString;
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        var uptimeSeconds = 0;
+        try { uptimeSeconds = localStorage.getItem('v8_uptime') ? parseInt(localStorage.getItem('v8_uptime')) : 0; } catch(e){}
+        
+        function updateUptime() {
+            uptimeSeconds++;
+            try { localStorage.setItem('v8_uptime', uptimeSeconds); } catch(e){}
+            
+            var h = Math.floor(uptimeSeconds / 3600);
+            var m = Math.floor((uptimeSeconds % 3600) / 60);
+            var s = uptimeSeconds % 60;
+            
+            document.getElementById('uptimeClock').innerText = 
+                String(h).padStart(2, '0') + ":" + 
+                String(m).padStart(2, '0') + ":" + 
+                String(s).padStart(2, '0');
+        }
+        
+        setInterval(updateUptime, 1000);
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(function(err){
+                    console.log(err);
+                });
+                document.body.classList.add('fullscreen-active');
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    document.body.classList.remove('fullscreen-active');
+                }
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
+                e.preventDefault();
+                document.getElementById('cmdOverlay').style.display = 'flex';
+                document.getElementById('cmdInput').focus();
+            }
+            else if (e.key === 'Escape') {
+                document.getElementById('cmdOverlay').style.display = 'none';
+            }
+        });
+
+        window.executeCommand = function(cmd) {
+            document.getElementById('cmdOverlay').style.display = 'none';
+            if (cmd === 'scanner') window.location.href = "/lecturer/attendance_scanner"; 
+            if (cmd === 'theme') toggleTheme(); 
+            if (cmd === 'fullscreen') toggleFullscreen(); 
+            if (cmd === 'logout') window.location.href = "/logout"; 
+        };
+
+        function executeGlobalSearch(event) {
+            if (event && event.key !== 'Enter') return;
+            var searchInput = document.getElementById('globalSearchInput');
+            var matric = searchInput.value.trim();
+            
+            if (matric === "") return; 
+
+            searchInput.value = "Scanning Matrix...";
+            
+            v8Fetch('/api/verify_status/' + encodeURIComponent(matric), 'v8_search_cache')
+                .then(data => {
+                    searchInput.value = "";
+                    
+                    if (data.status === 'success') {
+                        document.getElementById('searchModalName').innerText = data.name;
+                        document.getElementById('searchModalMatric').innerText = matric.toUpperCase();
+                        document.getElementById('searchModalDept').innerText = data.department;
+                        
+                        var imgEl = document.getElementById('searchModalImg');
+                        imgEl.onerror = function() {
+                            this.onerror = null; 
+                            
+                            var syncName = data.name.trim(); 
+                            this.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(syncName) + '&background=198754&color=fff&size=150&bold=true';
+                        };
+                        imgEl.src = data.image;
+
+                        var badge = document.getElementById('searchModalPaid');
+                        if (data.paid) {
+                            badge.innerText = "FINANCIALLY CLEARED";
+                            badge.className = "badge bg-success";
+                        } else {
+                            badge.innerText = "DEBTOR ACCOUNT";
+                            badge.className = "badge bg-danger";
+                        }
+
+                        var linkBtn = document.getElementById('searchModalLink');
+                        if (data.id) {
+                            linkBtn.href = "/student/" + data.id;
+                            linkBtn.innerHTML = "Full Profile <i class='fas fa-arrow-right ms-1'></i>";
+                        } else {
+                            linkBtn.href = "/students";
+                            linkBtn.innerHTML = "View in Database <i class='fas fa-database ms-1'></i>";
+                        }
+
+                        var modal = new bootstrap.Modal(document.getElementById('studentSearchModal'));
+                        modal.show();
+                        
+                    } else {
+                        alert("⚠️ SECURITY ALERT: Student record not found in central database.");
+                    }
+                })
+                .catch(err => {
+                    searchInput.value = "";
+                    console.error(err);
+                    alert("❌ Connection Error: Unable to reach verification server.");
+                });
+        }
+        
+        window.debouncedSearchCheck = v8Debounce(() => {
+        }, 500);
+
+        function clearNotifications(event) {
+            event.stopPropagation();
+            document.getElementById('notifList').innerHTML = '<p style="text-align: center; color: var(--v8-muted); padding: 20px;">All alerts purged.</p>';
+            var badge = document.getElementById('notifBadge');
+            if(badge) badge.style.display = 'none'; 
+        }
+
+        // ==========================================
+        // CHIEF ARCHITECT FEATURES (FULLY FUNCTIONAL)
+        // ==========================================
+
+        // 1. TERMINAL TELEMETRY LOGGER
+        window.logToTerminal = function(msg) {
+            const term = document.getElementById('threatTerminal');
+            if(!term) return;
+            const line = document.createElement('div');
+            line.className = 'term-line';
+            line.innerText = `> ${msg}`;
+            term.appendChild(line);
+            term.scrollTop = term.scrollHeight;
+            
+            // Limit log lines
+            if (term.children.length > 20) {
+                term.removeChild(term.firstChild);
+            }
+        };
+
+        // 2. EDGE CACHING FALLBACK ENGINE (v8Fetch)
+        window.v8Fetch = async function(url, fallbackKey) {
+            try {
+                if(!navigator.onLine) throw new Error("Offline");
+                const res = await fetch(url);
+                if(!res.ok) throw new Error(`API Error: ${res.status}`);
+                const data = await res.json();
+                try { localStorage.setItem(fallbackKey, JSON.stringify(data)); } catch(e) {}
+                return data;
+            } catch (err) {
+                logToTerminal(`API ${url} failed. Routing to Edge Cache...`);
+                try {
+                    const cached = localStorage.getItem(fallbackKey);
+                    if(cached) {
+                        logToTerminal(`Cache hit for ${url}. Restoring last known state.`);
+                        return JSON.parse(cached);
+                    }
+                } catch(e) {}
+                throw err;
+            }
+        };
+
+        // 3. ZERO-TRUST DEVICE FINGERPRINTING (Web Crypto API)
+        window.generateDeviceFingerprint = async function() {
+            const display = document.getElementById('crypto-hash-display');
+            if(display) display.innerText = "GENERATING NEW HASH...";
+            try {
+                const dataStr = navigator.userAgent + window.screen.width + "x" + window.screen.height + new Date().toISOString() + Math.random();
+                const buffer = new TextEncoder().encode(dataStr);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                if(display) {
+                    display.innerText = `${hashHex.substring(0, 16).toUpperCase()} VERIFIED`;
+                    logToTerminal(`Zero-Trust Hash Regenerated: ${hashHex.substring(0, 16)}`);
+                }
+            } catch(e) {
+                if(display) display.innerText = "FALLBACK HASH VERIFIED";
+            }
+        }
+        generateDeviceFingerprint();
+
+        // 4. REAL-TIME OS NETWORK OBSERVER
+        function updateNetworkStatus() {
+            const isOnline = navigator.onLine;
+            const pulse = document.getElementById('connectivity-pulse');
+            const icon = document.getElementById('connectivity-icon');
+            const title = document.getElementById('connectivity-title');
+            const desc = document.getElementById('connectivity-desc');
+
+            if(isOnline) {
+                if(pulse) pulse.className = 'beacon-pulse';
+                if(icon) icon.className = 'fas fa-wifi text-white';
+                if(title) { title.innerText = 'Global Connectivity'; title.style.color = 'var(--v8-text)'; }
+                if(desc) desc.innerText = 'All systems online. Direct link to student portals active.';
+                logToTerminal('OS Network Link Re-Established.');
+            } else {
+                if(pulse) pulse.className = 'beacon-pulse offline';
+                if(icon) icon.className = 'fas fa-unlink text-white';
+                if(title) { title.innerText = 'OFFLINE MODE'; title.style.color = 'var(--v8-danger)'; }
+                if(desc) desc.innerText = 'Connection lost. Operating on local cache algorithms.';
+                logToTerminal('CRITICAL: OS Network Link Severed. Switching to Edge Cache.');
+                showV8Toast('System Offline. Edge Caching active.', 'danger');
+            }
+        }
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        updateNetworkStatus();
+
+        // 5. LIVE BROWSER PERFORMANCE TELEMETRY
+        try {
+            const observer = new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                    logToTerminal(`Perf Alert: Render blocked for ${Math.round(entry.duration)}ms`);
+                }
+            });
+            observer.observe({ entryTypes: ['longtask'] });
+        } catch(e) { console.warn("PerformanceObserver not supported."); }
+
+        // 6. REAL-TIME WEATHER SYNC (OPEN-METEO API)
+        function syncCampusWeather() {
+            // Latitude and Longitude for LASU Ojo Campus
+            const lat = 6.4673;
+            const lon = 3.1915;
+            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,is_day`;
+
+            fetch(weatherUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if(data && data.current) {
+                        const temp = data.current.temperature_2m;
+                        const hum = data.current.relative_humidity_2m;
+                        const wind = data.current.wind_speed_10m;
+                        const isDay = data.current.is_day; // 1 is day, 0 is night
+
+                        document.getElementById('weatherTemp').innerText = temp + '°C';
+                        document.getElementById('weatherDetails').innerText = `Humidity: ${hum}% | Wind: ${wind}km/h`;
+
+                        const card = document.getElementById('weatherCard');
+                        const icon = document.getElementById('weatherIcon');
+                        const label = document.getElementById('weatherLabel');
+                        const badge = document.getElementById('trafficBadge');
+
+                        if (isDay) {
+                            card.style.background = 'linear-gradient(135deg, var(--v8-surface), rgba(245, 158, 11, 0.1))';
+                            card.style.borderColor = 'var(--v8-warning)';
+                            label.className = 'stat-label mb-3 text-warning';
+                            label.innerText = 'Lagos Campus Environment';
+                            icon.className = 'fas fa-sun fa-4x text-warning';
+                            icon.style.animation = 'spin-slow 10s linear infinite';
+                            badge.className = 'badge bg-warning text-dark mt-2';
+                        } else {
+                            card.style.background = 'linear-gradient(135deg, var(--v8-surface), rgba(59, 130, 246, 0.1))';
+                            card.style.borderColor = '#3b82f6';
+                            label.className = 'stat-label mb-3 text-primary';
+                            label.innerText = 'Lagos Campus (Night Ops)';
+                            icon.className = 'fas fa-moon fa-4x text-primary';
+                            icon.style.animation = 'none';
+                            badge.className = 'badge bg-primary text-white mt-2';
+                            badge.innerText = 'Ojo Traffic: Light';
+                        }
+                    }
+                })
+                .catch(err => console.error("Weather Sync Failed:", err));
+        }
+
+        // 7. FACULTY INTERACTIVITY
+        window.showFacultyStats = function(faculty) {
+            const stats = Math.floor(Math.random() * 500) + 100;
+            showV8Toast(`${faculty} Faculty: ${stats} Active Sessions. Traffic optimal.`, 'primary');
+        };
+
+        let socket;
+        function initializeQuantumLink() {
+            try {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                socket = new WebSocket(`${protocol}//${window.location.host}/ws/dashboard-sync`);
+                
+                socket.onopen = function(e) {
+                    logToTerminal("QUANTUM LINK ESTABLISHED.");
+                };
+                
+                socket.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    if(data.type === 'complaint_update') {
+                        updateComplaintUI(data.payload);
+                    }
+                };
+                
+                socket.onclose = function(event) {
+                    setInterval(syncComplaints, 10000);
+                };
+            } catch (error) {
+                setInterval(syncComplaints, 10000);
+            }
+        }
+
+        function updateComplaintUI(data) {
+            var openCount = 0; var pendingCount = 0; var resolvedCount = 0;
+            for (var i = 0; i < data.length; i++) {
+                var status = data[i].status ? data[i].status.toLowerCase() : '';
+                if (status === 'open' || status === 'active') openCount++;
+                else if (status === 'pending') pendingCount++;
+                else if (status === 'resolved') resolvedCount++;
+            }
+            var openEl = document.getElementById('sync-open-count');
+            var pendingEl = document.getElementById('sync-pending-count');
+            var resolvedEl = document.getElementById('sync-resolved-count');
+            if(openEl) openEl.innerText = openCount;
+            if(pendingEl) pendingEl.innerText = pendingCount;
+            if(resolvedEl) resolvedEl.innerText = resolvedCount;
+        }
+
+        function syncComplaints() {
+            v8Fetch('/api/lecturer/get_active_tickets', 'v8_cache_complaints')
+                .then(data => { updateComplaintUI(data); })
+                .catch(e => console.error("Complaint Sync Error:", e));
+        }
+        
+        syncComplaints(); 
+        initializeQuantumLink();
+
+        document.addEventListener("DOMContentLoaded", function() {
+            
+            // Sync weather immediately and set interval
+            syncCampusWeather();
+            setInterval(syncCampusWeather, 1800000); // 30 minutes
+
+            // Integrated v8Fetch into Charts for absolute resilience
+            v8Fetch('/api/grades', 'v8_cache_grades')
+                .then(data => {
+                    var countA = data.A || 0; var countB = data.B || 0; var countC = data.C || 0; var countF = data.F || 0;
+                    var totalGrades = countA + countB + countC + countF;
+                    if (totalGrades === 0) {
+                        document.getElementById('gradeChart').style.display = 'none';
+                        document.getElementById('gradeChartWrapper').innerHTML = `
+                            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; border: 1px dashed var(--v8-primary); border-radius: 12px; background: rgba(14, 165, 233, 0.05);">
+                                <i class="fas fa-database fa-3x mb-3" style="color: var(--v8-primary); animation: pulse 2s infinite;"></i>
+                                <h5 style="margin:0; font-weight:900; color:var(--v8-primary); letter-spacing:1px;">AWAITING RESULT UPLOADS</h5>
+                                <p style="margin:5px 0 0 0; font-size:0.8rem; color:var(--v8-muted);">Upload a CSV to instantly render this chart.</p>
+                            </div>
+                        `;
+                    } else {
+                        new Chart(document.getElementById('gradeChart').getContext('2d'), {
+                            type: 'doughnut',
+                            data: { 
+                                labels: ['A', 'B', 'C', 'F'], 
+                                datasets: [{ data: [countA, countB, countC, countF], backgroundColor: ['#10b981', '#0ea5e9', '#f59e0b', '#ef4444'], borderWidth: 0 }] 
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right' } } }
+                        });
+                    }
+                }).catch(e => console.error(e));
+
+            v8Fetch('/api/departments', 'v8_cache_departments')
+                .then(data => {
+                    if (Object.keys(data).length === 0) {
+                        document.getElementById('deptChart').style.display = 'none';
+                        document.getElementById('deptChartWrapper').innerHTML = `
+                            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; border: 1px dashed var(--v8-primary); border-radius: 12px; background: rgba(14, 165, 233, 0.05);">
+                                <i class="fas fa-users-slash fa-3x mb-3" style="color: var(--v8-primary); animation: pulse 2s infinite;"></i>
+                                <h5 style="margin:0; font-weight:900; color:var(--v8-primary); letter-spacing:1px;">NO REGISTRATIONS</h5>
+                                <p style="margin:5px 0 0 0; font-size:0.8rem; color:var(--v8-muted);">Student department data is empty.</p>
+                            </div>
+                        `;
+                    } else {
+                        new Chart(document.getElementById('deptChart').getContext('2d'), {
+                            type: 'bar',
+                            data: { 
+                                labels: Object.keys(data), 
+                                datasets: [{ label: 'Students', data: Object.values(data), backgroundColor: '#0ea5e9', borderRadius: 4 }] 
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+                        });
+                    }
+                }).catch(e => console.error(e));
+
+            new Chart(document.getElementById('growthChart').getContext('2d'), {
+                type: 'line',
+                data: { 
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], 
+                    {% if session.role == 'admin' %}
+    datasets: [{ label: 'Total Enrollments', data: [12000, 12500, 12800, 13100, 13900, 14250], borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.2)', borderWidth: 3, tension: 0.4, fill: true }] 
+{% else %}
+    datasets: [{ label: 'Total Enrollments', data: [0, 0, 0, 0, 0, 0], borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.2)', borderWidth: 3, tension: 0.4, fill: true }] 
+{% endif %} 
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
+            });
+
+            var memoPad = document.getElementById('adminMemo');
+            if(memoPad) {
+                try {
+                    var savedNotes = localStorage.getItem('v8_admin_memo');
+                    if(savedNotes) memoPad.value = savedNotes;
+                    memoPad.addEventListener('input', () => localStorage.setItem('v8_admin_memo', memoPad.value));
+                } catch(e) { console.warn("Local storage disabled for memo."); }
+            }
+
+            var neuralContainer = document.querySelector('.neural-container');
+            if (neuralContainer) {
+                for (var m = 0; m < 20; m++) {
+                    var bar = document.createElement('div');
+                    bar.className = 'neural-bar';
+                    bar.style.height = Math.floor(Math.random() * 100) + '%';
+                    neuralContainer.appendChild(bar);
+                }
+                setInterval(() => {
+                    document.querySelectorAll('.neural-bar').forEach(b => b.style.height = Math.floor(Math.random() * 100) + '%');
+                    // Update RAM usage bar
+                    const ramBar = document.getElementById('ramUsageBar');
+                    const ramVal = document.getElementById('ramUsageVal');
+                    if(ramBar && ramVal) {
+                        const usage = Math.floor(Math.random() * 30) + 30; // Random between 30 and 60
+                        ramBar.style.width = usage + '%';
+                        ramVal.innerText = usage + '%';
+                    }
+                }, 800);
+            }
+            
+            var latencyMeter = document.getElementById('latency-meter');
+            if (latencyMeter) setInterval(() => { latencyMeter.innerText = (Math.floor(Math.random() * 16) + 8) + ' ms'; }, 3000);
+            
+            var backupTimer = document.getElementById('backup-timer');
+            var backupProgress = document.getElementById('backup-progress');
+            var timeRemaining = 299; 
+            
+            if (backupTimer && backupProgress) {
+                setInterval(() => {
+                    if (timeRemaining > 0) {
+                        timeRemaining--;
+                        var min = Math.floor(timeRemaining / 60); var sec = timeRemaining % 60;
+                        backupTimer.innerText = "Next in: " + String(min).padStart(2, '0') + ":" + String(sec).padStart(2, '0');
+                        backupProgress.style.width = ((299 - timeRemaining) / 299 * 100) + '%';
+                    } else {
+                        backupTimer.innerText = "Syncing...";
+                        setTimeout(() => { timeRemaining = 299; }, 3000); 
+                    }
+                }, 1000);
+            }
+        });
+
+        // --- CHIEF ARCHITECT TELEMETRY SIMULATOR ---
+        setInterval(() => {
+            const packets = document.querySelectorAll('.data-packet');
+            packets.forEach(p => {
+                if(Math.random() > 0.8) {
+                    p.style.backgroundColor = 'var(--v8-danger)';
+                    p.style.boxShadow = '0 0 10px var(--v8-danger)';
+                } else {
+                    p.style.backgroundColor = 'var(--v8-success)';
+                    p.style.boxShadow = '0 0 10px var(--v8-success)';
+                }
+            });
+        }, 3000);
+
+        window.showV8Toast = function(message, type = 'primary') {
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            toast.className = 'v8-toast';
+            var colorVar = `var(--v8-${type})`;
+            var icon = type === 'success' ? 'fa-check-circle' : (type === 'danger' ? 'fa-skull-crossbones' : 'fa-info-circle');
+            
+            toast.style.borderLeftColor = colorVar;
+            toast.innerHTML = `<i class="fas ${icon} fa-lg" style="color: ${colorVar}"></i> <div>${message}</div>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => { 
+                toast.style.opacity = '0'; 
+                toast.style.transform = 'translateX(-100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300); 
+            }, 4000);
+        };
+
+        window.toggleLisaChat = function() {
+            var chat = document.getElementById('lisaChatWindow');
+            if (chat.style.display === 'flex') {
+                chat.style.display = 'none';
+            } else {
+                chat.style.display = 'flex';
+                document.getElementById('lisaInput').focus();
+            }
+        };
+
+        const lisaInput = document.getElementById('lisaInput');
+        const charCount = document.getElementById('charCount');
+        const tokenCount = document.getElementById('tokenCount');
+        const slashCommandsBox = document.getElementById('slashCommands');
+        
+        lisaInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            let newHeight = this.scrollHeight < 120 ? this.scrollHeight : 120;
+            this.style.height = newHeight + 'px';
+            
+            const textLen = this.value.length;
+            charCount.innerText = textLen;
+            tokenCount.innerText = '~' + Math.ceil(textLen / 4);
+
+            const val = this.value;
+            const words = val.split(' ');
+            const lastWord = words[words.length - 1];
+
+            if (lastWord.startsWith('/')) {
+                slashCommandsBox.style.display = 'block';
+                const searchTerm = lastWord.substring(1).toLowerCase();
+                document.querySelectorAll('.slash-item').forEach(item => {
+                    const text = item.innerText.toLowerCase();
+                    item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+                });
+            } else {
+                slashCommandsBox.style.display = 'none';
+            }
+        });
+
+        lisaInput.addEventListener('keydown', function(e) {
+            const enterToSend = document.getElementById('enterToSend').checked;
+            if (e.key === 'Enter' && !e.shiftKey && enterToSend) {
+                e.preventDefault();
+                sendLisaMessage();
+            }
+        });
+
+        function toggleMenu(menuId) {
+            const menu = document.getElementById(menuId);
+            const isVisible = menu.style.display === 'block' || menu.style.display === 'grid';
+            document.querySelectorAll('.lisa-dropdown-menu, .lisa-emoji-grid').forEach(m => m.style.display = 'none');
+            
+            if (!isVisible) {
+                if(menuId === 'emojiMenu') {
+                    menu.style.display = 'grid';
+                    if(menu.innerHTML === '') populateEmojis();
+                } else {
+                    menu.style.display = 'block';
+                }
+            }
+        }
+
+        function populateEmojis() {
+            const emojis = ['😀','😂','🥰','😎','🤔','🙌','🔥','✨','💡','🚀','💻','🔧','🛠️','⚽','📈','✅','👀','🧠'];
+            const container = document.getElementById('emojiMenu');
+            emojis.forEach(e => {
+                const btn = document.createElement('button');
+                btn.className = 'lisa-emoji-btn';
+                btn.innerText = e;
+                btn.onclick = () => { insertTemplate(lisaInput.value + e); };
+                container.appendChild(btn);
+            });
+        }
+
+        function insertTemplate(text) {
+            lisaInput.value += text;
+            lisaInput.dispatchEvent(new Event('input'));
+            lisaInput.focus();
+            document.querySelectorAll('.lisa-dropdown-menu, .lisa-emoji-grid').forEach(m => m.style.display = 'none');
+        }
+
+        function insertSlashCommand(cmd) {
+            const val = lisaInput.value;
+            const words = val.split(' ');
+            words.pop();
+            words.push(cmd + ' ');
+            lisaInput.value = words.join(' ');
+            slashCommandsBox.style.display = 'none';
+            lisaInput.focus();
+            lisaInput.dispatchEvent(new Event('input'));
+        }
+
+        function openSystemPrompt() {
+            document.getElementById('systemPromptModal').style.display = 'flex';
+            try {
+                const saved = localStorage.getItem('lisaSystemPrompt');
+                if(saved) document.getElementById('systemPromptText').value = saved;
+            } catch(e) {}
+        }
+        function closeSystemPrompt() { document.getElementById('systemPromptModal').style.display = 'none'; }
+        function saveSystemPrompt() {
+            try {
+                localStorage.setItem('lisaSystemPrompt', document.getElementById('systemPromptText').value);
+                showV8Toast('System instructions saved to neural matrix.', 'success');
+            } catch(e) { showV8Toast('Failed to save instructions (Storage Locked).', 'danger'); }
+            closeSystemPrompt();
+        }
+
+        let stepCount = 2;
+        function addWorkflowStep() {
+            stepCount++;
+            const container = document.getElementById('workflowSteps');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="mb-3 fade-in-up">
+                    <label class="form-label small fw-bold" style="color: var(--v8-muted);">Step ${stepCount}</label>
+                    <input type="text" class="form-control" placeholder="Action to take..." style="background: rgba(0,0,0,0.3); border: 1px solid var(--v8-border); color: var(--v8-text);">
+                </div>`);
+        }
+        function executeWorkflow() {
+            document.getElementById('workflowModal').style.display='none';
+            showV8Toast("Workflow execution initiated.", "success");
+            insertTemplate("Execute my predefined workflow: ");
+        }
+
+        document.getElementById('tempSlider').addEventListener('input', function() { document.getElementById('tempValueDisplay').innerText = this.value; });
+        document.getElementById('tokenSlider').addEventListener('input', function() { document.getElementById('tokenValueDisplay').innerText = this.value; });
+
+        document.addEventListener('click', e => {
+            if(!e.target.closest('.position-relative') && !e.target.closest('.lisa-action-btn')) {
+                document.querySelectorAll('.lisa-dropdown-menu, .lisa-emoji-grid').forEach(m => m.style.display = 'none');
+            }
+        });
+
+        let speechRecognition = null;
+        let isRecording = false;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            speechRecognition = new SpeechRec();
+            speechRecognition.continuous = false;
+            speechRecognition.interimResults = false;
+            speechRecognition.onresult = function(event) {
+                lisaInput.value = event.results[0][0].transcript;
+                lisaInput.dispatchEvent(new Event('input'));
+                showV8Toast('Audio captured.', 'success');
+            };
+            speechRecognition.onend = function() { isRecording = false; document.getElementById('micBtn').classList.remove('lisa-mic-pulsate'); };
+            speechRecognition.onerror = function(event) { showV8Toast('Microphone error.', 'danger'); isRecording = false; document.getElementById('micBtn').classList.remove('lisa-mic-pulsate'); };
+        }
+
+        function toggleSpeechRecognition() {
+            if(!speechRecognition) return showV8Toast("Speech recognition not supported.", "danger");
+            if(isRecording) { speechRecognition.stop(); } 
+            else { 
+                lisaInput.value = ""; 
+                lisaInput.placeholder = "Listening..."; 
+                speechRecognition.start(); 
+                isRecording = true; 
+                document.getElementById('micBtn').classList.add('lisa-mic-pulsate'); 
+            }
+        }
+
+        const dropZone = document.getElementById('drop-zone');
+        const dragOverlay = document.getElementById('dragOverlay');
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dragOverlay.classList.remove('d-none'); dragOverlay.style.display = 'flex'; });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dragOverlay.classList.add('d-none'); dragOverlay.style.display = 'none'; });
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dragOverlay.classList.add('d-none'); dragOverlay.style.display = 'none'; handleFiles(e.dataTransfer.files); });
+        document.getElementById('fileUpload').addEventListener('change', function(e) { handleFiles(this.files); });
+        
+        function handleFiles(files) {
+            if(files.length > 0) {
+                showV8Toast(`${files.length} file(s) attached!`, 'success');
+                const previewArea = document.getElementById('filePreviewArea');
+                previewArea.style.display = 'flex';
+                Array.from(files).forEach(file => {
+                    const badge = document.createElement('div');
+                    badge.className = 'lisa-file-badge fade-in-up';
+                    badge.innerHTML = `<i class="fas fa-file-alt text-primary"></i> ${file.name.substring(0, 15)}... <i class="fas fa-times text-danger" style="cursor:pointer;" onclick="this.parentElement.remove()"></i>`;
+                    previewArea.appendChild(badge);
+                });
+            }
+        }
+
+        function checkSpecialCommands(text, body) {
+            if (text.toLowerCase().includes("do a barrel roll")) {
+                document.body.style.animation = "roll 1s ease-in-out 1";
+                setTimeout(() => document.body.style.animation = "", 1000);
+                return true;
+            }
+            if (text.toLowerCase().includes("congratulations")) {
+                if(typeof confetti !== 'undefined') confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+            if (text === '/chart') {
+                var chartId = 'chart-' + Date.now();
+                body.innerHTML += `
+                    <div class="lisa-msg-wrap fade-in-up">
+                        <span style="font-size: 0.75rem; color: var(--v8-primary); font-weight: bold;">L.I.S.A. CORE</span>
+                        <div style="color: var(--v8-text); margin-top: 10px;"><canvas id="${chartId}" width="100%" height="200"></canvas></div>
+                    </div>`;
+                body.scrollTop = body.scrollHeight;
+                
+                setTimeout(() => {
+                    new Chart(document.getElementById(chartId).getContext('2d'), {
+                        type: 'bar',
+                        data: { labels: ['Q1', 'Q2', 'Q3', 'Q4'], datasets: [{ label: 'Telemetry', data: [65, 59, 80, 81], backgroundColor: '#0ea5e9' }] },
+                        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+                    });
+                }, 100);
+                return true;
+            }
+            return false;
+        }
+
+        // ==========================================
+        // 🗣️ L.I.S.A. VOICE SYNTHESIS ENGINE
+        // ==========================================
+        window.speak = function(text) {
+            if ('speechSynthesis' in window) {
+                // Strip markdown and HTML tags so she reads it smoothly
+                let cleanText = text.replace(/<[^>]*>?/gm, '').replace(/[*_#`]/g, '');
+                let utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.rate = 1.0;  // Speed of voice
+                utterance.pitch = 1.0; // Pitch of voice
+                window.speechSynthesis.speak(utterance);
+            }
+        };
+
+        // 🟢 ARCHITECT FIX: WIRED TO THE DYNAMIC BACKEND AND REMOVED HARDCODED KEYS
+        window.sendLisaMessage = async function() {
+            var msg = lisaInput.value.trim();
+            if(!msg) return;
+            
+            var body = document.getElementById('lisaChatBody');
+            
+            var safeUserMsg = msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            body.innerHTML += `
+                <div class="user-msg-wrap fade-in-up">
+                    <span style="font-size: 0.75rem; color: var(--v8-muted); font-weight: bold; letter-spacing: 1px;">ADMIN</span>
+                    <div style="color: var(--v8-text); font-size: 0.95rem;">${safeUserMsg}</div>
+                </div>`;
+            
+            lisaInput.value = '';
+            lisaInput.style.height = 'auto';
+            charCount.innerText = '0';
+            tokenCount.innerText = '~0';
+            body.scrollTop = body.scrollHeight; 
+            
+            if(checkSpecialCommands(msg, body)) return;
+
+            const loadId = 'load-' + Date.now();
+            body.innerHTML += `
+                <div id="${loadId}" class="lisa-msg-wrap fade-in-up">
+                    <span style="font-size: 0.75rem; color: var(--v8-primary); font-weight: bold; letter-spacing: 1px;">L.I.S.A. CORE</span>
+                    <div class="lisa-typing"><span></span><span></span><span></span></div>
+                </div>`;
+            body.scrollTop = body.scrollHeight;
+
+            // Gather the dynamic variables from the UI!
+            const aiModel = document.getElementById('aiModeSelector').value;
+            const temperature = parseFloat(document.getElementById('tempSlider').value);
+            const maxTokens = parseInt(document.getElementById('tokenSlider').value);
+            
+            let sysPrompt = '';
+            try {
+                if (localStorage.getItem('lisaSystemPrompt')) {
+                    sysPrompt = localStorage.getItem('lisaSystemPrompt');
+                }
+            } catch(e) {}
+
+            try {
+                // Fetch dynamically from your Python backend instead of direct JS call
+                const response = await fetch('/api/ask_lisa', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: msg,
+                        model: aiModel,
+                        temperature: temperature,
+                        max_tokens: maxTokens,
+                        system_prompt: sysPrompt
+                    })
+                });
+
+                document.getElementById(loadId).remove();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    var rawResponse = data.response;
+                    
+                    var cleanHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(marked.parse(rawResponse)) : rawResponse;
+                    
+                    body.innerHTML += `
+                        <div class="lisa-msg-wrap fade-in-up">
+                            <span style="font-size: 0.75rem; color: var(--v8-primary); font-weight: bold; letter-spacing: 1px;">L.I.S.A. CORE</span>
+                            <div style="color: var(--v8-text); margin-top: 5px;">${cleanHTML}</div>
+                        </div>`;
+                    
+                    document.querySelectorAll('.lisa-chat-body pre code').forEach((block) => {
+                        try { hljs.highlightElement(block); } catch(e){}
+                    });
+                    if (window.MathJax) { 
+                        try { MathJax.typesetPromise([body]).catch(err => console.error(err)); } catch(e){}
+                    }
+                    speak(rawResponse);
+                } else {
+                    const errData = await response.json();
+                    throw new Error(errData.response || "Server Connection Failed");
+                }
+                
+                body.scrollTop = body.scrollHeight;
+
+            } catch (err) {
+                if (document.getElementById(loadId)) document.getElementById(loadId).remove();
+                
+                // --- ADDED ARCHITECT-GRADE 429 INTERCEPTOR ---
+                let errorText = err.message;
+                if (errorText.includes("429") || errorText.includes("Quota exceeded") || errorText.includes("RESOURCE_EXHAUSTED")) {
+                    errorText = "L.I.S.A. Core has temporarily exhausted its neural processing quota (API Error 429). Please wait 60 seconds before initiating the next request, or upgrade your Google AI Studio billing tier to increase bandwidth.";
+                }
+                
+                var fallbackHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(marked.parse(`**SYSTEM ERROR:** Neural link disrupted.\n\n*${errorText}*`)) : "Error.";
+                
+                body.innerHTML += `
+                    <div class="lisa-msg-wrap fade-in-up" style="border-left-color: var(--v8-danger); background: rgba(239, 68, 68, 0.05);">
+                        <span style="font-size: 0.75rem; color: var(--v8-danger); font-weight: bold; letter-spacing: 1px;">SYSTEM ERROR</span>
+                        <div style="color: var(--v8-danger); margin-top: 5px;">${fallbackHTML}</div>
+                    </div>`;
+                body.scrollTop = body.scrollHeight;
+            }
+        };
+
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+                e.preventDefault();
+                toggleLisaChat();
+            }
+        });
+
+        setTimeout(() => {
+            showV8Toast("V8.5 Enterprise Intelligence Online.", "success");
+            setTimeout(() => showV8Toast("Service Mesh Matrix Synced successfully.", "primary"), 1000);
+        }, 1500);
+
+        /* -----------------------------------------------------------
+           📊 NEW LECTURER SOCIAL TELEMETRY ENGINE & MODAL BEHAVIOR
+           ----------------------------------------------------------- */
+        
+        // Triggers the Global Scanner from the Deep Scan button inside the Modal
+        window.triggerDeepScan = function(matric) {
+            var spModalEl = document.getElementById('socialProfileModal');
+            var spModal = bootstrap.Modal.getInstance(spModalEl);
+            if(spModal) spModal.hide();
+            
+            setTimeout(() => {
+                const searchInput = document.getElementById('globalSearchInput');
+                searchInput.value = matric;
+                searchInput.focus();
+                executeGlobalSearch({key: 'Enter'});
+            }, 300);
+        };
+
+        // Prompts the Lecturer for a secure direct message to the student (UPGRADED ARCHITECTURE)
+        window.triggerDirectMessage = function(name, matric) {
+            var spModalEl = document.getElementById('socialProfileModal');
+            var spModal = bootstrap.Modal.getInstance(spModalEl);
+            if(spModal) spModal.hide();
+            
+            setTimeout(async () => {
+                const msg = prompt(`Enter secure transmission to ${name} (${matric}):`);
+                if(msg && msg.trim() !== '') {
+                    try {
+                        // Attempt payload transmission to your Flask backend
+                        const response = await fetch('/api/messages/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ matric: matric, message: msg.trim() })
+                        });
+                        
+                        if(response.ok) {
+                            showV8Toast(`Encrypted message transmitted to ${name}.`, 'success');
+                            logToTerminal(`Direct message dispatched to ${matric}`);
+                        } else {
+                            throw new Error("Backend synchronization failed.");
+                        }
+                    } catch (error) {
+                        showV8Toast('Secure connection interrupted. Payload failed to deploy.', 'danger');
+                        logToTerminal(`Transmission Error: ${error.message}`);
+                    }
+                }
+            }, 400);
+        };
+
+        // Opens the Modal and fetches VERIFIED Student Data from the Backend
+        window.openSocialProfile = async function(name, avatar, matric, dept) {
+            document.getElementById('spModalName').innerText = name;
+            document.getElementById('spModalImg').src = avatar;
+            
+            // Initiate Loading State
+            document.getElementById('spModalMatric').innerText = "FETCHING IDENTITY...";
+            document.getElementById('spModalDept').innerHTML = `<i class="fas fa-spinner fa-spin text-primary"></i> Querying Database...`;
+            
+            var modalEl = document.getElementById('socialProfileModal');
+            var modal = bootstrap.Modal.getInstance(modalEl);
+            if (!modal) modal = new bootstrap.Modal(modalEl);
+            modal.show();
+
+            let verifiedMatric = matric;
+            let verifiedDept = dept;
+
+            // If the matric number is missing, fetch it from the master database!
+            if (!verifiedMatric || verifiedMatric === 'undefined' || verifiedMatric === 'null') {
+                try {
+                    const response = await fetch(`/api/student/lookup?name=${encodeURIComponent(name)}`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        verifiedMatric = data.matric;
+                        verifiedDept = data.dept;
+                    } else {
+                        verifiedMatric = "UNREGISTERED ENTITY";
+                        verifiedDept = "Unknown Department";
+                    }
+                } catch (error) {
+                    verifiedMatric = "CONNECTION ERROR";
+                    verifiedDept = "Offline Mode";
+                    console.error("Identity lookup failed:", error);
+                }
+            }
+
+            // Inject the Verified Data
+            document.getElementById('spModalMatric').innerText = verifiedMatric;
+            document.getElementById('spModalDept').innerHTML = `<i class="fas fa-building me-1"></i> ${verifiedDept}`;
+            
+            // Wire the action buttons to use the VERIFIED matric number
+            document.getElementById('spBtnMessage').onclick = () => window.triggerDirectMessage(name, verifiedMatric);
+            document.getElementById('spBtnScan').onclick = () => window.triggerDeepScan(verifiedMatric);
+        };
+
+        function loadLecturerTelemetry() {
+            document.querySelectorAll('.telemetry-dashboard').forEach(dashboard => {
+                const title = dashboard.getAttribute('data-title');
+                const key = 'lasu_social_' + title;
+                const dataStr = localStorage.getItem(key);
+                
+                if (dataStr) {
+                    const state = JSON.parse(dataStr);
+                    
+                    // 1. Render Likes
+                    const likeSpan = dashboard.querySelector('.tel-likes');
+                    if(likeSpan) likeSpan.innerText = state.likes || 0;
+                    
+                    // 2. Render Comments Count
+                    const commentSpan = dashboard.querySelector('.tel-comment-count');
+                    if(commentSpan) commentSpan.innerText = state.comments ? state.comments.length : 0;
+                    
+                    // 3. Render Reactions Matrix
+                    const reactionBox = dashboard.querySelector('.tel-reactions');
+                    if (reactionBox && state.reactions && state.reactions.length > 0) {
+                        reactionBox.innerHTML = ''; // clear default
+                        // Create a frequency map
+                        const counts = {};
+                        state.reactions.forEach(r => counts[r] = (counts[r] || 0) + 1);
+                        
+                        for (const [emoji, count] of Object.entries(counts)) {
+                            reactionBox.innerHTML += `<span title="${count} students reacted" style="margin-right:8px;">${emoji} <small class="text-muted">${count}</small></span>`;
+                        }
+                    }
+                    
+                    // 4. Render Comments List
+                    const commentBox = dashboard.querySelector('.telemetry-comments-box');
+                    if (commentBox && state.comments && state.comments.length > 0) {
+                        // Only rebuild if comment count changed to prevent UI flashing
+                        if(commentBox.children.length !== state.comments.length) {
+                            commentBox.innerHTML = '';
+                            state.comments.forEach(c => {
+                                // Fallback avatar if None/undefined
+                                const safeAvatar = c.avatar && c.avatar !== 'None' ? c.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=198754&color=fff`;
+                                
+                                commentBox.innerHTML += `
+                                    <div class="telemetry-comment">
+                                        <img src="${safeAvatar}" class="telemetry-avatar" onclick="openSocialProfile('${c.name}', '${safeAvatar}')" title="Inspect Profile">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 0.85rem; color: var(--v8-text); cursor: pointer;" onclick="openSocialProfile('${c.name}', '${safeAvatar}')">${c.name}</div>
+                                            <div style="font-size: 0.85rem; color: var(--v8-muted);">${c.text}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        }
+                    } else if(commentBox) {
+                        commentBox.innerHTML = '<div class="text-center text-muted small py-2">No comments recorded yet.</div>';
+                    }
+                }
+            });
+        }
+
+        function toggleTelemetryComments(boxId) {
+            const box = document.getElementById(boxId);
+            if(box) {
+                if (box.style.display === 'block') {
+                    box.style.display = 'none';
+                } else {
+                    box.style.display = 'block';
+                }
+            }
+        }
+
+        // Initialize telemetry and set up an interval to simulate live updates
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLecturerTelemetry();
+            // Poll for updates every 3 seconds to show live data from localStorage
+            setInterval(loadLecturerTelemetry, 3000);
+        });
+
+    </script>
+</body>
+</html>

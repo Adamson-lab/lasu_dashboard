@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbital Packet Sniffer | PRO MAX MAX MAX</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ==========================================
+           V INFINITY PRO MAX MAX MAX THEME ENGINE
+           ========================================== */
+        
+        /* LIGHT MODE (NEW DEFAULT) */
+        [data-theme="light"] {
+            --bg-master: #f1f5f9;
+            --bg-surface: #ffffff;
+            --term-bg: #f8fafc;
+            --border-core: #cbd5e1;
+            --border-neon: #0284c7;
+            --text-main: #0f172a;
+            --text-mute: #64748b;
+            --text-cyber: #0284c7;
+            --grid-line: rgba(0, 0, 0, 0.04);
+            --shadow-core: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --alert: #ef4444;
+            --warn: #f59e0b;
+            --info: #0ea5e9;
+            --temporal: #6d28d9;
+            --success: #10b981;
+        }
+
+        /* DARK MODE */
+        [data-theme="dark"] {
+            --bg-master: #020617;
+            --bg-surface: #0f172a;
+            --term-bg: #050510;
+            --border-core: #1e293b;
+            --border-neon: #10b981;
+            --text-main: #f8fafc;
+            --text-mute: #64748b;
+            --text-cyber: #10b981;
+            --grid-line: rgba(255, 255, 255, 0.03);
+            --shadow-core: 0 15px 35px rgba(0, 0, 0, 0.5);
+            --alert: #ef4444;
+            --warn: #f59e0b;
+            --info: #0ea5e9;
+            --temporal: #8b5cf6;
+            --success: #10b981;
+        }
+
+        body { 
+            background-color: var(--bg-master); 
+            color: var(--text-main); 
+            font-family: 'JetBrains Mono', 'Courier New', monospace; 
+            margin: 0; 
+            padding: 20px; 
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* CRT Effect (Dark mode only) */
+        [data-theme="dark"] body::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 9999; background-size: 100% 2px, 3px 100%; pointer-events: none; opacity: 0.8;
+        }
+
+        /* Panels */
+        .cyber-panel { 
+            background: var(--bg-surface); 
+            border: 1px solid var(--border-core); 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: var(--shadow-core); 
+            margin-bottom: 20px;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+        
+        .cyber-panel:hover {
+            border-color: var(--border-neon);
+            box-shadow: 0 10px 30px rgba(var(--border-neon), 0.1);
+        }
+
+        .panel-header {
+            border-bottom: 1px dashed var(--border-core);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-transform: uppercase;
+        }
+
+        /* THEME BUTTON */
+        .btn-theme {
+            background: var(--bg-master);
+            color: var(--text-main);
+            border: 1px solid var(--border-core);
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .btn-theme:hover { border-color: var(--border-neon); color: var(--border-neon); transform: translateY(-2px); }
+
+        /* Controls */
+        .tz-select {
+            background: var(--bg-master);
+            color: var(--temporal);
+            border: 1px solid var(--border-core);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .tz-select:focus, .tz-select:hover { border-color: var(--temporal); box-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
+
+        .btn-cyber { 
+            background: var(--bg-surface); 
+            border: 1px solid var(--border-core); 
+            color: var(--text-main); 
+            padding: 8px 16px; 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            font-size: 0.8rem;
+            border-radius: 6px;
+            transition: all 0.2s; 
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .btn-cyber:hover, .btn-cyber.active { 
+            background: var(--border-neon); 
+            color: #fff; 
+            border-color: var(--border-neon);
+            box-shadow: 0 5px 15px rgba(2, 132, 199, 0.3);
+        }
+        .btn-cyber-danger { border-color: var(--alert); color: var(--alert); }
+        .btn-cyber-danger:hover { background: var(--alert); color: #fff; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); }
+
+        /* Terminal Window */
+        .terminal { 
+            height: 48vh; 
+            overflow-y: auto; 
+            background: var(--term-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.75rem;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);
+        }
+        
+        /* New Smooth Injection Animation */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .log-line { 
+            display: grid;
+            grid-template-columns: 70px 110px 60px 60px 1fr 100px;
+            gap: 10px;
+            margin-bottom: 4px; 
+            border-left: 3px solid transparent; 
+            padding: 8px 10px; 
+            cursor: pointer; 
+            border-bottom: 1px solid var(--grid-line);
+            align-items: center;
+            background: var(--bg-surface);
+            border-radius: 4px;
+            animation: slideIn 0.2s ease-out forwards;
+        }
+        .log-line:hover { background: var(--term-bg); border-left-color: var(--border-neon); transform: translateX(2px); transition: 0.2s; }
+
+        /* Text Helpers */
+        .text-danger { color: var(--alert) !important; }
+        .text-warning { color: var(--warn) !important; }
+        .text-info { color: var(--info) !important; }
+        .text-temporal { color: var(--temporal) !important; }
+        .text-success { color: var(--success) !important; }
+        .text-cyber { color: var(--text-cyber) !important; font-weight: bold; }
+
+        /* Hex Dump Box */
+        .hex-dump { font-size: 0.75rem; color: var(--text-mute); line-height: 1.6; height: 280px; overflow-y: auto; background: var(--term-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-core); box-shadow: inset 0 2px 10px rgba(0,0,0,0.02); }
+        .hex-offset { color: var(--text-cyber); margin-right: 12px; font-weight: bold; }
+        .hex-ascii { color: var(--warn); margin-left: 12px; font-weight: bold;}
+
+        /* Live Graph */
+        .graph-container { display: flex; align-items: flex-end; height: 80px; gap: 4px; padding-bottom: 5px;}
+        .graph-bar { width: 12px; background: var(--text-cyber); transition: height 0.1s ease-out; border-radius: 3px 3px 0 0; }
+
+        /* Progress Bars */
+        .proto-bar-bg { background: var(--term-bg); height: 12px; border-radius: 6px; overflow: hidden; margin-top: 5px; border: 1px solid var(--border-core); }
+        .proto-bar-fill { height: 100%; background: var(--border-neon); transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid position-relative" style="max-width: 1700px; z-index: 5;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 cyber-panel">
+            <div class="d-flex align-items-center gap-4">
+                <h2 class="m-0 fs-3 fw-bold" style="letter-spacing: -1px;">
+                    <i class="fas fa-radar me-2 text-cyber" style="animation: pulse 2s infinite;"></i> 
+                    DPI <span class="text-mute fw-light">MATRIX</span>
+                    <span class="badge ms-2 text-white" style="font-size:0.6rem; vertical-align: middle; background: linear-gradient(135deg, var(--alert), var(--warn));">PRO MAX³</span>
+                </h2>
+                
+                <div class="d-none d-md-flex gap-3 border-start ps-4" style="border-color: var(--border-core) !important;">
+                    <div>
+                        <div style="font-size: 0.6rem; color: var(--text-mute); font-weight: bold;">CPU LOAD</div>
+                        <div class="fw-bold text-success" id="cpuLoad">14%</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.6rem; color: var(--text-mute); font-weight: bold;">MEM ALLOC</div>
+                        <div class="fw-bold text-info" id="memLoad">2.4 GB</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                
+                <div class="d-flex flex-column align-items-end me-2">
+                    <span style="font-size: 0.65rem; color: var(--temporal); font-weight: bold; letter-spacing: 1px; margin-bottom: 2px;">TEMPORAL CORE</span>
+                    <select id="temporalEngine" class="tz-select" onchange="recalibrateTimezone()">
+                        <option value="Africa/Lagos">WAT (Lagos / West Africa)</option>
+                        <option value="UTC">UTC (Zulu / Prime)</option>
+                        <option value="America/New_York">EST (New York)</option>
+                        <option value="Europe/London">GMT (London)</option>
+                        <option value="Asia/Tokyo">JST (Tokyo)</option>
+                    </select>
+                </div>
+
+                <div class="text-end me-3 px-3 border-end border-start" style="border-color: var(--border-core) !important;">
+                    <div style="font-size: 0.65rem; color: var(--text-mute); font-weight: bold; letter-spacing: 1px;">SYSTEM TIME</div>
+                    <div id="sysTime" class="fw-bold" style="font-size: 1.2rem; color: var(--text-main); letter-spacing: -1px;">00:00:00.000</div>
+                </div>
+
+                <button class="btn-theme" id="themeToggleBtn" onclick="toggleMasterTheme()" title="Toggle Dark/Light Matrix">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                
+                <button class="btn-cyber btn-cyber-danger ms-1" onclick="window.history.back()">
+                    <i class="fas fa-power-off"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-lg-6">
+                <div class="cyber-panel h-100 d-flex flex-column justify-content-center">
+                    <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                        <button class="btn-cyber" id="startBtn" onclick="toggleSniffer()"><i class="fas fa-play me-2"></i> Init Capture</button>
+                        <button class="btn-cyber" onclick="clearBuffer()"><i class="fas fa-trash me-2"></i> Purge Buffer</button>
+                        <button class="btn-cyber text-mute" onclick="alert('Exporting PCAP trace to local disk...')"><i class="fas fa-download me-2"></i> PCAP</button>
+                        
+                        <div class="ms-auto border px-3 py-2 rounded d-flex align-items-center gap-2" style="border-color: var(--border-core)!important; background: var(--term-bg);">
+                            <div id="statusDot" style="width:8px; height:8px; border-radius:50%; background: var(--text-mute);"></div>
+                            <span id="status" class="fw-bold" style="color: var(--text-mute); font-size: 0.85rem;">STANDBY</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center border-top pt-3 mt-1" style="border-color: var(--border-core)!important;">
+                        <span class="text-mute small fw-bold me-2"><i class="fas fa-filter"></i> RULES:</span>
+                        <button class="btn-cyber active" style="padding: 4px 12px; font-size: 0.7rem;" onclick="setFilter('ALL', this)">ALL</button>
+                        <button class="btn-cyber" style="padding: 4px 12px; font-size: 0.7rem;" onclick="setFilter('TCP', this)">TCP</button>
+                        <button class="btn-cyber" style="padding: 4px 12px; font-size: 0.7rem;" onclick="setFilter('UDP', this)">UDP</button>
+                        <button class="btn-cyber" style="padding: 4px 12px; font-size: 0.7rem;" onclick="setFilter('HTTP', this)">HTTP</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="cyber-panel h-100" style="padding: 15px 20px;">
+                    <div class="panel-header" style="font-size: 0.8rem; margin-bottom: 5px; border:none;">
+                        <span><i class="fas fa-chart-area me-2 text-cyber"></i> THROUGHPUT EQUALIZER (PPS)</span>
+                    </div>
+                    <div class="graph-container" id="liveGraph">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="cyber-panel" style="padding: 15px;">
+                    <div class="panel-header" style="padding-bottom: 8px; margin-bottom: 10px;">
+                        <span><i class="fas fa-list me-2"></i> LIVE PACKET STREAM</span>
+                        <span id="pktCount" class="badge text-white" style="background: var(--text-cyber);">Captured: 0</span>
+                    </div>
+                    
+                    <div class="d-grid mb-2 text-mute fw-bold" style="grid-template-columns: 70px 110px 60px 60px 1fr 100px; gap: 10px; padding: 5px 10px; font-size: 0.7rem; border-bottom: 2px solid var(--border-core); background: var(--term-bg); border-radius: 6px;">
+                        <div>PACKET ID</div>
+                        <div>TIMESTAMP</div>
+                        <div>PROTO</div>
+                        <div>ROUTE</div>
+                        <div>SOURCE -> DESTINATION</div>
+                        <div class="text-end">INFO</div>
+                    </div>
+
+                    <div class="terminal" id="terminal">
+                        <div class="p-2 text-cyber fw-bold" style="font-size: 0.9rem;">>> V INFINITY PRO MAX³ ENGINE INITIALIZED... OK.</div>
+                        <div class="p-2 text-cyber fw-bold" style="font-size: 0.9rem;">>> DEFAULT THEME: LIGHT (AWS/AZURE SPEC)... OK.</div>
+                        <div class="p-2 text-mute">>> AWAITING START COMMAND...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 d-flex flex-column gap-3">
+                
+                <div class="cyber-panel" style="padding: 20px;">
+                    <div class="panel-header" style="font-size: 0.85rem;"><i class="fas fa-chart-pie me-2 text-cyber"></i> TRAFFIC DISTRIBUTION</div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small fw-bold"><span>TCP/IP</span> <span id="tcpPct" class="text-cyber">0%</span></div>
+                        <div class="proto-bar-bg"><div class="proto-bar-fill" id="tcpBar" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small fw-bold"><span>HTTP(S)</span> <span id="httpPct" class="text-warning">0%</span></div>
+                        <div class="proto-bar-bg"><div class="proto-bar-fill bg-warning" id="httpBar" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="mb-1">
+                        <div class="d-flex justify-content-between small fw-bold"><span>UDP/ICMP</span> <span id="udpPct" class="text-info">0%</span></div>
+                        <div class="proto-bar-bg"><div class="proto-bar-fill bg-info" id="udpBar" style="width: 0%;"></div></div>
+                    </div>
+                </div>
+
+                <div class="cyber-panel flex-grow-1" style="padding: 20px;">
+                    <div class="panel-header" style="font-size: 0.85rem;">
+                        <span><i class="fas fa-search-plus me-2 text-cyber"></i> DEEP INSPECTION (HEX)</span>
+                    </div>
+                    <div class="hex-dump" id="hexDump">
+                        >> Select a packet from the stream to generate deep hex analysis...
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // THEME ENGINE (LIGHT MODE DEFAULT)
+        // ==========================================
+        function toggleMasterTheme() {
+            const htmlTag = document.documentElement;
+            const currentTheme = htmlTag.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            htmlTag.setAttribute('data-theme', newTheme);
+            // In Light Mode, show a Moon (to go dark). In Dark Mode, show a Sun (to go light).
+            document.getElementById('themeIcon').className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('lisa_vinfinity_theme', newTheme);
+        }
+
+        // Init Theme on Load (Defaulting to light as requested)
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = localStorage.getItem('lisa_vinfinity_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+        });
+
+
+        // ==========================================
+        // CORE VARIABLES
+        // ==========================================
+        let isRunning = false;
+        let snifferInterval;
+        let packetCounter = 0;
+        let currentFilter = 'ALL';
+        
+        // DOM ELEMENTS
+        const terminal = document.getElementById('terminal');
+        const hexDump = document.getElementById('hexDump');
+        const liveGraph = document.getElementById('liveGraph');
+        const tzSelect = document.getElementById('temporalEngine');
+        const statusDot = document.getElementById('statusDot');
+        
+        // STATS OBJECT
+        const stats = { total: 0, TCP: 0, HTTP: 0, HTTPS: 0, UDP: 0, ICMP: 0 };
+
+        // INITIALIZE GRAPH BARS
+        for(let i=0; i<45; i++) {
+            liveGraph.innerHTML += `<div class="graph-bar" style="height: 4px; background: var(--border-core);"></div>`;
+        }
+
+        // ==========================================
+        // TEMPORAL ENGINE (TIMEZONE SYNC)
+        // ==========================================
+        function getTemporalString() {
+            const now = new Date();
+            const tz = tzSelect.value;
+            
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: tz,
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            const parts = formatter.formatToParts(now);
+            let hh, mm, ss;
+            parts.forEach(p => {
+                if(p.type==='hour') hh = p.value;
+                if(p.type==='minute') mm = p.value;
+                if(p.type==='second') ss = p.value;
+            });
+            
+            const ms = String(now.getMilliseconds()).padStart(3, '0');
+            return `${hh}:${mm}:${ss}.${ms}`;
+        }
+
+        function recalibrateTimezone() {
+            const tz = tzSelect.value;
+            const log = `<div class="p-2 fw-bold text-temporal mb-2" style="background: rgba(109, 40, 217, 0.05); border-left: 3px solid var(--temporal);">>> TEMPORAL SHIFT DETECTED: SYNCING TO ${tz} <<</div>`;
+            terminal.insertAdjacentHTML('beforeend', log);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        setInterval(() => {
+            document.getElementById('sysTime').innerText = getTemporalString();
+        }, 50);
+
+        // FAKE CPU/MEM LOAD SIMULATOR
+        setInterval(() => {
+            if(isRunning) {
+                document.getElementById('cpuLoad').innerText = (Math.floor(Math.random() * 40) + 10) + '%';
+                document.getElementById('memLoad').innerText = (2.4 + Math.random() * 0.5).toFixed(1) + ' GB';
+            } else {
+                document.getElementById('cpuLoad').innerText = '4%';
+                document.getElementById('memLoad').innerText = '1.8 GB';
+            }
+        }, 2000);
+
+
+        // ==========================================
+        // UI CONTROLS & LOGIC
+        // ==========================================
+        function toggleSniffer() {
+            isRunning = !isRunning;
+            const btn = document.getElementById('startBtn');
+            const status = document.getElementById('status');
+            
+            if(isRunning) {
+                btn.innerHTML = '<i class="fas fa-stop me-2"></i> Halt Capture';
+                btn.classList.add('btn-cyber-danger');
+                status.innerText = 'INTERCEPTING';
+                status.style.color = 'var(--alert)';
+                statusDot.style.background = 'var(--alert)';
+                statusDot.style.boxShadow = '0 0 10px var(--alert)';
+                statusDot.style.animation = 'pulse 1s infinite';
+                snifferInterval = setInterval(interceptPacket, 100); // Super fast for PRO MAX MAX MAX
+            } else {
+                btn.innerHTML = '<i class="fas fa-play me-2"></i> Init Capture';
+                btn.classList.remove('btn-cyber-danger');
+                status.innerText = 'STANDBY';
+                status.style.color = 'var(--text-mute)';
+                statusDot.style.background = 'var(--text-mute)';
+                statusDot.style.boxShadow = 'none';
+                statusDot.style.animation = 'none';
+                clearInterval(snifferInterval);
+            }
+        }
+
+        function clearBuffer() {
+            terminal.innerHTML = '<div class="p-2 text-mute">>> BUFFER PURGED. AWAITING DATA...</div>';
+            hexDump.innerHTML = '>> BUFFER PURGED.';
+            packetCounter = 0;
+            document.getElementById('pktCount').innerText = `Captured: 0`;
+            stats.total = 0; stats.TCP = 0; stats.HTTP = 0; stats.HTTPS = 0; stats.UDP = 0; stats.ICMP = 0;
+            updateDashboards();
+        }
+
+        function setFilter(proto, btn) {
+            currentFilter = proto;
+            document.querySelectorAll('.col-lg-6 .btn-cyber').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const log = `<div class="p-2 text-info fw-bold mb-2" style="background: rgba(14, 165, 233, 0.05); border-left: 3px solid var(--info);">>> FILTER APPLIED: ${proto} ONLY</div>`;
+            terminal.insertAdjacentHTML('beforeend', log);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+
+        // ==========================================
+        // PRO MAX MAX MAX PACKET GENERATION ENGINE
+        // ==========================================
+        function interceptPacket() {
+            const ips = ['192.168.1.104', '10.0.0.5', '172.16.254.1', '8.8.8.8', '1.1.1.1', '192.168.19.111'];
+            const geos = ['NGA', 'USA', 'GBR', 'JPN', 'FRA', 'ZAF'];
+            const protocols = ['TCP', 'TCP', 'UDP', 'ICMP', 'HTTP', 'HTTPS'];
+            const ports = [80, 443, 22, 21, 5000, 3306, 8080];
+            
+            const src = ips[Math.floor(Math.random() * ips.length)];
+            const dst = ips[Math.floor(Math.random() * ips.length)];
+            
+            const geoSrc = geos[Math.floor(Math.random() * geos.length)];
+            const geoDst = geos[Math.floor(Math.random() * geos.length)];
+
+            const proto = protocols[Math.floor(Math.random() * protocols.length)];
+            const port = ports[Math.floor(Math.random() * ports.length)];
+            const size = Math.floor(Math.random() * 1500) + 64;
+            
+            // Generate Fake Hex Packet ID
+            const pktId = "0x" + Math.floor(Math.random()*65535).toString(16).toUpperCase().padStart(4, '0');
+
+            const timestamp = getTemporalString().slice(0, -4);
+
+            if(currentFilter !== 'ALL' && !proto.includes(currentFilter)) return;
+
+            stats.total++;
+            stats[proto]++;
+            packetCounter++;
+            document.getElementById('pktCount').innerText = `Captured: ${packetCounter}`;
+            if(stats.total % 5 === 0) updateDashboards(); // Throttled update for performance
+
+            // Color Coding
+            let rowColor = 'color: var(--text-main);';
+            let protoClass = 'text-cyber';
+            let flags = '[S.]';
+
+            if(proto === 'HTTP' || proto === 'HTTPS') { rowColor = 'color: var(--warn);'; protoClass = 'text-warning'; flags = '[P.]'; }
+            if(proto === 'UDP' || proto === 'ICMP') { rowColor = 'color: var(--info);'; protoClass = 'text-info'; flags = '[E.]'; }
+            
+            // Threat Node Alert
+            let alertTag = '';
+            if(src === '192.168.19.111' || dst === '192.168.19.111') { 
+                rowColor = 'color: var(--alert); font-weight: bold;'; 
+                protoClass = 'text-danger';
+                alertTag = '<i class="fas fa-exclamation-circle ms-1 text-danger" title="Threat Node"></i>';
+            }
+
+            // PRO MAX MAX MAX Data Grid Log
+            const log = `
+            <div class="log-line" style="${rowColor}" onclick="generateHex('${pktId}', ${size}, '${proto}', '${src}', '${dst}')">
+                <div style="color: var(--text-mute); font-weight: bold; font-size:0.7rem;">${pktId}</div>
+                <div style="color: var(--text-mute);">${timestamp}</div>
+                <div class="${protoClass} fw-bold">${proto}</div>
+                <div style="font-size: 0.65rem; color: var(--temporal); font-weight: bold;">${geoSrc} > ${geoDst}</div>
+                <div class="text-truncate">
+                    ${src}:${Math.floor(Math.random()*60000)} 
+                    <i class="fas fa-arrow-right mx-1" style="font-size:0.6rem; opacity: 0.5;"></i> 
+                    ${dst}:${port} ${alertTag}
+                </div>
+                <div class="text-end" style="opacity: 0.8; font-size: 0.7rem;">L:${size} ${flags}</div>
+            </div>`;
+            
+            terminal.insertAdjacentHTML('beforeend', log);
+            
+            terminal.scrollTop = terminal.scrollHeight;
+            if(terminal.childElementCount > 150) terminal.removeChild(terminal.firstChild);
+
+            if(Math.random() > 0.85) generateHex(pktId, size, proto, src, dst);
+            
+            updateLiveGraph();
+        }
+
+
+        // ==========================================
+        // DEEP INSPECTION (HEX) GENERATOR
+        // ==========================================
+        function generateHex(pktId, size, protoType, src, dst) {
+            let hexHTML = `
+                <div style="background: var(--bg-surface); border: 1px solid var(--border-core); border-radius: 6px; padding: 10px; margin-bottom: 15px;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-cyber"><i class="fas fa-microchip me-2"></i> PACKET ${pktId}</span>
+                        <span class="badge bg-secondary">${protoType}</span>
+                    </div>
+                    <div style="font-size: 0.7rem; color: var(--text-mute); display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                        <div><strong>SRC:</strong> ${src}</div>
+                        <div><strong>DST:</strong> ${dst}</div>
+                        <div><strong>SIZE:</strong> ${size} Bytes</div>
+                        <div><strong>TTL:</strong> ${Math.floor(Math.random()*60)+60}</div>
+                    </div>
+                </div>`;
+            
+            let bytesRendered = 0;
+            const lines = Math.min(Math.ceil(size / 16), 16); 
+
+            for(let i=0; i<lines; i++) {
+                let offset = (i * 16).toString(16).padStart(4, '0');
+                let hexStr = '';
+                let asciiStr = '';
+                
+                for(let j=0; j<16; j++) {
+                    if(bytesRendered >= size) break;
+                    
+                    let byte;
+                    if(protoType === 'HTTP' && bytesRendered < 14) {
+                        byte = "GET /index HTTP".charCodeAt(bytesRendered) || 32;
+                    } else if (protoType === 'HTTPS' && bytesRendered < 5) {
+                        byte = "TLSv1".charCodeAt(bytesRendered) || 32;
+                    } else {
+                        byte = Math.floor(Math.random() * 256);
+                    }
+                    
+                    hexStr += byte.toString(16).padStart(2, '0') + ' ';
+                    asciiStr += (byte > 32 && byte < 127) ? String.fromCharCode(byte) : '.';
+                    bytesRendered++;
+                }
+                
+                hexHTML += `<div><span class="hex-offset">${offset}0</span> <span style="display:inline-block;width:230px;font-family:'Courier New';">${hexStr}</span> <span class="hex-ascii">${asciiStr.replace(/</g, "&lt;")}</span></div>`;
+            }
+            hexDump.innerHTML = hexHTML;
+        }
+
+
+        // ==========================================
+        // HUD / DASHBOARD UPDATES
+        // ==========================================
+        function updateDashboards() {
+            if(stats.total === 0) return;
+            
+            const tcpP = Math.round((stats.TCP / stats.total) * 100);
+            const httpP = Math.round(((stats.HTTP + stats.HTTPS) / stats.total) * 100);
+            const udpP = Math.round(((stats.UDP + stats.ICMP) / stats.total) * 100);
+
+            document.getElementById('tcpPct').innerText = `${tcpP}%`;
+            document.getElementById('tcpBar').style.width = `${tcpP}%`;
+
+            document.getElementById('httpPct').innerText = `${httpP}%`;
+            document.getElementById('httpBar').style.width = `${httpP}%`;
+
+            document.getElementById('udpPct').innerText = `${udpP}%`;
+            document.getElementById('udpBar').style.width = `${udpP}%`;
+        }
+
+        function updateLiveGraph() {
+            liveGraph.removeChild(liveGraph.firstChild);
+            
+            let height = Math.floor(Math.random() * 60) + 5;
+            
+            let color = 'var(--text-cyber)';
+            if(height > 50) color = 'var(--alert)';
+            else if(height > 35) color = 'var(--warn)';
+            else if(height < 15) color = 'var(--info)';
+
+            liveGraph.innerHTML += `<div class="graph-bar" style="height: ${height}px; background: ${color};"></div>`;
+        }
+    </script>
+</body>
+</html>

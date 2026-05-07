@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Master Exam Timetable</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* 🟢 FORCE LANDSCAPE MODE FOR PDF */
+        @media print {
+            @page { size: landscape; margin: 10mm; } 
+            body { -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+        }
+
+        body { font-family: 'Times New Roman', serif; background: #fff; }
+        .university-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background-color: #f0f0f0 !important; border: 1px solid #000; padding: 10px; text-align: center; }
+        td { border: 1px solid #000; padding: 8px; vertical-align: middle; }
+        
+        /* 🟢 COLUMN WIDTH CONTROL */
+        .col-date { width: 15%; white-space: nowrap; font-weight: bold; }
+        .col-time { width: 12%; white-space: nowrap; text-align: center; }
+        .col-code { width: 10%; font-weight: bold; text-align: center; }
+        .col-title { width: 35%; } /* Give title the most space */
+        .col-venue { width: 15%; white-space: nowrap; text-align: center; }
+        .col-invig { width: 13%; }
+
+        .logo { width: 100px; height: auto; display: block; margin: 0 auto 10px auto; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid mt-4">
+    <div class="university-header">
+        <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" alt="Logo" class="logo">
+        <h2 class="fw-bold">LAGOS STATE UNIVERSITY</h2>
+        <p class="mb-0"><strong>FACULTY OF SCIENCE</strong></p>
+        <p class="small text-muted">Badagry Expressway, Ojo, Lagos</p>
+        
+        <h4 class="mt-3 text-decoration-underline">MASTER EXAMINATION TIMETABLE</h4>
+        <p class="small">Generated on: {{ today.strftime('%d %B, %Y') }} | Status: <strong>FINAL</strong></p>
+    </div>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>DATE</th>
+                <th>TIME</th>
+                <th>CODE</th>
+                <th>COURSE TITLE</th>
+                <th>VENUE</th>
+                <th>INVIGILATORS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exam in exams %}
+            <tr>
+                <td class="col-date">{{ exam.exam_date.strftime('%a, %d %b') }}</td>
+                <td class="col-time">{{ exam.start_time }} - {{ exam.end_time }}</td>
+                <td class="col-code">{{ exam.course.code }}</td>
+                <td class="col-title">{{ exam.course.title }}</td>
+                <td class="col-venue">{{ exam.venue }}</td>
+                <td class="col-invig">__________________</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center py-5">
+                    <h4>No exams generated yet.</h4>
+                    <p>Go to Admin Console -> Generate Timetable</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="row mt-5 pt-5">
+        <div class="col-4 text-center">
+            <p>_________________________</p>
+            <p><strong>Dean, Faculty of Science</strong></p>
+        </div>
+        <div class="col-4 text-center">
+            <p>_________________________</p>
+            <p><strong>Examination Officer</strong></p>
+        </div>
+        <div class="col-4 text-center">
+            <p>_________________________</p>
+            <p><strong>Sub-Dean</strong></p>
+        </div>
+    </div>
+</div>
+
+<button onclick="window.print()" class="btn btn-primary btn-lg shadow-lg no-print" style="position: fixed; bottom: 30px; right: 30px; border-radius: 50px; padding: 15px 30px;">
+    <i class="fas fa-print me-2"></i> Print Timetable
+</button>
+
+</body>
+</html>

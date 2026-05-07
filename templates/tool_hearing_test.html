@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hearing Frequency Test | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0dcaf0; 
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-preset {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 10px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-preset span { font-family: 'Fira Code', monospace; color: var(--math-purple); font-weight: 800; font-size: 1.1rem; }
+        .btn-preset:hover { background: #f8f9fa; border-color: var(--math-purple); }
+
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 202, 240, 0.15); }
+        
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+        }
+
+        .slider-custom {
+            flex: 1;
+            margin: 0 15px;
+            accent-color: var(--math-blue);
+        }
+
+        .num-input {
+            width: 90px;
+            border: none;
+            border-left: 1px solid #ced4da;
+            padding: 15px 10px;
+            font-size: 1.2rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            color: #212529;
+            outline: none;
+            text-align: center;
+        }
+
+        .btn-audio {
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .btn-play { background-color: var(--lasu-accent); }
+        .btn-play:hover { background-color: #146c43; transform: translateY(-2px); }
+        .btn-stop { background-color: var(--math-red); }
+        .btn-stop:hover { background-color: #b02a37; transform: translateY(-2px); }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+            transition: all 0.3s;
+        }
+        
+        .stat-card.primary { border-color: rgba(13, 202, 240, 0.4); background: rgba(13, 202, 240, 0.05); }
+        .stat-card.warning { border-color: rgba(253, 126, 20, 0.4); background: rgba(253, 126, 20, 0.05); }
+        .stat-card.secondary { border-color: rgba(111, 66, 193, 0.4); background: rgba(111, 66, 193, 0.05); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .primary .stat-val { color: var(--math-blue); }
+        .warning .stat-val { color: var(--math-orange); font-family: 'Segoe UI', sans-serif;}
+        .secondary .stat-val { color: var(--math-purple); }
+
+        .res-unit { font-size: 1rem; color: #adb5bd; margin-left: 2px; font-family: 'Segoe UI', sans-serif;}
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* Oscilloscope Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #001100; /* Deep oscilloscope green-black */
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            min-height: 400px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-position: center center;
+        }
+
+        #oscCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #00ff00;
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .formula-bar span { color: #adb5bd; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; text-transform: uppercase; margin-right: 8px;}
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-wave-square"></i> Tone Generator
+            </div>
+
+            <div class="preset-grid">
+                <button class="btn-preset" onclick="setPreset(120)">
+                    Sub-Bass
+                    <span>120 Hz</span>
+                </button>
+                <button class="btn-preset" onclick="setPreset(1000)">
+                    Standard Beep
+                    <span>1,000 Hz</span>
+                </button>
+                <button class="btn-preset" onclick="setPreset(8000)">
+                    High Pitch
+                    <span>8,000 Hz</span>
+                </button>
+                <button class="btn-preset" onclick="setPreset(15000)">
+                    Mosquito Tone
+                    <span>15,000 Hz</span>
+                </button>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label">
+                    <span>Frequency</span>
+                    <span class="badge bg-secondary">Hz</span>
+                </div>
+                <div class="control-row">
+                    <input type="range" class="form-range slider-custom" id="hzSlider" min="20" max="20000" step="1" value="1000" oninput="syncSlider()">
+                    <input type="number" class="num-input" id="hzInput" value="1000" min="20" max="20000" oninput="syncNum()">
+                </div>
+            </div>
+
+            <div class="input-group-custom mb-4">
+                <div class="input-label">
+                    <span>Volume</span>
+                    <span class="badge bg-danger"><i class="fas fa-volume-up"></i></span>
+                </div>
+                <div class="control-row">
+                    <input type="range" class="form-range slider-custom" id="volSlider" min="0" max="1" step="0.01" value="0.1" oninput="updateVolume()">
+                    <div class="unit-label" id="volText" style="width: 90px; border-left: 1px solid #ced4da; height: 100%; margin: 0; padding: 15px 0;">10%</div>
+                </div>
+            </div>
+
+            <button class="btn-audio btn-play" id="btnAudio" onclick="toggleAudio()">
+                <i class="fas fa-play"></i> Start Tone
+            </button>
+            
+            <div class="alert alert-warning mt-3 mb-0 border-0" style="font-size: 0.8rem; background: rgba(253, 126, 20, 0.05); color: var(--math-orange);">
+                <i class="fas fa-exclamation-triangle me-1"></i> Start with low volume. High frequencies can be painful or damage speakers.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card primary">
+                    <div class="stat-label">Active Tone</div>
+                    <div class="stat-val">
+                        <span id="resHz">1,000</span>
+                        <span class="res-unit">Hz</span>
+                    </div>
+                    <div class="stat-sub">Cycles per second</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card warning">
+                    <div class="stat-label">Biological Age Est.</div>
+                    <div class="stat-val">
+                        <span id="resAge">All Ages</span>
+                    </div>
+                    <div class="stat-sub">Max hearing threshold limit</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card secondary">
+                    <div class="stat-label">Physical Wavelength</div>
+                    <div class="stat-val">
+                        <span id="resWave">34.30</span>
+                        <span class="res-unit">cm</span>
+                    </div>
+                    <div class="stat-sub">&lambda; = v / f (in air at 20&deg;C)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="simulation-box mt-2">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="oscCanvas"></canvas>
+            </div>
+            <div class="telemetry-bar">
+                <div class="formula-bar">
+                    <span>Acoustic Equation:</span> y(t) = A &middot; sin(2&pi;ft)
+                </div>
+                <div class="text-muted fw-bold small text-uppercase">
+                    <i class="fas fa-satellite-dish me-1 text-success"></i> Oscilloscope Active
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Inputs
+    const hzSlider = document.getElementById('hzSlider');
+    const hzInput = document.getElementById('hzInput');
+    const volSlider = document.getElementById('volSlider');
+    const volText = document.getElementById('volText');
+    const btnAudio = document.getElementById('btnAudio');
+
+    // Outputs
+    const resHz = document.getElementById('resHz');
+    const resAge = document.getElementById('resAge');
+    const resWave = document.getElementById('resWave');
+
+    // Canvas
+    const canvas = document.getElementById('oscCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // Web Audio API State
+    let audioCtx = null;
+    let oscillator = null;
+    let gainNode = null;
+    let isPlaying = false;
+    let animationFrameId = null;
+    let timeOffset = 0;
+
+    // Presets
+    function setPreset(hz) {
+        hzSlider.value = hz;
+        hzInput.value = hz;
+        updateEngine();
+    }
+
+    // Input Syncing
+    function syncSlider() {
+        hzInput.value = hzSlider.value;
+        updateEngine();
+    }
+
+    function syncNum() {
+        let val = parseInt(hzInput.value);
+        if (val >= 20 && val <= 20000) {
+            hzSlider.value = val;
+            updateEngine();
+        }
+    }
+
+    function updateVolume() {
+        let vol = parseFloat(volSlider.value);
+        volText.innerText = Math.round(vol * 100) + '%';
+        if (gainNode) {
+            // Smooth transition to prevent popping
+            gainNode.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.05);
+        }
+        if(!isPlaying) drawWave();
+    }
+
+    // Core Logic
+    function updateEngine() {
+        const hz = parseInt(hzInput.value);
+        if (isNaN(hz)) return;
+
+        // Update Text UI
+        resHz.innerText = hz.toLocaleString();
+
+        // 1. Calculate Presbycusis (Biological Age Threshold)
+        if (hz <= 8000) resAge.innerText = "All Ages";
+        else if (hz <= 12000) resAge.innerText = "Under 50";
+        else if (hz <= 15000) resAge.innerText = "Under 40";
+        else if (hz <= 16000) resAge.innerText = "Under 30";
+        else if (hz <= 17400) resAge.innerText = "Under 24";
+        else resAge.innerText = "Under 20";
+
+        // 2. Calculate Physical Wavelength (speed of sound in air ~343 m/s)
+        const speedOfSound = 343;
+        const wavelengthMeters = speedOfSound / hz;
+        
+        if (wavelengthMeters >= 1) {
+            resWave.innerText = wavelengthMeters.toFixed(2);
+            resWave.nextElementSibling.innerText = "m";
+        } else if (wavelengthMeters >= 0.01) {
+            resWave.innerText = (wavelengthMeters * 100).toFixed(2);
+            resWave.nextElementSibling.innerText = "cm";
+        } else {
+            resWave.innerText = (wavelengthMeters * 1000).toFixed(2);
+            resWave.nextElementSibling.innerText = "mm";
+        }
+
+        // Update Audio Hardware if running
+        if (isPlaying && oscillator) {
+            oscillator.frequency.setTargetAtTime(hz, audioCtx.currentTime, 0.05);
+        }
+
+        if (!isPlaying) drawWave();
+    }
+
+    // Audio Engine Controls
+    function toggleAudio() {
+        if (!audioCtx) {
+            // Initialize Web Audio Context on first interaction to bypass browser autoplay policy
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+        }
+
+        isPlaying = !isPlaying;
+
+        if (isPlaying) {
+            // Start
+            btnAudio.classList.remove('btn-play');
+            btnAudio.classList.add('btn-stop');
+            btnAudio.innerHTML = '<i class="fas fa-stop"></i> Stop Tone';
+
+            oscillator = audioCtx.createOscillator();
+            gainNode = audioCtx.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(parseInt(hzInput.value), audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime); // Start at 0
+            gainNode.gain.linearRampToValueAtTime(parseFloat(volSlider.value), audioCtx.currentTime + 0.1); // Fade in
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+
+            animate();
+        } else {
+            // Stop
+            btnAudio.classList.remove('btn-stop');
+            btnAudio.classList.add('btn-play');
+            btnAudio.innerHTML = '<i class="fas fa-play"></i> Start Tone';
+
+            if (gainNode) {
+                // Fade out smoothly to prevent speaker pop
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+                setTimeout(() => {
+                    if(oscillator) {
+                        oscillator.stop();
+                        oscillator.disconnect();
+                    }
+                }, 150);
+            }
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            drawWave(); // Draw static state
+        }
+    }
+
+    // FLAWLESS CANVAS SCALING
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
+            
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            drawWave(); 
+        }
+    });
+    resizeObserver.observe(container);
+
+    // KINEMATIC OSCILLOSCOPE RENDERER
+    function drawWave() {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        if(cw === 0) return;
+        
+        ctx.clearRect(0, 0, cw, ch);
+
+        const cy = ch / 2;
+        const hz = parseInt(hzInput.value);
+        const vol = parseFloat(volSlider.value);
+
+        // Draw central X axis
+        ctx.beginPath();
+        ctx.moveTo(0, cy);
+        ctx.lineTo(cw, cy);
+        ctx.strokeStyle = 'rgba(0, 255, 0, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 1. Amplitude mapping: Amplitude scales based on Volume slider
+        let visualAmp = (vol * (ch * 0.4));
+        if (!isPlaying) visualAmp = 2; // Flatline if stopped
+
+        // 2. Visual Frequency mapping: We cannot draw 20,000 cycles on screen.
+        // We compress the visual representation so it looks like a faster wave, but readable.
+        // Logarithmic scale for visual frequency mapping.
+        let logHz = Math.log10(hz); // between 1.3 (20Hz) and 4.3 (20kHz)
+        let visualFreq = (logHz - 1) * 0.05;
+
+        ctx.beginPath();
+        ctx.moveTo(0, cy);
+
+        // Draw the Sine Wave
+        for (let x = 0; x < cw; x += 2) {
+            // y = Amplitude * sin(frequency * x + timeOffset)
+            let y = cy + Math.sin((x * visualFreq) + timeOffset) * visualAmp;
+            ctx.lineTo(x, y);
+        }
+
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = isPlaying ? 3 : 2;
+        ctx.lineJoin = 'round';
+        
+        // Add oscilloscope glow
+        ctx.shadowColor = '#00ff00';
+        ctx.shadowBlur = isPlaying ? 15 : 5;
+        
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Draw live status text
+        if (isPlaying) {
+            ctx.fillStyle = '#00ff00';
+            ctx.font = 'bold 16px "Fira Code", monospace';
+            ctx.fillText(`OUTPUT: ${hz} Hz @ ${Math.round(vol*100)}%`, 20, 30);
+        }
+    }
+
+    function animate() {
+        if (!isPlaying) return;
+        
+        // Advance time offset based on frequency to make the wave "roll" continuously
+        const hz = parseInt(hzInput.value);
+        let speed = (Math.log10(hz)) * 0.2;
+        timeOffset -= speed;
+
+        drawWave();
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // INIT
+    setTimeout(() => { 
+        updateEngine(); 
+        updateVolume();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

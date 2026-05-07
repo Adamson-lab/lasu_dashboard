@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citation Generator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-type {
+            flex: 1;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            font-weight: 700;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .btn-type:hover { background: #e9ecef; }
+        .btn-type.active {
+            background: rgba(13, 110, 253, 0.1);
+            border-color: var(--math-blue);
+            color: var(--math-blue);
+        }
+
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        
+        .input-label {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #495057;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-input {
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            color: #212529;
+            outline: none;
+            transition: all 0.2s;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .data-input:focus { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .row-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn-action {
+            padding: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            font-size: 1.1rem;
+            background: var(--lasu-accent);
+            color: white;
+            margin-top: auto;
+        }
+        .btn-action:hover {
+            background: #146c43;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3);
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .citation-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            transition: border-color 0.3s;
+        }
+        .citation-card:hover { border-color: #ced4da; }
+
+        .cit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .cit-title {
+            font-weight: 800;
+            color: var(--math-blue);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-mla .cit-title { color: var(--math-purple); }
+        .card-chicago .cit-title { color: var(--math-orange); }
+
+        .cit-body {
+            font-family: 'Times New Roman', Times, serif; /* Standard academic font */
+            font-size: 1.2rem;
+            color: #212529;
+            line-height: 1.8;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--math-blue);
+            word-wrap: break-word;
+        }
+        
+        .card-mla .cit-body { border-left-color: var(--math-purple); }
+        .card-chicago .cit-body { border-left-color: var(--math-orange); }
+
+        .btn-copy {
+            background: transparent;
+            border: 2px solid #ced4da;
+            color: #495057;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-copy:hover {
+            background: #f8f9fa;
+            color: #212529;
+            border-color: #adb5bd;
+        }
+        .btn-copy.copied {
+            background: var(--lasu-accent);
+            color: white;
+            border-color: var(--lasu-accent);
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-book me-2"></i> Source Details</div>
+            </div>
+
+            <div class="type-selector">
+                <button class="btn-type active" id="btnBook" onclick="setType('book')"><i class="fas fa-book-open me-2"></i>Book</button>
+                <button class="btn-type" id="btnWeb" onclick="setType('website')"><i class="fas fa-globe me-2"></i>Website</button>
+            </div>
+
+            <div class="row-grid">
+                <div class="input-group-custom">
+                    <div class="input-label">Author First Name</div>
+                    <input type="text" class="data-input" id="valFirst" placeholder="e.g. Tunde" oninput="generateCitations()">
+                </div>
+                <div class="input-group-custom">
+                    <div class="input-label">Author Last Name</div>
+                    <input type="text" class="data-input" id="valLast" placeholder="e.g. Oloyede" oninput="generateCitations()">
+                </div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label" id="lblTitle">Book Title</div>
+                <input type="text" class="data-input" id="valTitle" placeholder="Enter title..." oninput="generateCitations()">
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label" id="lblPublisher">Publisher</div>
+                <input type="text" class="data-input" id="valPublisher" placeholder="e.g. Oxford Press" oninput="generateCitations()">
+            </div>
+
+            <div class="row-grid">
+                <div class="input-group-custom">
+                    <div class="input-label">Year Published</div>
+                    <input type="number" class="data-input" id="valYear" placeholder="e.g. 2026" oninput="generateCitations()">
+                </div>
+                <div class="input-group-custom" id="urlGroup" style="display: none;">
+                    <div class="input-label">URL</div>
+                    <input type="text" class="data-input" id="valURL" placeholder="https://..." oninput="generateCitations()">
+                </div>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-2 mb-4" onclick="clearFields()">
+                <i class="fas fa-trash-alt me-2"></i> Clear Fields
+            </button>
+
+            <div class="alert alert-info border-0 mb-0 mt-auto" style="background: rgba(13, 110, 253, 0.05); color: var(--math-blue); font-size: 0.85rem;">
+                <i class="fas fa-info-circle me-1"></i> Missing info? Leave the field blank. The algorithm will automatically structure a valid citation.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="citation-card card-apa">
+            <div class="cit-header">
+                <div class="cit-title"><i class="fas fa-bookmark"></i> APA (7th Edition)</div>
+                <button class="btn-copy" onclick="copyCitation('citAPA', this)">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="cit-body" id="citAPA">
+                <i>Awaiting source data to generate citation...</i>
+            </div>
+        </div>
+
+        <div class="citation-card card-mla">
+            <div class="cit-header">
+                <div class="cit-title"><i class="fas fa-graduation-cap"></i> MLA (9th Edition)</div>
+                <button class="btn-copy" onclick="copyCitation('citMLA', this)">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="cit-body" id="citMLA">
+                <i>Awaiting source data to generate citation...</i>
+            </div>
+        </div>
+
+        <div class="citation-card card-chicago">
+            <div class="cit-header">
+                <div class="cit-title"><i class="fas fa-university"></i> Chicago (17th Edition)</div>
+                <button class="btn-copy" onclick="copyCitation('citChicago', this)">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="cit-body" id="citChicago">
+                <i>Awaiting source data to generate citation...</i>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    let sourceType = 'book';
+
+    // Inputs
+    const valFirst = document.getElementById('valFirst');
+    const valLast = document.getElementById('valLast');
+    const valTitle = document.getElementById('valTitle');
+    const valPublisher = document.getElementById('valPublisher');
+    const valYear = document.getElementById('valYear');
+    const valURL = document.getElementById('valURL');
+    
+    // UI Toggles
+    const lblTitle = document.getElementById('lblTitle');
+    const lblPublisher = document.getElementById('lblPublisher');
+    const urlGroup = document.getElementById('urlGroup');
+
+    // Outputs
+    const citAPA = document.getElementById('citAPA');
+    const citMLA = document.getElementById('citMLA');
+    const citChicago = document.getElementById('citChicago');
+
+    function setType(type) {
+        sourceType = type;
+        
+        document.getElementById('btnBook').classList.remove('active');
+        document.getElementById('btnWeb').classList.remove('active');
+        
+        if (type === 'book') {
+            document.getElementById('btnBook').classList.add('active');
+            lblTitle.innerText = "Book Title";
+            lblPublisher.innerText = "Publisher";
+            urlGroup.style.display = 'none';
+        } else {
+            document.getElementById('btnWeb').classList.add('active');
+            lblTitle.innerText = "Article / Page Title";
+            lblPublisher.innerText = "Website Name";
+            urlGroup.style.display = 'flex';
+        }
+        
+        generateCitations();
+    }
+
+    function clearFields() {
+        valFirst.value = '';
+        valLast.value = '';
+        valTitle.value = '';
+        valPublisher.value = '';
+        valYear.value = '';
+        valURL.value = '';
+        citAPA.innerHTML = '<i>Awaiting source data to generate citation...</i>';
+        citMLA.innerHTML = '<i>Awaiting source data to generate citation...</i>';
+        citChicago.innerHTML = '<i>Awaiting source data to generate citation...</i>';
+    }
+
+    function copyCitation(targetId, btn) {
+        const text = document.getElementById(targetId).innerText;
+        if (text.includes("Awaiting source data")) return;
+
+        // Create temporary textarea to copy rich text as plain text
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied';
+        btn.classList.add('copied');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('copied');
+        }, 1500);
+    }
+
+    // --- ALGORITHMIC CITATION ENGINE ---
+    function generateCitations() {
+        const first = valFirst.value.trim();
+        const last = valLast.value.trim();
+        const title = valTitle.value.trim();
+        const publisher = valPublisher.value.trim();
+        const year = valYear.value.trim();
+        const url = valURL.value.trim();
+
+        if (!first && !last && !title) {
+            citAPA.innerHTML = '<i>Awaiting source data to generate citation...</i>';
+            citMLA.innerHTML = '<i>Awaiting source data to generate citation...</i>';
+            citChicago.innerHTML = '<i>Awaiting source data to generate citation...</i>';
+            return;
+        }
+
+        // Helpers
+        const firstInitial = first ? `${first.charAt(0)}.` : '';
+        const authorAPA = last ? (firstInitial ? `${last}, ${firstInitial}` : `${last}.`) : '';
+        const authorMLA = last ? (first ? `${last}, ${first}.` : `${last}.`) : '';
+        
+        // --- APA 7th ---
+        let apa = '';
+        if (authorAPA) apa += `${authorAPA} `;
+        
+        if (year) apa += `(${year}). `;
+        else apa += `(n.d.). `;
+
+        if (sourceType === 'book') {
+            if (title) apa += `<i>${title}</i>. `;
+            if (publisher) apa += `${publisher}.`;
+        } else {
+            if (title) apa += `${title}. `;
+            if (publisher) apa += `<i>${publisher}</i>. `;
+            if (url) apa += `${url}`;
+        }
+        citAPA.innerHTML = apa.trim() || '<i>Insufficient data for APA</i>';
+
+        // --- MLA 9th ---
+        let mla = '';
+        if (authorMLA) mla += `${authorMLA} `;
+        
+        if (sourceType === 'book') {
+            if (title) mla += `<i>${title}</i>. `;
+            if (publisher) mla += `${publisher}, `;
+            if (year) mla += `${year}.`;
+        } else {
+            if (title) mla += `"${title}." `;
+            if (publisher) mla += `<i>${publisher}</i>, `;
+            if (year) mla += `${year}, `;
+            if (url) mla += `${url}.`;
+        }
+        // Cleanup trailing commas if fields are missing
+        mla = mla.trim().replace(/,\s*$/, '.');
+        if (!mla.endsWith('.')) mla += '.';
+        citMLA.innerHTML = mla || '<i>Insufficient data for MLA</i>';
+
+        // --- Chicago 17th (Notes and Bibliography format) ---
+        let chi = '';
+        if (authorMLA) chi += `${authorMLA} `; // Chicago author format is same as MLA for bibliography
+        
+        if (sourceType === 'book') {
+            if (title) chi += `<i>${title}</i>. `;
+            if (publisher) chi += `${publisher}, `;
+            if (year) chi += `${year}.`;
+        } else {
+            if (title) chi += `"${title}." `;
+            if (publisher) chi += `${publisher}. `;
+            // Chicago prefers 'Last modified' or 'Accessed' for websites, we'll keep it clean
+            if (year) chi += `${year}. `;
+            if (url) chi += `${url}.`;
+        }
+        chi = chi.trim().replace(/,\s*$/, '.');
+        if (!chi.endsWith('.')) chi += '.';
+        citChicago.innerHTML = chi || '<i>Insufficient data for Chicago</i>';
+    }
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

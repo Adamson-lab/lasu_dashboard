@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regex Engine | LASU Matrix</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V-INFINITY THEME ENGINE (REGEX MODULE)
+           FULLY EXPANDED AND FORMATTED
+           ========================================== */
+        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700;800;900&display=swap');
+
+        /* LIGHT MODE */
+        [data-theme="light"] {
+            --bg-master: #f8fafc; 
+            --bg-surface: rgba(255, 255, 255, 0.9); 
+            --term-bg: rgba(241, 245, 249, 0.9);
+            --border-core: rgba(148, 163, 184, 0.3); 
+            --border-neon: #10b981; 
+            --text-main: #0f172a; 
+            --text-mute: #64748b; 
+            --text-cyber: #059669; 
+            --shadow-core: 0 10px 30px rgba(16, 185, 129, 0.1);
+            --alert: #ef4444; 
+            --warn: #f59e0b; 
+            --info: #0ea5e9; 
+            --success: #10b981;
+        }
+
+        /* DARK MODE */
+        [data-theme="dark"] {
+            --bg-master: #020617; 
+            --bg-surface: rgba(15, 23, 42, 0.8); 
+            --term-bg: rgba(5, 10, 20, 0.9);
+            --border-core: rgba(51, 65, 85, 0.5); 
+            --border-neon: #10b981; 
+            --text-main: #f8fafc; 
+            --text-mute: #94a3b8; 
+            --text-cyber: #34d399;
+            --shadow-core: 0 10px 30px rgba(16, 185, 129, 0.15);
+            --alert: #ef4444; 
+            --warn: #f59e0b; 
+            --info: #0ea5e9; 
+            --success: #10b981;
+        }
+
+        /* HIGH CONTRAST MODE */
+        [data-theme="god"] {
+            --bg-master: #0a0500; 
+            --bg-surface: rgba(25, 10, 35, 0.85); 
+            --term-bg: rgba(10, 0, 15, 0.9);
+            --border-core: rgba(217, 70, 239, 0.5); 
+            --border-neon: #fbbf24; 
+            --text-main: #fffbeb; 
+            --text-mute: #f472b6; 
+            --text-cyber: #ffd700;
+            --shadow-core: 0 0 40px rgba(217, 70, 239, 0.3);
+            --alert: #ff0000; 
+            --warn: #f59e0b; 
+            --info: #38bdf8; 
+            --success: #34d399;
+        }
+
+        /* DEEP VOID MODE */
+        [data-theme="singularity"] {
+            --bg-master: #000000; 
+            --bg-surface: rgba(0, 5, 15, 0.9); 
+            --term-bg: #000000;
+            --border-core: rgba(0, 255, 204, 0.3); 
+            --border-neon: #00ffcc; 
+            --text-main: #e0ffff; 
+            --text-mute: #8a2be2; 
+            --text-cyber: #00ffcc;
+            --shadow-core: 0 0 50px rgba(0, 255, 204, 0.2), inset 0 0 20px rgba(138, 43, 226, 0.2);
+            --alert: #ff003c; 
+            --warn: #ffea00; 
+            --info: #00f0ff; 
+            --success: #00ffcc;
+        }
+
+        body { 
+            background-color: var(--bg-master); 
+            color: var(--text-main); 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px; 
+            background-attachment: fixed;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Scanlines */
+        [data-theme="dark"] body::before, 
+        [data-theme="god"] body::before, 
+        [data-theme="singularity"] body::before {
+            content: " "; 
+            display: block; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            bottom: 0; 
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%); 
+            z-index: 9999; 
+            background-size: 100% 3px; 
+            pointer-events: none; 
+            opacity: 0.7;
+        }
+
+        [data-theme="singularity"] body::before { 
+            background-size: 100% 2px; 
+            opacity: 0.9; 
+        }
+
+        /* Panels */
+        .cyber-panel { 
+            background: var(--bg-surface); 
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border-core); 
+            border-radius: 16px; 
+            padding: 25px; 
+            box-shadow: var(--shadow-core); 
+            margin-bottom: 20px; 
+            transition: all 0.4s ease; 
+            position: relative;
+        }
+        
+        .panel-header {
+            border-bottom: 1px solid var(--border-core); 
+            padding-bottom: 12px; 
+            margin-bottom: 20px;
+            font-weight: 900; 
+            letter-spacing: 2px; 
+            color: var(--text-main); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            text-transform: uppercase; 
+            font-size: 0.9rem;
+        }
+
+        /* Buttons & Toggles */
+        .btn-theme {
+            background: var(--bg-surface); 
+            color: var(--text-main); 
+            border: 1px solid var(--border-core);
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 1.2rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: var(--shadow-core);
+        }
+
+        .btn-theme:hover { 
+            border-color: var(--border-neon); 
+            color: var(--border-neon); 
+            transform: rotate(90deg) scale(1.15); 
+            box-shadow: 0 0 25px var(--border-neon); 
+        }
+
+        /* Regex Input Bar */
+        .regex-input-group {
+            display: flex;
+            align-items: stretch;
+            background: var(--term-bg);
+            border: 2px solid var(--border-core);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .regex-input-group:focus-within {
+            border-color: var(--border-neon);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .regex-slash {
+            background: var(--bg-master);
+            color: var(--text-mute);
+            padding: 15px 20px;
+            font-size: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 900;
+            border-right: 1px solid var(--border-core);
+            border-left: 1px solid var(--border-core);
+        }
+
+        .form-control-regex {
+            background: transparent;
+            border: none;
+            color: var(--text-cyber);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 15px;
+            width: 100%;
+            outline: none;
+        }
+
+        .form-control-flags {
+            background: transparent;
+            border: none;
+            color: var(--warn);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 15px;
+            width: 100px;
+            outline: none;
+        }
+
+        /* ------------------------------------------
+           LIVE MATCH HIGHLIGHTING ENGINE (CRITICAL)
+           ------------------------------------------ */
+        .editor-container {
+            position: relative;
+            height: 300px;
+            border: 1px solid var(--border-core);
+            border-radius: 8px;
+            background: var(--term-bg);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* The transparent textarea where you type */
+        .test-textarea {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            margin: 0; padding: 20px;
+            background: transparent;
+            color: transparent; /* Text is invisible, caret is visible */
+            caret-color: var(--text-main);
+            border: none;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+            z-index: 2;
+            white-space: pre-wrap;
+            overflow-y: auto;
+        }
+
+        /* The div underneath that renders the highlights */
+        .highlight-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            margin: 0; padding: 20px;
+            background: transparent;
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            z-index: 1;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            word-wrap: break-word;
+            pointer-events: none; /* Let clicks pass through to textarea */
+        }
+
+        /* Sync scroll between textarea and highlight layer */
+        .test-textarea::-webkit-scrollbar { width: 8px; }
+        .test-textarea::-webkit-scrollbar-track { background: transparent; }
+        .test-textarea::-webkit-scrollbar-thumb { background: var(--border-core); border-radius: 4px; }
+        .highlight-layer::-webkit-scrollbar { width: 8px; display: none; } /* Hide scrollbar on underlayer */
+
+        /* The highlighted span */
+        .regex-match {
+            background-color: rgba(16, 185, 129, 0.3);
+            border-bottom: 2px solid var(--border-neon);
+            border-radius: 2px;
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        [data-theme="god"] .regex-match { background-color: rgba(251, 191, 36, 0.3); }
+        [data-theme="singularity"] .regex-match { background-color: rgba(0, 255, 204, 0.3); }
+
+        /* Terminal Results Grid */
+        .results-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            background: var(--bg-master);
+            border: 1px solid var(--border-core);
+            margin-bottom: 10px;
+            border-radius: 6px;
+            padding: 12px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            border-left: 4px solid var(--border-neon);
+        }
+
+        .match-string {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-main);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .match-groups {
+            font-size: 0.75rem;
+            color: var(--text-mute);
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px dashed var(--border-core);
+        }
+
+        .group-pill {
+            background: var(--term-bg);
+            border: 1px solid var(--border-core);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 5px;
+            color: var(--info);
+            font-family: monospace;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container-fluid position-relative" style="max-width: 1600px; z-index: 5;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 cyber-panel" style="padding: 15px 25px;">
+            <div class="d-flex align-items-center gap-4">
+                <h2 class="m-0 fs-3 fw-bold" style="letter-spacing: -1px;">
+                    <i class="fas fa-search-plus me-2 text-cyber" style="animation: pulse 2s infinite;"></i> 
+                    REGEX <span class="text-mute fw-light">ENGINE</span>
+                    <span class="badge ms-3 text-white" style="font-size:0.7rem; vertical-align: middle; background: linear-gradient(90deg, #10b981, #059669); box-shadow: 0 0 15px rgba(16,185,129,0.4); letter-spacing: 2px;">SECURE MATRIX</span>
+                </h2>
+            </div>
+            
+            <div class="d-flex align-items-center gap-4">
+                <div class="text-end border-end pe-4" style="border-color: var(--border-core) !important;">
+                    <div style="font-size: 0.65rem; color: var(--text-mute); font-weight: 900; letter-spacing: 3px;">SYSTEM TIME</div>
+                    <div id="sysTime" class="fw-bold" style="font-size: 1.5rem; color: var(--text-main); font-family: 'JetBrains Mono', monospace;">00:00:00.000</div>
+                </div>
+
+                <button class="btn-theme" onclick="cycleTheme()" title="Change Display Theme">
+                    <i class="fas fa-adjust" id="themeIcon"></i>
+                </button>
+                
+                <button class="btn btn-outline-danger border-2 fw-bold py-2 px-3" onclick="window.history.back()" style="border-radius: 8px; font-size: 1.2rem;">
+                    <i class="fas fa-power-off"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="cyber-panel m-0 pb-3">
+                    <div class="panel-header" style="border:none; margin-bottom: 5px;">
+                        <span><i class="fas fa-code me-2 text-cyber"></i> PATTERN MATRIX</span>
+                        <span class="badge bg-secondary" id="matchCountBadge">0 MATCHES</span>
+                    </div>
+                    
+                    <div class="regex-input-group">
+                        <div class="regex-slash">/</div>
+                        <input type="text" id="regexPattern" class="form-control-regex" placeholder="^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$" value="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" oninput="evaluateRegex()">
+                        <div class="regex-slash">/</div>
+                        <input type="text" id="regexFlags" class="form-control-flags" placeholder="gmi" value="gm" oninput="evaluateRegex()">
+                    </div>
+                    <div class="text-danger small fw-bold mt-2 ps-2" id="regexError" style="display: none;">Invalid Regular Expression</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-xl-7 d-flex flex-column gap-4">
+                <div class="cyber-panel m-0 flex-grow-1">
+                    <div class="panel-header">
+                        <i class="fas fa-align-left me-2 text-cyber"></i> TEST STRING DATABASE
+                    </div>
+                    
+                    <div class="editor-container">
+                        <div id="highlightLayer" class="highlight-layer"></div>
+                        
+                        <textarea id="testString" class="test-textarea" oninput="evaluateRegex(); syncScroll();" onscroll="syncScroll()" spellcheck="false">Welcome to the Regex Engine matrix.
+
+Extract emails easily: 
+admin@lasu.edu.ng
+support@matrix.com
+
+Extract IPs: 192.168.1.104
+Extract Dates: 2026-03-13
+
+Modify the pattern above to highlight different data points in real-time.</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-5 d-flex flex-column gap-4">
+                <div class="cyber-panel m-0 flex-grow-1 d-flex flex-column">
+                    <div class="panel-header">
+                        <span><i class="fas fa-list me-2 text-info"></i> EXTRACTION LOG</span>
+                    </div>
+                    
+                    <ul class="results-list flex-grow-1" id="resultsList">
+                        </ul>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🌌 THEME ENGINE LOGIC
+        // ==========================================
+        const themes = ['light', 'dark', 'god', 'singularity'];
+        let currentThemeIndex = 0;
+
+        function cycleTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            const newTheme = themes[currentThemeIndex];
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('lisa_regex_theme', newTheme);
+            updateThemeIcon(newTheme);
+            evaluateRegex(); // Re-trigger to update highlight colors based on theme
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'light') { icon.className = 'fas fa-sun text-warning'; } 
+            else if (theme === 'dark') { icon.className = 'fas fa-moon text-info'; } 
+            else if (theme === 'god') { icon.className = 'fas fa-radiation text-danger'; } 
+            else if (theme === 'singularity') { icon.className = 'fas fa-meteor text-cyber'; }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = localStorage.getItem('lisa_regex_theme') || 'dark';
+            currentThemeIndex = themes.indexOf(savedTheme) > -1 ? themes.indexOf(savedTheme) : 1;
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+            
+            // Initial Run
+            evaluateRegex();
+        });
+
+        // ==========================================
+        // SYSTEM CLOCK 
+        // ==========================================
+        setInterval(() => {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            const ms = String(now.getMilliseconds()).padStart(3, '0');
+            document.getElementById('sysTime').innerText = `${hh}:${mm}:${ss}.${ms}`;
+        }, 50);
+
+        // ==========================================
+        // LIVE REGEX ENGINE LOGIC
+        // ==========================================
+        function syncScroll() {
+            const textarea = document.getElementById('testString');
+            const highlight = document.getElementById('highlightLayer');
+            highlight.scrollTop = textarea.scrollTop;
+            highlight.scrollLeft = textarea.scrollLeft;
+        }
+
+        function evaluateRegex() {
+            const patternStr = document.getElementById('regexPattern').value;
+            const flagsStr = document.getElementById('regexFlags').value;
+            const textStr = document.getElementById('testString').value;
+            
+            const errorEl = document.getElementById('regexError');
+            const highlightLayer = document.getElementById('highlightLayer');
+            const resultsList = document.getElementById('resultsList');
+            const matchCountBadge = document.getElementById('matchCountBadge');
+
+            if (!patternStr) {
+                // Empty pattern = no highlights
+                highlightLayer.innerHTML = textStr.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                errorEl.style.display = 'none';
+                resultsList.innerHTML = '';
+                matchCountBadge.innerText = '0 MATCHES';
+                matchCountBadge.className = 'badge bg-secondary';
+                return;
+            }
+
+            try {
+                // Attempt to compile Regex
+                const regex = new RegExp(patternStr, flagsStr);
+                errorEl.style.display = 'none';
+
+                // We need to apply the highlight wrapper without destroying HTML tags
+                // Easiest way is string replacement using the regex itself
+                
+                // 1. Generate Results List & Count
+                let match;
+                let matchCount = 0;
+                let htmlResults = '';
+
+                // We need a non-global copy if they didn't provide 'g' flag to prevent infinite loops
+                const isGlobal = flagsStr.includes('g');
+                
+                // Temporary regex for iteration
+                const iterRegex = new RegExp(patternStr, flagsStr + (isGlobal ? '' : 'g')); 
+
+                // Reset lastIndex
+                iterRegex.lastIndex = 0;
+
+                while ((match = iterRegex.exec(textStr)) !== null) {
+                    matchCount++;
+                    
+                    let groupsHtml = '';
+                    if (match.length > 1) {
+                        groupsHtml = '<div class="match-groups">';
+                        for (let i = 1; i < match.length; i++) {
+                            if (match[i] !== undefined) {
+                                groupsHtml += `<span class="group-pill">Group ${i}: ${match[i].replace(/</g, "&lt;")}</span>`;
+                            }
+                        }
+                        groupsHtml += '</div>';
+                    }
+
+                    htmlResults += `
+                        <li class="result-item">
+                            <div class="text-mute small">Match ${matchCount} (Index: ${match.index})</div>
+                            <div class="match-string">${match[0].replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+                            ${groupsHtml}
+                        </li>
+                    `;
+
+                    // Prevent infinite loop if regex matches empty string
+                    if (match.index === iterRegex.lastIndex) {
+                        iterRegex.lastIndex++;
+                    }
+
+                    // If not global originally, break after first match
+                    if (!isGlobal) break; 
+                }
+
+                resultsList.innerHTML = htmlResults || '<div class="text-mute text-center mt-4">NO MATCHES FOUND IN MATRIX.</div>';
+                
+                // Update Badge
+                matchCountBadge.innerText = `${matchCount} MATCHES`;
+                if(matchCount > 0) matchCountBadge.className = 'badge bg-success';
+                else matchCountBadge.className = 'badge bg-secondary';
+
+                // 2. Highlight Layer Replacement
+                // It is safer to build the highlighted string manually to avoid overlapping tags issues
+                
+                let highlightedText = "";
+                let currentIndex = 0;
+                
+                // Reset iter regex again
+                iterRegex.lastIndex = 0;
+                
+                while ((match = iterRegex.exec(textStr)) !== null) {
+                    // Prevent infinite loops on zero-length matches
+                    if(match[0].length === 0) {
+                        if (match.index === iterRegex.lastIndex) iterRegex.lastIndex++;
+                        continue;
+                    }
+
+                    // Add text before match
+                    highlightedText += textStr.substring(currentIndex, match.index).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    
+                    // Add match with wrapper
+                    const safeMatch = match[0].replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    highlightedText += `<span class="regex-match">${safeMatch}</span>`;
+                    
+                    currentIndex = match.index + match[0].length;
+                    
+                    if (!isGlobal) break;
+                }
+                
+                // Add remaining text
+                highlightedText += textStr.substring(currentIndex).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                
+                // Update the visual layer (handling trailing newlines so scroll syncs perfectly)
+                // A trailing newline in a textarea creates a new line, but in a div it doesn't unless there's a space or `<br>` after it.
+                if (textStr.endsWith('\n')) highlightedText += '<br>';
+                
+                highlightLayer.innerHTML = highlightedText;
+
+            } catch (err) {
+                // Invalid regex provided
+                errorEl.innerText = `Matrix Error: ${err.message}`;
+                errorEl.style.display = 'block';
+                highlightLayer.innerHTML = textStr.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                resultsList.innerHTML = '';
+                matchCountBadge.innerText = 'INVALID';
+                matchCountBadge.className = 'badge bg-danger';
+            }
+        }
+    </script>
+</body>
+</html>

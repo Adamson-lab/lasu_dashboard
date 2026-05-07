@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V166 Temporal Displacement Matrix | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V166 MASTER THEME ENGINE
+           ========================================== */
+        [data-theme="dark"] {
+            --bg-master: #030712;
+            --bg-surface: #0f172a;
+            --border-core: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --grid-line: rgba(255, 255, 255, 0.02);
+            --panel-bg: #000000;
+            --input-bg: rgba(255,255,255,0.05);
+        }
+
+        [data-theme="light"] {
+            --bg-master: #f8fafc;
+            --bg-surface: #ffffff;
+            --border-core: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --grid-line: rgba(0, 0, 0, 0.04);
+            --panel-bg: #f1f5f9;
+            --input-bg: #ffffff;
+        }
+
+        :root {
+            --neon-blue: #0ea5e9;
+            --neon-green: #10b981;
+            --neon-red: #f43f5e;
+            --neon-amber: #f59e0b;
+            --neon-purple: #8b5cf6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-master);
+            color: var(--text-main);
+            padding: 40px 20px;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+            transition: all 0.4s ease;
+        }
+
+        .tool-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.6);
+            border: 1px solid var(--border-core);
+            transition: all 0.4s ease;
+        }
+
+        .btn-theme {
+            background: var(--bg-surface); color: var(--text-main);
+            border: 1px solid var(--border-core); padding: 8px 15px;
+            border-radius: 4px; cursor: pointer; transition: all 0.2s; font-size: 1.2rem;
+        }
+        .btn-theme:hover { border-color: var(--neon-purple); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
+
+        /* ==========================================
+           VECTOR INPUT DECK (LEFT PANEL)
+           ========================================== */
+        .vector-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 12px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            height: 100%;
+        }
+
+        .vector-node {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-core);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .vector-node:focus-within {
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+        }
+
+        .node-badge {
+            position: absolute;
+            top: -12px; left: 15px;
+            background: var(--neon-purple);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .node-badge.point-b { background: var(--neon-blue); }
+
+        .datetime-input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-core);
+            color: var(--text-main);
+            padding: 15px;
+            font-size: 1.2rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        /* Fix calendar icon color for dark mode */
+        ::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
+        [data-theme="light"] ::-webkit-calendar-picker-indicator { filter: invert(0); }
+
+        /* Swap Button */
+        .btn-swap {
+            align-self: center;
+            background: var(--bg-surface);
+            color: var(--text-muted);
+            border: 1px solid var(--border-core);
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 2;
+            margin: -15px 0;
+        }
+        .btn-swap:hover {
+            color: var(--text-main);
+            border-color: var(--text-main);
+            transform: rotate(180deg);
+        }
+
+        /* Tactical Presets */
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .btn-preset {
+            background: var(--bg-surface);
+            border: 1px dashed var(--border-core);
+            color: var(--text-muted);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-preset:hover {
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            background: rgba(14, 165, 233, 0.05);
+        }
+
+        .btn-execute {
+            background: var(--neon-purple);
+            color: #fff;
+            border: none;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: auto;
+        }
+        .btn-execute:hover { box-shadow: 0 0 25px rgba(139, 92, 246, 0.5); transform: translateY(-2px); }
+
+        /* ==========================================
+           MATRIX OUTPUT (RIGHT PANEL)
+           ========================================== */
+        .output-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+        }
+
+        /* Hero Delta Card */
+        .delta-hero {
+            background: linear-gradient(135deg, var(--panel-bg) 0%, #1e1b4b 100%);
+            border: 1px solid var(--border-core);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 4px solid var(--neon-purple);
+        }
+        .delta-hero-title {
+            font-size: 0.85rem; font-weight: 900; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;
+        }
+        .delta-hero-value {
+            font-family: 'Courier New', monospace;
+            font-size: 4rem; font-weight: 900; color: var(--text-main);
+            line-height: 1; letter-spacing: -2px; text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Granular Slicing Grid */
+        .granular-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .gran-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 8px;
+            padding: 20px 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .gran-box:hover { border-color: var(--text-muted); transform: translateY(-2px); }
+        
+        .gran-box.business-days { border-color: var(--neon-green); background: rgba(16, 185, 129, 0.05); }
+        .gran-box.business-days:hover { border-color: var(--neon-green); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+
+        .gran-label {
+            font-size: 0.7rem; font-weight: 800; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .gran-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem; font-weight: 900; color: var(--text-main);
+        }
+
+        /* Temporal Trajectory Bar */
+        .trajectory-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 8px;
+            padding: 25px;
+        }
+        .traj-header {
+            display: flex; justify-content: space-between;
+            font-size: 0.75rem; font-weight: 800; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;
+        }
+        .traj-track {
+            width: 100%; height: 10px; background: var(--border-core);
+            border-radius: 50px; position: relative;
+        }
+        .traj-fill {
+            position: absolute; top: 0; left: 0; height: 100%;
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue));
+            border-radius: 50px; width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
+        }
+        .traj-marker-today {
+            position: absolute; top: -10px; width: 4px; height: 30px;
+            background: var(--neon-red); border-radius: 2px;
+            box-shadow: 0 0 10px var(--neon-red); z-index: 5;
+            transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* L.I.S.A Insights */
+        .insights-panel {
+            background: var(--panel-bg); border-left: 4px solid var(--neon-blue);
+            padding: 15px 20px; border-radius: 0 4px 4px 0; font-size: 0.85rem; font-weight: 600;
+            color: var(--text-main); margin-top: auto; border-top: 1px solid var(--border-core);
+            border-right: 1px solid var(--border-core); border-bottom: 1px solid var(--border-core);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--border-core);">
+            <h2 class="fw-bold m-0" style="color: var(--text-main);">
+                <i class="fas fa-space-shuttle me-2" style="color: var(--neon-purple);"></i> TEMPORAL DISPLACEMENT MATRIX 
+                <span class="badge ms-2" style="background: var(--neon-blue); color: #fff; font-size: 0.75rem; vertical-align: middle; letter-spacing: 1px;">V166</span>
+            </h2>
+            <div class="d-flex gap-2">
+                <button class="btn-theme" id="themeToggleBtn" onclick="toggleMasterTheme()" title="Toggle Environment">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary fw-bold border-0" style="color: var(--text-main); background: var(--panel-bg);">
+                    <i class="fas fa-arrow-left me-1"></i> Terminate
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                <div class="vector-panel">
+                    
+                    <div class="vector-node">
+                        <div class="node-badge">Temporal Point A</div>
+                        <input type="datetime-local" id="dateA" class="datetime-input">
+                    </div>
+
+                    <button class="btn-swap" onclick="invertVectors()" title="Invert Temporal Trajectory">
+                        <i class="fas fa-exchange-alt rotate-icon"></i>
+                    </button>
+
+                    <div class="vector-node">
+                        <div class="node-badge point-b">Temporal Point B</div>
+                        <input type="datetime-local" id="dateB" class="datetime-input">
+                    </div>
+
+                    <div>
+                        <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Quick Inject Point B</div>
+                        <div class="preset-grid">
+                            <button class="btn-preset" onclick="injectDate(7)">+ 7 Days</button>
+                            <button class="btn-preset" onclick="injectDate(30)">+ 30 Days</button>
+                            <button class="btn-preset" onclick="injectEndOfYear()">End of Year</button>
+                            <button class="btn-preset" onclick="injectY2K()">Y2K Epoch</button>
+                        </div>
+                    </div>
+
+                    <button class="btn-execute" onclick="executeTemporalMath()">Calculate Displacement</button>
+
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="output-panel">
+                    
+                    <div class="delta-hero">
+                        <div class="delta-hero-title" id="deltaTitle">Absolute Displacement</div>
+                        <div class="delta-hero-value" id="mainDeltaDays">-- Days</div>
+                    </div>
+
+                    <div class="granular-grid">
+                        <div class="gran-box">
+                            <div class="gran-label">Years</div>
+                            <div class="gran-value" id="valYears">--</div>
+                        </div>
+                        <div class="gran-box">
+                            <div class="gran-label">Months</div>
+                            <div class="gran-value" id="valMonths">--</div>
+                        </div>
+                        <div class="gran-box">
+                            <div class="gran-label">Weeks</div>
+                            <div class="gran-value" id="valWeeks">--</div>
+                        </div>
+                        <div class="gran-box">
+                            <div class="gran-label">Total Hours</div>
+                            <div class="gran-value" id="valHours">--</div>
+                        </div>
+                        <div class="gran-box business-days">
+                            <div class="gran-label" style="color: var(--neon-green);">Market Days (M-F)</div>
+                            <div class="gran-value" style="color: var(--neon-green);" id="valBizDays">--</div>
+                        </div>
+                        <div class="gran-box">
+                            <div class="gran-label">Total Seconds</div>
+                            <div class="gran-value" id="valSecs" style="font-size: 1.1rem; padding-top: 5px;">--</div>
+                        </div>
+                    </div>
+
+                    <div class="trajectory-box">
+                        <div class="traj-header">
+                            <span id="trajStartLabel">Point A</span>
+                            <span style="color: var(--neon-red);">"TODAY" MARKER</span>
+                            <span id="trajEndLabel">Point B</span>
+                        </div>
+                        <div class="traj-track">
+                            <div class="traj-fill" id="trajFill"></div>
+                            <div class="traj-marker-today" id="trajMarker" style="left: 0%; display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="insights-panel" id="aiInsightsBox">
+                        <i class="fas fa-satellite-dish me-2"></i> 
+                        <span id="aiInsightsText">Matrix idle. Awaiting vector coordinates to calculate displacement.</span>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // THEME ENGINE
+        // ==========================================
+        function toggleMasterTheme() {
+            const htmlTag = document.documentElement;
+            const newTheme = htmlTag.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlTag.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('lisa_v166_theme', newTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = localStorage.getItem('lisa_v166_theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                document.getElementById('themeIcon').className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            }
+
+            // Init inputs with current time
+            const now = new Date();
+            const nowIso = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            document.getElementById('dateA').value = nowIso;
+            
+            // Default B to Tomorrow
+            const tmrw = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+            const tmrwIso = new Date(tmrw.getTime() - (tmrw.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            document.getElementById('dateB').value = tmrwIso;
+        });
+
+        // ==========================================
+        // TACTICAL INJECTORS
+        // ==========================================
+        function setLocalInput(id, dateObj) {
+            // Adjusts JS Date to local timezone string required by datetime-local input
+            const localIso = new Date(dateObj.getTime() - (dateObj.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            document.getElementById(id).value = localIso;
+        }
+
+        function invertVectors() {
+            const a = document.getElementById('dateA').value;
+            const b = document.getElementById('dateB').value;
+            document.getElementById('dateA').value = b;
+            document.getElementById('dateB').value = a;
+            executeTemporalMath();
+        }
+
+        function injectDate(daysToAdd) {
+            const baseDate = new Date(document.getElementById('dateA').value || new Date());
+            baseDate.setDate(baseDate.getDate() + daysToAdd);
+            setLocalInput('dateB', baseDate);
+            executeTemporalMath();
+        }
+
+        function injectEndOfYear() {
+            const baseDate = new Date(document.getElementById('dateA').value || new Date());
+            const eoy = new Date(baseDate.getFullYear(), 11, 31, 23, 59); // Dec 31, 23:59
+            setLocalInput('dateB', eoy);
+            executeTemporalMath();
+        }
+
+        function injectY2K() {
+            const y2k = new Date(2000, 0, 1, 0, 0); // Jan 1, 2000, 00:00
+            setLocalInput('dateB', y2k);
+            executeTemporalMath();
+        }
+
+        // ==========================================
+        // MARKET DAY ALGORITHM (Ignores Weekends)
+        // ==========================================
+        function calcBusinessDays(d1, d2) {
+            let start = new Date(Math.min(d1, d2));
+            let end = new Date(Math.max(d1, d2));
+            let count = 0;
+            let current = new Date(start);
+
+            // Strip time for clean day iteration
+            current.setHours(0,0,0,0);
+            end.setHours(0,0,0,0);
+
+            while (current < end) {
+                const dayOfWeek = current.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
+                current.setDate(current.getDate() + 1);
+            }
+            return count;
+        }
+
+        // ==========================================
+        // V166 CORE TEMPORAL ENGINE
+        // ==========================================
+        function executeTemporalMath() {
+            const strA = document.getElementById('dateA').value;
+            const strB = document.getElementById('dateB').value;
+
+            if (!strA || !strB) return alert("System requires two valid temporal coordinates.");
+
+            const dateA = new Date(strA);
+            const dateB = new Date(strB);
+            const today = new Date();
+
+            // Absolute math
+            const msDiff = dateB.getTime() - dateA.getTime();
+            const absMsDiff = Math.abs(msDiff);
+            const isPast = msDiff < 0;
+
+            // Granular Slicing
+            const totalSecs = absMsDiff / 1000;
+            const totalMins = totalSecs / 60;
+            const totalHours = totalMins / 60;
+            const totalDays = totalHours / 24;
+            const totalWeeks = totalDays / 7;
+            const totalMonths = totalDays / 30.44; // Approx average
+            const totalYears = totalDays / 365.25; // Approx leap year
+
+            const bizDays = calcBusinessDays(dateA, dateB);
+
+            // Formatting
+            const fmt = (num) => new Intl.NumberFormat('en-US').format(Math.floor(num));
+            
+            // Directional Logic
+            const direction = isPast ? "Into the Past" : "Into the Future";
+            document.getElementById('deltaTitle').innerText = `Trajectory: ${direction}`;
+            document.getElementById('mainDeltaDays').innerText = `${fmt(totalDays)} Days`;
+
+            // Grid Output
+            document.getElementById('valYears').innerText = totalYears.toFixed(2);
+            document.getElementById('valMonths').innerText = totalMonths.toFixed(1);
+            document.getElementById('valWeeks').innerText = totalWeeks.toFixed(1);
+            document.getElementById('valHours').innerText = fmt(totalHours);
+            document.getElementById('valBizDays').innerText = fmt(bizDays);
+            document.getElementById('valSecs').innerText = fmt(totalSecs);
+
+            // --- TRAJECTORY RADAR ---
+            const startT = Math.min(dateA.getTime(), dateB.getTime());
+            const endT = Math.max(dateA.getTime(), dateB.getTime());
+            const nowT = today.getTime();
+
+            const trajMarker = document.getElementById('trajMarker');
+            const trajFill = document.getElementById('trajFill');
+
+            // Set labels chronologically
+            document.getElementById('trajStartLabel').innerText = isPast ? "Point B" : "Point A";
+            document.getElementById('trajEndLabel').innerText = isPast ? "Point A" : "Point B";
+
+            if (nowT < startT) {
+                // Today is before both dates
+                trajMarker.style.display = 'block';
+                trajMarker.style.left = '-2%';
+                trajFill.style.width = '100%';
+            } else if (nowT > endT) {
+                // Today is after both dates
+                trajMarker.style.display = 'block';
+                trajMarker.style.left = '100%';
+                trajFill.style.width = '100%';
+            } else {
+                // Today is INSIDE the displacement
+                const pct = ((nowT - startT) / absMsDiff) * 100;
+                trajMarker.style.display = 'block';
+                trajMarker.style.left = `${pct}%`;
+                trajFill.style.width = `${pct}%`;
+            }
+
+            // --- L.I.S.A. AI INSIGHTS ---
+            const aiText = document.getElementById('aiInsightsText');
+            if (totalYears > 100) {
+                aiText.innerText = `Century Leap: Displacement spans ${fmt(totalYears)} years. You are crossing multiple human generations.`;
+            } else if (totalDays === 0) {
+                aiText.innerText = `Micro-Delta: Coordinates occur on the same day. Exact displacement is ${fmt(totalHours)} hours.`;
+            } else {
+                const weekendLost = Math.floor(totalDays) - bizDays;
+                aiText.innerText = `Market Analytics: Spanning ${fmt(totalDays)} calendar days, but yielding only ${fmt(bizDays)} actionable business days. ${weekendLost} days are lost to weekends.`;
+            }
+        }
+    </script>
+</body>
+</html>

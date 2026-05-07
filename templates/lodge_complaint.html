@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lodge Complaint</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-success px-4 py-3">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#">LASU Student Portal</a>
+        <a href="{{ url_for('student_portal') }}" class="btn btn-outline-light btn-sm">← Back to Portal</a>
+    </div>
+</nav>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark fw-bold">⚠️ Lodge a Complaint</div>
+                <div class="card-body">
+                    <p class="text-muted small">Report missing grades, registration errors, or profile issues.</p>
+                    <form action="{{ url_for('student_complaint') }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Issue Category</label>
+                            <select name="category" class="form-select" required>
+                                <option value="Missing Grade">Missing Grade</option>
+                                <option value="Wrong Score">Wrong Score / Calculation</option>
+                                <option value="Profile Error">Name/Profile Error</option>
+                                <option value="Course Registration">Course Registration Issue</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea name="message" class="form-control" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 fw-bold">Submit Ticket</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

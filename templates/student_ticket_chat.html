@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat with Support | LASU Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #e5ddd5; /* WhatsApp background color */ }
+        .chat-container { max-width: 800px; margin: 20px auto; background: #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: 85vh; display: flex; flex-direction: column; }
+        
+        .chat-header { background: #075e54; color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; }
+        
+        .chat-body { flex: 1; padding: 20px; overflow-y: auto; background: #e5ddd5; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* Message Bubbles */
+        .message { max-width: 75%; padding: 10px 15px; border-radius: 15px; position: relative; font-size: 0.95rem; line-height: 1.4; }
+        
+        /* Student (Me) - Right Side */
+        .msg-me { align-self: flex-end; background-color: #dcf8c6; border-bottom-right-radius: 2px; color: #000; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        
+        /* Lecturer (Them) - Left Side */
+        .msg-them { align-self: flex-start; background-color: #fff; border-bottom-left-radius: 2px; color: #000; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        
+        .msg-time { font-size: 0.7rem; color: #999; text-align: right; margin-top: 5px; display: block; }
+        
+        .chat-footer { background: #f0f0f0; padding: 15px; border-top: 1px solid #ddd; }
+        .form-control:focus { box-shadow: none; border-color: #075e54; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid p-0">
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="d-flex align-items-center">
+                <a href="{{ url_for('student_portal') }}" class="text-white me-3"><i class="fas fa-arrow-left"></i></a>
+                <div class="bg-white text-success rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="mb-0 fw-bold">Lecturer Support</h6>
+                    <small class="opacity-75" style="font-size: 0.75rem;">Ticket #{{ ticket.id }} | {{ ticket.category }}</small>
+                </div>
+            </div>
+            <span class="badge {{ 'bg-warning' if ticket.status == 'Pending' else 'bg-success' }}">{{ ticket.status }}</span>
+        </div>
+
+        <div class="chat-body" id="chatBox">
+            <div class="text-center my-3">
+                <span class="badge bg-secondary opacity-50 fw-normal p-2">Ticket Created: {{ ticket.date_filed.strftime('%d %b, %Y') }}</span>
+            </div>
+            <div class="message msg-me text-muted fst-italic border border-success">
+                <strong>Original Complaint:</strong><br>
+                {{ ticket.details }}
+            </div>
+
+            {% for msg in ticket.messages %}
+                {% if msg.sender == 'Student' %}
+                    <div class="message msg-me">
+                        {{ msg.message }}
+                        <span class="msg-time">
+                            {{ msg.timestamp.strftime('%H:%M') }}
+                            {% if msg.is_read %}<i class="fas fa-check-double text-primary ms-1"></i>{% else %}<i class="fas fa-check ms-1"></i>{% endif %}
+                        </span>
+                    </div>
+                {% else %}
+                    <div class="message msg-them">
+                        <strong>Lecturer:</strong><br>
+                        {{ msg.message }}
+                        <span class="msg-time">{{ msg.timestamp.strftime('%H:%M') }}</span>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="chat-footer">
+            <form method="POST" class="d-flex gap-2">
+                <input type="text" name="message" class="form-control rounded-pill" placeholder="Type a message..." required autocomplete="off">
+                <button type="submit" class="btn btn-success rounded-circle" style="width: 45px; height: 45px;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-scroll to bottom
+    const chatBox = document.getElementById('chatBox');
+    chatBox.scrollTop = chatBox.scrollHeight;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V30000 Gravity Matrix | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V30000 GRAVITY MATRIX THEME ENGINE
+           ========================================== */
+        
+        [data-theme="dark"] {
+            --nk-bg: #0b0f19;
+            --nk-surface: #131a2a;
+            --nk-text: #e2e8f0;
+            --nk-text-muted: #475569;
+            --nk-accent: #3b82f6; /* Matrix Blue */
+            --nk-accent-glow: rgba(59, 130, 246, 0.3);
+            --nk-player-1: #ef4444; /* Tactical Red */
+            --nk-player-2: #f59e0b; /* Caution Yellow */
+            --nk-border: #1e293b;
+            --nk-board: #1e40af; /* Deep Blue Board */
+            --nk-hole: #0b0f19; /* Background color for holes */
+        }
+
+        [data-theme="light"] {
+            --nk-bg: #f8fafc;
+            --nk-surface: #ffffff;
+            --nk-text: #0f172a;
+            --nk-text-muted: #94a3b8;
+            --nk-accent: #2563eb; 
+            --nk-accent-glow: rgba(37, 99, 235, 0.2);
+            --nk-player-1: #dc2626;
+            --nk-player-2: #d97706;
+            --nk-border: #cbd5e1;
+            --nk-board: #2563eb;
+            --nk-hole: #f8fafc;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--nk-bg);
+            color: var(--nk-text);
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .test-container {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        /* HUD Header */
+        .nk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--nk-border);
+        }
+
+        .nk-title {
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            color: var(--nk-accent);
+            text-shadow: 0 0 15px var(--nk-accent-glow);
+        }
+
+        .btn-nav {
+            background: transparent;
+            color: var(--nk-text);
+            border: 1px solid var(--nk-border);
+            padding: 10px 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-nav:hover { background: var(--nk-surface); border-color: var(--nk-accent); color: var(--nk-accent); }
+
+        /* Telemetry Dashboard */
+        .telemetry-dash {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .telemetry-node {
+            background: var(--nk-surface);
+            border: 1px solid var(--nk-border);
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .node-val {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--nk-text);
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .node-lbl {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--nk-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-purge {
+            position: absolute;
+            top: 5px; right: 5px;
+            background: transparent; border: none; color: var(--nk-text-muted);
+            font-size: 0.7rem; cursor: pointer;
+        }
+        .btn-purge:hover { color: var(--nk-player-1); }
+
+        /* Layout Structure */
+        .main-layout {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout { flex-direction: column-reverse; align-items: center; }
+            .control-panel { width: 100%; max-width: 500px; }
+        }
+
+        /* Control Panel */
+        .control-panel {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: var(--nk-surface);
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid var(--nk-border);
+            min-width: 280px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .panel-label {
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: var(--nk-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .form-select {
+            background: var(--nk-bg);
+            color: var(--nk-text);
+            border: 2px solid var(--nk-border);
+            padding: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 4px;
+            outline: none;
+            width: 100%;
+        }
+        .form-select:focus { border-color: var(--nk-accent); }
+
+        .btn-action {
+            background: var(--nk-surface);
+            color: var(--nk-text);
+            border: 2px solid var(--nk-border);
+            padding: 15px 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .btn-action:hover { border-color: var(--nk-text); }
+        .btn-action.active-btn { background: var(--nk-text); color: var(--nk-bg); border-color: var(--nk-text); }
+        
+        .btn-start {
+            background: var(--nk-accent);
+            color: #ffffff;
+            border: none;
+            margin-top: 10px;
+        }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--nk-accent-glow); border: none; }
+
+        /* The Suspension Grid */
+        .arena-box {
+            background-color: var(--nk-bg);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Hover Target Row (Top) */
+        .target-row {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 5px;
+            width: 100%;
+            height: 50px;
+        }
+        
+        .target-cell {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .target-cell:hover::after {
+            content: "\f0dd"; /* fa-caret-down */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--nk-text);
+            font-size: 2rem;
+            position: absolute;
+            top: -10px;
+            animation: bounceIndicator 1s infinite;
+        }
+
+        @keyframes bounceIndicator {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(5px); }
+        }
+
+        /* Physical Board */
+        .physical-board {
+            background-color: var(--nk-board);
+            padding: 10px;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .board-hole {
+            width: 50px;
+            height: 50px;
+            background-color: var(--nk-hole);
+            border-radius: 50%;
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden; /* To mask dropping tokens */
+        }
+
+        /* Dynamic Tokens */
+        .gravity-token {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            top: -300px; /* Start high above */
+            left: 0;
+            transition: top 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .token-p1 {
+            background: radial-gradient(circle at 30% 30%, #f87171, var(--nk-player-1));
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .token-p2 {
+            background: radial-gradient(circle at 30% 30%, #fbbf24, var(--nk-player-2));
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Winning Line Highlight */
+        .token-win {
+            box-shadow: 0 0 20px #ffffff, inset 0 0 10px #ffffff;
+            border: 3px solid #ffffff;
+            z-index: 5;
+            animation: pulseWin 1s infinite alternate;
+        }
+
+        @keyframes pulseWin {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* Status Overlay */
+        .status-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            display: none;
+        }
+
+        .overlay-text {
+            font-size: 3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 500px) {
+            .target-cell, .board-hole { width: 35px; height: 35px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="test-container">
+        
+        <div class="nk-header">
+            <div>
+                <h1 class="nk-title">Gravity Matrix</h1>
+                <div style="font-size: 0.8rem; font-weight: bold; color: var(--nk-text-muted); letter-spacing: 3px; margin-top: 5px;">V30000 Vertical Alignment Engine</div>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn-nav" onclick="toggleGravityTheme()"><i class="fas fa-adjust"></i></button>
+                <a href="{{ url_for('student_tools_dashboard') }}" class="btn-nav"><i class="fas fa-arrow-left me-2"></i> Dashboard</a>
+            </div>
+        </div>
+
+        <div class="telemetry-dash">
+            <div class="telemetry-node">
+                <button class="btn-purge" onclick="purgeTelemetry()" title="Reset Stats"><i class="fas fa-trash"></i></button>
+                <div class="node-val" id="hudWins" style="color: var(--nk-player-1);">0</div>
+                <div class="node-lbl">Red Victories</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudDraws" style="color: var(--nk-text-muted);">0</div>
+                <div class="node-lbl">Stalemates</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudLosses" style="color: var(--nk-player-2);">0</div>
+                <div class="node-lbl">Yellow Victories</div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            
+            <div class="control-panel">
+                
+                <div>
+                    <div class="panel-label">Opponent Engine</div>
+                    <select id="difficultySelect" class="form-select">
+                        <option value="HUMAN">Local Human (PvP)</option>
+                        <option value="NOVICE">AI: Initiate (Random)</option>
+                        <option value="GRANDMASTER" selected>AI: Grandmaster (Minimax)</option>
+                    </select>
+                </div>
+
+                <div style="border-top: 1px solid var(--nk-border); margin: 5px 0;"></div>
+                
+                <button class="btn-action btn-start" onclick="executeSystemReboot()"><i class="fas fa-power-off me-2"></i> Reboot Matrix</button>
+
+                <div id="systemStatus" style="text-align: center; margin-top: 15px; font-weight: bold; color: var(--nk-text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">
+                    SYSTEM STANDBY
+                </div>
+
+            </div>
+
+            <div class="arena-box">
+                
+                <div class="target-row" id="targetRow">
+                    <div class="target-cell" onclick="handleHumanDrop(0)"></div>
+                    <div class="target-cell" onclick="handleHumanDrop(1)"></div>
+                    <div class="target-cell" onclick="handleHumanDrop(2)"></div>
+                    <div class="target-cell" onclick="handleHumanDrop(3)"></div>
+                    <div class="target-cell" onclick="handleHumanDrop(4)"></div>
+                    <div class="target-cell" onclick="handleHumanDrop(5)"></div>
+                    <div class="target-cell" onclick="handleHumanDrop(6)"></div>
+                </div>
+
+                <div class="physical-board" id="boardContainer">
+                    
+                    <div class="status-overlay" id="statusOverlay">
+                        <div class="overlay-text" id="overlayText">DRAW</div>
+                        <button class="btn-action btn-start" style="width: auto;" onclick="executeSystemReboot()">Re-engage Matrix</button>
+                    </div>
+
+                    </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V30000 THEME ENGINE
+        // ==========================================
+        function toggleGravityTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v30000_gravity_theme', nextTheme);
+        }
+
+        // ==========================================
+        // GLOBAL REGISTERS (7 Columns, 6 Rows)
+        // Array maps [row][col]. Row 0 is Top. Row 5 is Bottom.
+        // ==========================================
+        let matrixArray = [];
+        let numRows = 6;
+        let numCols = 7;
+        
+        let currentPlayer = 1; // 1 = Red, 2 = Yellow
+        let isEngineLocked = false;
+        
+        let statWins = 0;
+        let statLosses = 0;
+        let statDraws = 0;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v30000_gravity_theme');
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+            
+            let loadedWins = localStorage.getItem('lisa_v30000_wins');
+            let loadedLosses = localStorage.getItem('lisa_v30000_losses');
+            let loadedDraws = localStorage.getItem('lisa_v30000_draws');
+
+            if (loadedWins !== null) { statWins = parseInt(loadedWins, 10); }
+            if (loadedLosses !== null) { statLosses = parseInt(loadedLosses, 10); }
+            if (loadedDraws !== null) { statDraws = parseInt(loadedDraws, 10); }
+            
+            updateTelemetryDOM();
+            buildPhysicalDOM();
+            executeSystemReboot();
+        });
+
+        // ==========================================
+        // UI & HARDWARE CONTROLLERS
+        // ==========================================
+        function updateStatusUI(messageString, colorVar) {
+            let statusElement = document.getElementById('systemStatus');
+            statusElement.innerText = messageString;
+            statusElement.style.color = colorVar;
+        }
+
+        function updateTelemetryDOM() {
+            document.getElementById('hudWins').innerText = String(statWins);
+            document.getElementById('hudLosses').innerText = String(statLosses);
+            document.getElementById('hudDraws').innerText = String(statDraws);
+            
+            localStorage.setItem('lisa_v30000_wins', String(statWins));
+            localStorage.setItem('lisa_v30000_losses', String(statLosses));
+            localStorage.setItem('lisa_v30000_draws', String(statDraws));
+        }
+
+        function purgeTelemetry() {
+            statWins = 0;
+            statLosses = 0;
+            statDraws = 0;
+            updateTelemetryDOM();
+        }
+
+        // ==========================================
+        // MATRIX GENERATION
+        // ==========================================
+        function buildPhysicalDOM() {
+            let containerElement = document.getElementById('boardContainer');
+            // Clear everything except the overlay
+            let childrenArray = containerElement.children;
+            for (let i = childrenArray.length - 1; i >= 0; i = i - 1) {
+                if (childrenArray[i].id !== 'statusOverlay') {
+                    containerElement.removeChild(childrenArray[i]);
+                }
+            }
+
+            for (let r = 0; r < numRows; r = r + 1) {
+                for (let c = 0; c < numCols; c = c + 1) {
+                    let holeElement = document.createElement("div");
+                    holeElement.className = "board-hole";
+                    holeElement.id = "hole_" + String(r) + "_" + String(c);
+                    
+                    // The token div lives inside the hole, initially out of frame above
+                    let tokenElement = document.createElement("div");
+                    tokenElement.className = "gravity-token";
+                    tokenElement.id = "token_" + String(r) + "_" + String(c);
+                    
+                    holeElement.appendChild(tokenElement);
+                    containerElement.appendChild(holeElement);
+                }
+            }
+        }
+
+        function executeSystemReboot() {
+            matrixArray = [];
+            for (let r = 0; r < numRows; r = r + 1) {
+                let rowData = [];
+                for (let c = 0; c < numCols; c = c + 1) {
+                    rowData.push(0);
+                    
+                    // Reset DOM visual state
+                    let tokenElement = document.getElementById("token_" + String(r) + "_" + String(c));
+                    tokenElement.style.top = "-300px"; // Hide above
+                    tokenElement.className = "gravity-token"; // Strip colors/win classes
+                }
+                matrixArray.push(rowData);
+            }
+
+            currentPlayer = 1; // 1 = Red
+            isEngineLocked = false;
+            
+            document.getElementById('statusOverlay').style.display = "none";
+            updateStatusUI("RED SQUADRON TURN", "var(--nk-player-1)");
+        }
+
+        // ==========================================
+        // KINETIC DROP MECHANICS
+        // ==========================================
+        function findLowestEmptyRow(colIndex) {
+            for (let r = numRows - 1; r >= 0; r = r - 1) {
+                if (matrixArray[r][colIndex] === 0) {
+                    return r;
+                }
+            }
+            return -1; // Column full
+        }
+
+        function handleHumanDrop(colIndex) {
+            if (isEngineLocked === true) { return; }
+
+            let targetRow = findLowestEmptyRow(colIndex);
+            if (targetRow === -1) { return; } // Invalid move
+
+            executeKineticDrop(targetRow, colIndex, currentPlayer);
+        }
+
+        function executeKineticDrop(rowInt, colInt, playerInt) {
+            // Lock engine during animation
+            isEngineLocked = true;
+
+            // 1. Update Logical Array
+            matrixArray[rowInt][colInt] = playerInt;
+
+            // 2. Execute Physical DOM Drop
+            let tokenElement = document.getElementById("token_" + String(rowInt) + "_" + String(colInt));
+            
+            if (playerInt === 1) {
+                tokenElement.classList.add('token-p1');
+            } else {
+                tokenElement.classList.add('token-p2');
+            }
+
+            // Force reflow to ensure CSS transition triggers properly
+            void tokenElement.offsetWidth;
+            
+            // Drop it into position
+            tokenElement.style.top = "0px";
+
+            // 3. Wait for animation to finish (400ms) before evaluating state
+            setTimeout(function() {
+                let isGameOver = verifyEndState();
+                
+                if (isGameOver === false) {
+                    // Swap turns
+                    if (currentPlayer === 1) {
+                        currentPlayer = 2;
+                    } else {
+                        currentPlayer = 1;
+                    }
+
+                    // Check Mode
+                    let opponentMode = document.getElementById('difficultySelect').value;
+                    if (opponentMode === "HUMAN") {
+                        isEngineLocked = false;
+                        if (currentPlayer === 1) { updateStatusUI("RED SQUADRON TURN", "var(--nk-player-1)"); }
+                        else { updateStatusUI("YELLOW SQUADRON TURN", "var(--nk-player-2)"); }
+                    } else {
+                        if (currentPlayer === 2) {
+                            updateStatusUI("AI COMPUTING...", "var(--nk-accent)");
+                            setTimeout(executeAITurn, 100); // Small psychological delay
+                        } else {
+                            isEngineLocked = false;
+                            updateStatusUI("RED SQUADRON TURN", "var(--nk-player-1)");
+                        }
+                    }
+                }
+            }, 450); // Slightly longer than CSS transition to be safe
+        }
+
+        // ==========================================
+        // ENDGAME LOGIC
+        // ==========================================
+        function verifyEndState() {
+            let winObject = scanForWinner(matrixArray);
+            
+            if (winObject !== null) {
+                triggerVictorySequence(winObject);
+                return true;
+            }
+
+            if (isGridFull() === true) {
+                triggerDrawSequence();
+                return true;
+            }
+
+            return false;
+        }
+
+        function scanForWinner(boardState) {
+            // 1. Horizontal Check
+            for (let r = 0; r < numRows; r = r + 1) {
+                for (let c = 0; c < numCols - 3; c = c + 1) {
+                    let token = boardState[r][c];
+                    if (token !== 0 && token === boardState[r][c+1] && token === boardState[r][c+2] && token === boardState[r][c+3]) {
+                        return { winner: token, coords: [[r,c], [r,c+1], [r,c+2], [r,c+3]] };
+                    }
+                }
+            }
+
+            // 2. Vertical Check
+            for (let r = 0; r < numRows - 3; r = r + 1) {
+                for (let c = 0; c < numCols; c = c + 1) {
+                    let token = boardState[r][c];
+                    if (token !== 0 && token === boardState[r+1][c] && token === boardState[r+2][c] && token === boardState[r+3][c]) {
+                        return { winner: token, coords: [[r,c], [r+1,c], [r+2,c], [r+3,c]] };
+                    }
+                }
+            }
+
+            // 3. Diagonal Check (Down-Right)
+            for (let r = 0; r < numRows - 3; r = r + 1) {
+                for (let c = 0; c < numCols - 3; c = c + 1) {
+                    let token = boardState[r][c];
+                    if (token !== 0 && token === boardState[r+1][c+1] && token === boardState[r+2][c+2] && token === boardState[r+3][c+3]) {
+                        return { winner: token, coords: [[r,c], [r+1,c+1], [r+2,c+2], [r+3,c+3]] };
+                    }
+                }
+            }
+
+            // 4. Diagonal Check (Up-Right)
+            for (let r = 3; r < numRows; r = r + 1) {
+                for (let c = 0; c < numCols - 3; c = c + 1) {
+                    let token = boardState[r][c];
+                    if (token !== 0 && token === boardState[r-1][c+1] && token === boardState[r-2][c+2] && token === boardState[r-3][c+3]) {
+                        return { winner: token, coords: [[r,c], [r-1,c+1], [r-2,c+2], [r-3,c+3]] };
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        function isGridFull() {
+            // Only need to check top row
+            for (let c = 0; c < numCols; c = c + 1) {
+                if (matrixArray[0][c] === 0) { return false; }
+            }
+            return true;
+        }
+
+        function triggerVictorySequence(winObject) {
+            let overlayElement = document.getElementById('statusOverlay');
+            let textElement = document.getElementById('overlayText');
+            let opponentMode = document.getElementById('difficultySelect').value;
+
+            overlayElement.style.display = "flex";
+
+            if (opponentMode === "HUMAN") {
+                if (winObject.winner === 1) {
+                    textElement.innerText = "RED DOMINANCE";
+                    textElement.style.color = "var(--nk-player-1)";
+                    statWins = statWins + 1;
+                    updateStatusUI("RED VICTORY", "var(--nk-player-1)");
+                } else {
+                    textElement.innerText = "YELLOW DOMINANCE";
+                    textElement.style.color = "var(--nk-player-2)";
+                    statLosses = statLosses + 1;
+                    updateStatusUI("YELLOW VICTORY", "var(--nk-player-2)");
+                }
+            } else {
+                if (winObject.winner === 1) {
+                    textElement.innerText = "HUMAN VICTORY";
+                    textElement.style.color = "var(--nk-player-1)";
+                    statWins = statWins + 1;
+                    updateStatusUI("SYSTEM DEFEATED", "var(--nk-player-1)");
+                } else {
+                    textElement.innerText = "SYSTEM FATALITY";
+                    textElement.style.color = "var(--nk-player-2)";
+                    statLosses = statLosses + 1;
+                    updateStatusUI("AI DOMINANCE ACHIEVED", "var(--nk-player-2)");
+                }
+            }
+
+            updateTelemetryDOM();
+
+            // Highlight Winning Tokens
+            let winCoords = winObject.coords;
+            for (let i = 0; i < winCoords.length; i = i + 1) {
+                let targetR = winCoords[i][0];
+                let targetC = winCoords[i][1];
+                document.getElementById("token_" + String(targetR) + "_" + String(targetC)).classList.add('token-win');
+            }
+        }
+
+        function triggerDrawSequence() {
+            let overlayElement = document.getElementById('statusOverlay');
+            let textElement = document.getElementById('overlayText');
+
+            overlayElement.style.display = "flex";
+            textElement.innerText = "STALEMATE";
+            textElement.style.color = "var(--nk-text)";
+            
+            statDraws = statDraws + 1;
+            updateTelemetryDOM();
+            updateStatusUI("TACTICAL STALEMATE", "var(--nk-text-muted)");
+        }
+
+        // ==========================================
+        // V30000 ALPHA-BETA MINIMAX AI
+        // ==========================================
+        function executeAITurn() {
+            let difficultyLevel = document.getElementById('difficultySelect').value;
+            let targetCol = -1;
+
+            if (difficultyLevel === "NOVICE") {
+                targetCol = getValidColumns(matrixArray);
+                if (targetCol.length > 0) {
+                    let randIndex = Math.floor(Math.random() * targetCol.length);
+                    targetCol = targetCol[randIndex];
+                } else {
+                    targetCol = -1;
+                }
+            } else if (difficultyLevel === "GRANDMASTER") {
+                // Throttled depth to 5. Keeps computation under 200ms usually.
+                targetCol = runMinimaxWrapper(matrixArray, 5); 
+            }
+
+            // Fallback safety
+            if (targetCol === -1) {
+                let validCols = getValidColumns(matrixArray);
+                targetCol = validCols[0];
+            }
+
+            let targetRow = findLowestEmptyRow(targetCol);
+            executeKineticDrop(targetRow, targetCol, 2);
+        }
+
+        function getValidColumns(boardState) {
+            let validCols = [];
+            for (let c = 0; c < numCols; c = c + 1) {
+                if (boardState[0][c] === 0) { validCols.push(c); }
+            }
+            return validCols;
+        }
+
+        function simulateDrop(boardState, colInt, pieceInt) {
+            // Returns a temporary cloned board with the dropped piece
+            let clonedBoard = [];
+            for (let r = 0; r < numRows; r = r + 1) {
+                let rowData = [];
+                for (let c = 0; c < numCols; c = c + 1) {
+                    rowData.push(boardState[r][c]);
+                }
+                clonedBoard.push(rowData);
+            }
+
+            for (let r = numRows - 1; r >= 0; r = r - 1) {
+                if (clonedBoard[r][colInt] === 0) {
+                    clonedBoard[r][colInt] = pieceInt;
+                    break;
+                }
+            }
+            return clonedBoard;
+        }
+
+        // Heuristic Scoring Engine
+        function evaluateWindow(windowArray, pieceInt) {
+            let score = 0;
+            let oppPiece = 1;
+            if (pieceInt === 1) { oppPiece = 2; }
+
+            let pieceCount = 0;
+            let emptyCount = 0;
+            let oppCount = 0;
+
+            for(let i = 0; i < 4; i = i + 1) {
+                if (windowArray[i] === pieceInt) { pieceCount = pieceCount + 1; }
+                else if (windowArray[i] === 0) { emptyCount = emptyCount + 1; }
+                else if (windowArray[i] === oppPiece) { oppCount = oppCount + 1; }
+            }
+
+            if (pieceCount === 4) { score = score + 100000; }
+            else if (pieceCount === 3 && emptyCount === 1) { score = score + 50; }
+            else if (pieceCount === 2 && emptyCount === 2) { score = score + 10; }
+
+            if (oppCount === 3 && emptyCount === 1) { score = score - 80; } // Heavy block penalty
+
+            return score;
+        }
+
+        function scorePhysicalBoard(boardState, pieceInt) {
+            let score = 0;
+
+            // Score center column higher to encourage centralized control
+            let centerArray = [];
+            for (let r = 0; r < numRows; r = r + 1) {
+                centerArray.push(boardState[r][3]);
+            }
+            let centerCount = 0;
+            for (let i = 0; i < centerArray.length; i = i + 1) {
+                if (centerArray[i] === pieceInt) { centerCount = centerCount + 1; }
+            }
+            score = score + (centerCount * 30);
+
+            // Horizontal
+            for (let r = 0; r < numRows; r = r + 1) {
+                let rowArray = boardState[r];
+                for (let c = 0; c < numCols - 3; c = c + 1) {
+                    let windowArr = [rowArray[c], rowArray[c+1], rowArray[c+2], rowArray[c+3]];
+                    score = score + evaluateWindow(windowArr, pieceInt);
+                }
+            }
+
+            // Vertical
+            for (let c = 0; c < numCols; c = c + 1) {
+                for (let r = 0; r < numRows - 3; r = r + 1) {
+                    let windowArr = [boardState[r][c], boardState[r+1][c], boardState[r+2][c], boardState[r+3][c]];
+                    score = score + evaluateWindow(windowArr, pieceInt);
+                }
+            }
+
+            // Positive Diagonal
+            for (let r = 0; r < numRows - 3; r = r + 1) {
+                for (let c = 0; c < numCols - 3; c = c + 1) {
+                    let windowArr = [boardState[r][c], boardState[r+1][c+1], boardState[r+2][c+2], boardState[r+3][c+3]];
+                    score = score + evaluateWindow(windowArr, pieceInt);
+                }
+            }
+
+            // Negative Diagonal
+            for (let r = 3; r < numRows; r = r + 1) {
+                for (let c = 0; c < numCols - 3; c = c + 1) {
+                    let windowArr = [boardState[r][c], boardState[r-1][c+1], boardState[r-2][c+2], boardState[r-3][c+3]];
+                    score = score + evaluateWindow(windowArr, pieceInt);
+                }
+            }
+
+            return score;
+        }
+
+        function isTerminalNode(boardState) {
+            let winObject = scanForWinner(boardState);
+            if (winObject !== null) { return true; }
+            
+            let validCols = getValidColumns(boardState);
+            if (validCols.length === 0) { return true; }
+            
+            return false;
+        }
+
+        function minimaxEngine(boardState, depthInt, alphaVar, betaVar, isMaximizing) {
+            let validLocations = getValidColumns(boardState);
+            let isTerminal = isTerminalNode(boardState);
+
+            if (depthInt === 0 || isTerminal === true) {
+                if (isTerminal === true) {
+                    let winObject = scanForWinner(boardState);
+                    if (winObject !== null && winObject.winner === 2) {
+                        return { score: 10000000000 };
+                    } else if (winObject !== null && winObject.winner === 1) {
+                        return { score: -10000000000 };
+                    } else {
+                        return { score: 0 }; // Draw
+                    }
+                } else {
+                    return { score: scorePhysicalBoard(boardState, 2) };
+                }
+            }
+
+            if (isMaximizing === true) {
+                let bestScore = -Infinity;
+                // Randomize fallback column
+                let targetCol = validLocations[Math.floor(Math.random() * validLocations.length)];
+                
+                for (let i = 0; i < validLocations.length; i = i + 1) {
+                    let col = validLocations[i];
+                    let simBoard = simulateDrop(boardState, col, 2);
+                    let resultScore = minimaxEngine(simBoard, depthInt - 1, alphaVar, betaVar, false).score;
+                    
+                    if (resultScore > bestScore) {
+                        bestScore = resultScore;
+                        targetCol = col;
+                    }
+                    if (bestScore > alphaVar) { alphaVar = bestScore; }
+                    if (alphaVar >= betaVar) { break; } // Prune
+                }
+                return { column: targetCol, score: bestScore };
+            } else {
+                let bestScore = Infinity;
+                let targetCol = validLocations[Math.floor(Math.random() * validLocations.length)];
+                
+                for (let i = 0; i < validLocations.length; i = i + 1) {
+                    let col = validLocations[i];
+                    let simBoard = simulateDrop(boardState, col, 1);
+                    let resultScore = minimaxEngine(simBoard, depthInt - 1, alphaVar, betaVar, true).score;
+                    
+                    if (resultScore < bestScore) {
+                        bestScore = resultScore;
+                        targetCol = col;
+                    }
+                    if (bestScore < betaVar) { betaVar = bestScore; }
+                    if (alphaVar >= betaVar) { break; } // Prune
+                }
+                return { column: targetCol, score: bestScore };
+            }
+        }
+
+        function runMinimaxWrapper(boardState, searchDepth) {
+            let resultObject = minimaxEngine(boardState, searchDepth, -Infinity, Infinity, true);
+            return resultObject.column;
+        }
+
+    </script>
+</body>
+</html>

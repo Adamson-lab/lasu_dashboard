@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V122 Defcon Matrix | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V122 MASTER THEME ENGINE
+           ========================================== */
+        [data-theme="dark"] {
+            --bg-master: #030712;
+            --bg-surface: #0f172a;
+            --border-core: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --grid-line: rgba(255, 255, 255, 0.02);
+            --panel-bg: #000000;
+        }
+
+        [data-theme="light"] {
+            --bg-master: #f8fafc;
+            --bg-surface: #ffffff;
+            --border-core: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --grid-line: rgba(0, 0, 0, 0.04);
+            --panel-bg: #f1f5f9;
+        }
+
+        /* STATE COLORS (DEFCON MATRIX) */
+        :root {
+            --defcon-5: #0ea5e9; /* Nominal (Blue) */
+            --defcon-3: #f59e0b; /* Elevated (Amber) */
+            --defcon-1: #ef4444; /* Critical (Red) */
+            --neon-green: #10b981;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-master);
+            color: var(--text-main);
+            padding: 40px 20px;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+            transition: all 0.4s ease;
+        }
+
+        .tool-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.6);
+            border: 1px solid var(--border-core);
+            transition: all 0.4s ease;
+        }
+
+        .btn-theme {
+            background: var(--bg-surface); color: var(--text-main);
+            border: 1px solid var(--border-core); padding: 8px 15px;
+            border-radius: 4px; cursor: pointer; transition: all 0.2s; font-size: 1.2rem;
+        }
+        .btn-theme:hover { border-color: var(--defcon-5); box-shadow: 0 0 15px rgba(14, 165, 233, 0.3); }
+
+        /* ==========================================
+           DEFCON HUD (LEFT PANEL)
+           ========================================== */
+        .hud-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 12px;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 25px; /* Strict spacing to prevent V99-style overlaps */
+            height: 100%;
+            min-height: 600px;
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow 0.3s, border-color 0.3s;
+        }
+
+        /* Defcon Flashing State */
+        @keyframes criticalPulse {
+            0% { box-shadow: inset 0 0 50px rgba(239, 68, 68, 0.1); border-color: var(--border-core); }
+            50% { box-shadow: inset 0 0 150px rgba(239, 68, 68, 0.4); border-color: var(--defcon-1); }
+            100% { box-shadow: inset 0 0 50px rgba(239, 68, 68, 0.1); border-color: var(--border-core); }
+        }
+        .hud-panel.defcon-critical {
+            animation: criticalPulse 1s infinite;
+        }
+
+        /* SVG Countdown Ring */
+        .ring-container {
+            position: relative;
+            width: 340px;
+            height: 340px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ring-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .ring-bg { fill: none; stroke: var(--border-core); stroke-width: 4; }
+        .ring-fill {
+            fill: none;
+            stroke: var(--defcon-5); /* Defaults to nominal */
+            stroke-width: 10;
+            stroke-linecap: square;
+            stroke-dasharray: 1005; /* r=160 */
+            stroke-dashoffset: 0; /* Starts full, drains to 1005 */
+            transition: stroke-dashoffset 0.1s linear, stroke 0.5s ease;
+        }
+
+        /* Digital Display & Inputs */
+        .time-wrapper {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .time-display {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--text-main);
+            letter-spacing: -2px;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: none; /* Hidden during setup */
+        }
+        
+        .time-display.over-time {
+            color: var(--defcon-1);
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+            animation: textBlink 1s infinite;
+        }
+
+        @keyframes textBlink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* The Input Matrix */
+        .input-matrix {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .input-group-col { display: flex; flex-direction: column; align-items: center; }
+        .time-input {
+            width: 80px;
+            height: 70px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid var(--border-core);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: 'Courier New', monospace;
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .time-input:focus { outline: none; border-color: var(--defcon-5); box-shadow: 0 0 15px rgba(14,165,233,0.3); }
+        .input-label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-top: 5px; letter-spacing: 1px; }
+        .colon { font-size: 2.5rem; font-weight: 900; color: var(--text-muted); padding-bottom: 25px; }
+
+        /* Controls */
+        .control-deck { display: flex; gap: 20px; z-index: 2; }
+        .btn-hardware {
+            width: 80px; height: 80px; border-radius: 50%; border: 2px solid transparent;
+            background: var(--bg-surface); color: var(--text-main); font-size: 1.8rem;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .btn-hardware:hover { transform: scale(1.08); }
+        .btn-hardware:active { transform: scale(0.92); }
+        .btn-hardware:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+        .btn-start { border-color: var(--neon-green); color: var(--neon-green); }
+        .btn-start:hover:not(:disabled) { background: var(--neon-green); color: #000; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        .btn-stop { border-color: var(--defcon-1); color: var(--defcon-1); }
+        .btn-stop:hover:not(:disabled) { background: var(--defcon-1); color: #fff; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+        .btn-reset { border-color: var(--text-muted); color: var(--text-muted); }
+        .btn-reset:hover:not(:disabled) { background: var(--text-muted); color: #fff; }
+
+        /* ==========================================
+           TACTICAL COMMAND (RIGHT PANEL)
+           ========================================== */
+        .status-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.4s ease;
+        }
+
+        .defcon-indicator {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            transition: color 0.4s;
+        }
+        
+        .status-box.s-defcon-5 { border-left: 6px solid var(--defcon-5); }
+        .status-box.s-defcon-5 .defcon-indicator { color: var(--defcon-5); text-shadow: 0 0 15px rgba(14, 165, 233, 0.4); }
+        
+        .status-box.s-defcon-3 { border-left: 6px solid var(--defcon-3); }
+        .status-box.s-defcon-3 .defcon-indicator { color: var(--defcon-3); text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+        
+        .status-box.s-defcon-1 { border-left: 6px solid var(--defcon-1); background: rgba(239, 68, 68, 0.05); }
+        .status-box.s-defcon-1 .defcon-indicator { color: var(--defcon-1); text-shadow: 0 0 15px rgba(239, 68, 68, 0.6); animation: textBlink 0.5s infinite; }
+
+        /* Preset Injection Grid */
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn-preset {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .btn-preset:hover {
+            border-color: var(--defcon-5);
+            background: var(--bg-surface);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .preset-title { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .preset-time { font-family: 'Courier New', monospace; font-size: 1.5rem; font-weight: 900; color: var(--text-main); }
+
+        .insights-panel {
+            background: var(--panel-bg); border-left: 4px solid var(--defcon-5);
+            padding: 15px 20px; border-radius: 0 4px 4px 0; font-size: 0.85rem; font-weight: 600;
+            color: var(--text-main); margin-top: 20px; border-top: 1px solid var(--border-core);
+            border-right: 1px solid var(--border-core); border-bottom: 1px solid var(--border-core);
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--border-core);">
+            <h2 class="fw-bold m-0" style="color: var(--text-main);">
+                <i class="fas fa-radiation-alt me-2" style="color: var(--defcon-3);"></i> DEFCON COUNTDOWN MATRIX 
+                <span class="badge ms-2" style="background: var(--defcon-1); color: #fff; font-size: 0.75rem; vertical-align: middle; letter-spacing: 1px;">V122 PRO MAX</span>
+            </h2>
+            <div class="d-flex gap-2">
+                <button class="btn-theme" id="themeToggleBtn" onclick="toggleMasterTheme()" title="Toggle Environment">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary fw-bold border-0" style="color: var(--text-main); background: var(--panel-bg);">
+                    <i class="fas fa-arrow-left me-1"></i> Terminate
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-5">
+                <div class="hud-panel" id="hudPanel">
+                    
+                    <div class="ring-container">
+                        <svg class="ring-svg" viewBox="0 0 340 340">
+                            <circle class="ring-bg" cx="170" cy="170" r="160"></circle>
+                            <circle class="ring-fill" id="sweepRing" cx="170" cy="170" r="160"></circle>
+                        </svg>
+
+                        <div class="time-wrapper">
+                            <div class="input-matrix" id="setupMatrix">
+                                <div class="input-group-col">
+                                    <input type="number" class="time-input" id="inHours" value="00" min="0" max="99" onchange="padInput(this)">
+                                    <span class="input-label">HR</span>
+                                </div>
+                                <div class="colon">:</div>
+                                <div class="input-group-col">
+                                    <input type="number" class="time-input" id="inMins" value="15" min="0" max="59" onchange="padInput(this)">
+                                    <span class="input-label">MIN</span>
+                                </div>
+                                <div class="colon">:</div>
+                                <div class="input-group-col">
+                                    <input type="number" class="time-input" id="inSecs" value="00" min="0" max="59" onchange="padInput(this)">
+                                    <span class="input-label">SEC</span>
+                                </div>
+                            </div>
+
+                            <div class="time-display" id="runDisplay">00:00:00</div>
+                        </div>
+                    </div>
+
+                    <div class="control-deck">
+                        <button class="btn-hardware btn-start" id="btnStart" onclick="engageDefcon()"><i class="fas fa-play"></i></button>
+                        <button class="btn-hardware btn-reset" id="btnReset" onclick="resetMatrix()"><i class="fas fa-undo"></i></button>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                
+                <div class="status-box" id="defconStatusBox">
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Threat Level</div>
+                        <div style="font-family: 'Courier New', monospace; font-size: 1rem; font-weight: 600;" id="defconSubtext">System Idle. Awaiting Vector.</div>
+                    </div>
+                    <div class="defcon-indicator" id="defconText">STANDBY</div>
+                </div>
+
+                <h6 class="fw-bold mb-3 mt-4" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem;">
+                    <i class="fas fa-bolt me-2"></i> Tactical Preset Injection
+                </h6>
+
+                <div class="preset-grid">
+                    <button class="btn-preset" onclick="injectPreset(0, 5, 0)">
+                        <span class="preset-title">High-Intensity Sprint</span>
+                        <span class="preset-time">00:05:00</span>
+                    </button>
+                    <button class="btn-preset" onclick="injectPreset(0, 15, 0)">
+                        <span class="preset-title">Tactical Power Nap</span>
+                        <span class="preset-time">00:15:00</span>
+                    </button>
+                    <button class="btn-preset" onclick="injectPreset(0, 25, 0)">
+                        <span class="preset-title">Pomodoro Deep Work</span>
+                        <span class="preset-time">00:25:00</span>
+                    </button>
+                    <button class="btn-preset" onclick="injectPreset(1, 0, 0)">
+                        <span class="preset-title">Sustained Operation</span>
+                        <span class="preset-time">01:00:00</span>
+                    </button>
+                </div>
+
+                <div class="insights-panel" id="aiInsightsBox">
+                    <i class="fas fa-satellite-dish me-2"></i> 
+                    <span id="aiInsightsText">V122 Audio Hardware Armed. Ready to broadcast nuclear klaxon on zero.</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // V122 SYNTHETIC KLAXON ENGINE (Web Audio API)
+        // ==========================================
+        let audioCtx = null;
+        let sirenInterval = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function fireSirenPulse() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            // High-pitch dual tone alarm to simulate a submarine/nuclear klaxon
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.3);
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.6);
+        }
+
+        function engageKlaxon() {
+            initAudio();
+            fireSirenPulse(); // Fire immediately
+            sirenInterval = setInterval(fireSirenPulse, 800); // Repeat every 800ms
+        }
+
+        function killKlaxon() {
+            if (sirenInterval) clearInterval(sirenInterval);
+        }
+
+        // ==========================================
+        // THEME ENGINE
+        // ==========================================
+        function toggleMasterTheme() {
+            const htmlTag = document.documentElement;
+            const newTheme = htmlTag.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlTag.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('lisa_v122_theme', newTheme);
+        }
+
+        // ==========================================
+        // V122 STATE ARCHITECTURE
+        // ==========================================
+        let isRunning = false;
+        let isPaused = false;
+        let isOverTime = false;
+        let engineRAF;
+        
+        let targetMs = 0;
+        let remainingMs = 0;
+        let lastFrameTime = 0;
+
+        // DOM Nodes
+        const inH = document.getElementById('inHours');
+        const inM = document.getElementById('inMins');
+        const inS = document.getElementById('inSecs');
+        
+        const setupMatrix = document.getElementById('setupMatrix');
+        const runDisplay = document.getElementById('runDisplay');
+        const ringFill = document.getElementById('sweepRing');
+        const btnStart = document.getElementById('btnStart');
+        
+        const defconBox = document.getElementById('defconStatusBox');
+        const defconText = document.getElementById('defconText');
+        const defconSub = document.getElementById('defconSubtext');
+        const hudPanel = document.getElementById('hudPanel');
+
+        // ==========================================
+        // INPUT CONTROLLERS
+        // ==========================================
+        function padInput(el) {
+            let val = parseInt(el.value) || 0;
+            if (val < 0) val = 0;
+            if (el.id === 'inHours' && val > 99) val = 99;
+            if (el.id !== 'inHours' && val > 59) val = 59;
+            el.value = String(val).padStart(2, '0');
+        }
+
+        function injectPreset(h, m, s) {
+            if (isRunning) return; // Prevent injection while running
+            inH.value = String(h).padStart(2, '0');
+            inM.value = String(m).padStart(2, '0');
+            inS.value = String(s).padStart(2, '0');
+        }
+
+        // ==========================================
+        // FORMATTING ENGINE
+        // ==========================================
+        function formatDisplayTime(ms) {
+            let isNeg = ms < 0;
+            let absMs = Math.abs(ms);
+            let totalSeconds = Math.ceil(absMs / 1000); // Ceil keeps it from flashing 0 too early
+            
+            let hours = Math.floor(totalSeconds / 3600);
+            let minutes = Math.floor((totalSeconds % 3600) / 60);
+            let seconds = Math.floor(totalSeconds % 60);
+
+            let hStr = String(hours).padStart(2, '0');
+            let mStr = String(minutes).padStart(2, '0');
+            let sStr = String(seconds).padStart(2, '0');
+
+            let timeStr = hours > 0 ? `${hStr}:${mStr}:${sStr}` : `${mStr}:${sStr}`;
+            return isNeg ? `-${timeStr}` : timeStr;
+        }
+
+        // ==========================================
+        // HARDWARE LOOP & DEFCON ESCALATION
+        // ==========================================
+        function tickEngine(timestamp) {
+            if (!lastFrameTime) lastFrameTime = timestamp;
+            const delta = timestamp - lastFrameTime;
+            lastFrameTime = timestamp;
+
+            remainingMs -= delta;
+
+            // --- ZERO CROSSOVER (OVER-TIME BLEED) ---
+            if (remainingMs <= 0 && !isOverTime) {
+                isOverTime = true;
+                engageKlaxon();
+                
+                // Shift UI to Terminal Threat
+                runDisplay.classList.add('over-time');
+                hudPanel.classList.add('defcon-critical');
+                defconBox.className = "status-box s-defcon-1";
+                defconText.innerText = "DEFCON 1";
+                defconSub.innerText = "CRITICAL: TIMER COMPROMISED. KLAXON ACTIVE.";
+                ringFill.style.stroke = "var(--defcon-1)";
+                ringFill.style.strokeDashoffset = 0; // Lock full red
+            }
+
+            // Update Digital Readout
+            runDisplay.innerText = formatDisplayTime(remainingMs);
+
+            // --- DEFCON ESCALATION PHYSICS (Only if > 0) ---
+            if (!isOverTime) {
+                const pct = remainingMs / targetMs;
+                // Dasharray is 1005. Offset 0 is full circle, 1005 is empty circle.
+                // We want it to drain: start at 0, move towards 1005.
+                ringFill.style.strokeDashoffset = 1005 - (1005 * pct);
+
+                // Threat Evaluation
+                if (pct <= 0.25 && defconText.innerText !== "DEFCON 3") {
+                    // Shift to Elevated
+                    defconBox.className = "status-box s-defcon-3";
+                    defconText.innerText = "DEFCON 3";
+                    defconSub.innerText = "ELEVATED: 25% Time Remaining.";
+                    ringFill.style.stroke = "var(--defcon-3)";
+                }
+            }
+
+            if (isRunning) engineRAF = requestAnimationFrame(tickEngine);
+        }
+
+        function engageDefcon() {
+            initAudio(); // Initialize audio context on physical click
+
+            if (!isRunning && !isPaused) {
+                // FRESH START
+                const h = parseInt(inH.value) || 0;
+                const m = parseInt(inM.value) || 0;
+                const s = parseInt(inS.value) || 0;
+                
+                targetMs = (h * 3600 + m * 60 + s) * 1000;
+                if (targetMs <= 0) return alert("Vector required. Insert time.");
+
+                remainingMs = targetMs;
+                isOverTime = false;
+                
+                // UI Shift
+                setupMatrix.style.display = 'none';
+                runDisplay.style.display = 'block';
+                runDisplay.classList.remove('over-time');
+                runDisplay.innerText = formatDisplayTime(remainingMs);
+
+                // Initial Defcon State
+                defconBox.className = "status-box s-defcon-5";
+                defconText.innerText = "DEFCON 5";
+                defconSub.innerText = "NOMINAL: Tracking target vector.";
+                ringFill.style.stroke = "var(--defcon-5)";
+                ringFill.style.strokeDashoffset = 0;
+            }
+
+            if (!isRunning) {
+                // RESUME OR START
+                isRunning = true;
+                isPaused = false;
+                lastFrameTime = 0; // Reset delta calculator
+                
+                btnStart.innerHTML = '<i class="fas fa-pause"></i>';
+                btnStart.className = "btn-hardware btn-stop";
+                
+                engineRAF = requestAnimationFrame(tickEngine);
+            } else {
+                // PAUSE
+                isRunning = false;
+                isPaused = true;
+                cancelAnimationFrame(engineRAF);
+                killKlaxon();
+                
+                btnStart.innerHTML = '<i class="fas fa-play"></i>';
+                btnStart.className = "btn-hardware btn-start";
+                btnStart.style.borderColor = "var(--neon-green)";
+                btnStart.style.color = "var(--neon-green)";
+            }
+        }
+
+        function resetMatrix() {
+            isRunning = false;
+            isPaused = false;
+            isOverTime = false;
+            cancelAnimationFrame(engineRAF);
+            killKlaxon();
+
+            // Reset UI
+            setupMatrix.style.display = 'flex';
+            runDisplay.style.display = 'none';
+            runDisplay.classList.remove('over-time');
+            hudPanel.classList.remove('defcon-critical');
+            
+            ringFill.style.strokeDashoffset = 0;
+            ringFill.style.stroke = "var(--defcon-5)";
+
+            defconBox.className = "status-box";
+            defconText.innerText = "STANDBY";
+            defconSub.innerText = "System Idle. Awaiting Vector.";
+
+            btnStart.innerHTML = '<i class="fas fa-play"></i>';
+            btnStart.className = "btn-hardware btn-start";
+        }
+    </script>
+</body>
+</html>

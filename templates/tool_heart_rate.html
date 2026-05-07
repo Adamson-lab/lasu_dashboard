@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Rate Tapper | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0dcaf0; 
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        /* The Giant Tap Button */
+        .tap-btn-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .tap-btn {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #ff4d4d, #dc3545);
+            border: 10px solid rgba(220, 53, 69, 0.2);
+            color: white;
+            font-size: 3rem;
+            font-weight: 800;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 15px 35px rgba(220, 53, 69, 0.4), inset 0 -10px 20px rgba(0,0,0,0.2);
+            transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.1s;
+            user-select: none;
+            outline: none;
+        }
+
+        .tap-btn:active, .tap-btn.pulse {
+            transform: scale(0.92);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3), inset 0 -5px 10px rgba(0,0,0,0.2);
+            background: linear-gradient(145deg, #e60000, #b02a37);
+        }
+
+        .tap-btn i { font-size: 4rem; margin-bottom: 10px; }
+        .tap-btn span { font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+
+        .keyboard-hint {
+            text-align: center;
+            font-weight: 800;
+            color: #adb5bd;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+            transition: all 0.3s;
+        }
+        
+        .stat-card.primary { border-color: rgba(220, 53, 69, 0.4); background: rgba(220, 53, 69, 0.05); }
+        .stat-card.secondary { border-color: rgba(13, 110, 253, 0.4); background: rgba(13, 110, 253, 0.05); }
+        .stat-card.warning { border-color: rgba(253, 126, 20, 0.4); background: rgba(253, 126, 20, 0.05); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 3rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+        
+        .primary .stat-val { color: var(--math-red); }
+        .secondary .stat-val { color: var(--math-blue); font-size: 2.2rem; }
+        .warning .stat-val { color: var(--math-orange); font-size: 2.2rem;}
+
+        .res-unit { font-size: 1rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; font-weight: 700; text-transform: lowercase;}
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* EKG Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #121212; /* Deep monitor black */
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+            min-height: 350px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            /* Hospital Grid Background */
+            background-image: 
+                linear-gradient(rgba(220, 53, 69, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(220, 53, 69, 0.1) 1px, transparent 1px),
+                linear-gradient(rgba(220, 53, 69, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(220, 53, 69, 0.05) 1px, transparent 1px);
+            background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+            background-position: center center;
+        }
+
+        #ekgCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #00ff00;
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .formula-bar span { color: #adb5bd; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; text-transform: uppercase; margin-right: 8px;}
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-heartbeat"></i> Biometric Tapper
+            </div>
+
+            <div class="tap-btn-container">
+                <button class="tap-btn" id="btnTap" onmousedown="registerTap()" ontouchstart="registerTap(event)">
+                    <i class="fas fa-heart"></i>
+                    <span>Tap Here</span>
+                </button>
+            </div>
+
+            <div class="keyboard-hint">
+                <i class="fas fa-keyboard me-2"></i> Or press Spacebar
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-auto" onclick="resetTapper()">
+                <i class="fas fa-undo me-2"></i> Reset Monitor
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card primary">
+                    <div class="stat-label">Calculated BPM</div>
+                    <div class="stat-val">
+                        <span id="resBPM">--</span>
+                    </div>
+                    <div class="stat-sub">Beats Per Minute</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card secondary">
+                    <div class="stat-label">Average Interval</div>
+                    <div class="stat-val">
+                        <span id="resInterval">--</span>
+                        <span class="res-unit">ms</span>
+                    </div>
+                    <div class="stat-sub">Time between beats</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card warning">
+                    <div class="stat-label">Health Zone</div>
+                    <div class="stat-val" style="font-family: 'Segoe UI', sans-serif; font-size: 1.5rem;">
+                        <span id="resZone">Awaiting Data</span>
+                    </div>
+                    <div class="stat-sub">Based on adult resting rate</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="simulation-box mt-2">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="ekgCanvas"></canvas>
+            </div>
+            <div class="telemetry-bar">
+                <div class="formula-bar">
+                    <span>Engine:</span> Live Electrocardiogram Plotter
+                </div>
+                <div class="text-muted fw-bold small text-uppercase">
+                    <i class="fas fa-satellite-dish me-1" style="color: #00ff00;"></i> Monitor Active
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Elements
+    const btnTap = document.getElementById('btnTap');
+    const resBPM = document.getElementById('resBPM');
+    const resInterval = document.getElementById('resInterval');
+    const resZone = document.getElementById('resZone');
+
+    // Canvas
+    const canvas = document.getElementById('ekgCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // Tap Math State
+    let taps = [];
+    const MAX_TAPS = 10; // Keep a moving average of the last 10 taps
+    const TIMEOUT_MS = 3000; // Reset if no tap for 3 seconds
+    let lastTapTime = 0;
+    
+    // EKG State
+    let ekgData = [];
+    let animationFrameId = null;
+    let isDrawing = true;
+    let currentSpikeProgress = 0; // 0 means flatline, >0 means animating a QRS complex
+
+    // Listen for spacebar
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'Space') {
+            event.preventDefault(); // prevent scrolling
+            btnTap.classList.add('pulse');
+            registerTap();
+        }
+    });
+    document.addEventListener('keyup', function(event) {
+        if (event.code === 'Space') {
+            btnTap.classList.remove('pulse');
+        }
+    });
+
+    // FLAWLESS CANVAS SCALING
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+            
+            // Standard pixel mapping, no window scaling corruption
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            
+            // Fill array with zeros initially to represent flatline
+            if(ekgData.length === 0) {
+                ekgData = new Array(Math.floor(rect.width / 4)).fill(0);
+            }
+        }
+    });
+    resizeObserver.observe(container);
+
+    function registerTap(e) {
+        if (e) e.preventDefault(); // prevent double firing on touch
+        
+        const now = performance.now();
+        
+        // Trigger Canvas EKG Spike
+        currentSpikeProgress = 1;
+
+        // Visual button pulse via JS if clicked via mouse/touch
+        btnTap.classList.add('pulse');
+        setTimeout(() => btnTap.classList.remove('pulse'), 100);
+
+        // Logic
+        if (now - lastTapTime > TIMEOUT_MS) {
+            // Reset if they paused too long
+            taps = [];
+        }
+        
+        taps.push(now);
+        if (taps.length > MAX_TAPS) {
+            taps.shift(); // Remove oldest
+        }
+
+        lastTapTime = now;
+        calculateBPM();
+    }
+
+    function calculateBPM() {
+        if (taps.length < 2) {
+            resBPM.innerText = '...';
+            resInterval.innerText = '...';
+            resZone.innerText = 'Calculating';
+            resZone.style.color = '#adb5bd';
+            return;
+        }
+
+        let totalInterval = 0;
+        for (let i = 1; i < taps.length; i++) {
+            totalInterval += (taps[i] - taps[i - 1]);
+        }
+
+        let avgInterval = totalInterval / (taps.length - 1);
+        let bpm = 60000 / avgInterval;
+
+        resInterval.innerText = Math.round(avgInterval);
+        resBPM.innerText = Math.round(bpm);
+
+        // Zone Logic (Based on adult resting)
+        if (bpm < 50) {
+            resZone.innerText = 'Bradycardia';
+            resZone.style.color = 'var(--math-blue)'; // Low
+        } else if (bpm <= 100) {
+            resZone.innerText = 'Normal Resting';
+            resZone.style.color = 'var(--lasu-accent)'; // Good
+        } else if (bpm <= 140) {
+            resZone.innerText = 'Elevated / Active';
+            resZone.style.color = 'var(--math-orange)'; // High
+        } else {
+            resZone.innerText = 'Tachycardia / Cardio';
+            resZone.style.color = 'var(--math-red)'; // Max
+        }
+    }
+
+    function resetTapper() {
+        taps = [];
+        lastTapTime = 0;
+        resBPM.innerText = '--';
+        resInterval.innerText = '--';
+        resZone.innerText = 'Awaiting Data';
+        resZone.style.color = '#212529';
+    }
+
+    // --- CONTINUOUS SCROLLING EKG CANVAS ---
+    function animateEKG() {
+        if (!isDrawing) return;
+
+        const cw = canvas.width;
+        const ch = canvas.height;
+
+        if (cw > 0 && ekgData.length > 0) {
+            ctx.clearRect(0, 0, cw, ch);
+
+            // Calculate next Y value
+            let nextY = 0;
+
+            if (currentSpikeProgress > 0) {
+                // Procedural QRS Complex Generation
+                // Progress goes from 1 to 20
+                if (currentSpikeProgress === 1) nextY = 10;   // P wave start
+                else if (currentSpikeProgress === 2) nextY = 15; // P wave peak
+                else if (currentSpikeProgress === 3) nextY = 0;  // Return
+                else if (currentSpikeProgress === 4) nextY = -15; // Q dip
+                else if (currentSpikeProgress === 5) nextY = 120; // R SPIKE (massive up)
+                else if (currentSpikeProgress === 6) nextY = -40; // S deep dip
+                else if (currentSpikeProgress === 7) nextY = 0;   // Return
+                else if (currentSpikeProgress === 12) nextY = 20; // T wave start
+                else if (currentSpikeProgress === 13) nextY = 25; // T wave peak
+                else if (currentSpikeProgress === 14) nextY = 0;  // Return
+                else nextY = 0; // Flat
+                
+                currentSpikeProgress++;
+                if (currentSpikeProgress > 20) currentSpikeProgress = 0; // Reset
+            }
+
+            // Shift array left and push new Y
+            ekgData.shift();
+            ekgData.push(nextY);
+
+            // Draw Line
+            ctx.beginPath();
+            const sliceWidth = cw / (ekgData.length - 1);
+            const cy = ch / 2;
+
+            ctx.moveTo(0, cy - ekgData[0]);
+
+            for (let i = 1; i < ekgData.length; i++) {
+                ctx.lineTo(i * sliceWidth, cy - ekgData[i]);
+            }
+
+            ctx.strokeStyle = '#00ff00'; // Neon medical green
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            
+            ctx.shadowColor = '#00ff00';
+            ctx.shadowBlur = 10;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Draw glowing dot at the leading edge
+            ctx.beginPath();
+            ctx.arc(cw, cy - ekgData[ekgData.length-1], 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 10;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        animationFrameId = requestAnimationFrame(animateEKG);
+    }
+
+    // INIT
+    setTimeout(() => { 
+        resetTapper();
+        animateEKG();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

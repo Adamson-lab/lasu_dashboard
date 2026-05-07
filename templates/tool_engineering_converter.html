@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engineering Unit Converter | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .category-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .cat-btn {
+            font-weight: 800;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            background: white;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cat-btn:hover { border-color: var(--math-blue); background: #f8f9fa; }
+        .cat-btn.active {
+            background: var(--math-blue);
+            color: white;
+            border-color: var(--math-blue);
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+        }
+
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-orange); box-shadow: 0 0 0 4px rgba(253, 126, 20, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .num-input {
+            width: 100%;
+            border: none;
+            padding: 20px;
+            font-size: 1.8rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-select {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            color: var(--math-orange);
+            background-color: white;
+        }
+        .unit-select:focus { border-color: var(--math-orange); box-shadow: 0 0 0 4px rgba(253, 126, 20, 0.15); }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .hero-result {
+            background: #212529;
+            border-radius: 12px;
+            padding: 30px;
+            color: white;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .hero-label {
+            font-weight: 800;
+            color: var(--math-orange);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .hero-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #00ff00;
+            word-break: break-all;
+            line-height: 1.2;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .hero-unit {
+            font-size: 1.2rem;
+            color: #adb5bd;
+            font-family: 'Segoe UI', sans-serif;
+            text-transform: none;
+        }
+
+        .conversions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .conv-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .conv-label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .conv-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .conv-unit {
+            font-size: 1rem;
+            color: var(--math-blue);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #adb5bd;
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 0;
+            font-size: 1.1rem;
+        }
+        .copy-btn:hover { color: var(--math-blue); transform: scale(1.1); }
+        .hero-result .copy-btn { color: var(--math-orange); }
+
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .conversions-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-exchange-alt"></i> Omni-Converter
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter a valid number.
+            </div>
+
+            <div class="category-selector">
+                <label class="mode-label">Select Physical Property:</label>
+                <button class="cat-btn active" id="btnPressure" onclick="setCategory('pressure')">
+                    Pressure <i class="fas fa-compress-arrows-alt"></i>
+                </button>
+                <button class="cat-btn" id="btnForce" onclick="setCategory('force')">
+                    Force <i class="fas fa-weight-hanging"></i>
+                </button>
+                <button class="cat-btn" id="btnTorque" onclick="setCategory('torque')">
+                    Torque <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+
+            <div class="input-group-custom" id="inputGroup">
+                <div class="input-label">
+                    <span id="propLabel">Input Pressure</span>
+                </div>
+                <input type="number" class="num-input" id="inVal" value="100" step="any" oninput="calculateConversions()">
+            </div>
+
+            <div class="mb-4">
+                <label class="mode-label text-muted">Input Unit:</label>
+                <select class="unit-select" id="unitSelect" onchange="calculateConversions()">
+                    </select>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-auto" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Field
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box p-0 border-0" style="background: transparent; box-shadow: none;">
+            
+            <div class="hero-result">
+                <div class="hero-label">
+                    <span>SI Base Standard Equivalent</span>
+                    <button class="copy-btn" onclick="copyVal('heroOutputVal')"><i class="fas fa-copy"></i></button>
+                </div>
+                <div class="hero-value">
+                    <span id="heroOutputVal">--</span>
+                    <span class="hero-unit" id="heroOutputUnit">Pa</span>
+                </div>
+            </div>
+
+            <div class="pane-header text-dark border-0 mt-2 mb-2 pb-0">
+                <i class="fas fa-th-large text-primary"></i> Live Conversions
+            </div>
+
+            <div class="conversions-grid" id="gridContainer">
+                </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0 text-center text-white bg-success" role="alert"></div>
+
+<script>
+    // --- CONVERSION MULTIPLIERS (Base to Target) ---
+    // The engine converts the input unit to the SI Base Unit, and then multiplies the SI Base Unit to all targets.
+    // Factor defined as: 1 SI Unit = X Target Unit
+    
+    const db = {
+        pressure: {
+            siBase: 'Pa',
+            units: {
+                'Pa': { name: 'Pascal', factor: 1 },
+                'kPa': { name: 'Kilopascal', factor: 0.001 },
+                'MPa': { name: 'Megapascal', factor: 0.000001 },
+                'bar': { name: 'Bar', factor: 0.00001 },
+                'psi': { name: 'Pound/sq inch', factor: 0.0001450377 },
+                'atm': { name: 'Atmosphere', factor: 0.00000986923 },
+                'torr': { name: 'Torr (mmHg)', factor: 0.00750062 }
+            }
+        },
+        force: {
+            siBase: 'N',
+            units: {
+                'N': { name: 'Newton', factor: 1 },
+                'kN': { name: 'Kilonewton', factor: 0.001 },
+                'lbf': { name: 'Pound-force', factor: 0.2248089 },
+                'kgf': { name: 'Kilogram-force', factor: 0.1019716 },
+                'dyne': { name: 'Dyne', factor: 100000 }
+            }
+        },
+        torque: {
+            siBase: 'N·m',
+            units: {
+                'N·m': { name: 'Newton-meter', factor: 1 },
+                'lbf·ft': { name: 'Pound-foot', factor: 0.7375621 },
+                'lbf·in': { name: 'Pound-inch', factor: 8.850746 },
+                'kgf·m': { name: 'Kilogram-meter', factor: 0.1019716 }
+            }
+        }
+    };
+
+    let currentCategory = 'pressure';
+
+    const inVal = document.getElementById('inVal');
+    const unitSelect = document.getElementById('unitSelect');
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const heroOutputVal = document.getElementById('heroOutputVal');
+    const heroOutputUnit = document.getElementById('heroOutputUnit');
+    const gridContainer = document.getElementById('gridContainer');
+    
+    const toastBox = document.getElementById('toastBox');
+
+    function setCategory(cat) {
+        document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+        
+        if (cat === 'pressure') {
+            document.getElementById('btnPressure').classList.add('active');
+            document.getElementById('propLabel').innerText = 'Input Pressure';
+        } else if (cat === 'force') {
+            document.getElementById('btnForce').classList.add('active');
+            document.getElementById('propLabel').innerText = 'Input Force';
+        } else if (cat === 'torque') {
+            document.getElementById('btnTorque').classList.add('active');
+            document.getElementById('propLabel').innerText = 'Input Torque';
+        }
+
+        currentCategory = cat;
+        
+        // Populate Dropdown
+        let optionsHtml = '';
+        const unitsData = db[currentCategory].units;
+        for (let symbol in unitsData) {
+            optionsHtml += `<option value="${symbol}">${unitsData[symbol].name} (${symbol})</option>`;
+        }
+        unitSelect.innerHTML = optionsHtml;
+
+        // Default selection logic (try to select standard non-SI as default for UI UX)
+        if (cat === 'pressure') unitSelect.value = 'psi';
+        if (cat === 'force') unitSelect.value = 'lbf';
+        if (cat === 'torque') unitSelect.value = 'lbf·ft';
+
+        calculateConversions();
+    }
+
+    // Number formatting engine to prevent UI overflow
+    function formatOutput(num) {
+        if (num === 0) return "0";
+        const absNum = Math.abs(num);
+        
+        // If number is huge or tiny, use E-notation
+        if (absNum >= 1e7 || absNum <= 1e-4) {
+            return num.toExponential(4);
+        }
+        
+        // Count decimal places to trim safely
+        let str = num.toString();
+        if (str.includes('.')) {
+            let decimals = str.split('.')[1].length;
+            if (decimals > 4) return num.toFixed(4).replace(/\.?0+$/, ''); // Max 4 dec, trim trailing 0s
+        }
+        
+        return num.toString();
+    }
+
+    function calculateConversions() {
+        const val = parseFloat(inVal.value);
+        
+        if (isNaN(val)) {
+            errorBanner.style.display = 'block';
+            resetOutputs();
+            return;
+        }
+        
+        errorBanner.style.display = 'none';
+
+        const unitsData = db[currentCategory].units;
+        const siBase = db[currentCategory].siBase;
+        const selectedUnit = unitSelect.value;
+        
+        // 1. Convert Input to SI Base
+        // Since factor = Target / Base, Base = Target / factor
+        const factorToTarget = unitsData[selectedUnit].factor;
+        const valueInSiBase = val / factorToTarget;
+
+        // Update Hero SI Result
+        heroOutputVal.innerText = formatOutput(valueInSiBase);
+        heroOutputUnit.innerText = siBase;
+
+        // 2. Generate Grid Cards
+        let gridHtml = '';
+        for (let symbol in unitsData) {
+            // Skip rendering the unit they literally just typed
+            if (symbol === selectedUnit) continue;
+
+            const targetFactor = unitsData[symbol].factor;
+            const targetValue = valueInSiBase * targetFactor;
+            
+            // Unique ID for copy button
+            const uniqueId = `res_${symbol.replace(/[^a-zA-Z]/g, '')}`;
+
+            gridHtml += `
+                <div class="conv-card">
+                    <div class="conv-label">
+                        <span>${unitsData[symbol].name}</span>
+                        <button class="copy-btn" onclick="copyVal('${uniqueId}')"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="conv-val">
+                        <span id="${uniqueId}">${formatOutput(targetValue)}</span>
+                        <span class="conv-unit">${symbol}</span>
+                    </div>
+                </div>
+            `;
+        }
+        gridContainer.innerHTML = gridHtml;
+    }
+
+    function resetOutputs() {
+        heroOutputVal.innerText = '--';
+        heroOutputUnit.innerText = db[currentCategory].siBase;
+        
+        let gridHtml = '';
+        const unitsData = db[currentCategory].units;
+        for (let symbol in unitsData) {
+            if (symbol === unitSelect.value) continue;
+            gridHtml += `
+                <div class="conv-card">
+                    <div class="conv-label"><span>${unitsData[symbol].name}</span></div>
+                    <div class="conv-val"><span>--</span> <span class="conv-unit">${symbol}</span></div>
+                </div>
+            `;
+        }
+        gridContainer.innerHTML = gridHtml;
+    }
+
+    function clearInputs() {
+        inVal.value = '';
+        inVal.focus();
+        errorBanner.style.display = 'none';
+        resetOutputs();
+    }
+
+    function copyVal(id) {
+        const text = document.getElementById(id).innerText;
+        if (text === '--' || text === '') return;
+        navigator.clipboard.writeText(text).then(() => {
+            toastBox.innerText = `Copied: ${text}`;
+            toastBox.style.display = 'block';
+            setTimeout(() => toastBox.style.display = 'none', 2500);
+        });
+    }
+
+    // Init
+    window.onload = () => {
+        setCategory('pressure'); // Sets default category and triggers calculation
+    };
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

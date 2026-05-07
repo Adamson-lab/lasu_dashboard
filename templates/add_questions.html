@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>📝 Add Questions: {{ quiz.title }}</h3>
+        <a href="{{ url_for('manage_quizzes') }}" class="btn btn-secondary">Done / Back</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="fw-bold">Question Text</label>
+                            <textarea name="text" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><input type="text" name="opt_a" class="form-control" placeholder="Option A" required></div>
+                            <div class="col-6"><input type="text" name="opt_b" class="form-control" placeholder="Option B" required></div>
+                            <div class="col-6"><input type="text" name="opt_c" class="form-control" placeholder="Option C" required></div>
+                            <div class="col-6"><input type="text" name="opt_d" class="form-control" placeholder="Option D" required></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Correct Answer</label>
+                            <select name="correct" class="form-select" required>
+                                <option value="A">Option A</option>
+                                <option value="B">Option B</option>
+                                <option value="C">Option C</option>
+                                <option value="D">Option D</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Add Question</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="list-group">
+                {% for q in quiz.questions %}
+                <div class="list-group-item">
+                    <p class="mb-1 fw-bold">{{ loop.index }}. {{ q.text }}</p>
+                    <small class="text-muted">A: {{ q.option_a }} | B: {{ q.option_b }} | C: {{ q.option_c }} | D: {{ q.option_d }}</small>
+                    <br>
+                    <span class="badge bg-success mt-1">Ans: {{ q.correct_option }}</span>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">No questions added yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Border Radius Previewer | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .card-custom {
+            background: white; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Controls Section */
+        .controls-panel {
+            padding: 30px;
+            background: #ffffff;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .control-group { margin-bottom: 1.5rem; }
+        .control-label {
+            font-weight: 600; color: #495057;
+            font-size: 0.9rem; margin-bottom: 8px;
+            display: flex; justify-content: space-between;
+        }
+
+        .val-badge {
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: var(--lasu-green);
+        }
+
+        input[type=range] { width: 100%; accent-color: var(--lasu-green); }
+
+        /* Toggle Button */
+        .unit-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        /* Playground Section */
+        .playground-panel {
+            padding: 40px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .preview-area {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 350px;
+            background-color: transparent;
+            background-image: radial-gradient(#dee2e6 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+
+        .shape-preview {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, var(--lasu-green) 0%, var(--lasu-accent) 100%);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            transition: border-radius 0.1s ease;
+        }
+
+        /* Code Output Section */
+        .code-output {
+            background: #272822; /* Monokai dark */
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .code-output pre {
+            margin: 0; color: #f8f8f2;
+            font-family: 'Fira Code', monospace; font-size: 1.1rem;
+            white-space: pre-wrap;
+            text-align: center;
+        }
+        .prop-key { color: #66d9ef; } /* Blue */
+        .prop-val { color: #a6e22e; } /* Green */
+
+        .copy-btn { position: absolute; top: 15px; right: 15px; }
+
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .card-custom { flex-direction: column; }
+            .controls-panel { border-right: none; border-bottom: 1px solid #dee2e6; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">CSS TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="row h-100 g-0 card-custom flex-row overflow-hidden shadow-lg">
+        
+        <div class="col-lg-4 controls-panel">
+            <h5 class="fw-bold mb-4"><i class="fas fa-vector-square me-2 text-primary"></i> Shape Settings</h5>
+
+            <div class="unit-toggle btn-group w-100 shadow-sm" role="group">
+                <input type="radio" class="btn-check" name="unitType" id="unitPx" value="px" autocomplete="off" checked onchange="switchUnit()">
+                <label class="btn btn-outline-success" for="unitPx">Pixels (px)</label>
+
+                <input type="radio" class="btn-check" name="unitType" id="unitPct" value="%" autocomplete="off" onchange="switchUnit()">
+                <label class="btn btn-outline-success" for="unitPct">Percentage (%)</label>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">All Corners <span class="val-badge text-muted">Master</span></label>
+                <input type="range" id="masterRadius" min="0" max="150" value="0" oninput="updateMaster()">
+            </div>
+
+            <hr class="my-4">
+
+            <div class="control-group">
+                <label class="control-label">Top Left <span class="val-badge" id="valTL">0px</span></label>
+                <input type="range" id="tlRadius" class="corner-slider" min="0" max="150" value="0" oninput="updateShape()">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Top Right <span class="val-badge" id="valTR">0px</span></label>
+                <input type="range" id="trRadius" class="corner-slider" min="0" max="150" value="0" oninput="updateShape()">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Bottom Right <span class="val-badge" id="valBR">0px</span></label>
+                <input type="range" id="brRadius" class="corner-slider" min="0" max="150" value="0" oninput="updateShape()">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Bottom Left <span class="val-badge" id="valBL">0px</span></label>
+                <input type="range" id="blRadius" class="corner-slider" min="0" max="150" value="0" oninput="updateShape()">
+            </div>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-sm btn-outline-secondary" onclick="presetCircle()">Circle</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="presetLeaf()">Leaf Shape</button>
+            </div>
+        </div>
+
+        <div class="col-lg-8 playground-panel">
+            
+            <div class="preview-area" id="previewArea">
+                <div class="shape-preview" id="shapePreview"></div>
+            </div>
+
+            <div class="code-output">
+                <button class="btn btn-sm btn-outline-light copy-btn" onclick="copyCSS()"><i class="fas fa-copy"></i> Copy CSS</button>
+                <pre id="cssOutput"></pre>
+            </div>
+            
+        </div>
+
+    </div>
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    // Elements
+    const shapePreview = document.getElementById('shapePreview');
+    const cssOutput = document.getElementById('cssOutput');
+    const masterRadius = document.getElementById('masterRadius');
+    const sliders = document.querySelectorAll('.corner-slider');
+
+    const tlRadius = document.getElementById('tlRadius');
+    const trRadius = document.getElementById('trRadius');
+    const brRadius = document.getElementById('brRadius');
+    const blRadius = document.getElementById('blRadius');
+
+    const valTL = document.getElementById('valTL');
+    const valTR = document.getElementById('valTR');
+    const valBR = document.getElementById('valBR');
+    const valBL = document.getElementById('valBL');
+
+    let currentUnit = 'px';
+
+    function switchUnit() {
+        const isPx = document.getElementById('unitPx').checked;
+        currentUnit = isPx ? 'px' : '%';
+        
+        // Update Max Values
+        const maxVal = isPx ? 150 : 100;
+        masterRadius.max = maxVal;
+        sliders.forEach(slider => slider.max = maxVal);
+
+        updateShape();
+    }
+
+    function updateMaster() {
+        const val = masterRadius.value;
+        tlRadius.value = val;
+        trRadius.value = val;
+        brRadius.value = val;
+        blRadius.value = val;
+        updateShape();
+    }
+
+    function updateShape() {
+        const tl = tlRadius.value;
+        const tr = trRadius.value;
+        const br = brRadius.value;
+        const bl = blRadius.value;
+
+        // Update Badges
+        valTL.innerText = tl + currentUnit;
+        valTR.innerText = tr + currentUnit;
+        valBR.innerText = br + currentUnit;
+        valBL.innerText = bl + currentUnit;
+
+        // Determine if all values are equal for shorthand syntax
+        let radiusString = "";
+        if (tl === tr && tr === br && br === bl) {
+            radiusString = `${tl}${currentUnit}`;
+        } else {
+            radiusString = `${tl}${currentUnit} ${tr}${currentUnit} ${br}${currentUnit} ${bl}${currentUnit}`;
+        }
+
+        // Apply style
+        shapePreview.style.borderRadius = radiusString;
+
+        // Output Code
+        cssOutput.innerHTML = `<span class="prop-key">border-radius</span>: <span class="prop-val">${radiusString}</span>;`;
+    }
+
+    function presetCircle() {
+        document.getElementById('unitPct').click(); // Switch to %
+        masterRadius.value = 50;
+        updateMaster();
+    }
+
+    function presetLeaf() {
+        document.getElementById('unitPx').click(); // Switch to px
+        tlRadius.value = 0;
+        trRadius.value = 150;
+        brRadius.value = 0;
+        blRadius.value = 150;
+        updateShape();
+    }
+
+    function copyCSS() {
+        const rawText = cssOutput.innerText;
+        navigator.clipboard.writeText(rawText).then(() => {
+            showToast('CSS copied to clipboard!', 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        const toastBox = document.getElementById('toastBox');
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Init
+    updateShape();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

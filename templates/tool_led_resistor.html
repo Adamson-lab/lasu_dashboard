@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Resistor Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .btn-preset {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 10px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-preset:hover { background: #f8f9fa; border-color: #ced4da; }
+        
+        .led-dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 4px rgba(0,0,0,0.3); }
+
+        .input-group-custom {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1.1rem;
+            color: #495057;
+            width: 170px;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        .input-label small { font-size: 0.75rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; margin-top: 2px;}
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .formula-display {
+            background: #212529;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.6rem;
+            text-align: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 120px;
+        }
+        .formula-display span { color: var(--math-orange); font-weight: 800; }
+        .formula-sub { font-size: 0.9rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .result-box.highlight {
+            background: rgba(13, 110, 253, 0.05);
+            border-color: rgba(13, 110, 253, 0.2);
+        }
+
+        .res-label {
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .res-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+        .res-unit { font-size: 1.2rem; color: #adb5bd; }
+        
+        .highlight .res-val { color: var(--math-blue); font-size: 2.5rem; margin: 0; }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
+            min-height: 350px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+            background-image: 
+                linear-gradient(rgba(108, 117, 125, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(108, 117, 125, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #schematicCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .result-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-lightbulb"></i> LED Specs
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid numbers.
+            </div>
+
+            <label class="fw-bold text-muted small text-uppercase mb-2 d-block">Quick Presets (Typical)</label>
+            <div class="preset-grid">
+                <button class="btn-preset" onclick="setPreset(2.0, 20, '#ff0000')">
+                    <div class="led-dot" style="background: #ff0000;"></div> Red (2.0V)
+                </button>
+                <button class="btn-preset" onclick="setPreset(2.2, 20, '#ffcc00')">
+                    <div class="led-dot" style="background: #ffcc00;"></div> Yellow (2.2V)
+                </button>
+                <button class="btn-preset" onclick="setPreset(3.0, 20, '#00ff00')">
+                    <div class="led-dot" style="background: #00ff00;"></div> Green (3.0V)
+                </button>
+                <button class="btn-preset" onclick="setPreset(3.3, 20, '#0088ff')">
+                    <div class="led-dot" style="background: #0088ff;"></div> Blue (3.3V)
+                </button>
+                <button class="btn-preset" onclick="setPreset(3.3, 20, '#ffffff')">
+                    <div class="led-dot" style="background: #ffffff; border: 1px solid #ccc;"></div> White (3.3V)
+                </button>
+                <button class="btn-preset" onclick="setPreset(1.2, 20, '#555555')">
+                    <div class="led-dot" style="background: #555555;"></div> IR (1.2V)
+                </button>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-primary">Source Voltage <small>(Vs Volts)</small></div>
+                <input type="number" class="num-input" id="valVs" value="9" step="any" oninput="calculateResistor()">
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-danger">LED Voltage <small>(Vf Volts)</small></div>
+                <input type="number" class="num-input" id="valVf" value="2" step="any" oninput="calculateResistor()">
+            </div>
+
+            <div class="input-group-custom mb-0">
+                <div class="input-label text-success">LED Current <small>(If MilliAmps)</small></div>
+                <input type="number" class="num-input" id="valIf" value="20" step="any" oninput="calculateResistor()">
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-4" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Values
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            
+            <div class="formula-display" id="formulaScreen">
+                R = (<span>9</span> - <span>2</span>) / (<span>20</span> &div; 1000)
+                <div class="formula-sub">Formula: R = (V<sub>s</sub> - V<sub>f</sub>) / I<sub>f</sub></div>
+            </div>
+
+            <div class="result-grid">
+                <div class="result-box highlight">
+                    <div class="res-label text-primary">Standard E12 Resistor To Buy</div>
+                    <div class="res-val" id="resStandard">390 <span class="res-unit">&Omega;</span></div>
+                    <div class="text-muted small fw-bold mt-1" id="resExact">Exact Math: 350 &Omega;</div>
+                </div>
+                
+                <div class="result-box">
+                    <div class="res-label text-danger">Resistor Power Dissipation</div>
+                    <div class="res-val" id="resPower">0.140 <span class="res-unit">W</span></div>
+                    <div class="text-muted small fw-bold mt-1" id="resRating">Safe Rating: 1/4 Watt</div>
+                </div>
+            </div>
+
+            <div class="pane-header text-dark border-0 mt-4 mb-2 pb-0">
+                <i class="fas fa-project-diagram text-primary"></i> Circuit Schematic
+            </div>
+
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="schematicCanvas"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valVs = document.getElementById('valVs');
+    const valVf = document.getElementById('valVf');
+    const valIf = document.getElementById('valIf');
+    
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const resStandard = document.getElementById('resStandard');
+    const resExact = document.getElementById('resExact');
+    const resPower = document.getElementById('resPower');
+    const resRating = document.getElementById('resRating');
+    const formulaScreen = document.getElementById('formulaScreen');
+
+    const canvas = document.getElementById('schematicCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    let activeColor = '#ff0000'; // Default to red
+
+    const E12 = [10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82];
+
+    function setPreset(vf, i_f, color) {
+        valVf.value = vf;
+        valIf.value = i_f;
+        activeColor = color;
+        calculateResistor();
+    }
+
+    function resizeCanvas() {
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        if(cw === 0 || ch === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = cw * dpr;
+        canvas.height = ch * dpr;
+        
+        canvas.style.width = `${cw}px`;
+        canvas.style.height = `${ch}px`;
+        
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        calculateResistor();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function roundSafe(num) {
+        return (Math.round(num * 1000) / 1000);
+    }
+
+    function findStandardResistor(exactOhms) {
+        if (exactOhms <= 0) return 0;
+        if (exactOhms < 10) return 10; 
+
+        const magnitude = Math.pow(10, Math.floor(Math.log10(exactOhms)) - 1);
+        const normalized = exactOhms / magnitude;
+
+        let nextBase = E12[E12.length - 1] * 10; 
+        for (let i = 0; i < E12.length; i++) {
+            if (E12[i] >= normalized) {
+                nextBase = E12[i];
+                break;
+            }
+        }
+        
+        return Math.round(nextBase * magnitude);
+    }
+
+    function determineWattage(powerWatts) {
+        if (powerWatts <= 0.125) return "1/8 Watt (0.125W)";
+        if (powerWatts <= 0.25) return "1/4 Watt (0.25W)";
+        if (powerWatts <= 0.5) return "1/2 Watt (0.5W)";
+        if (powerWatts <= 1) return "1 Watt";
+        if (powerWatts <= 2) return "2 Watt";
+        if (powerWatts <= 5) return "5 Watt";
+        return "> 5 Watt (Power Resistor)";
+    }
+
+    function calculateResistor() {
+        const vs = parseFloat(valVs.value);
+        const vf = parseFloat(valVf.value);
+        const i_f_mA = parseFloat(valIf.value);
+
+        if (isNaN(vs) || isNaN(vf) || isNaN(i_f_mA) || i_f_mA <= 0) {
+            errorBanner.innerText = "Please enter valid positive numbers.";
+            errorBanner.style.display = 'block';
+            resetOutputs();
+            return;
+        }
+
+        if (vs <= vf) {
+            errorBanner.innerText = "Source Voltage must be greater than LED Forward Voltage.";
+            errorBanner.style.display = 'block';
+            resetOutputs();
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        const i_f_A = i_f_mA / 1000;
+        const exactR = (vs - vf) / i_f_A;
+        const standardR = findStandardResistor(exactR);
+
+        const powerW = Math.pow(i_f_A, 2) * standardR;
+        const rating = determineWattage(powerW);
+
+        formulaScreen.innerHTML = `R = (<span>${vs}</span> - <span>${vf}</span>) / (<span>${i_f_mA}</span> &div; 1000)<div class="formula-sub">Formula: R = (V<sub>s</sub> - V<sub>f</sub>) / I<sub>f</sub></div>`;
+        
+        resStandard.innerHTML = `${standardR} <span class="res-unit">&Omega;</span>`;
+        resExact.innerText = `Exact Math: ${roundSafe(exactR)} \u03A9`;
+        
+        resPower.innerHTML = `${roundSafe(powerW)} <span class="res-unit">W</span>`;
+        resRating.innerText = `Safe Rating: ${rating}`;
+
+        if(document.activeElement === valVf || document.activeElement === valIf) {
+            activeColor = '#00ff00'; 
+        }
+
+        drawSchematic(vs, standardR, activeColor);
+    }
+
+    // --- CANVAS GRAPHICS ENGINE ---
+    function drawResistor(x, y, isVertical) {
+        ctx.save();
+        ctx.translate(x, y);
+        if (!isVertical) ctx.rotate(Math.PI / 2);
+
+        ctx.beginPath();
+        ctx.moveTo(0, -30); ctx.lineTo(10, -20); ctx.lineTo(-10, -10);
+        ctx.lineTo(10, 0); ctx.lineTo(-10, 10); ctx.lineTo(10, 20); ctx.lineTo(0, 30);
+        
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawLED(x, y, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        
+        ctx.beginPath();
+        ctx.moveTo(-15, -15); ctx.lineTo(15, -15); ctx.lineTo(0, 15);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#212529';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(-15, 15); ctx.lineTo(15, 15);
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(20, -5); ctx.lineTo(35, -20);
+        ctx.moveTo(20, 10); ctx.lineTo(40, -5);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(35, -20); ctx.lineTo(30, -20); ctx.lineTo(35, -15); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(40, -5); ctx.lineTo(35, -5); ctx.lineTo(40, 0); ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawBattery(x, y) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#212529';
+        
+        ctx.beginPath(); ctx.moveTo(-25, -10); ctx.lineTo(25, -10); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-15, 10); ctx.lineTo(15, 10); ctx.lineWidth = 6; ctx.stroke();
+        
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#212529';
+        ctx.fillText('+', 30, -5);
+        ctx.fillText('-', 25, 15);
+        
+        ctx.restore();
+    }
+
+    function drawSchematic(vs, resValue, ledColor) {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const cx = cw / 2;
+        const cy = ch / 2;
+        
+        // DYNAMIC BOUNDARIES: Ensures drawing never exceeds frame
+        const leftX = cw * 0.15;
+        const rightX = cw * 0.85;
+        const topY = cy - (ch * 0.25);
+        const botY = cy + (ch * 0.25);
+
+        ctx.strokeStyle = '#495057';
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+
+        // 1. Draw Wires Frame
+        ctx.beginPath();
+        ctx.moveTo(leftX, botY); ctx.lineTo(leftX, topY); ctx.lineTo(rightX, topY);
+        ctx.lineTo(rightX, botY); ctx.lineTo(leftX, botY);
+        ctx.stroke();
+
+        // 2. Cut gaps for components
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath(); ctx.rect(leftX - 30, cy - 20, 60, 40); ctx.fill(); 
+        ctx.beginPath(); ctx.rect(cx - 30, topY - 15, 60, 30); ctx.fill(); 
+        ctx.beginPath(); ctx.rect(rightX - 25, cy - 20, 50, 40); ctx.fill(); 
+        ctx.globalCompositeOperation = 'source-over';
+
+        // 3. Draw Components
+        drawBattery(leftX, cy);
+        
+        ctx.strokeStyle = '#0d6efd';
+        drawResistor(cx, topY, false); 
+        
+        drawLED(rightX, cy, ledColor);
+
+        // 4. Ground Symbol
+        ctx.strokeStyle = '#212529';
+        ctx.beginPath();
+        ctx.moveTo(cx, botY); ctx.lineTo(cx, botY + 15);
+        ctx.moveTo(cx - 15, botY + 15); ctx.lineTo(cx + 15, botY + 15);
+        ctx.moveTo(cx - 8, botY + 22); ctx.lineTo(cx + 8, botY + 22);
+        ctx.moveTo(cx - 3, botY + 29); ctx.lineTo(cx + 3, botY + 29);
+        ctx.stroke();
+
+        // 5. Labels
+        ctx.font = 'bold 16px "Fira Code", monospace';
+        ctx.fillStyle = '#dc3545';
+        ctx.textAlign = 'right';
+        ctx.fillText(`Vs = ${vs}V`, leftX - 10, cy - 35);
+
+        ctx.fillStyle = '#0d6efd';
+        ctx.textAlign = 'center';
+        ctx.fillText(`R = ${resValue} \u03A9`, cx, topY - 25);
+
+        ctx.fillStyle = '#198754';
+        ctx.textAlign = 'left';
+        ctx.fillText(`LED`, rightX + 25, cy + 30);
+    }
+
+    function resetOutputs() {
+        resStandard.innerHTML = '-- <span class="res-unit">&Omega;</span>';
+        resExact.innerText = 'Exact Math: --';
+        resPower.innerHTML = '-- <span class="res-unit">W</span>';
+        resRating.innerText = 'Safe Rating: --';
+        formulaScreen.innerHTML = `Awaiting valid input...<div class="formula-sub">Formula: R = (V<sub>s</sub> - V<sub>f</sub>) / I<sub>f</sub></div>`;
+        drawSchematic('?', '?', '#495057');
+    }
+
+    function clearInputs() {
+        valVs.value = '';
+        valVf.value = '';
+        valIf.value = '';
+        errorBanner.style.display = 'block';
+        errorBanner.innerText = 'Waiting for input...';
+        resetOutputs();
+    }
+
+    // SAFE INIT
+    setTimeout(() => {
+        setPreset(2.0, 20, '#ff0000'); 
+        resizeCanvas();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

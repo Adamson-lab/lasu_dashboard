@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institutional Wealth Forecaster | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-main: #0f172a;       /* Obsidian */
+            --brand-accent: #0284c7;     /* Ocean Blue */
+            --brand-accent-light: rgba(2, 132, 199, 0.1);
+            --brand-success: #10b981;    /* Wealth Green */
+            --brand-warning: #f59e0b;    /* Amber */
+            --brand-danger: #ef4444;     /* Red */
+            --brand-tax: #8b5cf6;        /* Tax Purple */
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --glass-border: #e2e8f0;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--brand-main);
+            padding: 40px 20px;
+        }
+
+        .tool-container {
+            max-width: 1450px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        
+        /* Input Panel */
+        .input-panel {
+            background: #f1f5f9;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        
+        .form-label {
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-accent);
+            box-shadow: 0 0 0 3px var(--brand-accent-light);
+        }
+        
+        .section-title {
+            background: var(--brand-main);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 25px 0 15px 0;
+            display: inline-block;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .dash-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Hero Card */
+        .dash-card.hero {
+            grid-column: span 2;
+            background: linear-gradient(135deg, var(--brand-main) 0%, #1e293b 100%);
+            color: white;
+            text-align: center;
+            padding: 35px;
+            transition: all 0.4s ease;
+        }
+        .dash-card.hero.error { background: linear-gradient(135deg, var(--brand-danger) 0%, #b91c1c 100%); }
+        .dash-card.hero.success { background: linear-gradient(135deg, var(--brand-success) 0%, #059669 100%); }
+        
+        .hero-val {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin: 10px 0;
+            letter-spacing: -1px;
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            background: #f8fafc;
+            border-left: 4px solid var(--brand-accent);
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #334155;
+            margin-top: 15px;
+        }
+        .insights-panel.warning { border-left-color: var(--brand-warning); }
+        .insights-panel.danger { border-left-color: var(--brand-danger); }
+        .insights-panel.success { border-left-color: var(--brand-success); }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 700;
+            color: #334155;
+            font-size: 1rem;
+        }
+        
+        .summary-row.total {
+            border-top: 2px solid #cbd5e1;
+            border-bottom: none;
+            font-size: 1.2rem;
+            color: var(--brand-main);
+            padding-top: 15px;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .export-btn {
+            background: var(--brand-main);
+            color: white;
+            font-weight: 800;
+            padding: 15px 24px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            transition: 0.2s;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        .export-btn:hover { background: #1e293b; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-chart-line me-2" style="color: var(--brand-accent);"></i> Institutional Wealth Forecaster</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="input-panel">
+                    
+                    <div class="d-flex justify-content-between align-items-end mb-3">
+                        <div class="flex-grow-1 me-2">
+                            <label class="form-label">Goal Trajectory Name</label>
+                            <input type="text" id="goalName" class="form-control fw-bold" placeholder="e.g. Financial Independence" value="Early Retirement Fund">
+                        </div>
+                        <div style="width: 90px;">
+                            <label class="form-label">Currency</label>
+                            <select id="currencySelect" class="form-select fw-bold" onchange="runAdvancedProjection()">
+                                <option value="$" selected>USD</option>
+                                <option value="₦">NGN</option>
+                                <option value="€">EUR</option>
+                                <option value="£">GBP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="section-title mt-2"><i class="fas fa-flag-checkered me-1"></i> Objective</div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Target Nominal Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text cur-sym">$</span>
+                            <input type="number" id="targetAmount" class="form-control" value="250000" min="1" step="1000" oninput="runAdvancedProjection()">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Current Liquid Capital</label>
+                        <div class="input-group">
+                            <span class="input-group-text cur-sym">$</span>
+                            <input type="number" id="startingBalance" class="form-control" value="15000" min="0" step="500" oninput="runAdvancedProjection()">
+                        </div>
+                    </div>
+
+                    <div class="section-title mt-2"><i class="fas fa-seedling me-1"></i> Growth & Escalation</div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Base Monthly Contribution</label>
+                        <div class="input-group">
+                            <span class="input-group-text cur-sym">$</span>
+                            <input type="number" id="monthlyContribution" class="form-control" value="1500" min="0" step="100" oninput="runAdvancedProjection()">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-success">Annual Contribution Step-Up (%)</label>
+                        <div class="input-group">
+                            <input type="number" id="annualEscalation" class="form-control" value="5.0" min="0" step="0.5" oninput="runAdvancedProjection()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Simulates career salary growth scaling.</small>
+                    </div>
+
+                    <div class="section-title mt-2"><i class="fas fa-balance-scale-right me-1"></i> Macro-Friction</div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Expected APY</label>
+                            <div class="input-group">
+                                <input type="number" id="interestRate" class="form-control" value="8.0" min="0" step="0.1" oninput="runAdvancedProjection()">
+                                <span class="input-group-text p-1">%</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Inflation Rate</label>
+                            <div class="input-group">
+                                <input type="number" id="inflationRate" class="form-control" value="3.2" min="0" step="0.1" oninput="runAdvancedProjection()">
+                                <span class="input-group-text p-1">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-danger">Capital Gains Tax Rate (%)</label>
+                        <div class="input-group">
+                            <input type="number" id="taxRate" class="form-control" value="15.0" min="0" step="0.1" oninput="runAdvancedProjection()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Applied annually to earned interest.</small>
+                    </div>
+
+                    <button class="btn btn-outline-secondary w-100 fw-bold" onclick="resetEngine()"><i class="fas fa-redo-alt me-1"></i> Factory Reset</button>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="dashboard-grid">
+                    
+                    <div class="dash-card hero" id="heroCard">
+                        <div class="text-uppercase fw-bold" style="font-size: 0.9rem; letter-spacing: 2px; opacity: 0.8;">Estimated Runway to Target</div>
+                        <div class="hero-val" id="etaDisplay">Calculating...</div>
+                        <div style="font-size: 1.1rem; opacity: 0.9; font-weight: 700;" id="dateDisplay">Target Reached By: ---</div>
+                    </div>
+
+                    <div class="dash-card">
+                        <div class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px;"><i class="fas fa-cubes me-1"></i> Capital Stack</div>
+                        
+                        <div class="summary-row pt-0">
+                            <span class="text-muted">Starting Capital</span>
+                            <span class="fw-bold text-dark" id="sumInitial">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="text-muted">Total Contributions</span>
+                            <span class="fw-bold" style="color: var(--brand-accent);" id="sumContrib">+$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="text-muted">Gross Yield (Interest)</span>
+                            <span class="fw-bold" style="color: var(--brand-success);" id="sumGrossInterest">+$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="text-muted">Tax Drag (Loss)</span>
+                            <span class="fw-bold" style="color: var(--brand-tax);" id="sumTaxLoss">-$0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Final Nominal Balance</span>
+                            <span id="sumFinal">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="dash-card">
+                        <div class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px;"><i class="fas fa-globe me-1"></i> Economic Reality</div>
+                        
+                        <div class="summary-row pt-0">
+                            <span class="text-muted">Nominal Value</span>
+                            <span class="fw-bold text-dark" id="econNominal">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="text-muted">Inflation Bleed (Loss)</span>
+                            <span class="fw-bold" style="color: var(--brand-danger);" id="econBleed">-$0.00</span>
+                        </div>
+                        <div class="summary-row total border-0 pt-3">
+                            <div class="d-flex flex-column">
+                                <span style="font-size: 0.9rem; color: var(--text-muted);">Real Purchasing Power</span>
+                                <span style="font-size: 0.75rem; font-weight: 600;">(In today's value)</span>
+                            </div>
+                            <span class="fs-3" style="color: var(--brand-danger);" id="econReal">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="dash-card" style="grid-column: span 2;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="text-muted text-uppercase fw-bold" style="font-size: 0.8rem; letter-spacing: 1px;">Nominal vs Real Trajectory</div>
+                            <span class="badge bg-light text-dark border border-secondary" id="chartTargetBadge">Target: $250,000</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="growthChart"></canvas>
+                        </div>
+                        
+                        <div class="insights-panel" id="aiInsightsBox">
+                            <i class="fas fa-robot me-2" style="color: var(--brand-accent);"></i> 
+                            <span id="aiInsightsText">Analyzing macro-economic vectors...</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <button class="export-btn" onclick="exportAmortizationToCSV()"><i class="fas fa-file-csv me-2"></i> Export Institutional Amortization (CSV)</button>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global State Architecture
+        let projectionChartInstance = null;
+        let scheduleData = []; // Pure array for CSV extraction
+
+        document.addEventListener("DOMContentLoaded", () => {
+            runAdvancedProjection();
+        });
+
+        // ==========================================
+        // FORMATTERS
+        // ==========================================
+        function getCurrencySymbol() {
+            return document.getElementById('currencySelect').value;
+        }
+
+        function formatMoney(amount) {
+            const sym = getCurrencySymbol();
+            return sym + new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
+        }
+
+        function addMonthsToDate(months) {
+            const date = new Date();
+            date.setMonth(date.getMonth() + months);
+            return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        }
+
+        function formatTimeSpan(totalMonths) {
+            const y = Math.floor(totalMonths / 12);
+            const m = totalMonths % 12;
+            let str = "";
+            if (y > 0) str += `${y} Yr${y > 1 ? 's' : ''}`;
+            if (m > 0) str += `${y > 0 ? ', ' : ''}${m} Mo${m > 1 ? 's' : ''}`;
+            return str || "0 Mos";
+        }
+
+        // ==========================================
+        // THE INSTITUTIONAL ENGINE
+        // ==========================================
+        function runAdvancedProjection() {
+            // 1. Ingest Data
+            const target = parseFloat(document.getElementById('targetAmount').value) || 0;
+            const startBal = parseFloat(document.getElementById('startingBalance').value) || 0;
+            const baseCont = parseFloat(document.getElementById('monthlyContribution').value) || 0;
+            const escalationPct = parseFloat(document.getElementById('annualEscalation').value) || 0;
+            
+            const apy = parseFloat(document.getElementById('interestRate').value) || 0;
+            const inflation = parseFloat(document.getElementById('inflationRate').value) || 0;
+            const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+
+            // Sync UI Symbols
+            document.querySelectorAll('.cur-sym').forEach(el => el.innerText = getCurrencySymbol());
+            document.getElementById('chartTargetBadge').innerText = `Target: ${formatMoney(target)}`;
+
+            // 2. Guardrails
+            const hero = document.getElementById('heroCard');
+            if (target <= 0) {
+                hero.className = "dash-card hero error";
+                document.getElementById('etaDisplay').innerText = "Invalid Target";
+                document.getElementById('dateDisplay').innerText = "Target must be greater than 0.";
+                clearUI(); return;
+            }
+            if (startBal >= target) {
+                hero.className = "dash-card hero success";
+                document.getElementById('etaDisplay').innerText = "Target Achieved";
+                document.getElementById('dateDisplay').innerText = "Capital already exceeds objective.";
+                clearUI(); return;
+            }
+            if (baseCont <= 0 && apy <= 0) {
+                hero.className = "dash-card hero error";
+                document.getElementById('etaDisplay').innerText = "Infinite";
+                document.getElementById('dateDisplay').innerText = "Zero growth velocity detected.";
+                clearUI(); return;
+            }
+
+            // 3. Variables for Iteration
+            let currentNominalBal = startBal;
+            let totalPrincipal = startBal;
+            let totalTaxPaid = 0;
+            let totalGrossInterest = 0;
+            
+            let currentMonthlyCont = baseCont;
+            let currentYearlyInterest = 0; // Tracks interest for annual taxation
+            
+            let months = 0;
+            const MAX_MONTHS = 1200; // 100 Year Circuit Breaker
+            const monthlyApyRate = (apy / 100) / 12;
+
+            // Chart Arrays
+            let labels = ['Start'];
+            let dataNominal = [startBal];
+            let dataReal = [startBal]; // Purchasing power tracking
+
+            scheduleData = []; // Clear CSV memory
+
+            // 4. The Core Simulation Loop
+            while (currentNominalBal < target && months < MAX_MONTHS) {
+                months++;
+                
+                // A. Calculate Monthly Growth
+                let monthInterest = currentNominalBal * monthlyApyRate;
+                currentYearlyInterest += monthInterest;
+                totalGrossInterest += monthInterest;
+                currentNominalBal += monthInterest;
+                
+                // B. Add Escalted Contribution
+                currentNominalBal += currentMonthlyCont;
+                totalPrincipal += currentMonthlyCont;
+
+                // C. Annual Interventions (Taxes & Step-Ups)
+                if (months % 12 === 0) {
+                    // Tax Drag Application (applied at end of year on that year's interest)
+                    let taxDeduction = currentYearlyInterest * (taxRate / 100);
+                    currentNominalBal -= taxDeduction;
+                    totalTaxPaid += taxDeduction;
+                    currentYearlyInterest = 0; // Reset for next tax year
+
+                    // Auto-Escalation (Salary Bump)
+                    currentMonthlyCont += currentMonthlyCont * (escalationPct / 100);
+                }
+
+                // D. Visualization Logging (Yearly to keep chart clean, plus final month)
+                if (months % 12 === 0 || currentNominalBal >= target) {
+                    labels.push(`Yr ${Math.ceil(months/12)}`);
+                    dataNominal.push(Math.round(currentNominalBal));
+                    
+                    // Calculate Real Purchasing Power of current balance
+                    // PV = FV / (1 + inflation)^years
+                    let yearsElapsed = months / 12;
+                    let realValue = currentNominalBal / Math.pow(1 + (inflation / 100), yearsElapsed);
+                    dataReal.push(Math.round(realValue));
+
+                    scheduleData.push({
+                        month: months,
+                        year: new Date().getFullYear() + Math.floor(months/12),
+                        contributionRate: currentMonthlyCont,
+                        nominalBalance: currentNominalBal,
+                        realValue: realValue,
+                        cumulativeTax: totalTaxPaid
+                    });
+                }
+            }
+
+            // 5. Output Handling
+            if (months >= MAX_MONTHS) {
+                hero.className = "dash-card hero error";
+                document.getElementById('etaDisplay').innerText = "100+ Years";
+                document.getElementById('dateDisplay').innerText = "Contributions/Yield too low to reach target.";
+                return;
+            }
+
+            // Success State
+            hero.className = "dash-card hero";
+            document.getElementById('etaDisplay').innerText = formatTimeSpan(months);
+            document.getElementById('dateDisplay').innerHTML = `Target Reached By: <span style="color: var(--brand-accent);">${addMonthsToDate(months)}</span>`;
+
+            // Capital Stack UI
+            document.getElementById('sumInitial').innerText = formatMoney(startBal);
+            document.getElementById('sumContrib').innerText = `+${formatMoney(totalPrincipal - startBal)}`;
+            document.getElementById('sumGrossInterest').innerText = `+${formatMoney(totalGrossInterest)}`;
+            document.getElementById('sumTaxLoss').innerText = `-${formatMoney(totalTaxPaid)}`;
+            document.getElementById('sumFinal').innerText = formatMoney(currentNominalBal);
+
+            // Economic Reality UI
+            let yearsToGoal = months / 12;
+            let finalRealValue = target / Math.pow(1 + (inflation / 100), yearsToGoal);
+            let inflationBleed = target - finalRealValue;
+
+            document.getElementById('econNominal').innerText = formatMoney(target);
+            document.getElementById('econBleed').innerText = `-${formatMoney(inflationBleed)}`;
+            document.getElementById('econReal').innerText = formatMoney(finalRealValue);
+
+            // 6. Execute AI Insights
+            generateAIInsights(escalationPct, taxRate, inflationBleed, finalRealValue, totalTaxPaid, yearsToGoal);
+
+            // 7. Execute Dual-Curve Render
+            renderChart(labels, dataNominal, dataReal, target);
+        }
+
+        function clearUI() {
+            document.getElementById('sumInitial').innerText = "$0.00";
+            document.getElementById('sumContrib').innerText = "$0.00";
+            document.getElementById('sumGrossInterest').innerText = "$0.00";
+            document.getElementById('sumTaxLoss').innerText = "$0.00";
+            document.getElementById('sumFinal').innerText = "$0.00";
+            document.getElementById('econNominal').innerText = "$0.00";
+            document.getElementById('econBleed').innerText = "$0.00";
+            document.getElementById('econReal').innerText = "$0.00";
+            if(projectionChartInstance) projectionChartInstance.destroy();
+        }
+
+        // ==========================================
+        // L.I.S.A. KINETIC INSIGHTS
+        // ==========================================
+        function generateAIInsights(escalation, taxRate, inflationLoss, realValue, totalTax, years) {
+            const box = document.getElementById('aiInsightsBox');
+            const text = document.getElementById('aiInsightsText');
+            
+            let insight = "";
+            let statusClass = "";
+
+            if (realValue < 0.7 * (parseFloat(document.getElementById('targetAmount').value))) {
+                insight = `Severe Economic Bleed: Over ${years.toFixed(1)} years, inflation destroys over 30% of your target's purchasing power. You must aggressively raise your APY or step-up contributions.`;
+                statusClass = "danger";
+            } else if (taxRate > 20 && totalTax > (0.1 * parseFloat(document.getElementById('targetAmount').value))) {
+                insight = `Tax Inefficiency: You are losing massive capital to taxes. Consider shifting contributions into a tax-advantaged wrapper (e.g., Roth IRA, ISA, Pension) to protect yield.`;
+                statusClass = "warning";
+            } else if (escalation >= 5) {
+                insight = `High-Velocity Architecture: Your ${escalation}% annual step-up drastically compresses your timeline, overwhelming both tax drag and inflation. Excellent strategy.`;
+                statusClass = "success";
+            } else {
+                insight = `Stable Matrix: Nominal target achievable. Note that your real purchasing power will be ${formatMoney(realValue)}. Consider a 3% annual contribution step-up to outpace inflation.`;
+                statusClass = "";
+            }
+
+            text.innerText = insight;
+            box.className = `insights-panel ${statusClass}`;
+        }
+
+        // ==========================================
+        // DUAL-CURVE CHART.JS RENDERER
+        // ==========================================
+        function renderChart(labels, dataNominal, dataReal, targetAmt) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            if (projectionChartInstance) projectionChartInstance.destroy();
+
+            const targetLine = new Array(labels.length).fill(targetAmt);
+
+            projectionChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Nominal Balance (Bank Statement)',
+                            data: dataNominal,
+                            borderColor: '#0284c7', // Blue
+                            backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                            fill: true,
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Real Purchasing Power (Inflation Adj.)',
+                            data: dataReal,
+                            borderColor: '#ef4444', // Red
+                            borderDash: [5, 5],
+                            fill: false,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Target Objective',
+                            data: targetLine,
+                            borderColor: '#0f172a',
+                            borderWidth: 2,
+                            borderDash: [2, 4],
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return `${getCurrencySymbol()}${(value/1000000).toFixed(1)}M`;
+                                    if (value >= 1000) return `${getCurrencySymbol()}${(value/1000).toFixed(0)}k`;
+                                    return `${getCurrencySymbol()}${value}`;
+                                }
+                            }
+                        },
+                        x: { grid: { display: false, drawBorder: false } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    interaction: { mode: 'index', intersect: false }
+                }
+            });
+        }
+
+        // ==========================================
+        // CSV EXPORT ENGINE
+        // ==========================================
+        function exportAmortizationToCSV() {
+            if (scheduleData.length === 0) {
+                alert("Execute a valid projection first.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Month,Year,Monthly Contribution,Cumulative Tax Paid,Nominal Balance,Real Purchasing Power\r\n";
+            
+            scheduleData.forEach(row => {
+                csvContent += `${row.month},${row.year},${row.contributionRate.toFixed(2)},${row.cumulativeTax.toFixed(2)},${row.nominalBalance.toFixed(2)},${row.realValue.toFixed(2)}\r\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "LISA_Institutional_Wealth_Schedule.csv");
+            document.body.appendChild(link); 
+            link.click(); 
+            document.body.removeChild(link);
+        }
+
+        function resetEngine() {
+            document.getElementById('targetAmount').value = 250000;
+            document.getElementById('startingBalance').value = 15000;
+            document.getElementById('monthlyContribution').value = 1500;
+            document.getElementById('annualEscalation').value = 5.0;
+            document.getElementById('interestRate').value = 8.0;
+            document.getElementById('inflationRate').value = 3.2;
+            document.getElementById('taxRate').value = 15.0;
+            runAdvancedProjection();
+        }
+    </script>
+</body>
+</html>

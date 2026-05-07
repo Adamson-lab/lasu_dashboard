@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Exam Docket | LASU</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #525659; font-family: 'Segoe UI', sans-serif; padding: 30px 0; }
+        .docket-paper {
+            background: white;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 40px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            min-height: 900px;
+            position: relative;
+        }
+        .watermark {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 8rem;
+            color: rgba(0,0,0,0.03);
+            font-weight: bold;
+            pointer-events: none;
+        }
+        .table-custom th { background-color: #004d40; color: white; }
+        
+        @media print {
+            body { background: white; padding: 0; }
+            .docket-paper { box-shadow: none; width: 100%; max-width: 100%; padding: 20px; }
+            .no-print { display: none !important; }
+            .btn { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="docket-paper">
+    <div class="watermark">OFFICIAL</div>
+
+    <div class="border-bottom pb-3 mb-4 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-university fa-3x text-success me-3"></i>
+            <div>
+                <h2 class="fw-bold mb-0 text-dark">LASU</h2>
+                <h5 class="text-muted text-uppercase">Examination Docket</h5>
+            </div>
+        </div>
+        <div class="text-end">
+            <small class="d-block text-muted">Session: 2025/2026</small>
+            <small class="fw-bold text-danger">GENERATED: <span id="printDate"></span></small>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-8">
+            <div class="p-3 bg-light border rounded">
+                <h4 class="fw-bold">{{ student.name }}</h4>
+                <p class="mb-0">Matric No: <strong>{{ student.matric_no }}</strong></p>
+                <p class="mb-0">Department: <strong>{{ student.department }}</strong></p>
+                <p class="mb-0">Level: <strong>{{ student.level }}</strong></p>
+            </div>
+        </div>
+        <div class="col-4 text-end">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data={{ student.matric_no }}" class="border p-1">
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-3 text-success"><i class="fas fa-calendar-check me-2"></i>Approved Exam Schedule</h5>
+    
+    {% if exams %}
+    <table class="table table-bordered table-custom table-striped">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Course Title</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Venue (Hall)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for course in exams %}
+            <tr>
+                <td class="fw-bold">{{ course.code }}</td>
+                <td>{{ course.title }}</td>
+                <td class="fw-bold">{{ course.exam_date.strftime('%d %b, %Y') }}</td>
+                <td>{{ course.exam_time }}</td>
+                <td class="text-danger fw-bold">{{ course.exam_venue or 'TBA' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info text-center p-5">
+        <h4><i class="fas fa-info-circle me-2"></i>No Exams Scheduled Yet</h4>
+        <p>Your lecturers have not posted the exam dates for your registered courses yet.</p>
+    </div>
+    {% endif %}
+
+    <div class="row mt-5 pt-5">
+        <div class="col-6 text-center">
+            <div class="border-bottom border-dark w-75 mx-auto mb-2"></div>
+            <small class="fw-bold">Student Signature</small>
+        </div>
+        <div class="col-6 text-center">
+            <div class="border-bottom border-dark w-75 mx-auto mb-2"></div>
+            <small class="fw-bold">Exam Officer / Dean</small>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4 mb-5 no-print d-flex gap-2 justify-content-center">
+    <a href="{{ url_for('student_portal') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to Portal</a>
+    <button onclick="window.print()" class="btn btn-success"><i class="fas fa-print me-2"></i>Print Docket</button>
+</div>
+
+<script>
+    document.getElementById('printDate').innerText = new Date().toLocaleString();
+</script>
+
+</body>
+</html>

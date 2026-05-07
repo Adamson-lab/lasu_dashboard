@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Quizzes & Tests</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        /* Smooth transition for manual dismissal */
+        .notification-fade {
+            transition: all 0.4s ease;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-success mb-4 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ url_for('student_portal') }}">← Back to Portal</a>
+        <span class="navbar-text text-white">CBT Assessment Center</span>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <div id="notification-area">
+                {% if void_alerts %}
+                    {% for alert in void_alerts %}
+                    <div id="alert-wrapper-{{ alert.id }}" class="alert alert-danger alert-dismissible fade show border-start border-5 border-danger shadow-sm d-flex align-items-start animate__animated animate__shakeX mb-4 notification-fade" role="alert">
+                        <div class="me-3 mt-1"><i class="fas fa-exclamation-triangle fa-2x text-danger"></i></div>
+                        <div class="w-100">
+                            <h5 class="alert-heading fw-bold text-danger">⚠️ Academic Warning</h5>
+                            <p class="mb-1 text-dark">{{ alert.message }}</p>
+                            <small class="text-muted">{{ alert.timestamp.strftime('%d %b, %H:%M') if alert.timestamp else '' }}</small>
+                        </div>
+                        <button type="button" class="btn-close" aria-label="Close" onclick="deleteNotificationInstantly('{{ alert.id }}')"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <h3 class="mb-4 fw-bold text-dark">📝 Available Assessments</h3>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for item in quizzes %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center p-4">
+                            <div>
+                                <h5 class="mb-1 fw-bold text-primary">{{ item.quiz.title }}</h5>
+                                <p class="mb-1 text-muted small">{{ item.quiz.course.code }} - {{ item.quiz.course.title }}</p>
+                                <small class="text-secondary">
+                                    <i class="fas fa-list-ol me-1"></i> {{ item.quiz.questions|length }} Questions
+                                </small>
+                            </div>
+                            
+                            <div>
+                                {% if item.taken %}
+                                    {% if item.taken.score == -1 %}
+                                        {% if item.appeal_status == 'Pending' %}
+                                            <button class="btn btn-warning border-0 fw-bold px-3 text-dark" disabled>
+                                                <i class="fas fa-clock me-2"></i> Appeal Pending
+                                            </button>
+                                        {% elif item.appeal_status == 'Rejected' %}
+                                            <button class="btn btn-dark border-0 fw-bold px-3" disabled>
+                                                <i class="fas fa-gavel me-2"></i> PERMANENTLY BANNED
+                                            </button>
+                                        {% else %}
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-danger disabled border-0 fw-bold px-3" style="opacity: 0.6;">
+                                                    <i class="fas fa-ban"></i> Voided
+                                                </button>
+                                                <button onclick="openAppealModal('{{ item.taken.id }}', '{{ item.quiz.title }}')" 
+                                                        class="btn btn-outline-danger fw-bold shadow-sm animate__animated animate__pulse animate__infinite">
+                                                    <i class="fas fa-balance-scale"></i> File Appeal
+                                                </button>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <button class="btn btn-light border" disabled>
+                                            <span class="text-success fw-bold">
+                                                <i class="fas fa-check-circle me-1"></i> Score: {{ item.taken.score }} / {{ item.taken.total_questions }}
+                                            </span>
+                                        </button>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{{ url_for('take_quiz', quiz_id=item.quiz.id) }}" class="btn btn-success fw-bold px-4 shadow-sm">
+                                        🚀 Take Test
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <h5 class="text-muted">No quizzes available yet.</h5>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+             <div class="text-center mt-4 mb-5">
+                <a href="{{ url_for('student_portal') }}" class="text-decoration-none text-muted">
+                    <i class="fas fa-home me-1"></i> Return to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="appealModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-balance-scale me-2"></i>Submit Defense</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">You are appealing the voiding of <strong id="appealQuizTitle"></strong>.</p>
+                <div class="form-group">
+                    <label class="fw-bold mb-2">Why should your result be restored?</label>
+                    <textarea id="appealMessage" class="form-control" rows="5" placeholder="I was not cheating, the system error was because..."></textarea>
+                    <small class="text-muted">Be professional. This will be reviewed by the Disciplinary Committee.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger fw-bold" onclick="submitAppeal()">Submit Appeal</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    let activeResultId = null;
+
+    // ⚖️ APPEAL FUNCTIONS
+    function openAppealModal(resultId, quizTitle) {
+        activeResultId = resultId;
+        document.getElementById('appealQuizTitle').innerText = quizTitle;
+        document.getElementById('appealMessage').value = '';
+        var myModal = new bootstrap.Modal(document.getElementById('appealModal'));
+        myModal.show();
+    }
+
+    function submitAppeal() {
+        let msgInput = document.getElementById('appealMessage');
+        let msg = msgInput.value;
+        let submitBtn = document.querySelector('#appealModal .btn-danger');
+
+        if (!msg.trim()) {
+            Swal.fire('Required', 'Please write your defense statement.', 'warning');
+            return;
+        }
+
+        let originalText = submitBtn.innerText;
+        submitBtn.innerText = "Sending...";
+        submitBtn.disabled = true;
+
+        fetch(`/submit_appeal/${activeResultId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ message: msg })
+        })
+        .then(async response => {
+            const isJson = response.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await response.json() : null;
+            if (!response.ok) {
+                const errorMsg = (data && data.error) || response.statusText;
+                throw new Error(errorMsg);
+            }
+            return data;
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                Swal.fire({
+                    title: 'Submitted!',
+                    text: 'Your appeal has been sent to the Disciplinary Committee.',
+                    icon: 'success',
+                    timer: 2500,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload(); 
+                });
+            } else {
+                Swal.fire('Error', data.error || 'Unknown error occurred.', 'error');
+                resetButton();
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'System Error',
+                text: error.message || 'Could not save appeal.',
+                icon: 'error'
+            });
+            resetButton();
+        });
+
+        function resetButton() {
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    // 🆕 INSTANT DELETION FUNCTION (Single Page App Feel)
+    function deleteNotificationInstantly(alertId) {
+        const targetAlert = document.getElementById(`alert-wrapper-${alertId}`);
+
+        if (targetAlert) {
+            // 1. Instant Visual Removal
+            targetAlert.style.opacity = "0";
+            targetAlert.style.transform = "scale(0.9)";
+            
+            // Wait for animation, then remove from DOM
+            setTimeout(() => {
+                targetAlert.remove();
+            }, 400);
+        }
+
+        // 2. Background Database Update (Silent)
+        fetch(`/api/notification/mark_read/${alertId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== 'success') {
+                console.error("Database update failed, but UI is already cleared.");
+            }
+        })
+        .catch(error => console.error("Network Error:", error));
+    }
+</script>
+
+</body>
+</html>

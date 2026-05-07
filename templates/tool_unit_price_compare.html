@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Price Compare | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-blue: #0d6efd; 
+            --brand-blue-light: rgba(13, 110, 253, 0.1);
+            --brand-success: #198754;
+            --brand-danger: #dc3545;
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .config-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .form-label {
+            font-weight: 800;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .product-card {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            height: 100%;
+        }
+        .product-card:focus-within {
+            border-color: #cbd5e1;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        /* Dynamic States for Cards */
+        .product-card.winner {
+            border-color: var(--brand-success);
+            background: rgba(25, 135, 84, 0.03);
+            box-shadow: 0 8px 20px rgba(25, 135, 84, 0.15);
+            transform: translateY(-5px);
+        }
+        .product-card.loser {
+            opacity: 0.85;
+            border-color: #e2e8f0;
+        }
+
+        .badge-status {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: white;
+            display: none;
+            white-space: nowrap;
+            z-index: 2;
+        }
+        .winner .badge-status {
+            display: block;
+            background: var(--brand-success);
+            box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3);
+        }
+
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 3px var(--brand-blue-light);
+        }
+        .input-group-text {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            font-weight: 700;
+            color: #64748b;
+        }
+        
+        /* Results Section */
+        .unit-price-display {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-align: center;
+            margin: 15px 0 5px 0;
+            letter-spacing: -0.5px;
+        }
+        .winner .unit-price-display {
+            color: var(--brand-success);
+        }
+        .premium-text {
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--brand-danger);
+            min-height: 20px;
+        }
+        .winner .premium-text {
+            color: var(--brand-success);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            margin-top: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--glass-border);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-balance-scale me-2" style="color: var(--brand-blue);"></i> Unit Price Engine</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="config-panel">
+            <div>
+                <div class="form-label mb-1">Comparison Category</div>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="compareType" id="typeWeight" value="weight" checked onchange="updateUnits()">
+                    <label class="btn btn-outline-primary fw-bold" for="typeWeight"><i class="fas fa-weight-hanging me-1"></i> Weight</label>
+
+                    <input type="radio" class="btn-check" name="compareType" id="typeVolume" value="volume" onchange="updateUnits()">
+                    <label class="btn btn-outline-primary fw-bold" for="typeVolume"><i class="fas fa-tint me-1"></i> Volume</label>
+
+                    <input type="radio" class="btn-check" name="compareType" id="typeCount" value="count" onchange="updateUnits()">
+                    <label class="btn btn-outline-primary fw-bold" for="typeCount"><i class="fas fa-boxes me-1"></i> Count (Pcs)</label>
+                </div>
+            </div>
+            
+            <div style="width: 150px;">
+                <div class="form-label mb-1">Currency</div>
+                <select class="form-select fw-bold" id="globalCurrency" onchange="calculateComparison()">
+                    <option value="$">USD ($)</option>
+                    <option value="₦">NGN (₦)</option>
+                    <option value="£">GBP (£)</option>
+                    <option value="€">EUR (€)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            
+            <div class="col-lg-4">
+                <div class="product-card" id="cardA">
+                    <div class="badge-status"><i class="fas fa-trophy me-1"></i> BEST VALUE</div>
+                    <div class="form-label text-center mb-3 fs-6">Item A</div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Total Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text cur-sym">$</span>
+                            <input type="number" id="priceA" class="form-control item-input" value="4.99" min="0.01" step="0.01" oninput="calculateComparison()">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Size / Quantity</label>
+                        <div class="input-group">
+                            <input type="number" id="sizeA" class="form-control item-input" value="500" min="0.01" step="0.1" oninput="calculateComparison()">
+                            <select id="unitA" class="form-select dynamic-unit item-input" style="max-width: 90px;" onchange="calculateComparison()">
+                                </select>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4" style="border-color: var(--glass-border);">
+                    <div class="unit-price-display" id="upA">$0.00</div>
+                    <div class="text-center text-muted fw-bold mb-2" style="font-size: 0.75rem;" id="baseDisplayA">per 100g</div>
+                    <div class="premium-text" id="premA"></div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="product-card" id="cardB">
+                    <div class="badge-status"><i class="fas fa-trophy me-1"></i> BEST VALUE</div>
+                    <div class="form-label text-center mb-3 fs-6">Item B</div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Total Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text cur-sym">$</span>
+                            <input type="number" id="priceB" class="form-control item-input" value="8.50" min="0.01" step="0.01" oninput="calculateComparison()">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Size / Quantity</label>
+                        <div class="input-group">
+                            <input type="number" id="sizeB" class="form-control item-input" value="1" min="0.01" step="0.1" oninput="calculateComparison()">
+                            <select id="unitB" class="form-select dynamic-unit item-input" style="max-width: 90px;" onchange="calculateComparison()">
+                                </select>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4" style="border-color: var(--glass-border);">
+                    <div class="unit-price-display" id="upB">$0.00</div>
+                    <div class="text-center text-muted fw-bold mb-2" style="font-size: 0.75rem;" id="baseDisplayB">per 100g</div>
+                    <div class="premium-text" id="premB"></div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="product-card" id="cardC">
+                    <div class="badge-status"><i class="fas fa-trophy me-1"></i> BEST VALUE</div>
+                    <div class="form-label text-center mb-3 fs-6">Item C <span class="text-muted fw-normal text-lowercase">(Optional)</span></div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Total Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text cur-sym">$</span>
+                            <input type="number" id="priceC" class="form-control item-input" placeholder="0.00" min="0.01" step="0.01" oninput="calculateComparison()">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Size / Quantity</label>
+                        <div class="input-group">
+                            <input type="number" id="sizeC" class="form-control item-input" placeholder="0" min="0.01" step="0.1" oninput="calculateComparison()">
+                            <select id="unitC" class="form-select dynamic-unit item-input" style="max-width: 90px;" onchange="calculateComparison()">
+                                </select>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4" style="border-color: var(--glass-border);">
+                    <div class="unit-price-display" id="upC">---</div>
+                    <div class="text-center text-muted fw-bold mb-2" style="font-size: 0.75rem;" id="baseDisplayC">per 100g</div>
+                    <div class="premium-text" id="premC"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="chart-container">
+            <canvas id="compareChart"></canvas>
+        </div>
+
+    </div>
+
+    <script>
+        let compareChartInstance = null;
+
+        // Omni-Metric Conversion Matrix
+        // Base units for backend math: Grams (g), Milliliters (ml), Pieces (pc)
+        const unitMatrix = {
+            'weight': {
+                baseDisplay: 'per 100g',
+                multiplierDisplay: 100,
+                options: [
+                    { val: 'g', label: 'g', toBase: 1 },
+                    { val: 'kg', label: 'kg', toBase: 1000 },
+                    { val: 'oz', label: 'oz', toBase: 28.3495 },
+                    { val: 'lb', label: 'lb', toBase: 453.592 }
+                ],
+                defaultB: 'kg' // Make Item B default to kg to show off auto-conversion
+            },
+            'volume': {
+                baseDisplay: 'per 100ml',
+                multiplierDisplay: 100,
+                options: [
+                    { val: 'ml', label: 'ml', toBase: 1 },
+                    { val: 'l', label: 'L', toBase: 1000 },
+                    { val: 'floz', label: 'fl oz', toBase: 29.5735 },
+                    { val: 'gal', label: 'gal', toBase: 3785.41 }
+                ],
+                defaultB: 'l'
+            },
+            'count': {
+                baseDisplay: 'per item',
+                multiplierDisplay: 1,
+                options: [
+                    { val: 'pc', label: 'pcs', toBase: 1 },
+                    { val: 'dozen', label: 'doz', toBase: 12 }
+                ],
+                defaultB: 'pc'
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateUnits(); // Initializes dropdowns and triggers first calc
+        });
+
+        // 1. Dynamic UI Logic
+        function updateUnits() {
+            const type = document.querySelector('input[name="compareType"]:checked').value;
+            const config = unitMatrix[type];
+            
+            const selects = [document.getElementById('unitA'), document.getElementById('unitB'), document.getElementById('unitC')];
+            
+            selects.forEach((select, index) => {
+                select.innerHTML = '';
+                config.options.forEach(opt => {
+                    select.add(new Option(opt.label, opt.val));
+                });
+                // To show off auto-conversion immediately, set Item B to a larger unit by default
+                if (index === 1 && config.defaultB) {
+                    select.value = config.defaultB;
+                }
+            });
+
+            // Update bottom labels
+            document.getElementById('baseDisplayA').innerText = config.baseDisplay;
+            document.getElementById('baseDisplayB').innerText = config.baseDisplay;
+            document.getElementById('baseDisplayC').innerText = config.baseDisplay;
+
+            calculateComparison();
+        }
+
+        // 2. Core Processing Engine
+        function calculateComparison() {
+            const sym = document.getElementById('globalCurrency').value;
+            document.querySelectorAll('.cur-sym').forEach(el => el.innerText = sym);
+
+            const type = document.querySelector('input[name="compareType"]:checked').value;
+            const config = unitMatrix[type];
+
+            // Parse Items
+            let items = [];
+            ['A', 'B', 'C'].forEach(id => {
+                const price = parseFloat(document.getElementById(`price${id}`).value);
+                const size = parseFloat(document.getElementById(`size${id}`).value);
+                const unitVal = document.getElementById(`unit${id}`).value;
+                
+                if (!isNaN(price) && !isNaN(size) && size > 0) {
+                    // Normalize to base unit (e.g., all to grams)
+                    const toBaseFactor = config.options.find(o => o.val === unitVal).toBase;
+                    const normalizedSize = size * toBaseFactor;
+                    
+                    // Calculate Unit Price based on Display Multiplier (e.g. price per 100g)
+                    const unitPrice = (price / normalizedSize) * config.multiplierDisplay;
+                    
+                    items.push({ id: id, unitPrice: unitPrice, valid: true });
+                } else {
+                    items.push({ id: id, unitPrice: Infinity, valid: false });
+                }
+            });
+
+            // Filter valid items for comparison
+            const validItems = items.filter(i => i.valid);
+            
+            // Reset UI states
+            ['A', 'B', 'C'].forEach(id => {
+                document.getElementById(`card${id}`).className = 'product-card';
+                document.getElementById(`up${id}`).innerText = '---';
+                document.getElementById(`prem${id}`).innerText = '';
+            });
+
+            if (validItems.length === 0) {
+                renderChart([], []);
+                return;
+            }
+
+            // Find the Winner (Lowest Unit Price)
+            const minItem = validItems.reduce((min, item) => item.unitPrice < min.unitPrice ? item : min, validItems[0]);
+
+            // Update UI with calculated data
+            let chartLabels = [];
+            let chartData = [];
+            let chartColors = [];
+
+            items.forEach(item => {
+                if (item.valid) {
+                    const elUp = document.getElementById(`up${item.id}`);
+                    const elCard = document.getElementById(`card${item.id}`);
+                    const elPrem = document.getElementById(`prem${item.id}`);
+                    
+                    // Format Unit Price
+                    elUp.innerText = `${sym}${item.unitPrice.toFixed(4).replace(/\.?0+$/, '')}`;
+                    
+                    chartLabels.push(`Item ${item.id}`);
+                    chartData.push(item.unitPrice);
+
+                    if (item.id === minItem.id) {
+                        elCard.classList.add('winner');
+                        elPrem.innerText = 'Most Cost-Effective';
+                        chartColors.push('#198754'); // Green
+                    } else {
+                        elCard.classList.add('loser');
+                        // Calculate Yield Premium
+                        const premiumPct = ((item.unitPrice - minItem.unitPrice) / minItem.unitPrice) * 100;
+                        elPrem.innerHTML = `<i class="fas fa-arrow-up"></i> Paying ${premiumPct.toFixed(1)}% more`;
+                        chartColors.push('#cbd5e1'); // Gray
+                    }
+                }
+            });
+
+            renderChart(chartLabels, chartData, chartColors, sym, config.baseDisplay);
+        }
+
+        // 3. Visual Cost Density Matrix
+        function renderChart(labels, data, colors, sym, baseDisplay) {
+            const ctx = document.getElementById('compareChart').getContext('2d');
+            
+            if (compareChartInstance) {
+                compareChartInstance.destroy();
+            }
+
+            if (labels.length === 0) return;
+
+            compareChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Cost ${baseDisplay}`,
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 8,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                            ticks: {
+                                callback: function(value) {
+                                    return sym + value.toFixed(2);
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { weight: 'bold' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${sym}${context.raw.toFixed(4)} ${baseDisplay}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

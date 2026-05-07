@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breath Pacer | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0dcaf0; 
+            --math-purple: #6f42c1;
+            --math-pink: #e83e8c;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-preset {
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-preset:hover, .btn-preset.active { 
+            background: rgba(13, 202, 240, 0.05); 
+            border-color: var(--math-blue); 
+            color: #0aaaaa; 
+        }
+        .btn-preset span { font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #adb5bd; }
+        .btn-preset.active span { color: var(--math-blue); }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 202, 240, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 0.9rem;
+            color: #495057;
+            width: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 10px 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-label {
+            background: #f8f9fa;
+            border-left: 1px solid #ced4da;
+            padding: 0 15px;
+            font-weight: 800;
+            color: #adb5bd;
+            display: flex;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.8rem;
+            width: 60px;
+            justify-content: center;
+        }
+
+        .btn-control {
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-start { background-color: var(--lasu-accent); }
+        .btn-start:hover { background-color: #146c43; transform: translateY(-2px); }
+        .btn-stop { background-color: var(--math-red); }
+        .btn-stop:hover { background-color: #b02a37; transform: translateY(-2px); }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* Advanced Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #0d1117; /* Deep calming dark theme */
+            border-radius: 12px;
+            border: 4px solid #1a1d20;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            min-height: 450px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                radial-gradient(circle at center, rgba(13, 202, 240, 0.05) 0%, transparent 70%);
+        }
+
+        #breathCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #12151a;
+            padding: 15px 25px;
+            border-top: 1px solid #1a1d20;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: var(--math-blue);
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .formula-bar span { color: #6c757d; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; text-transform: uppercase; margin-right: 8px;}
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .telemetry-bar { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-wind"></i> Therapy Protocol
+            </div>
+
+            <div class="preset-grid">
+                <button class="btn-preset active" id="btn478" onclick="setPreset('478', 4, 7, 8, 0)">
+                    <div><i class="fas fa-bed me-2 text-primary"></i> 4-7-8 Relaxation</div>
+                    <span>4-7-8-0</span>
+                </button>
+                <button class="btn-preset" id="btnBox" onclick="setPreset('box', 4, 4, 4, 4)">
+                    <div><i class="fas fa-square me-2 text-warning"></i> Box Breathing</div>
+                    <span>4-4-4-4</span>
+                </button>
+                <button class="btn-preset" id="btnResonance" onclick="setPreset('resonance', 5.5, 0, 5.5, 0)">
+                    <div><i class="fas fa-heartbeat me-2 text-danger"></i> Coherent Pacing</div>
+                    <span>5.5-0-5.5-0</span>
+                </button>
+                <button class="btn-preset" id="btnCustom" onclick="setCustom()">
+                    <div><i class="fas fa-sliders-h me-2 text-success"></i> Custom Setup</div>
+                    <span>Manual</span>
+                </button>
+            </div>
+
+            <div class="pane-header border-0 mb-2 pb-0 mt-0" style="font-size: 0.85rem; color: #495057;">
+                Phase Timings
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label">Inhale</div>
+                <input type="number" class="num-input" id="valInhale" value="4" step="0.5" min="1" oninput="setCustom()">
+                <div class="unit-label">sec</div>
+            </div>
+            <div class="input-group-custom">
+                <div class="input-label">Hold (Top)</div>
+                <input type="number" class="num-input" id="valHoldTop" value="7" step="0.5" min="0" oninput="setCustom()">
+                <div class="unit-label">sec</div>
+            </div>
+            <div class="input-group-custom">
+                <div class="input-label">Exhale</div>
+                <input type="number" class="num-input" id="valExhale" value="8" step="0.5" min="1" oninput="setCustom()">
+                <div class="unit-label">sec</div>
+            </div>
+            <div class="input-group-custom mb-4">
+                <div class="input-label">Hold (Bot)</div>
+                <input type="number" class="num-input" id="valHoldBot" value="0" step="0.5" min="0" oninput="setCustom()">
+                <div class="unit-label">sec</div>
+            </div>
+
+            <button class="btn-control btn-start w-100 mt-auto" id="btnToggle" onclick="toggleTherapy()">
+                <i class="fas fa-play"></i> Start Session
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="simulation-box">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="breathCanvas"></canvas>
+            </div>
+            <div class="telemetry-bar">
+                <div class="formula-bar">
+                    <span>Current Phase:</span> <span id="telemetryPhase" style="color: #0dcaf0; font-family: 'Fira Code', monospace; font-size: 1rem;">IDLE</span>
+                </div>
+                <div class="text-muted fw-bold small text-uppercase"><i class="fas fa-lungs me-1"></i> Bio-Kinematic Engine</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Inputs
+    const valInhale = document.getElementById('valInhale');
+    const valHoldTop = document.getElementById('valHoldTop');
+    const valExhale = document.getElementById('valExhale');
+    const valHoldBot = document.getElementById('valHoldBot');
+    const btnToggle = document.getElementById('btnToggle');
+    const telemetryPhase = document.getElementById('telemetryPhase');
+
+    const btn478 = document.getElementById('btn478');
+    const btnBox = document.getElementById('btnBox');
+    const btnResonance = document.getElementById('btnResonance');
+    const btnCustom = document.getElementById('btnCustom');
+
+    // Canvas
+    const canvas = document.getElementById('breathCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // State Machine
+    let isPlaying = false;
+    let animationFrameId = null;
+    let startTime = 0;
+    
+    let phaseDurations = { inhale: 4000, holdTop: 7000, exhale: 8000, holdBot: 0 };
+    let cycleDuration = 19000;
+
+    function setPreset(type, i, ht, e, hb) {
+        valInhale.value = i;
+        valHoldTop.value = ht;
+        valExhale.value = e;
+        valHoldBot.value = hb;
+        
+        btn478.classList.remove('active');
+        btnBox.classList.remove('active');
+        btnResonance.classList.remove('active');
+        btnCustom.classList.remove('active');
+
+        if(type === '478') btn478.classList.add('active');
+        if(type === 'box') btnBox.classList.add('active');
+        if(type === 'resonance') btnResonance.classList.add('active');
+        
+        updateDurations();
+    }
+
+    function setCustom() {
+        btn478.classList.remove('active');
+        btnBox.classList.remove('active');
+        btnResonance.classList.remove('active');
+        btnCustom.classList.add('active');
+        updateDurations();
+    }
+
+    function updateDurations() {
+        const i = parseFloat(valInhale.value) || 0;
+        const ht = parseFloat(valHoldTop.value) || 0;
+        const e = parseFloat(valExhale.value) || 0;
+        const hb = parseFloat(valHoldBot.value) || 0;
+
+        phaseDurations = {
+            inhale: i * 1000,
+            holdTop: ht * 1000,
+            exhale: e * 1000,
+            holdBot: hb * 1000
+        };
+        cycleDuration = phaseDurations.inhale + phaseDurations.holdTop + phaseDurations.exhale + phaseDurations.holdBot;
+        
+        if (!isPlaying) drawIdle();
+    }
+
+    function toggleTherapy() {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            btnToggle.classList.remove('btn-start');
+            btnToggle.classList.add('btn-stop');
+            btnToggle.innerHTML = '<i class="fas fa-stop"></i> Stop Session';
+            updateDurations();
+            startTime = performance.now();
+            animate(startTime);
+        } else {
+            btnToggle.classList.remove('btn-stop');
+            btnToggle.classList.add('btn-start');
+            btnToggle.innerHTML = '<i class="fas fa-play"></i> Start Session';
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            telemetryPhase.innerText = 'IDLE';
+            telemetryPhase.style.color = '#6c757d';
+            drawIdle();
+        }
+    }
+
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
+            
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            
+            if (!isPlaying) drawIdle();
+        }
+    });
+    resizeObserver.observe(container);
+
+    // --- KINEMATIC CANVAS RENDERER ---
+    function drawCircle(radiusPercent, text, subtext, colorHex, glowIntense) {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const cx = cw / 2;
+        const cy = ch / 2;
+        
+        // Define min and max physical bounds based on screen size
+        const minRadius = Math.min(cw, ch) * 0.15;
+        const maxRadius = Math.min(cw, ch) * 0.40;
+        
+        const currentRadius = minRadius + ((maxRadius - minRadius) * radiusPercent);
+
+        // Draw Outer Glow (Fluid)
+        ctx.beginPath();
+        ctx.arc(cx, cy, currentRadius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${colorHex}, 0.15)`;
+        ctx.shadowColor = `rgba(${colorHex}, 0.8)`;
+        ctx.shadowBlur = glowIntense ? 60 : 30;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Draw Inner Solid Core
+        ctx.beginPath();
+        ctx.arc(cx, cy, currentRadius * 0.95, 0, Math.PI * 2);
+        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, currentRadius);
+        gradient.addColorStop(0, `rgba(${colorHex}, 0.8)`);
+        gradient.addColorStop(1, `rgba(${colorHex}, 0.4)`);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Draw Ring Outline
+        ctx.beginPath();
+        ctx.arc(cx, cy, currentRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${colorHex}, 1)`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Text rendering
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        ctx.font = 'bold 36px "Segoe UI", sans-serif';
+        ctx.fillText(text, cx, cy - 10);
+        
+        if (subtext) {
+            ctx.font = 'bold 18px "Fira Code", monospace';
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.fillText(subtext, cx, cy + 30);
+        }
+    }
+
+    function drawIdle() {
+        drawCircle(0, "READY", "Press Start", "13, 202, 240", false);
+    }
+
+    function animate(now) {
+        if (!isPlaying) return;
+
+        const elapsed = (now - startTime) % cycleDuration;
+
+        let phase = '';
+        let progress = 0;
+        let radiusPct = 0;
+        let color = '';
+        let instruction = '';
+        let timeLeft = 0;
+
+        const tInhale = phaseDurations.inhale;
+        const tHoldTop = tInhale + phaseDurations.holdTop;
+        const tExhale = tHoldTop + phaseDurations.exhale;
+        const tHoldBot = tExhale + phaseDurations.holdBot;
+
+        if (elapsed < tInhale) {
+            phase = 'INHALE';
+            progress = elapsed / phaseDurations.inhale;
+            // Smooth ease in-out sine for breathing
+            radiusPct = (Math.sin(progress * Math.PI - (Math.PI/2)) + 1) / 2;
+            color = '13, 202, 240'; // Cyan
+            instruction = 'Breathe In';
+            timeLeft = Math.ceil((phaseDurations.inhale - elapsed) / 1000);
+        } 
+        else if (elapsed < tHoldTop) {
+            phase = 'HOLD';
+            radiusPct = 1; // Full size
+            color = '25, 135, 84'; // Green
+            instruction = 'Hold';
+            timeLeft = Math.ceil((tHoldTop - elapsed) / 1000);
+        } 
+        else if (elapsed < tExhale) {
+            phase = 'EXHALE';
+            let exElapsed = elapsed - tHoldTop;
+            progress = exElapsed / phaseDurations.exhale;
+            // Smooth ease out sine
+            radiusPct = 1 - ((Math.sin(progress * Math.PI - (Math.PI/2)) + 1) / 2);
+            color = '111, 66, 193'; // Purple
+            instruction = 'Breathe Out';
+            timeLeft = Math.ceil((tExhale - elapsed) / 1000);
+        } 
+        else {
+            phase = 'HOLD';
+            radiusPct = 0; // Minimum size
+            color = '108, 117, 125'; // Grey
+            instruction = 'Hold Empty';
+            timeLeft = Math.ceil((tHoldBot - elapsed) / 1000);
+        }
+
+        telemetryPhase.innerText = phase;
+        telemetryPhase.style.color = `rgb(${color})`;
+
+        drawCircle(radiusPct, instruction, `${timeLeft}s`, color, phase === 'HOLD');
+
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // INIT
+    setTimeout(() => { updateDurations(); }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

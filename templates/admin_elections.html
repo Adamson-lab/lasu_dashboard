@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>🗳️ E-Voting Control Room</h2>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white fw-bold">1. Create Position</div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="input-group">
+                            <input type="text" name="position_title" class="form-control" placeholder="e.g. Student Union President" required>
+                            <button class="btn btn-primary">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white fw-bold">2. Add Candidate</div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-2">
+                            <label>Select Position</label>
+                            <select name="position_id" class="form-select" required>
+                                {% for pos in positions %}
+                                    <option value="{{ pos.id }}">{{ pos.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <input type="text" name="candidate_name" class="form-control" placeholder="Candidate Name" required>
+                        </div>
+                        <div class="mb-2">
+                            <input type="text" name="manifesto" class="form-control" placeholder="Slogan / Manifesto" required>
+                        </div>
+                        <button class="btn btn-success w-100">Register Candidate</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between">
+                    <span>📊 Live Election Results</span>
+                    <button onclick="window.location.reload()" class="btn btn-sm btn-light text-primary fw-bold">🔄 Refresh</button>
+                </div>
+                <div class="card-body">
+                    {% for pos in positions %}
+                    <div class="mb-4 border-bottom pb-4">
+                        <h5 class="fw-bold text-uppercase text-secondary">{{ pos.title }}</h5>
+                        <div style="height: 200px;">
+                            <canvas id="chart-{{ pos.id }}"></canvas>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-5">No elections active. Add positions to start.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    {% for pos in positions %}
+    new Chart(document.getElementById('chart-{{ pos.id }}'), {
+        type: 'bar',
+        data: {
+            labels: {{ chart_data[pos.id]['labels'] | tojson }},
+            datasets: [{
+                label: 'Votes',
+                data: {{ chart_data[pos.id]['data'] | tojson }},
+                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1']
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+    {% endfor %}
+</script>
+{% endblock %}

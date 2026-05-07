@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>₦ Bursary Department</h2>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('debtors_list') }}" class="btn btn-danger">📋 View Debtors List</a>
+            <button onclick="window.print()" class="btn btn-outline-dark">🖨️ Print Report</button>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-start border-5 border-success text-white bg-success bg-gradient">
+                <div class="card-body">
+                    <h5 class="card-title opacity-75">Total Revenue Generated</h5>
+                    <h2 class="display-5 fw-bold">₦{{ "{:,.2f}".format(revenue) }}</h2>
+                    <p class="mb-0 small">Lifetime Income</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-start border-5 border-primary">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Transaction Volume</h5>
+                    <h2 class="display-5 fw-bold text-primary">{{ tx_count }}</h2>
+                    <p class="mb-0 small text-muted">Total Receipts Issued</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-start border-5 border-danger">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Outstanding Debtors</h5>
+                    <h2 class="display-5 fw-bold text-danger">{{ debtors }}</h2>
+                    <p class="mb-0 small text-muted">Students yet to pay</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white fw-bold">🔍 Verify Receipt</div>
+                <div class="card-body">
+                    <form action="{{ url_for('verify_payment') }}" method="POST">
+                        <label class="form-label">Payment Reference Ref</label>
+                        <div class="input-group mb-3">
+                            <input type="text" name="reference" class="form-control" placeholder="e.g. LASU-XYZ123" required>
+                            <button class="btn btn-dark" type="submit">Check</button>
+                        </div>
+                    </form>
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <div class="alert alert-info small">{{ messages[0] }}</div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-bold">Payment Compliance</div>
+                <div class="card-body">
+                    <canvas id="financeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">Recent Transactions</div>
+                <div class="card-body p-0">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Reference</th>
+                                <th>Student</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pay in recents %}
+                            <tr>
+                                <td class="small">{{ pay.date_paid.strftime('%d-%b-%Y') }}</td>
+                                <td class="small font-monospace">{{ pay.reference }}</td>
+                                <td>
+                                    <div class="fw-bold">{{ pay.student.name }}</div>
+                                    <small class="text-muted">{{ pay.student.matric_no }}</small>
+                                </td>
+                                <td class="fw-bold text-success">₦{{ "{:,.0f}".format(pay.amount) }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center py-4">No transactions found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('financeChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Paid Fees', 'Debtors'],
+            datasets: [{
+                data: [{{ paid }}, {{ debtors }}],
+                backgroundColor: ['#198754', '#dc3545']
+            }]
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithmic Drum Machine | Tool</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --surface: #1e293b;
+            --background: #0b1120;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --border: #334155;
+            
+            --kick-color: #ef4444;
+            --snare-color: #3b82f6;
+            --hihat-color: #10b981;
+            --clap-color: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .app-container { max-width: 1000px; margin: 0 auto; }
+
+        .header { margin-bottom: 2rem; }
+        .back-link { color: #38bdf8; text-decoration: none; font-weight: 600; display: inline-block; margin-bottom: 0.5rem; transition: 0.2s; }
+        .back-link:hover { opacity: 0.8; }
+
+        .machine-chassis {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--primary);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .transport-controls { display: flex; gap: 1rem; align-items: center; }
+
+        .btn {
+            background: #334155;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn:hover { background: #475569; }
+        .btn.active { background: #10b981; color: #000; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+
+        .bpm-control { display: flex; align-items: center; gap: 1rem; }
+        .bpm-control input[type="range"] { width: 150px; cursor: pointer; }
+        .bpm-display { font-family: monospace; font-size: 1.5rem; font-weight: bold; color: #38bdf8; width: 70px; }
+
+        .sequencer-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .track {
+            display: flex;
+            align-items: center;
+            background: var(--primary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .track-label {
+            width: 100px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 0.25rem;
+            flex: 1;
+        }
+
+        .step {
+            aspect-ratio: 1;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .step:nth-child(4n+1) { background: #263346; } /* Highlight every downbeat */
+
+        /* Instrument Active Colors */
+        .track-kick .step.active { background: var(--kick-color); box-shadow: 0 0 10px var(--kick-color); border-color: var(--kick-color); }
+        .track-snare .step.active { background: var(--snare-color); box-shadow: 0 0 10px var(--snare-color); border-color: var(--snare-color); }
+        .track-hihat .step.active { background: var(--hihat-color); box-shadow: 0 0 10px var(--hihat-color); border-color: var(--hihat-color); }
+        .track-clap .step.active { background: var(--clap-color); box-shadow: 0 0 10px var(--clap-color); border-color: var(--clap-color); }
+
+        /* Playhead UI */
+        .step.current-beat { border: 2px solid #fff; transform: scale(1.1); z-index: 2; }
+
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <a href="{{ url_for('student_portal') }}" class="back-link">← Back To Dashboard</a>
+        <h1>Algorithmic Beat Sequencer</h1>
+        <p style="color: var(--text-muted);">Real-time procedural audio synthesis engine. 16-Step architecture.</p>
+    </div>
+
+    <div class="machine-chassis">
+        <div class="control-panel">
+            <div class="transport-controls">
+                <button class="btn" id="playBtn"><i class="fas fa-play"></i> PLAY</button>
+                <button class="btn" id="clearBtn"><i class="fas fa-trash"></i> CLEAR</button>
+            </div>
+            <div class="bpm-control">
+                <span style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; font-weight: bold;">TEMPO</span>
+                <input type="range" id="bpmSlider" min="60" max="200" value="120">
+                <div class="bpm-display"><span id="bpmValue">120</span></div>
+            </div>
+        </div>
+
+        <div class="sequencer-grid" id="sequencerGrid">
+            </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Algorithmic Drum Synthesizer Engine
+     */
+    class DrumMachine {
+        constructor() {
+            this.audioCtx = null;
+            this.isPlaying = false;
+            
+            // Scheduling Architecture
+            this.bpm = 120;
+            this.currentStep = 0;
+            this.nextNoteTime = 0.0;
+            this.scheduleAheadTime = 0.1;
+            this.lookahead = 25.0;
+            this.timerID = null;
+
+            // Matrix State [trackIndex][stepIndex]
+            this.tracks = [
+                { id: 'kick', name: 'Kick (808)', class: 'track-kick' },
+                { id: 'snare', name: 'Snare', class: 'track-snare' },
+                { id: 'hihat', name: 'Hi-Hat (CC)', class: 'track-hihat' },
+                { id: 'clap', name: 'Clap', class: 'track-clap' }
+            ];
+            this.matrix = Array(this.tracks.length).fill().map(() => Array(16).fill(false));
+
+            // Default simple house beat
+            this.matrix[0][0] = true; this.matrix[0][4] = true; this.matrix[0][8] = true; this.matrix[0][12] = true; // 4 on floor
+            this.matrix[1][4] = true; this.matrix[1][12] = true; // Snare on 2 and 4
+            for(let i=0; i<16; i+=2) this.matrix[2][i] = true; // 8th note hi-hats
+
+            this.noiseBuffer = null;
+
+            this.initUI();
+            this.initBindings();
+        }
+
+        initUI() {
+            const grid = document.getElementById('sequencerGrid');
+            
+            this.tracks.forEach((track, tIndex) => {
+                const trackRow = document.createElement('div');
+                trackRow.className = `track ${track.class}`;
+                
+                const label = document.createElement('div');
+                label.className = 'track-label';
+                label.textContent = track.name;
+                trackRow.appendChild(label);
+
+                const stepsContainer = document.createElement('div');
+                stepsContainer.className = 'steps-container';
+
+                for (let sIndex = 0; sIndex < 16; sIndex++) {
+                    const step = document.createElement('div');
+                    step.className = 'step';
+                    if (this.matrix[tIndex][sIndex]) step.classList.add('active');
+                    
+                    // Interaction
+                    step.addEventListener('mousedown', () => {
+                        this.matrix[tIndex][sIndex] = !this.matrix[tIndex][sIndex];
+                        step.classList.toggle('active');
+                    });
+                    // Allow click & drag to paint steps
+                    step.addEventListener('mouseenter', (e) => {
+                        if (e.buttons === 1) {
+                            this.matrix[tIndex][sIndex] = !this.matrix[tIndex][sIndex];
+                            step.classList.toggle('active');
+                        }
+                    });
+
+                    step.dataset.step = sIndex; // Store for visual playhead
+                    stepsContainer.appendChild(step);
+                }
+                
+                trackRow.appendChild(stepsContainer);
+                grid.appendChild(trackRow);
+            });
+        }
+
+        initBindings() {
+            document.getElementById('playBtn').addEventListener('click', (e) => this.togglePlay(e.target));
+            document.getElementById('clearBtn').addEventListener('click', () => this.clearMatrix());
+            
+            const bpmSlider = document.getElementById('bpmSlider');
+            bpmSlider.addEventListener('input', (e) => {
+                this.bpm = parseInt(e.target.value);
+                document.getElementById('bpmValue').textContent = this.bpm;
+            });
+        }
+
+        clearMatrix() {
+            this.matrix = Array(this.tracks.length).fill().map(() => Array(16).fill(false));
+            document.querySelectorAll('.step.active').forEach(el => el.classList.remove('active'));
+        }
+
+        initAudio() {
+            if (!this.audioCtx) {
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                this.createNoiseBuffer(); // Required for Snare and Hats
+            }
+            if (this.audioCtx.state === 'suspended') {
+                this.audioCtx.resume();
+            }
+        }
+
+        createNoiseBuffer() {
+            const bufferSize = this.audioCtx.sampleRate * 2; // 2 seconds of noise
+            this.noiseBuffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+            const output = this.noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+        }
+
+        /* --- SYNTHESIS ALGORITHMS --- */
+
+        playKick(time) {
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
+
+            // Pitch envelope (The "Thump")
+            osc.frequency.setValueAtTime(150, time);
+            osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.5);
+
+            // Amplitude envelope
+            gain.gain.setValueAtTime(1, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
+
+            osc.start(time);
+            osc.stop(time + 0.5);
+        }
+
+        playSnare(time) {
+            // Noise burst
+            const noise = this.audioCtx.createBufferSource();
+            noise.buffer = this.noiseBuffer;
+            const noiseFilter = this.audioCtx.createBiquadFilter();
+            noiseFilter.type = 'highpass';
+            noiseFilter.frequency.value = 1000;
+            const noiseGain = this.audioCtx.createGain();
+
+            // Tone (The "Body" of the snare)
+            const osc = this.audioCtx.createOscillator();
+            osc.type = 'triangle';
+            const oscGain = this.audioCtx.createGain();
+
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(this.audioCtx.destination);
+
+            osc.connect(oscGain);
+            oscGain.connect(this.audioCtx.destination);
+
+            // Envelopes
+            noiseGain.gain.setValueAtTime(1, time);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+            
+            osc.frequency.setValueAtTime(250, time);
+            oscGain.gain.setValueAtTime(0.7, time);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+
+            noise.start(time);
+            osc.start(time);
+            noise.stop(time + 0.2);
+            osc.stop(time + 0.1);
+        }
+
+        playHiHat(time) {
+            const noise = this.audioCtx.createBufferSource();
+            noise.buffer = this.noiseBuffer;
+            
+            const bandpass = this.audioCtx.createBiquadFilter();
+            bandpass.type = 'bandpass';
+            bandpass.frequency.value = 10000;
+            
+            const highpass = this.audioCtx.createBiquadFilter();
+            highpass.type = 'highpass';
+            highpass.frequency.value = 7000;
+
+            const gain = this.audioCtx.createGain();
+
+            noise.connect(bandpass);
+            bandpass.connect(highpass);
+            highpass.connect(gain);
+            gain.connect(this.audioCtx.destination);
+
+            // Very short envelope for crisp Closed Hat sound
+            gain.gain.setValueAtTime(0.5, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+
+            noise.start(time);
+            noise.stop(time + 0.05);
+        }
+
+        playClap(time) {
+            // A clap is essentially a series of very fast noise bursts
+            const noise = this.audioCtx.createBufferSource();
+            noise.buffer = this.noiseBuffer;
+            
+            const filter = this.audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 1500;
+
+            const gain = this.audioCtx.createGain();
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.audioCtx.destination);
+
+            gain.gain.setValueAtTime(0, time);
+            // Simulate hands hitting slightly out of sync
+            gain.gain.linearRampToValueAtTime(0.8, time + 0.01);
+            gain.gain.linearRampToValueAtTime(0, time + 0.02);
+            gain.gain.linearRampToValueAtTime(1, time + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+
+            noise.start(time);
+            noise.stop(time + 0.3);
+        }
+
+        /* --- SCHEDULING ALGORITHM --- */
+
+        nextNote() {
+            const secondsPerBeat = 60.0 / this.bpm;
+            this.nextNoteTime += 0.25 * secondsPerBeat; // 16th note timing
+            this.currentStep++;
+            if (this.currentStep === 16) {
+                this.currentStep = 0;
+            }
+        }
+
+        scheduleNote(stepNumber, time) {
+            // Trigger Synthesizers based on matrix state
+            if (this.matrix[0][stepNumber]) this.playKick(time);
+            if (this.matrix[1][stepNumber]) this.playSnare(time);
+            if (this.matrix[2][stepNumber]) this.playHiHat(time);
+            if (this.matrix[3][stepNumber]) this.playClap(time);
+
+            // Sync visual playhead
+            const timeUntilVisual = (time - this.audioCtx.currentTime) * 1000;
+            setTimeout(() => {
+                document.querySelectorAll('.step').forEach(el => el.classList.remove('current-beat'));
+                document.querySelectorAll(`.step[data-step="${stepNumber}"]`).forEach(el => el.classList.add('current-beat'));
+            }, Math.max(0, timeUntilVisual));
+        }
+
+        scheduler() {
+            while (this.nextNoteTime < this.audioCtx.currentTime + this.scheduleAheadTime) {
+                this.scheduleNote(this.currentStep, this.nextNoteTime);
+                this.nextNote();
+            }
+            this.timerID = setTimeout(() => this.scheduler(), this.lookahead);
+        }
+
+        togglePlay(btnElement) {
+            this.initAudio();
+
+            if (this.isPlaying) {
+                clearTimeout(this.timerID);
+                this.isPlaying = false;
+                btnElement.classList.remove('active');
+                btnElement.innerHTML = '<i class="fas fa-play"></i> PLAY';
+                document.querySelectorAll('.step').forEach(el => el.classList.remove('current-beat'));
+            } else {
+                this.isPlaying = true;
+                this.currentStep = 0;
+                this.nextNoteTime = this.audioCtx.currentTime + 0.05;
+                this.scheduler();
+                btnElement.classList.add('active');
+                btnElement.innerHTML = '<i class="fas fa-stop"></i> STOP';
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => new DrumMachine());
+</script>
+
+</body>
+</html>

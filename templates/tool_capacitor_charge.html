@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacitor Charge Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1.1rem;
+            color: #495057;
+            width: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        .input-label small { font-size: 0.75rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; margin-top: 2px;}
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-select {
+            background: #f8f9fa;
+            border: none;
+            border-left: 1px solid #ced4da;
+            padding: 0 10px;
+            font-weight: 800;
+            color: var(--math-blue);
+            outline: none;
+            cursor: pointer;
+            font-family: 'Fira Code', monospace;
+            text-align: center;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info-custom {
+            background: rgba(13, 110, 253, 0.05);
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            color: var(--math-blue);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: auto;
+            line-height: 1.5;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .formula-display {
+            background: #212529;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.6rem;
+            text-align: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 120px;
+        }
+        .formula-display span { color: var(--math-orange); font-weight: 800; }
+        .formula-sub { font-size: 0.9rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .result-box.highlight {
+            background: rgba(25, 135, 84, 0.05);
+            border-color: rgba(25, 135, 84, 0.2);
+        }
+
+        .res-label {
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .res-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+        .res-unit { font-size: 1rem; color: #adb5bd; }
+        
+        .highlight .res-val { color: var(--lasu-accent); font-size: 2.2rem; margin: 0; }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            min-height: 400px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #rcCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .result-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-car-battery"></i> RC Circuit Params
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid positive numbers.
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-primary">Voltage <small>(V_s)</small></div>
+                <input type="number" class="num-input" id="valV" value="5" step="any" oninput="calculateRC()">
+                <div class="unit-select" style="pointer-events: none;">V</div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-danger">Resistance <small>(R)</small></div>
+                <input type="number" class="num-input" id="valR" value="10" step="any" oninput="calculateRC()">
+                <select class="unit-select text-danger" id="unitR" onchange="calculateRC()">
+                    <option value="1">&Omega;</option>
+                    <option value="1000" selected>k&Omega;</option>
+                    <option value="1000000">M&Omega;</option>
+                </select>
+            </div>
+
+            <div class="input-group-custom mb-0">
+                <div class="input-label text-success">Capacitance <small>(C)</small></div>
+                <input type="number" class="num-input" id="valC" value="100" step="any" oninput="calculateRC()">
+                <select class="unit-select text-success" id="unitC" onchange="calculateRC()">
+                    <option value="1">F</option>
+                    <option value="0.001">mF</option>
+                    <option value="0.000001" selected>&mu;F</option>
+                    <option value="0.000000001">nF</option>
+                    <option value="0.000000000001">pF</option>
+                </select>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-4" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Values
+            </button>
+
+            <div class="alert-info-custom mt-auto">
+                <i class="fas fa-chart-line mb-2 fa-lg"></i><br>
+                <strong>The 5-Tau Rule:</strong><br>
+                A capacitor in an RC circuit is considered fully charged (99.3%) after exactly 5 time constants (5&tau;).
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            
+            <div class="formula-display" id="formulaScreen">
+                &tau; = R &times; C = <span>1.00</span> s
+                <div class="formula-sub">Time Constant (&tau;) Formula</div>
+            </div>
+
+            <div class="result-grid">
+                <div class="result-box highlight">
+                    <div class="res-label text-success">Total Charge Time (5&tau;)</div>
+                    <div class="res-val" id="resCharge">5.000 <span class="res-unit">s</span></div>
+                </div>
+                
+                <div class="result-box">
+                    <div class="res-label text-primary">Time Constant (&tau;)</div>
+                    <div class="res-val" id="resTau">1.000 <span class="res-unit">s</span></div>
+                    <div class="text-muted small fw-bold mt-1">63.2% Charged</div>
+                </div>
+
+                <div class="result-box">
+                    <div class="res-label text-warning">Stored Energy (E)</div>
+                    <div class="res-val" id="resEnergy">1.250 <span class="res-unit">mJ</span></div>
+                    <div class="text-muted small fw-bold mt-1">E = &frac12;CV&sup2;</div>
+                </div>
+            </div>
+
+            <div class="pane-header text-dark border-0 mt-4 mb-2 pb-0">
+                <i class="fas fa-wave-square text-primary"></i> RC Transient Charging Curve
+            </div>
+
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="rcCanvas"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valV = document.getElementById('valV');
+    const valR = document.getElementById('valR');
+    const valC = document.getElementById('valC');
+    
+    const unitR = document.getElementById('unitR');
+    const unitC = document.getElementById('unitC');
+    
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const resCharge = document.getElementById('resCharge');
+    const resTau = document.getElementById('resTau');
+    const resEnergy = document.getElementById('resEnergy');
+    const formulaScreen = document.getElementById('formulaScreen');
+
+    const canvas = document.getElementById('rcCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    function resizeCanvas() {
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        if(cw === 0 || ch === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = cw * dpr;
+        canvas.height = ch * dpr;
+        
+        canvas.style.width = `${cw}px`;
+        canvas.style.height = `${ch}px`;
+        
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        calculateRC();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function formatTime(seconds) {
+        if (seconds >= 1) return { val: seconds.toFixed(3), unit: 's' };
+        if (seconds >= 1e-3) return { val: (seconds * 1e3).toFixed(3), unit: 'ms' };
+        if (seconds >= 1e-6) return { val: (seconds * 1e6).toFixed(3), unit: '&mu;s' };
+        return { val: (seconds * 1e9).toFixed(3), unit: 'ns' };
+    }
+
+    function formatEnergy(joules) {
+        if (joules >= 1) return { val: joules.toFixed(3), unit: 'J' };
+        if (joules >= 1e-3) return { val: (joules * 1e3).toFixed(3), unit: 'mJ' };
+        if (joules >= 1e-6) return { val: (joules * 1e6).toFixed(3), unit: '&mu;J' };
+        return { val: (joules * 1e9).toFixed(3), unit: 'nJ' };
+    }
+
+    // --- MATH ENGINE ---
+    function calculateRC() {
+        const v = parseFloat(valV.value);
+        const r_base = parseFloat(valR.value);
+        const c_base = parseFloat(valC.value);
+
+        if (isNaN(v) || isNaN(r_base) || isNaN(c_base) || v <= 0 || r_base <= 0 || c_base <= 0) {
+            errorBanner.style.display = 'block';
+            resetOutputs();
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        // Apply multipliers
+        const r = r_base * parseFloat(unitR.value);
+        const c = c_base * parseFloat(unitC.value);
+
+        // Core Physics Math
+        const tau = r * c; // Time constant in seconds
+        const chargeTime = 5 * tau; // Full charge time
+        const energy = 0.5 * c * Math.pow(v, 2); // Joules
+
+        // Format for UI
+        const fmtTau = formatTime(tau);
+        const fmtCharge = formatTime(chargeTime);
+        const fmtEnergy = formatEnergy(energy);
+
+        formulaScreen.innerHTML = `&tau; = R &times; C = <span>${fmtTau.val}</span> ${fmtTau.unit}<div class="formula-sub">Time Constant (&tau;) Formula</div>`;
+        
+        resTau.innerHTML = `${fmtTau.val} <span class="res-unit">${fmtTau.unit}</span>`;
+        resCharge.innerHTML = `${fmtCharge.val} <span class="res-unit">${fmtCharge.unit}</span>`;
+        resEnergy.innerHTML = `${fmtEnergy.val} <span class="res-unit">${fmtEnergy.unit}</span>`;
+
+        drawCurve(tau, v, fmtTau.unit);
+    }
+
+    // --- CANVAS TRANSIENT CURVE ENGINE ---
+    function drawCurve(tau, vMax, timeUnit) {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const paddingX = 60;
+        const paddingY = 40;
+
+        const graphW = cw - (paddingX * 2);
+        const graphH = ch - (paddingY * 2);
+        const originX = paddingX;
+        const originY = ch - paddingY;
+
+        // Draw Grid and Axis
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#495057';
+        
+        // Y Axis (Voltage)
+        ctx.beginPath();
+        ctx.moveTo(originX, originY);
+        ctx.lineTo(originX, paddingY - 10);
+        ctx.stroke();
+
+        // X Axis (Time)
+        ctx.beginPath();
+        ctx.moveTo(originX, originY);
+        ctx.lineTo(cw - paddingX + 20, originY);
+        ctx.stroke();
+
+        // Labels
+        ctx.font = 'bold 14px "Fira Code", monospace';
+        ctx.fillStyle = '#adb5bd';
+        ctx.textAlign = 'right';
+        ctx.fillText(`V_s (${vMax}V)`, originX - 10, paddingY);
+        ctx.fillText('0V', originX - 10, originY);
+
+        ctx.textAlign = 'center';
+        ctx.fillText(`Time (t)`, cw / 2, originY + 30);
+
+        // Draw the 5 Tau lines
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#343a40';
+        ctx.setLineDash([5, 5]);
+        
+        const tauPercents = [0.632, 0.865, 0.950, 0.982, 0.993];
+        
+        for (let i = 1; i <= 5; i++) {
+            let x = originX + (i / 5) * graphW;
+            
+            // Vertical Line
+            ctx.beginPath();
+            ctx.moveTo(x, originY);
+            ctx.lineTo(x, paddingY);
+            ctx.stroke();
+
+            // Label Tau
+            ctx.fillStyle = '#198754';
+            ctx.fillText(`${i}\u03C4`, x, originY + 20);
+
+            // Label Percentage
+            ctx.fillStyle = '#fd7e14';
+            ctx.fillText(`${(tauPercents[i-1] * 100).toFixed(1)}%`, x, paddingY - 10);
+        }
+        ctx.setLineDash([]);
+
+        // Plot the Exponential Curve: V(t) = V_s * (1 - e^(-t/tau))
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#0d6efd';
+        ctx.shadowColor = '#0d6efd';
+        ctx.shadowBlur = 10;
+        
+        ctx.beginPath();
+        ctx.moveTo(originX, originY); // Start at 0,0
+
+        // Plot 100 points along the width
+        for (let i = 0; i <= 100; i++) {
+            let pctX = i / 100;
+            // X axis represents exactly 5 tau total
+            let t = pctX * 5 * tau; 
+            
+            let vt = vMax * (1 - Math.exp(-t / tau));
+            
+            let plotX = originX + (pctX * graphW);
+            let plotY = originY - ((vt / vMax) * graphH);
+
+            ctx.lineTo(plotX, plotY);
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0; // reset
+    }
+
+    function resetOutputs() {
+        resTau.innerHTML = '-- <span class="res-unit">s</span>';
+        resCharge.innerHTML = '-- <span class="res-unit">s</span>';
+        resEnergy.innerHTML = '-- <span class="res-unit">J</span>';
+        formulaScreen.innerHTML = `&tau; = R &times; C<div class="formula-sub">Awaiting valid input...</div>`;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function clearInputs() {
+        valV.value = '';
+        valR.value = '';
+        valC.value = '';
+        errorBanner.style.display = 'block';
+        errorBanner.innerText = 'Waiting for input...';
+        resetOutputs();
+    }
+
+    // SAFE INIT
+    setTimeout(() => {
+        resizeCanvas();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

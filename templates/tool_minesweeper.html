@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V25000 Ordinance Sweeper | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V25000 ORDINANCE SWEEPER THEME ENGINE
+           ========================================== */
+        
+        [data-theme="dark"] {
+            --nk-bg: #0b0f19;
+            --nk-surface: #131a2a;
+            --nk-text: #e2e8f0;
+            --nk-text-muted: #475569;
+            --nk-accent: #3b82f6; /* Tactical Blue */
+            --nk-accent-glow: rgba(59, 130, 246, 0.3);
+            --nk-error: #ef4444; /* Detonation Red */
+            --nk-flag: #f59e0b; /* Flag Amber */
+            --nk-border: #1e293b;
+            
+            --cell-hidden: #1e293b;
+            --cell-hover: #334155;
+            --cell-revealed: #0b0f19;
+        }
+
+        [data-theme="light"] {
+            --nk-bg: #f8fafc;
+            --nk-surface: #ffffff;
+            --nk-text: #0f172a;
+            --nk-text-muted: #94a3b8;
+            --nk-accent: #2563eb; 
+            --nk-accent-glow: rgba(37, 99, 235, 0.2);
+            --nk-error: #dc2626;
+            --nk-flag: #d97706;
+            --nk-border: #cbd5e1;
+
+            --cell-hidden: #cbd5e1;
+            --cell-hover: #94a3b8;
+            --cell-revealed: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--nk-bg);
+            color: var(--nk-text);
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .test-container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        /* HUD Header */
+        .nk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--nk-border);
+        }
+
+        .nk-title {
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            color: var(--nk-accent);
+            text-shadow: 0 0 15px var(--nk-accent-glow);
+        }
+
+        .btn-nav {
+            background: transparent;
+            color: var(--nk-text);
+            border: 1px solid var(--nk-border);
+            padding: 10px 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-nav:hover { background: var(--nk-surface); border-color: var(--nk-accent); color: var(--nk-accent); }
+
+        /* Telemetry Dashboard */
+        .telemetry-dash {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .telemetry-node {
+            background: var(--nk-surface);
+            border: 1px solid var(--nk-border);
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .node-val {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--nk-text);
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .node-lbl {
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: var(--nk-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Layout Structure */
+        .main-layout {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout { flex-direction: column-reverse; align-items: center; }
+            .control-panel { width: 100%; max-width: 500px; }
+        }
+
+        /* Control Panel */
+        .control-panel {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: var(--nk-surface);
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid var(--nk-border);
+            min-width: 280px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .panel-label {
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: var(--nk-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .form-select {
+            background-color: var(--nk-bg);
+            color: var(--nk-text);
+            border: 2px solid var(--nk-border);
+            padding: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 4px;
+            outline: none;
+            width: 100%;
+        }
+        .form-select:focus { border-color: var(--nk-accent); }
+
+        .btn-action {
+            background: var(--nk-surface);
+            color: var(--nk-text);
+            border: 2px solid var(--nk-border);
+            padding: 15px 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .btn-action:hover { border-color: var(--nk-text); }
+        .btn-action.active-btn { background: var(--nk-text); color: var(--nk-bg); border-color: var(--nk-text); }
+        
+        .btn-start {
+            background: var(--nk-accent);
+            color: #ffffff;
+            border: none;
+            margin-top: 10px;
+        }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--nk-accent-glow); border: none; }
+
+        /* The Grid Arena */
+        .arena-box {
+            background-color: var(--nk-border);
+            border-radius: 8px;
+            padding: 10px;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            border: 4px solid var(--nk-border);
+            display: inline-block;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .sweeper-grid {
+            display: grid;
+            gap: 2px;
+            background-color: var(--nk-bg);
+            border: 2px solid var(--nk-bg);
+        }
+
+        .grid-cell {
+            width: 32px;
+            height: 32px;
+            background-color: var(--cell-hidden);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        /* Hover only applies to unrevealed cells */
+        .grid-cell:not(.revealed):hover {
+            background-color: var(--cell-hover);
+        }
+
+        .grid-cell.revealed {
+            background-color: var(--cell-revealed);
+            cursor: default;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        /* Tactical Numerical Colors */
+        .val-1 { color: #3b82f6; } /* Blue */
+        .val-2 { color: #10b981; } /* Green */
+        .val-3 { color: #ef4444; } /* Red */
+        .val-4 { color: #8b5cf6; } /* Purple */
+        .val-5 { color: #f59e0b; } /* Orange */
+        .val-6 { color: #06b6d4; } /* Cyan */
+        .val-7 { color: #000000; } /* Black */
+        .val-8 { color: #64748b; } /* Gray */
+
+        .flagged {
+            color: var(--nk-flag);
+        }
+
+        .detonated {
+            background-color: var(--nk-error) !important;
+            color: #ffffff;
+            box-shadow: 0 0 15px var(--nk-error);
+        }
+
+        /* Status Overlay */
+        .status-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            display: none;
+        }
+
+        .overlay-text {
+            font-size: 3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .grid-cell { width: 28px; height: 28px; font-size: 1rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="test-container">
+        
+        <div class="nk-header">
+            <div>
+                <h1 class="nk-title">Ordinance Sweeper</h1>
+                <div style="font-size: 0.8rem; font-weight: bold; color: var(--nk-text-muted); letter-spacing: 3px; margin-top: 5px;">V25000 Tactical Defusal Matrix</div>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn-nav" onclick="toggleSweeperTheme()"><i class="fas fa-adjust"></i></button>
+                <a href="{{ url_for('student_tools_dashboard') }}" class="btn-nav"><i class="fas fa-arrow-left me-2"></i> Dashboard</a>
+            </div>
+        </div>
+
+        <div class="telemetry-dash">
+            <div class="telemetry-node">
+                <div class="node-val" id="hudBombs" style="color: var(--nk-error);">0</div>
+                <div class="node-lbl">Ordinances Remaining</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudTimer">00:00</div>
+                <div class="node-lbl">Chronometer</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudSafe" style="color: var(--nk-accent);">0</div>
+                <div class="node-lbl">Safe Nodes Cleared</div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            
+            <div class="control-panel">
+                
+                <div>
+                    <div class="panel-label">Matrix Density</div>
+                    <select id="difficultySelect" class="form-select" onchange="executeProtocolInitialization()">
+                        <option value="EASY">Initiate (9x9 | 10 Bombs)</option>
+                        <option value="MEDIUM" selected>Operative (16x16 | 40 Bombs)</option>
+                        <option value="HARD">Grandmaster (30x16 | 99 Bombs)</option>
+                    </select>
+                </div>
+
+                <div style="border-top: 1px solid var(--nk-border); margin: 5px 0;"></div>
+                
+                <div class="panel-label">Tactical Action Mode</div>
+                <div class="d-flex gap-2">
+                    <button class="btn-action active-btn" id="btnModeSweep" onclick="setActionMode('SWEEP')"><i class="fas fa-search me-2"></i> Sweep</button>
+                    <button class="btn-action" id="btnModeFlag" onclick="setActionMode('FLAG')"><i class="fas fa-flag me-2"></i> Flag</button>
+                </div>
+                <div style="font-size: 0.7rem; color: var(--nk-text-muted); text-align: center; margin-top: 5px; text-transform: uppercase;">(Right-Click also Flags)</div>
+
+                <div style="border-top: 1px solid var(--nk-border); margin: 5px 0;"></div>
+
+                <button class="btn-action btn-start" onclick="executeProtocolInitialization()"><i class="fas fa-power-off me-2"></i> Rebuild Matrix</button>
+
+                <div id="systemStatus" style="text-align: center; margin-top: 15px; font-weight: bold; color: var(--nk-text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">
+                    SYSTEM STANDBY
+                </div>
+
+            </div>
+
+            <div class="arena-box">
+                
+                <div class="status-overlay" id="statusOverlay">
+                    <div class="overlay-text" id="overlayText">DETONATION</div>
+                    <button class="btn-action btn-start" style="width: auto;" onclick="executeProtocolInitialization()">Deploy New Matrix</button>
+                </div>
+
+                <div class="sweeper-grid" id="gridContainer">
+                    </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V25000 THEME ENGINE
+        // ==========================================
+        function toggleSweeperTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v25000_sweeper_theme', nextTheme);
+        }
+
+        // ==========================================
+        // GLOBAL REGISTERS
+        // ==========================================
+        let matrixArray = [];
+        let currentRows = 16;
+        let currentCols = 16;
+        let totalBombs = 40;
+        
+        let flagsPlaced = 0;
+        let cellsRevealed = 0;
+        
+        let isFirstClick = true;
+        let isEngineLocked = false;
+        let currentActionMode = "SWEEP";
+
+        let timerSeconds = 0;
+        let timerIntervalObject = null;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v25000_sweeper_theme');
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+            executeProtocolInitialization();
+        });
+
+        // ==========================================
+        // UI & HARDWARE CONTROLLERS
+        // ==========================================
+        function setActionMode(modeString) {
+            currentActionMode = modeString;
+            if (modeString === "SWEEP") {
+                document.getElementById('btnModeSweep').classList.add('active-btn');
+                document.getElementById('btnModeFlag').classList.remove('active-btn');
+            } else {
+                document.getElementById('btnModeFlag').classList.add('active-btn');
+                document.getElementById('btnModeSweep').classList.remove('active-btn');
+            }
+        }
+
+        function updateHUD() {
+            let remainingBombs = totalBombs - flagsPlaced;
+            document.getElementById('hudBombs').innerText = String(remainingBombs);
+            document.getElementById('hudSafe').innerText = String(cellsRevealed);
+            
+            let statusEl = document.getElementById('systemStatus');
+            if (isEngineLocked === true) {
+                // Let the overlay handle the final message
+            } else if (isFirstClick === true) {
+                statusEl.innerText = "AWAITING FIRST STRIKE";
+                statusEl.style.color = "var(--nk-accent)";
+            } else {
+                statusEl.innerText = "DEFUSAL IN PROGRESS";
+                statusEl.style.color = "var(--nk-text)";
+            }
+        }
+
+        function startTimer() {
+            if (timerIntervalObject !== null) { clearInterval(timerIntervalObject); }
+            timerSeconds = 0;
+            document.getElementById('hudTimer').innerText = "00:00";
+
+            timerIntervalObject = setInterval(function() {
+                timerSeconds = timerSeconds + 1;
+                let minutes = Math.floor(timerSeconds / 60);
+                let seconds = timerSeconds % 60;
+                
+                let minStr = String(minutes);
+                let secStr = String(seconds);
+                
+                if (minStr.length < 2) { minStr = "0" + minStr; }
+                if (secStr.length < 2) { secStr = "0" + secStr; }
+                
+                document.getElementById('hudTimer').innerText = minStr + ":" + secStr;
+            }, 1000);
+        }
+
+        // ==========================================
+        // MATRIX GENERATION & FIRST-CLICK PROTOCOL
+        // ==========================================
+        function executeProtocolInitialization() {
+            let difficultyStr = document.getElementById('difficultySelect').value;
+
+            if (difficultyStr === "EASY") {
+                currentRows = 9; currentCols = 9; totalBombs = 10;
+            } else if (difficultyStr === "MEDIUM") {
+                currentRows = 16; currentCols = 16; totalBombs = 40;
+            } else if (difficultyStr === "HARD") {
+                currentRows = 16; currentCols = 30; totalBombs = 99;
+            }
+
+            matrixArray = [];
+            flagsPlaced = 0;
+            cellsRevealed = 0;
+            isFirstClick = true;
+            isEngineLocked = false;
+            
+            if (timerIntervalObject !== null) { clearInterval(timerIntervalObject); }
+            document.getElementById('hudTimer').innerText = "00:00";
+            document.getElementById('statusOverlay').style.display = "none";
+
+            let containerElement = document.getElementById('gridContainer');
+            containerElement.innerHTML = "";
+            containerElement.style.gridTemplateColumns = "repeat(" + String(currentCols) + ", 1fr)";
+
+            for (let r = 0; r < currentRows; r = r + 1) {
+                let rowData = [];
+                for (let c = 0; c < currentCols; c = c + 1) {
+                    
+                    let cellObject = {
+                        isBomb: false,
+                        isRevealed: false,
+                        isFlagged: false,
+                        neighborCount: 0
+                    };
+                    rowData.push(cellObject);
+
+                    // Physical DOM Element
+                    let cellElement = document.createElement("div");
+                    cellElement.className = "grid-cell";
+                    cellElement.id = "c_" + String(r) + "_" + String(c);
+                    
+                    // Left Click Action
+                    cellElement.addEventListener('mousedown', (function(lockedR, lockedC) {
+                        return function(e) {
+                            if (e.button === 0) { // Left click
+                                handleCellInteraction(lockedR, lockedC, currentActionMode);
+                            } else if (e.button === 2) { // Right click
+                                handleCellInteraction(lockedR, lockedC, "FLAG");
+                            }
+                        };
+                    })(r, c));
+
+                    // Prevent context menu on right click
+                    cellElement.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                    });
+
+                    containerElement.appendChild(cellElement);
+                }
+                matrixArray.push(rowData);
+            }
+
+            updateHUD();
+        }
+
+        function executeFirstClickProtocol(safeRow, safeCol) {
+            let bombsDeployed = 0;
+            let safetyLimit = 0;
+
+            while (bombsDeployed < totalBombs && safetyLimit < 10000) {
+                let randR = Math.floor(Math.random() * currentRows);
+                let randC = Math.floor(Math.random() * currentCols);
+
+                // Ensure the clicked cell and its immediate 8 neighbors are 100% safe
+                let distanceR = Math.abs(randR - safeRow);
+                let distanceC = Math.abs(randC - safeCol);
+
+                if (matrixArray[randR][randC].isBomb === false && (distanceR > 1 || distanceC > 1)) {
+                    matrixArray[randR][randC].isBomb = true;
+                    bombsDeployed = bombsDeployed + 1;
+                }
+                safetyLimit = safetyLimit + 1;
+            }
+
+            // Absolute Fallback: If grid is too dense to respect safety radius, just avoid the exact clicked cell
+            while (bombsDeployed < totalBombs) {
+                let randR = Math.floor(Math.random() * currentRows);
+                let randC = Math.floor(Math.random() * currentCols);
+                if (matrixArray[randR][randC].isBomb === false && (randR !== safeRow || randC !== safeCol)) {
+                    matrixArray[randR][randC].isBomb = true;
+                    bombsDeployed = bombsDeployed + 1;
+                }
+            }
+
+            calculateAllNeighbors();
+            startTimer();
+        }
+
+        function calculateAllNeighbors() {
+            for (let r = 0; r < currentRows; r = r + 1) {
+                for (let c = 0; c < currentCols; c = c + 1) {
+                    if (matrixArray[r][c].isBomb === false) {
+                        let count = 0;
+                        for (let i = -1; i <= 1; i = i + 1) {
+                            for (let j = -1; j <= 1; j = j + 1) {
+                                let nr = r + i;
+                                let nc = c + j;
+                                if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols) {
+                                    if (matrixArray[nr][nc].isBomb === true) {
+                                        count = count + 1;
+                                    }
+                                }
+                            }
+                        }
+                        matrixArray[r][c].neighborCount = count;
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // KINETIC TACTICAL ACTIONS
+        // ==========================================
+        function handleCellInteraction(r, c, actionOverride) {
+            if (isEngineLocked === true) { return; }
+
+            if (isFirstClick === true && actionOverride === "SWEEP") {
+                executeFirstClickProtocol(r, c);
+                isFirstClick = false;
+            }
+
+            if (actionOverride === "FLAG") {
+                toggleFlag(r, c);
+            } else if (actionOverride === "SWEEP") {
+                executeFloodFill(r, c);
+            }
+        }
+
+        function toggleFlag(r, c) {
+            let cellObj = matrixArray[r][c];
+            if (cellObj.isRevealed === true) { return; }
+
+            let cellDOM = document.getElementById("c_" + String(r) + "_" + String(c));
+
+            if (cellObj.isFlagged === false) {
+                cellObj.isFlagged = true;
+                cellDOM.classList.add("flagged");
+                cellDOM.innerHTML = "<i class='fas fa-flag'></i>";
+                flagsPlaced = flagsPlaced + 1;
+            } else {
+                cellObj.isFlagged = false;
+                cellDOM.classList.remove("flagged");
+                cellDOM.innerHTML = "";
+                flagsPlaced = flagsPlaced - 1;
+            }
+            updateHUD();
+        }
+
+        function executeFloodFill(r, c) {
+            let cellObj = matrixArray[r][c];
+            
+            if (cellObj.isRevealed === true || cellObj.isFlagged === true) { return; }
+
+            let cellDOM = document.getElementById("c_" + String(r) + "_" + String(c));
+            
+            // Check Death
+            if (cellObj.isBomb === true) {
+                triggerGameOver(false, r, c);
+                return;
+            }
+
+            // Safe Reveal
+            cellObj.isRevealed = true;
+            cellDOM.classList.add("revealed");
+            cellsRevealed = cellsRevealed + 1;
+            
+            if (cellObj.neighborCount > 0) {
+                cellDOM.innerText = String(cellObj.neighborCount);
+                cellDOM.classList.add("val-" + String(cellObj.neighborCount));
+            } else {
+                // Recursive Depth-First Search for empty zones
+                for (let i = -1; i <= 1; i = i + 1) {
+                    for (let j = -1; j <= 1; j = j + 1) {
+                        if (i !== 0 || j !== 0) {
+                            let nr = r + i;
+                            let nc = c + j;
+                            if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols) {
+                                executeFloodFill(nr, nc);
+                            }
+                        }
+                    }
+                }
+            }
+
+            updateHUD();
+            verifyVictoryCondition();
+        }
+
+        // ==========================================
+        // ENDGAME LOGIC
+        // ==========================================
+        function verifyVictoryCondition() {
+            let safeNodesTotal = (currentRows * currentCols) - totalBombs;
+            if (cellsRevealed === safeNodesTotal) {
+                triggerGameOver(true, -1, -1);
+            }
+        }
+
+        function triggerGameOver(isVictory, hitR, hitC) {
+            isEngineLocked = true;
+            clearInterval(timerIntervalObject);
+            
+            let overlayElement = document.getElementById('statusOverlay');
+            let textElement = document.getElementById('overlayText');
+
+            // Reveal all unflagged bombs and show wrong flags
+            for (let r = 0; r < currentRows; r = r + 1) {
+                for (let c = 0; c < currentCols; c = c + 1) {
+                    let cellObj = matrixArray[r][c];
+                    let cellDOM = document.getElementById("c_" + String(r) + "_" + String(c));
+
+                    if (cellObj.isBomb === true) {
+                        if (cellObj.isFlagged === false) {
+                            cellDOM.innerHTML = "<i class='fas fa-bomb'></i>";
+                            if (r === hitR && c === hitC) {
+                                cellDOM.classList.add("detonated"); // Highlight the killer bomb
+                            } else if (isVictory === false) {
+                                cellDOM.style.color = "var(--nk-text-muted)"; // Show other bombs muted
+                            } else {
+                                // If victory, auto-flag all remaining bombs green
+                                cellDOM.innerHTML = "<i class='fas fa-flag'></i>";
+                                cellDOM.style.color = "var(--nk-accent)";
+                            }
+                        }
+                    } else if (cellObj.isFlagged === true && cellObj.isBomb === false) {
+                        // Flagged incorrectly
+                        cellDOM.innerHTML = "<i class='fas fa-times'></i>";
+                        cellDOM.style.color = "var(--nk-error)";
+                    }
+                }
+            }
+
+            overlayElement.style.display = "flex";
+
+            if (isVictory === true) {
+                textElement.innerText = "MATRIX SECURED";
+                textElement.style.color = "var(--nk-accent)";
+                document.getElementById('systemStatus').innerText = "VICTORY ACHIEVED";
+                document.getElementById('systemStatus').style.color = "var(--nk-accent)";
+            } else {
+                textElement.innerText = "DETONATION";
+                textElement.style.color = "var(--nk-error)";
+                document.getElementById('systemStatus').innerText = "SYSTEM FATALITY";
+                document.getElementById('systemStatus').style.color = "var(--nk-error)";
+            }
+        }
+
+    </script>
+</body>
+</html>

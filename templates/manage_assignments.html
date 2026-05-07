@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📂 Assignments: {{ course.code }}</h2>
+        <a href="{{ url_for('manage_courses') }}" class="btn btn-secondary">← Back</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header bg-primary text-white fw-bold">Create New Task</div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="fw-bold">Title</label>
+                            <input type="text" name="title" class="form-control" placeholder="e.g. Term Paper 1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Instructions</label>
+                            <textarea name="instruction" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Due Date & Time</label>
+                            <input type="datetime-local" name="due_date" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Max Points</label>
+                            <input type="number" name="points" class="form-control" value="10" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Publish Assignment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">Active Assignments</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light"><tr><th>Title</th><th>Due Date</th><th>Subs</th><th>Action</th></tr></thead>
+                        <tbody>
+                            {% for ass in course.assignments %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ ass.title }}</div>
+                                    <small class="text-muted">{{ ass.points }} Marks</small>
+                                </td>
+                                <td>{{ ass.due_date.strftime('%d %b, %H:%M') }}</td>
+                                
+                                <td><span class="badge bg-secondary">{{ ass.submissions_list|length }}</span></td>
+                                
+                                <td>
+                                    <a href="{{ url_for('view_submissions', id=ass.id) }}" class="btn btn-sm btn-success">👀 View & Grade</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center py-3">No assignments created yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

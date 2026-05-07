@@ -1,0 +1,2568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gideon Word | Enterprise Desktop UI V20</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --word-brand: #2b579a;
+            --word-brand-hover: #1e3f6e;
+            --fluent-bg: #f3f2f1; /* Adjusted for closer MS Word 2016 light theme */
+            --fluent-border: #e1dfdd; 
+            --fluent-hover: #c8c6c4;
+            --fluent-active: #b3b0ad;
+            --fluent-text: #201f1e;
+            --fluent-text-muted: #605e5c;
+            --canvas-bg: #e1dfdd; /* Deeper gray for the workspace canvas */
+            --page-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            
+            --title-bg: #2b579a; /* MS Word Blue Header */
+            --title-text: #ffffff;
+            --yellow-banner: #fff4ce;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; background-color: var(--canvas-bg); height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: var(--fluent-text); font-size: 12px; transition: background-color 0.4s ease, filter 0.5s ease; }
+        
+        ::-webkit-scrollbar { width: 16px; height: 16px; }
+        ::-webkit-scrollbar-track { background: #f0f0f0; }
+        ::-webkit-scrollbar-thumb { background: #cdcdcd; border: 1px solid #f0f0f0; }
+        ::-webkit-scrollbar-thumb:hover { background: #a6a6a6; }
+
+        /* --- 1. WINDOWS TITLE BAR --- */
+        .ms-header { background-color: var(--title-bg); color: var(--title-text); display: flex; align-items: center; justify-content: space-between; height: 30px; flex-shrink: 0; padding: 0; transition: 0.3s; }
+        
+        .ms-header-left { display: flex; align-items: center; gap: 4px; height: 100%; padding-left: 8px; }
+        .ms-app-btn { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 2px; color: white; transition: 0.1s; cursor: pointer; text-decoration: none; font-size: 12px;}
+        .ms-app-btn:hover { background-color: rgba(255,255,255,0.2); color: white;}
+        .qat-btn { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; color: white; border-radius: 2px; transition: 0.1s; cursor: pointer; font-size: 12px; }
+        .qat-btn:hover { background-color: rgba(255,255,255,0.2); }
+        .qat-btn.disabled { color: rgba(255,255,255,0.5); }
+        
+        .title-center { flex: 1; text-align: center; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto; }
+        .ms-doc-name { font-weight: 400; padding: 0 4px; border: 1px solid transparent; outline: none; background: transparent; color: white;}
+        .ms-doc-name:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+        
+        .ms-header-right { display: flex; align-items: center; height: 100%; gap: 10px; }
+        .profile-area { display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer; padding: 0 8px; height: 100%; }
+        .profile-area:hover { background-color: rgba(255,255,255,0.1); }
+        
+        .window-controls { display: flex; height: 100%; }
+        .win-btn { width: 46px; height: 100%; display: flex; align-items: center; justify-content: center; color: white; transition: 0.1s; cursor: pointer; font-size: 10px; }
+        .win-btn:hover { background-color: rgba(255,255,255,0.2); }
+        .win-btn.close:hover { background-color: #e81123; }
+
+        /* --- 2. MENU BAR (Tabs) --- */
+        .ms-menu-bar { background-color: var(--title-bg); color: var(--title-text); display: flex; align-items: flex-end; padding: 0 0 0 4px; height: 28px; flex-shrink: 0; border-bottom: 1px solid var(--fluent-bg); transition: 0.3s; }
+        .ms-tab { padding: 5px 12px 6px 12px; font-size: 12px; cursor: pointer; margin-right: 2px; text-transform: uppercase; letter-spacing: 0.2px; border: 1px solid transparent; border-bottom: none; transition: background 0.1s; color: white;}
+        .ms-tab:hover { background-color: rgba(255,255,255,0.1); }
+        .ms-tab.active { background-color: var(--fluent-bg); color: var(--word-brand); border-color: var(--fluent-border); z-index: 2; position: relative; margin-bottom: -1px; padding-bottom: 7px; font-weight: 600;}
+        .ms-tab.file { background-color: transparent; }
+        .ms-tab.file:hover { background-color: var(--word-brand-hover); }
+        
+        .search-tab { display: flex; align-items: center; gap: 6px; color: #fff; padding: 4px 12px 6px 12px; font-size: 12px; cursor: text; margin-left: 10px; background: rgba(255,255,255,0.15); border-radius: 2px 2px 0 0;}
+        .search-tab i { color: #f2c811; }
+        .search-tab:hover { background-color: rgba(255,255,255,0.25); }
+        .search-tab input { background: transparent; border: none; color: white; outline: none; width: 180px;}
+        .search-tab input::placeholder { color: rgba(255,255,255,0.8); }
+        
+        .share-btn { margin-left: auto; margin-right: 8px; margin-bottom: 3px; background-color: #f1f1f1; border: 1px solid #ccc; padding: 3px 12px; font-size: 11px; display: flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 2px; color: var(--fluent-text);}
+        .share-btn:hover { background-color: white; }
+
+        /* --- 3. THE V20 SACRED RIBBON GEOMETRY --- */
+        .ms-ribbon { background-color: var(--fluent-bg); border-bottom: 1px solid var(--fluent-border); display: flex; flex-direction: column; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: 0.3s; flex-shrink: 0;}
+        
+        .ms-toolbar-container { position: relative; height: 104px; overflow: hidden; } 
+        .ms-toolbar { display: none; padding: 4px 2px 0 2px; align-items: flex-start; height: 104px; box-sizing: border-box; width: 100%; overflow-x: auto; overflow-y: hidden; position: absolute; top: 0; left: 0; background: var(--fluent-bg); gap: 2px;}
+        .ms-toolbar.active { display: flex; }
+
+        /* THE ANTI-SQUISH PROTOCOL: Absolute padding at bottom for labels */
+        .ms-group { 
+            display: flex; 
+            height: 100%; 
+            padding: 0 6px 22px 6px; /* 22px dedicated entirely to the text label */
+            position: relative; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            justify-content: flex-start;
+        }
+        
+        /* Native MS Word vertical separator logic */
+        .ms-group::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 2px;
+            bottom: 24px; /* Stops perfectly before the text label */
+            width: 1px;
+            background-color: #d2d0ce;
+        }
+        .ms-group:last-child::before { display: none; } /* No line on last item */
+
+        /* Absolute positioning for label to prevent flexbox crushing */
+        .ms-group::after { 
+            content: attr(data-label); 
+            position: absolute; 
+            bottom: 4px; 
+            left: 0; 
+            right: 0; 
+            text-align: center; 
+            font-size: 11px; 
+            color: var(--fluent-text-muted); 
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        .ms-group-content { display: flex; gap: 4px; height: auto; align-items: flex-start; flex-wrap: nowrap; flex-shrink: 0;}
+        
+        .dialog-launcher { position: absolute; bottom: 4px; right: 4px; font-size: 9px; color: var(--fluent-text-muted); cursor: pointer; padding: 3px; }
+        .dialog-launcher:hover { color: var(--word-brand); background-color: var(--fluent-hover); border-radius: 2px; }
+
+        /* SUB-PIXEL GRID ALIGNMENT */
+        .ms-row { display: flex; gap: 2px; align-items: center; margin-bottom: 2px; flex-wrap: nowrap; flex-shrink: 0; height: 22px;}
+        .ms-col { display: flex; flex-direction: column; gap: 2px; justify-content: flex-start; flex-shrink: 0;}
+
+        /* BUTTONS ENGINEERED TO BREATHE */
+        .ms-btn { background: transparent; border: 1px solid transparent; border-radius: 2px; color: var(--fluent-text); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.1s; flex-shrink: 0;}
+        
+        /* Large buttons push icon to top and text to bottom */
+        .ms-btn.lg { flex-direction: column; min-width: 48px; width: auto; height: 68px; font-size: 20px; gap: 4px; padding: 4px 4px 0 4px; justify-content: flex-start;}
+        .ms-btn.lg span { font-size: 11px; text-align: center; line-height: 1.1; white-space: normal; display: block; margin-top: 2px;}
+        
+        /* Small buttons are tight and rigid */
+        .ms-btn.sm { width: 22px; height: 22px; font-size: 12px; flex-shrink: 0;}
+        .ms-btn.sm.wide { width: auto; padding: 0 6px; justify-content: flex-start; gap: 6px; white-space: nowrap !important; flex-shrink: 0;}
+        
+        .ms-btn:hover { background-color: var(--fluent-hover); border-color: #c4c4c4;}
+        .ms-btn.active { background-color: var(--fluent-active); border-color: #999; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);}
+
+        .ms-select { border: 1px solid #ababab; height: 22px; padding: 0 4px; font-size: 11px; color: var(--fluent-text); outline: none; background: white; cursor: pointer; flex-shrink: 0;}
+        .ms-select:hover { border-color: #888; }
+
+        .ms-input-spinner { width: 50px; border: 1px solid #ababab; height: 22px; padding: 0 4px; font-size: 11px; outline: none; background: white;}
+
+        .ms-color-picker { position: relative; display: inline-block; width: 22px; height: 22px; flex-shrink: 0;}
+        .ms-color-picker input[type="color"] { opacity: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; }
+        .ms-color-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 2px; font-size: 12px; pointer-events: none;}
+        .ms-color-ui .bar { width: 12px; height: 3px; background: red; margin-top: 1px; }
+        .ms-color-picker:hover .ms-color-ui { background-color: var(--fluent-hover); border: 1px solid var(--fluent-active); }
+
+        /* STYLES GALLERY PERFECT REPLICATION */
+        .styles-gallery { display: flex; border: 1px solid #a6a6a6; background: white; height: 56px; align-items: center; overflow: hidden; flex-shrink: 0; width: 340px;}
+        .style-item { padding: 4px; width: 68px; height: 100%; border-right: 1px solid #eee; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; cursor: pointer; position: relative;}
+        .style-item:hover { background-color: #e5f1fb; border: 1px solid #0078d7; }
+        .style-item span.preview { font-size: 16px; position: absolute; top: 10px; }
+        .style-item span.name { font-size: 10px; color: var(--fluent-text-muted); }
+
+        .warning-banner { background-color: var(--yellow-banner); border-bottom: 1px solid #e1d6b8; padding: 4px 16px; font-size: 11px; display: flex; align-items: center; gap: 10px; color: #333; flex-shrink: 0; transition: 0.3s; }
+        .warning-banner button { background: white; border: 1px solid #ccc; padding: 2px 12px; font-size: 11px; cursor: pointer; }
+        .warning-banner button:hover { background: #f1f1f1; }
+
+        /* --- 5. MAIN WORKSPACE --- */
+        .ms-main { flex: 1; display: flex; overflow: hidden; position: relative;}
+        
+        .ms-sidebar { width: 300px; background: #f3f2f1; border-right: 1px solid #ccc; display: flex; flex-direction: column; transition: transform 0.3s; z-index: 10;}
+        .ms-sidebar.hidden { transform: translateX(-100%); position: absolute; height: 100%; }
+        .sidebar-header { padding: 12px 16px; font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; align-items: center;}
+        
+        .sidebar-tabs { display: flex; border-bottom: 1px solid #ccc;}
+        .sidebar-tab { flex: 1; text-align: center; padding: 8px 4px; font-size: 11px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;}
+        .sidebar-tab.active { border-bottom-color: var(--word-brand); font-weight: 600; color: var(--word-brand); }
+        
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 10px; display: none; }
+        .sidebar-content.active { display: block; }
+        .outline-item { padding: 6px 10px; cursor: pointer; font-size: 12px; color: var(--fluent-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;}
+        .outline-item:hover { background: #e5e5e5; }
+        .outline-h1 { font-weight: 600; }
+        .outline-h2 { margin-left: 15px; }
+        .outline-h3 { margin-left: 30px; font-style: italic; color: var(--fluent-text-muted);}
+
+        .ms-editor-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; overflow-x: auto; align-items: center; padding: 20px 40px 60px 40px; position: relative; transition: padding 0.3s, background 0.3s;}
+        
+        .ms-ruler { width: 816px; height: 16px; background: white; border: 1px solid #ccc; margin-bottom: 10px; position: relative; display: flex; align-items: flex-end; user-select: none; transition: width 0.3s; flex-shrink: 0;}
+        .ruler-tick { width: 1px; background: #a19f9d; position: absolute; bottom: 0;}
+        .ruler-tick.major { height: 8px; }
+        .ruler-tick.minor { height: 4px; }
+
+        .ms-page { background: white; width: 816px; min-height: 1056px; padding: 96px; box-shadow: var(--page-shadow); outline: none; color: #000; font-size: 11pt; font-family: 'Calibri', sans-serif; line-height: 1.15; transform-origin: top center; transition: transform 0.2s, padding 0.3s, background-color 0.3s, width 0.3s, box-shadow 0.3s, color 0.3s; position: relative; overflow: hidden;}
+        
+        .ms-page.show-gridlines {
+            background-image: linear-gradient(to right, #e1e1e1 1px, transparent 1px), linear-gradient(to bottom, #e1e1e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .ms-page.has-watermark::before {
+            content: attr(data-watermark);
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80pt; font-weight: bold; color: rgba(0, 0, 0, 0.05);
+            pointer-events: none; z-index: 0; white-space: nowrap;
+        }
+
+        .ms-page p { margin-top: 0; margin-bottom: 8pt; position: relative; z-index: 1;}
+        .ms-page h1 { font-size: 24pt; color: #2F5496; margin-top: 12pt; margin-bottom: 0; font-weight: 300; position: relative; z-index: 1;}
+        .ms-page h2 { font-size: 16pt; color: #2F5496; margin-top: 10pt; margin-bottom: 0; font-weight: 400; position: relative; z-index: 1;}
+        .ms-page h3 { font-size: 14pt; color: #1F3763; margin-top: 10pt; margin-bottom: 0; position: relative; z-index: 1;}
+        .ms-page img { max-width: 100%; height: auto; outline: 1px solid transparent; transition: 0.2s; cursor: pointer; position: relative; z-index: 1;}
+        .ms-page img:hover { outline: 2px solid var(--word-brand); }
+        .ms-page table { width: 100%; border-collapse: collapse; margin-bottom: 10pt; position: relative; z-index: 1;}
+        .ms-page table, .ms-page th, .ms-page td { border: 1px solid #a6a6a6; }
+        .ms-page th, .ms-page td { padding: 4px 8px; }
+        .ms-page ul, .ms-page ol { margin-top: 0; margin-bottom: 8pt; padding-left: 36pt;}
+        .ms-page blockquote { border-left: 3px solid #a6a6a6; padding-left: 10pt; color: #555; }
+        .ms-page mark { background-color: #ffff00; }
+        
+        .doc-toc { background: #f9f9f9; border: 1px solid #ccc; padding: 16px; margin-bottom: 20px; font-family: 'Calibri', sans-serif; }
+        .doc-toc-title { font-size: 14pt; color: #2F5496; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        .doc-toc a { text-decoration: none; color: #000; display: block; margin-bottom: 4px; border-bottom: 1px dotted #ccc; }
+        .doc-toc a:hover { color: var(--word-brand); }
+
+        .slash-menu { position: absolute; background: white; border: 1px solid var(--fluent-border); box-shadow: var(--page-shadow); border-radius: 2px; width: 220px; display: none; flex-direction: column; z-index: 2000; overflow: hidden; }
+        .slash-menu.visible { display: flex; animation: fadeSlide 0.15s ease-out; }
+        @keyframes fadeSlide { from { opacity:0; transform: translateY(-5px); } to { opacity:1; transform: translateY(0); } }
+        .slash-item { padding: 6px 12px; display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; color: var(--fluent-text); transition: 0.1s; }
+        .slash-item:hover { background: var(--fluent-hover); color: var(--word-brand); }
+        .slash-item i { font-size: 14px; width: 20px; text-align: center; }
+
+        .mini-toolbar { position: absolute; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); border-radius: 2px; display: none; padding: 2px; gap: 2px; z-index: 1000; opacity: 0; transition: opacity 0.2s; pointer-events: none;}
+        .mini-toolbar.visible { display: flex; opacity: 1; pointer-events: auto;}
+        .mini-toolbar .ms-btn.sm { width: 22px; height: 22px; font-size: 11px; }
+
+        .symbol-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; padding: 4px; position: absolute; top: 100%; left: 0; background: white; border: 1px solid var(--fluent-border); box-shadow: var(--page-shadow); display: none; z-index: 2000; width: 120px; }
+        .symbol-grid.show { display: grid; }
+        .symbol-item { padding: 6px; text-align: center; cursor: pointer; border: 1px solid transparent; font-size: 14px; }
+        .symbol-item:hover { background: var(--fluent-hover); border-color: var(--fluent-active); }
+
+        .ms-status { height: 22px; background-color: var(--title-bg); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: 11px; flex-shrink: 0; z-index: 100; transition: 0.3s;}
+        .status-left, .status-right { display: flex; align-items: center; gap: 12px; height: 100%;}
+        .status-item { cursor: pointer; padding: 0 4px; transition: 0.1s; display: flex; align-items: center; gap: 4px; height: 100%;}
+        .status-item:hover { background-color: rgba(255,255,255,0.15); }
+        .status-item.active { background-color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.4); border-radius: 2px;}
+        
+        .zoom-widget { display: flex; align-items: center; gap: 6px; }
+        .zoom-slider { width: 100px; height: 2px; -webkit-appearance: none; background: rgba(255,255,255,0.5); outline: none; cursor: pointer;}
+        .zoom-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 14px; background: white; cursor: pointer; border: 1px solid #999; }
+
+        .find-replace-box { display: flex; flex-direction: column; gap: 8px; }
+        .find-input-group { display: flex; gap: 4px; }
+        .find-input-group input { flex: 1; border: 1px solid #ccc; padding: 4px 8px; outline: none; font-size: 12px;}
+        .find-input-group input:focus { border-color: var(--word-brand); }
+
+        .ai-assistant-card { border: 1px solid #ccc; background: white; padding: 12px; margin-bottom: 10px; font-size: 12px; position: relative;}
+        .ai-btn { width: 100%; text-align: left; padding: 6px 10px; background: #f0f0f0; border: 1px solid #ccc; cursor: pointer; color: var(--fluent-text); transition: 0.2s; margin-bottom: 4px;}
+        .ai-btn:hover { background: #e5e5e5;}
+        
+        .avatar-stack { display: flex; align-items: center; }
+        .avatar { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--title-bg); background: #fff; color: var(--word-brand); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; margin-left: -8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .avatar.online { position: relative; }
+        .avatar.online::after { content: ''; position: absolute; bottom: 0; right: 0; width: 6px; height: 6px; background: #107c41; border-radius: 50%; border: 1px solid white; }
+
+        .ms-dialog-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.4); display: none; justify-content: center; align-items: center; z-index: 10000; }
+        .ms-dialog { background: white; border: 1px solid #0078d7; box-shadow: 0 4px 12px rgba(0,0,0,0.2); width: 320px; display: flex; flex-direction: column; font-size: 12px; color: #333; }
+        .ms-dialog-header { background: white; padding: 8px 12px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; cursor: move;}
+        .ms-dialog-body { padding: 16px; line-height: 1.8; }
+        .ms-dialog-footer { padding: 12px; background: #f0f0f0; display: flex; justify-content: flex-end; border-top: 1px solid #dfdfdf; }
+        .ms-dialog-btn { background: #e1e1e1; border: 1px solid #adadad; padding: 4px 16px; cursor: pointer; color: black; min-width: 75px; text-align: center; }
+        .ms-dialog-btn:hover { background: #e5f1fb; border-color: #0078d7; }
+        .stat-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #eee; margin-bottom: 4px; padding-bottom: 2px;}
+
+        .file-backstage { position: fixed; top: 30px; left: 0; right: 0; bottom: 0; background: white; z-index: 9999; display: none; flex-direction: row; font-family: 'Segoe UI', sans-serif; }
+        .file-sidebar { width: 150px; background: #2b579a; color: white; display: flex; flex-direction: column; padding-top: 20px; }
+        .file-sidebar-btn { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: 0.1s;}
+        .file-sidebar-btn:hover { background: #1e3f6e; }
+        .file-sidebar-btn.back { margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 20px; }
+        .file-content { flex: 1; padding: 40px; background: #f3f2f1; display: flex; flex-direction: column;}
+        .file-title { font-size: 32px; color: #2b579a; font-weight: 300; margin-bottom: 30px; }
+        .file-card { background: white; border: 1px solid #ccc; padding: 20px; width: 450px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; cursor: pointer; transition: 0.1s; display: flex; align-items: center; gap: 15px;}
+        .file-card:hover { border-color: #2b579a; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .file-card i { font-size: 28px; color: #2b579a; width: 40px; text-align: center;}
+
+        .live-cursor { position: absolute; pointer-events: none; z-index: 50; transition: top 0.4s ease-out, left 0.4s ease-out; display: flex; flex-direction: column; }
+        .cursor-icon { color: #d83b01; font-size: 16px; transform: rotate(-15deg) translateY(-2px); text-shadow: 1px 1px 0px white;}
+        .cursor-label { background: #d83b01; color: white; font-size: 10px; padding: 2px 6px; border-radius: 2px; margin-top: 2px; white-space: nowrap; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2);}
+        .cursor-sp { color: #8a2be2; }
+        .cursor-sp-label { background: #8a2be2; }
+
+        .ms-page.layout-web { width: 100% !important; min-height: 100vh !important; margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
+        .ms-page.layout-read { font-size: 14pt !important; line-height: 1.8 !important; background: #fdfaf6 !important; width: 900px !important; }
+
+        .comment-box { border: 1px solid #ccc; background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 2px; border-left: 3px solid #d83b01; font-size: 11px; }
+        .comment-author { font-weight: bold; margin-bottom: 4px; color: #2b579a; }
+        .comment-text { color: #333; }
+        .comment-time { font-size: 9px; color: #888; margin-top: 4px; text-align: right; }
+        .ms-page doc-comment { background-color: #fcebb6; cursor: pointer; border-bottom: 1px dashed #d83b01; }
+        .ms-page doc-comment:hover { background-color: #f7d87c; }
+
+        .read-aloud-widget { position: absolute; top: 130px; right: 40px; background: white; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 4px; display: none; z-index: 1000; gap: 12px; align-items: center; }
+        .ra-btn { cursor: pointer; color: #444; font-size: 14px; transition: 0.1s; }
+        .ra-btn:hover { color: var(--word-brand); }
+
+        .ink-layer { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; }
+        .ink-active .ink-layer { pointer-events: auto; cursor: crosshair; }
+
+        .ms-sticky { position: absolute; width: 180px; min-height: 150px; background: #fff7d1; border: 1px solid #e2c822; box-shadow: 2px 4px 8px rgba(0,0,0,0.15); padding: 25px 10px 10px 10px; font-family: 'Comic Sans MS', 'Segoe UI', cursive; font-size: 13px; z-index: 100; resize: both; overflow: hidden; color: #333;}
+        .ms-sticky-drag { position: absolute; top: 0; left: 0; right: 0; height: 20px; background: #f2db4e; cursor: move; }
+        .ms-sticky-close { position: absolute; top: 2px; right: 6px; font-size: 12px; cursor: pointer; color: #555; font-weight:bold;}
+        .ms-sticky-close:hover { color: #000; }
+
+        .desktop-dialog { position: absolute; background: #f0f0f0; border: 1px solid #0078d7; box-shadow: 2px 4px 12px rgba(0,0,0,0.3); display: none; flex-direction: column; z-index: 10000; font-family: 'Segoe UI', Tahoma, sans-serif; resize: both; overflow: hidden;}
+        .desktop-dialog-header { background: #0078d7; color: white; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; cursor: move; font-size: 12px;}
+        .desktop-dialog-close { cursor: pointer; font-size: 12px; padding: 2px 6px; transition: 0.1s;}
+        .desktop-dialog-close:hover { background: #e81123; }
+        
+        .vba-body { background: #1e1e1e; color: #d4d4d4; font-family: 'Courier New', Courier, monospace; flex: 1; padding: 10px; font-size: 13px; overflow: auto; outline: none; white-space: pre-wrap;}
+        .vba-sidebar { width: 150px; background: #252526; border-right: 1px solid #333; padding: 10px; color: #ccc;}
+        
+        .find-body { padding: 15px; background: #f0f0f0; font-size: 12px; color: #333;}
+        
+        .clippy-container { position: absolute; bottom: 40px; right: 40px; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; cursor: grab; }
+        .clippy-container:active { cursor: grabbing; }
+        .clippy-bubble { background: #ffffe1; border: 1px solid #000; padding: 10px 15px; border-radius: 8px; font-size: 12px; color: #000; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); margin-bottom: 10px; max-width: 200px; display: none; position: relative;}
+        .clippy-bubble::after { content: ''; position: absolute; bottom: -10px; right: 20px; border-width: 10px 10px 0 0; border-style: solid; border-color: #ffffe1 transparent transparent transparent; }
+        .clippy-bubble::before { content: ''; position: absolute; bottom: -12px; right: 19px; border-width: 11px 11px 0 0; border-style: solid; border-color: #000 transparent transparent transparent; z-index: -1; }
+        .clippy-img { font-size: 45px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); color: #ccc; }
+
+        body.zen-active .ms-header, body.zen-active .ms-menu-bar, body.zen-active .ms-ribbon, body.zen-active .warning-banner, body.zen-active .ms-sidebar, body.zen-active .ms-ruler { display: none !important; }
+        body.zen-active { background-color: #000; }
+        body.zen-active .ms-editor-wrapper { padding: 50px 0; }
+        body.zen-active .ms-status { background-color: #111; border-top: 1px solid #333;}
+
+        body.hacker-mode { background-color: #000 !important; filter: contrast(1.5) saturate(1.5); }
+        body.hacker-mode .ms-page { background-color: #000 !important; color: #0f0 !important; font-family: 'Courier New', Courier, monospace !important; border: 1px solid #0f0; box-shadow: 0 0 20px #0f0; }
+        body.hacker-mode * { color: #0f0 !important; border-color: #0f0 !important; text-shadow: 0 0 5px #0f0; }
+        body.hacker-mode img { filter: sepia(1) hue-rotate(90deg) saturate(5); }
+
+        body.blueprint-mode .ms-page { 
+            background-color: #0b3d91 !important; 
+            color: #ffffff !important; 
+            font-family: 'Consolas', monospace !important; 
+            background-image: linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px) !important;
+            background-size: 20px 20px !important;
+        }
+        body.blueprint-mode .ms-page * { color: #ffffff !important; border-color: rgba(255,255,255,0.5) !important;}
+
+        #pageWrapper { transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1); transform-style: preserve-3d; }
+        #pageWrapper.isometric { transform: perspective(1500px) rotateX(55deg) rotateZ(-30deg) scale(0.5) translateZ(-100px); }
+        #pageWrapper.isometric .ink-layer { transform: translateZ(120px); background: rgba(0, 200, 255, 0.05); border: 2px solid rgba(0, 200, 255, 0.5); box-shadow: 0 20px 40px rgba(0,255,0,0.2); }
+        #pageWrapper.isometric .ms-page { transform: translateZ(0px); box-shadow: 30px 30px 60px rgba(0,0,0,0.8); border: 1px solid #999; }
+
+        .quantum-particle { position: absolute; width: 8px; height: 8px; background: #0078d7; border-radius: 50%; pointer-events: none; z-index: 9999; animation: qFade 0.6s cubic-bezier(0, .9, .9, 1) forwards; }
+        @keyframes qFade { 0% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); } 100% { opacity: 0; transform: scale(0) translateY(-40px) rotate(180deg); } }
+
+        .minimap-panel { position: absolute; top: 120px; right: 20px; width: 150px; height: 200px; background: rgba(255,255,255,0.9); border: 1px solid #ccc; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 500; display: none; overflow: hidden; pointer-events: none;}
+        .minimap-content { transform: scale(0.15); transform-origin: top left; width: 816px; pointer-events: none; opacity: 0.7;}
+        .minimap-viewport-box { position: absolute; border: 2px solid #0078d7; background: rgba(0, 120, 215, 0.1); width: 100%; top: 0; z-index: 501;}
+
+        body.teleprompter-active .ms-editor-wrapper { background: #000; overflow: hidden; }
+        body.teleprompter-active .ms-page { background: #111 !important; color: #fff !important; font-size: 28pt !important; line-height: 2 !important; width: 100% !important; margin: 0; padding: 50vh 15% !important; box-shadow: none !important; border: none !important; font-weight: bold; font-family: 'Segoe UI', sans-serif;}
+        body.teleprompter-active .ms-page * { color: #fff !important; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .teleprompter-focus-line { display: none; position: fixed; top: 50%; left: 0; width: 100%; height: 6px; background: rgba(216, 59, 1, 0.6); z-index: 1000; box-shadow: 0 0 15px red; pointer-events: none; }
+        body.teleprompter-active .teleprompter-focus-line { display: block; }
+        
+        .neural-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; display: none; }
+        .neural-path { stroke: #8a2be2; stroke-width: 4; fill: none; stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: dash 1.5s linear forwards; filter: drop-shadow(0 0 8px #8a2be2); }
+        @keyframes dash { to { stroke-dashoffset: 0; } }
+
+        #bossKeyScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #0f0; font-family: 'Courier New', Courier, monospace; z-index: 9999999; padding: 30px; font-size: 16px; overflow: hidden; box-shadow: inset 0 0 50px rgba(0,255,0,0.2); }
+        .terminal-cursor { display: inline-block; width: 10px; height: 18px; background: #0f0; animation: blink 1s step-end infinite; vertical-align: bottom; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        @keyframes destructShake { 0% { transform: translate(2px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(0px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(2px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(2px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+        @keyframes destructMelt { to { filter: blur(30px) brightness(10) contrast(5); opacity: 0; transform: scale(0.5) translateY(200px); } }
+        body.destruct-mode { animation: destructShake 0.1s infinite; pointer-events: none; }
+        body.destruct-mode #workspace { animation: destructMelt 4s forwards; animation-delay: 1.5s; }
+        .destruct-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,0,0,0.1); z-index: 99999; display: none; justify-content: center; align-items: center; font-family: 'Courier New', monospace; color: red; font-size: 150px; font-weight: bold; text-shadow: 0 0 30px red; pointer-events: none; }
+
+        .xray-tooltip { position: fixed; background: rgba(0,0,0,0.9); color: #0f0; border: 1px solid #0f0; padding: 6px 10px; font-family: 'Courier New', Courier, monospace; font-size: 10px; z-index: 100000; pointer-events: none; display: none; border-radius: 2px; box-shadow: 0 4px 8px rgba(0,255,0,0.2); white-space: pre;}
+        body.xray-active .ms-page * { outline: 1px dashed rgba(255,0,0,0.3) !important; cursor: crosshair !important; }
+        body.xray-active .ms-page *:hover { outline: 2px solid #0f0 !important; background: rgba(0,255,0,0.1) !important;}
+
+        .click-ripple { position: fixed; border-radius: 50%; border: 2px solid var(--word-brand); pointer-events: none; transform: translate(-50%, -50%); animation: rippleAnim 0.8s ease-out forwards; z-index: 9999;}
+        @keyframes rippleAnim { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 150px; height: 150px; opacity: 0; } }
+
+    </style>
+</head>
+<body>
+
+<div class="ms-header">
+    <div class="ms-header-left">
+        <a href="{{ url_for('student_portal') }}" class="ms-app-btn" title="App Launcher"><i class="fas fa-th"></i></a>
+        <div class="qat-btn" onclick="updateEngine()" title="Save (Ctrl+S)"><i class="fas fa-save"></i></div>
+        <div class="qat-btn disabled" title="Undo (Ctrl+Z)"><i class="fas fa-undo"></i></div>
+        <div class="qat-btn disabled" title="Redo (Ctrl+Y)"><i class="fas fa-redo"></i></div>
+        <div class="qat-btn"><i class="fas fa-caret-down" style="font-size: 10px;"></i></div>
+    </div>
+    
+    <div class="title-center">
+        <div class="ms-doc-name" id="docTitle" contenteditable="true" spellcheck="false">Final_Year_Architecture.docx</div>
+        <span> - Word (Product Activation Failed)</span> 
+    </div>
+    
+    <div class="ms-header-right">
+        <div class="avatar-stack" title="Live Collaboration Active" style="margin-right: 10px;">
+            <div class="avatar online" style="z-index: 3;" title="You">GV</div>
+            <div class="avatar online" style="z-index: 2; border-color: #8a2be2; color: #8a2be2;" title="Supervisor">SP</div>
+            <div class="avatar" style="z-index: 1; border-color: #d83b01; color: #d83b01;" title="Peer Reviewer">PR</div>
+        </div>
+        <div class="profile-area">
+            <i class="fas fa-exclamation-triangle" style="color: #f2c811;"></i>
+            <span>Favour Adamson</span>
+            <div style="width: 20px; height: 20px; background: white; color: #444; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px;"><i class="fas fa-user"></i></div>
+        </div>
+        <div class="window-controls">
+            <div class="win-btn"><i class="far fa-caret-square-up"></i></div>
+            <div class="win-btn"><i class="fas fa-minus"></i></div>
+            <div class="win-btn" onclick="toggleFullScreen()"><i class="far fa-square"></i></div>
+            <div class="win-btn close"><i class="fas fa-times"></i></div>
+        </div>
+    </div>
+</div>
+
+<div class="ms-menu-bar">
+    <div class="ms-tab file" onclick="toggleFileMenu(true)">File</div>
+    <div class="ms-tab active" onclick="switchTab('home')">Home</div>
+    <div class="ms-tab" onclick="switchTab('insert')">Insert</div>
+    <div class="ms-tab" onclick="switchTab('draw')">Draw</div>
+    <div class="ms-tab" onclick="switchTab('design')">Design</div>
+    <div class="ms-tab" onclick="switchTab('layout')">Layout</div>
+    <div class="ms-tab" onclick="switchTab('references')">References</div>
+    <div class="ms-tab" onclick="switchTab('mailings')">Mailings</div>
+    <div class="ms-tab" onclick="switchTab('review')">Review</div>
+    <div class="ms-tab" onclick="switchTab('view')">View</div>
+    <div class="ms-tab" onclick="switchTab('developer')">Developer</div>
+    <div class="ms-tab" onclick="alert('Help Context Opened')">Help</div>
+    <div class="search-tab">
+        <i class="fas fa-lightbulb"></i>
+        <input type="text" placeholder="Tell me what you want to do">
+    </div>
+    <div class="share-btn" onclick="alert('Link generated for Portal sharing.')"><i class="fas fa-user-plus" style="color:#555"></i> Share</div>
+</div>
+
+<div class="ms-ribbon">
+    <div class="ms-toolbar-container">
+        
+        <div class="ms-toolbar active" id="tab-home">
+            <div class="ms-group" data-label="Clipboard">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="document.execCommand('paste')" title="Paste">
+                        <i class="fas fa-clipboard" style="color:#e9b517"></i><span>Paste <i class="fas fa-caret-down" style="font-size: 8px;"></i></span>
+                    </button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="document.execCommand('cut')" title="Cut"><i class="fas fa-cut"></i> Cut</button>
+                        <button class="ms-btn sm wide" onclick="document.execCommand('copy')" title="Copy"><i class="fas fa-copy"></i> Copy</button>
+                        <button class="ms-btn sm wide" onclick="alert('Format Painter Active')" title="Format Painter"><i class="fas fa-paint-roller" style="color: #444"></i> Format Painter</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ms-group" data-label="Font">
+                <div class="ms-group-content">
+                    <div class="ms-col">
+                        <div class="ms-row">
+                            <select class="ms-select" style="width: 110px;" onchange="formatDoc('fontName', this.value)">
+                                <option value="Calibri" selected>Calibri (Body)</option>
+                                <option value="Arial">Arial</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                            </select>
+                            <select class="ms-select" style="width: 45px;" onchange="formatDoc('fontSize', this.value)">
+                                <option value="1">8</option>
+                                <option value="3" selected>11</option>
+                                <option value="4">14</option>
+                                <option value="5">18</option>
+                            </select>
+                            <div style="width: 4px;"></div>
+                            <button class="ms-btn sm" style="font-size: 14px;" title="Increase Font Size">A<sup style="font-size: 8px;">^</sup></button>
+                            <button class="ms-btn sm" style="font-size: 12px;" title="Decrease Font Size">A<sub style="font-size: 8px;">v</sub></button>
+                            <button class="ms-btn sm" onclick="alert('Change Case options loaded')" title="Change Case">Aa<i class="fas fa-caret-down" style="font-size:8px; margin-left:2px;"></i></button>
+                            <div style="width: 4px;"></div>
+                            <button class="ms-btn sm" onclick="formatDoc('removeFormat')" title="Clear All Formatting"><i class="fas fa-eraser"></i></button>
+                        </div>
+                        <div class="ms-row">
+                            <button class="ms-btn sm" onclick="formatDoc('bold')" title="Bold" style="font-weight: bold;">B</button>
+                            <button class="ms-btn sm" onclick="formatDoc('italic')" title="Italic" style="font-style: italic;">I</button>
+                            <button class="ms-btn sm" onclick="formatDoc('underline')" title="Underline" style="text-decoration: underline;">U<i class="fas fa-caret-down" style="font-size:8px; margin-left:2px;"></i></button>
+                            <button class="ms-btn sm" onclick="formatDoc('strikeThrough')" title="Strikethrough" style="text-decoration: line-through;">abc</button>
+                            <button class="ms-btn sm" onclick="formatDoc('subscript')" title="Subscript">x<sub>2</sub></button>
+                            <button class="ms-btn sm" onclick="formatDoc('superscript')" title="Superscript">x<sup>2</sup></button>
+                            <div style="width: 4px;"></div>
+                            <button class="ms-btn sm" style="color: #2b579a; text-shadow: 1px 1px 1px #ccc;" onclick="alert('Typography effects modal active')" title="Text Effects & Typography">A</button>
+                            <div class="ms-color-picker" title="Highlight Color">
+                                <input type="color" onchange="formatDoc('hiliteColor', this.value)" value="#ffff00">
+                                <div class="ms-color-ui"><span style="font-weight:bold;">ab</span><div class="bar" id="ui-hl" style="background:#ffff00"></div></div>
+                            </div>
+                            <div class="ms-color-picker" title="Font Color">
+                                <input type="color" onchange="formatDoc('foreColor', this.value); document.getElementById('ui-fc').style.background=this.value" value="#ff0000">
+                                <div class="ms-color-ui"><span style="font-weight:bold;font-family:serif;">A</span><div class="bar" id="ui-fc"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <i class="fas fa-external-link-alt dialog-launcher"></i>
+            </div>
+            
+            <div class="ms-group" data-label="Paragraph">
+                <div class="ms-group-content">
+                    <div class="ms-col">
+                        <div class="ms-row">
+                            <button class="ms-btn sm" onclick="formatDoc('insertUnorderedList')" title="Bullets"><i class="fas fa-list-ul"></i> <i class="fas fa-caret-down" style="font-size:8px; margin-left:2px;"></i></button>
+                            <button class="ms-btn sm" onclick="formatDoc('insertOrderedList')" title="Numbering"><i class="fas fa-list-ol"></i> <i class="fas fa-caret-down" style="font-size:8px; margin-left:2px;"></i></button>
+                            <button class="ms-btn sm" onclick="alert('Multilevel list structures available')" title="Multilevel List"><i class="fas fa-list"></i> <i class="fas fa-caret-down" style="font-size:8px; margin-left:2px;"></i></button>
+                            <div style="width: 4px;"></div>
+                            <button class="ms-btn sm" onclick="formatDoc('outdent')" title="Decrease Indent"><i class="fas fa-outdent"></i></button>
+                            <button class="ms-btn sm" onclick="formatDoc('indent')" title="Increase Indent"><i class="fas fa-indent"></i></button>
+                            <div style="width: 4px;"></div>
+                            <button class="ms-btn sm" title="Sort Alphabetically" onclick="alert('DOM Nodes sorting routine engaged')"><i class="fas fa-sort-alpha-down"></i></button>
+                            <button class="ms-btn sm" title="Show/Hide ¶" onclick="alert('Hidden characters revealed')"><i class="fas fa-paragraph"></i></button>
+                        </div>
+                        <div class="ms-row">
+                            <button class="ms-btn sm" onclick="formatDoc('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+                            <button class="ms-btn sm" onclick="formatDoc('justifyCenter')" title="Center"><i class="fas fa-align-center"></i></button>
+                            <button class="ms-btn sm" onclick="formatDoc('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+                            <button class="ms-btn sm" onclick="formatDoc('justifyFull')" title="Justify"><i class="fas fa-align-justify"></i></button>
+                            <div style="width: 4px;"></div>
+                            <button class="ms-btn sm" title="Line and Paragraph Spacing" onclick="alert('Line Spacing properties accessed')"><i class="fas fa-arrows-alt-v"></i> <i class="fas fa-caret-down" style="font-size:8px; margin-left:2px;"></i></button>
+                            <div style="width: 4px;"></div>
+                            <button class="ms-btn sm" title="Shading" onclick="alert('Paragraph background shading activated')"><i class="fas fa-fill-drip"></i> <i class="fas fa-caret-down" style="font-size:8px; margin-left:2px;"></i></button>
+                            <button class="ms-btn sm" title="Borders"><i class="fas fa-border-all"></i> <i class="fas fa-caret-down" style="font-size:8px; margin-left:2px;"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <i class="fas fa-external-link-alt dialog-launcher"></i>
+            </div>
+            
+            <div class="ms-group" style="flex:1" data-label="Styles">
+                <div class="ms-group-content" style="align-items: center;">
+                    <div class="styles-gallery">
+                        <div class="style-item" style="border: 1px solid #999; background: #e1e1e1;" onclick="formatDoc('formatBlock', 'P')">
+                            <span class="preview" style="font-family: Calibri;">AaBbCcDd</span>
+                            <span class="name">¶ Normal</span>
+                        </div>
+                        <div class="style-item" onclick="formatDoc('formatBlock', 'P')">
+                            <span class="preview" style="font-family: Calibri;">AaBbCcDd</span>
+                            <span class="name">¶ No Spac...</span>
+                        </div>
+                        <div class="style-item" onclick="formatDoc('formatBlock', 'H1')">
+                            <span class="preview" style="font-family: Calibri; color: #2F5496;">AaBbCc...</span>
+                            <span class="name">Heading 1</span>
+                        </div>
+                        <div class="style-item" onclick="formatDoc('formatBlock', 'H2')">
+                            <span class="preview" style="font-family: Calibri; color: #2F5496; font-size: 14px;">AaBbCc...</span>
+                            <span class="name">Heading 2</span>
+                        </div>
+                        <div class="style-item" onclick="formatDoc('formatBlock', 'H1')">
+                            <span class="preview" style="font-family: Calibri; font-size: 18px; border-bottom: 1px solid #ccc;">AaB</span>
+                            <span class="name">Title</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; height: 56px; justify-content: flex-start;">
+                        <button class="ms-btn sm" style="height: 18px; background: white; border: 1px solid #ababab; border-bottom: none; width:15px;"><i class="fas fa-caret-up" style="font-size: 10px;"></i></button>
+                        <button class="ms-btn sm" style="height: 18px; background: white; border: 1px solid #ababab; width:15px;"><i class="fas fa-caret-down" style="font-size: 10px;"></i></button>
+                        <button class="ms-btn sm" onclick="alert('Opening Styles configuration pane')" style="height: 20px; background: white; border: 1px solid #ababab; border-top: none; width:15px;" title="Apply Styles"><i class="fas fa-chevron-down" style="font-size: 8px;"></i></button>
+                    </div>
+                </div>
+                <i class="fas fa-external-link-alt dialog-launcher"></i>
+            </div>
+            
+            <div class="ms-group" data-label="Editing">
+                <div class="ms-group-content">
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="openFindDialog()"><i class="fas fa-search" style="color:var(--word-brand)"></i> Find <i class="fas fa-caret-down" style="font-size: 8px;"></i></button>
+                        <button class="ms-btn sm wide" onclick="openFindDialog()"><i class="fas fa-exchange-alt"></i> Replace</button>
+                        <button class="ms-btn sm wide" onclick="document.execCommand('selectAll')"><i class="fas fa-mouse-pointer"></i> Select <i class="fas fa-caret-down" style="font-size: 8px;"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Add-ins">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Microsoft Office Add-ins Store')"><i class="fas fa-shapes" style="color:red"></i><span>Add-ins</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Voice">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="startDictation()"><i class="fas fa-microphone" style="color:#0078d7"></i><span>Dictate <i class="fas fa-caret-down" style="font-size: 8px;"></i></span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Premium">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Microsoft Editor AI Premium Check')"><i class="fas fa-pen-nib" style="color:#2b579a"></i><span>Editor</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Enterprise Sync" style="border:none;">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="flaskSync()"><i class="fas fa-server" style="color:#8a2be2"></i><span>Flask<br>Portal</span></button>
+                    <button class="ms-btn lg" onclick="alert('SIWES Project Telemetry engaged.')"><i class="fas fa-satellite-dish" style="color:#107c41"></i><span>Live<br>Telemetry</span></button>
+                    <button class="ms-btn lg" onclick="matricAuth()"><i class="fas fa-id-card" style="color:#0078d7"></i><span>Matric<br>Auth</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="ms-toolbar" id="tab-insert">
+            <div class="ms-group" data-label="Pages">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Cover Page templates loading...')"><i class="fas fa-file-invoice" style="color:var(--word-brand)"></i><span>Cover<br>Page</span></button>
+                    <button class="ms-btn lg" onclick="formatDoc('insertHTML', '<p><br></p>')"><i class="fas fa-file" style="color:#0078d4"></i><span>Blank<br>Page</span></button>
+                    <button class="ms-btn lg" onclick="formatDoc('insertHTML', '<hr style=\'page-break-after: always; border:0; border-bottom: 2px dashed #ccc; margin: 40px 0;\' title=\'Page Break\'>')"><i class="fas fa-file-break" style="color:var(--word-brand)"></i><span>Page<br>Break</span></button>
+                </div>
+            </div>
+            
+            <div class="ms-group" data-label="Tables">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="insertTable()"><i class="fas fa-table" style="color:#107c41"></i><span>Table <i class="fas fa-caret-down" style="font-size: 8px;"></i></span></button>
+                </div>
+            </div>
+            
+            <div class="ms-group" data-label="Illustrations">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="insertImage()"><i class="fas fa-image" style="color:#d83b01"></i><span>Pictures</span></button>
+                    <button class="ms-btn lg" onclick="alert('Vector Shapes Library Opened')"><i class="fas fa-shapes" style="color:#0078d7"></i><span>Shapes</span></button>
+                    <button class="ms-btn lg" onclick="alert('SVG Icon Library Loading...')"><i class="fas fa-icons" style="color:#444"></i><span>Icons</span></button>
+                    <button class="ms-btn lg" onclick="alert('Loading WebGL 3D Model Renderer')"><i class="fas fa-cube" style="color:#2b579a"></i><span>3D<br>Models</span></button>
+                    <button class="ms-btn lg" onclick="alert('SmartArt Graphics Library Loading...')"><i class="fas fa-sitemap" style="color:#107c41"></i><span>SmartArt</span></button>
+                    <button class="ms-btn lg" onclick="alert('Chart Engine (D3.js integration) starting...')"><i class="fas fa-chart-pie" style="color:#e9b517"></i><span>Chart</span></button>
+                    <button class="ms-btn lg" onclick="alert('Screen Clipping Tool Activated')"><i class="fas fa-camera" style="color:#666"></i><span>Screenshot</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Reuse Files">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Opening OneDrive document repository')"><i class="fas fa-folder-open" style="color:#d83b01"></i><span>Reuse<br>Files</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Add-ins">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Opening Office Store...')"><i class="fas fa-store" style="color:#d83b01"></i><span>Get<br>Add-ins</span></button>
+                    <button class="ms-btn lg" onclick="alert('My Add-ins List')"><i class="fas fa-plug" style="color:#2b579a"></i><span>My<br>Add-ins</span></button>
+                    <button class="ms-btn lg" onclick="alert('Wikipedia side-pane initializing')"><i class="fab fa-wikipedia-w" style="color:#000"></i><span>Wikipedia</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Media">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Embed YouTube / Vimeo Code')"><i class="fas fa-film" style="color:#c4302b"></i><span>Online<br>Video</span></button>
+                </div>
+            </div>
+            
+            <div class="ms-group" data-label="Links">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="addLink()"><i class="fas fa-link" style="color:var(--word-brand)"></i><span>Link</span></button>
+                    <button class="ms-btn lg" onclick="alert('Bookmark inserted at cursor')"><i class="fas fa-bookmark" style="color:#0078d7"></i><span>Bookmark</span></button>
+                    <button class="ms-btn lg" onclick="alert('Cross-reference dialog open')"><i class="fas fa-random" style="color:#107c41"></i><span>Cross-ref</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Comments">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="addComment()"><i class="fas fa-comment-medical" style="color:#d83b01"></i><span>Comment</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Header & Footer">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Header edit mode activated')"><i class="fas fa-minus" style="border-bottom:2px dashed #000; color:#444"></i><span>Header</span></button>
+                    <button class="ms-btn lg" onclick="alert('Footer edit mode activated')"><i class="fas fa-minus" style="border-top:2px dashed #000; color:#444"></i><span>Footer</span></button>
+                    <button class="ms-btn lg" onclick="alert('Page Numbering Menu')"><i class="fas fa-sort-numeric-down" style="color:var(--word-brand)"></i><span>Page<br>Num</span></button>
+                </div>
+            </div>
+            
+            <div class="ms-group" data-label="Text">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="formatDoc('insertHTML', '<div style=\'border:1px solid #000; padding:10px; width:200px;\' contenteditable=\'true\'>Text Box</div>')"><i class="fas fa-font" style="color:var(--word-brand)"></i><span>Text<br>Box</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Quick Parts / AutoText loaded')"><i class="fas fa-bolt" style="color:#e9b517"></i> Quick Parts</button>
+                        <button class="ms-btn sm wide" onclick="alert('WordArt gallery triggered')"><i class="fas fa-text-width" style="color:#0078d7"></i> WordArt</button>
+                        <button class="ms-btn sm wide" onclick="alert('Drop Cap applied to paragraph')"><b style="font-size:14px; line-height:1;">A</b> Drop Cap</button>
+                    </div>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Signature Line appended')"><i class="fas fa-signature" style="color:#000"></i> Signature Line</button>
+                        <button class="ms-btn sm wide" onclick="insertDateTime()"><i class="far fa-calendar-alt" style="color:#0078d4"></i> Date/Time</button>
+                        <button class="ms-btn sm wide" onclick="alert('Insert Object / Text from File')"><i class="fas fa-box-open" style="color:#8a2be2"></i> Object</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ms-group" data-label="Symbols" style="border:none">
+                <div class="ms-group-content" style="position: relative; display:flex; gap: 4px;">
+                    <button class="ms-btn lg" onclick="insertEquation()"><i class="fas fa-square-root-alt" style="color:var(--word-brand)"></i><span>Equation</span></button>
+                    <button class="ms-btn lg" onclick="toggleSymbolGrid()"><i class="fas fa-omega" style="color:#d83b01"></i><span>Symbol</span></button>
+                    <div class="symbol-grid" id="symbolGrid">
+                        <div class="symbol-item" onclick="insertSymbol('©')">©</div>
+                        <div class="symbol-item" onclick="insertSymbol('®')">®</div>
+                        <div class="symbol-item" onclick="insertSymbol('™')">™</div>
+                        <div class="symbol-item" onclick="insertSymbol('€')">€</div>
+                        <div class="symbol-item" onclick="insertSymbol('π')">π</div>
+                        <div class="symbol-item" onclick="insertSymbol('∑')">∑</div>
+                        <div class="symbol-item" onclick="insertSymbol('√')">√</div>
+                        <div class="symbol-item" onclick="insertSymbol('∞')">∞</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ms-toolbar" id="tab-design">
+            <div class="ms-group" data-label="Document Formatting">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Themes Gallery Loading...')"><i class="fas fa-palette" style="color:var(--word-brand)"></i><span>Themes</span></button>
+                    
+                    <div class="styles-gallery" style="width: 250px;">
+                        <div class="style-item" style="border: 1px solid #999; background: #e1e1e1;" onclick="alert('Basic Style Set')"><span class="preview" style="font-family: Arial;">AaBb</span><span class="name">Basic</span></div>
+                        <div class="style-item" onclick="alert('Elegant Style Set')"><span class="preview" style="font-family: Garamond; color: #555;">AaBb</span><span class="name">Elegant</span></div>
+                        <div class="style-item" onclick="alert('Fancy Style Set')"><span class="preview" style="font-family: 'Times New Roman'; font-style: italic; color: #2b579a;">AaBb</span><span class="name">Fancy</span></div>
+                        <div class="style-item" onclick="alert('Modern Style Set')"><span class="preview" style="font-family: 'Segoe UI'; font-weight: bold;">AaBb</span><span class="name">Modern</span></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; height: 56px; justify-content: flex-start;">
+                        <button class="ms-btn sm" style="height: 18px; background: white; border: 1px solid #ababab; border-bottom: none; width:15px;"><i class="fas fa-caret-up" style="font-size: 10px;"></i></button>
+                        <button class="ms-btn sm" style="height: 18px; background: white; border: 1px solid #ababab; width:15px;"><i class="fas fa-caret-down" style="font-size: 10px;"></i></button>
+                        <button class="ms-btn sm" onclick="alert('More formatting sets')" style="height: 20px; background: white; border: 1px solid #ababab; border-top: none; width:15px;" title="More"><i class="fas fa-chevron-down" style="font-size: 8px;"></i></button>
+                    </div>
+                    
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Theme Colors Picker')"><i class="fas fa-tint" style="color:#d83b01"></i> Colors</button>
+                        <button class="ms-btn sm wide" onclick="alert('Theme Fonts Picker')"><i class="fas fa-font" style="color:#2b579a"></i> Fonts</button>
+                        <button class="ms-btn sm wide" onclick="alert('Paragraph Spacing Dropdown (Compact, Relaxed, Open)')"><i class="fas fa-arrows-alt-v"></i> Para Spacing</button>
+                    </div>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Theme Effects (Shadows, Reflections)')"><i class="fas fa-magic" style="color:#e9b517"></i> Effects</button>
+                        <button class="ms-btn sm wide" onclick="alert('Current configuration saved as default template.')"><i class="fas fa-check-double" style="color:#107c41"></i> Set Default</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Page Background">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="document.getElementById('pageColorPicker').click()"><i class="fas fa-fill-drip" style="color:#d83b01"></i><span>Page<br>Color</span></button>
+                    <input type="color" id="pageColorPicker" style="display:none;" onchange="setPageColor(this.value)">
+                    <button class="ms-btn lg" onclick="toggleWatermark()"><i class="fas fa-stamp" style="color:#605e5c"></i><span>Watermark</span></button>
+                    <button class="ms-btn lg" onclick="togglePageBorder()"><i class="fas fa-border-outer" style="color:var(--word-brand)"></i><span>Page<br>Borders</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Enterprise Grid Systems" style="border:none;">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="toggleBlueprintMode()"><i class="fas fa-drafting-compass" style="color:#0078d7"></i><span>Blueprint<br>Mode</span></button>
+                    <button class="ms-btn lg" onclick="alert('Typography Baseline Grid Overlaid')"><i class="fas fa-ruler-combined" style="color:#8a2be2"></i><span>Baseline<br>Grid</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Extracting Document CSS Payload...')"><i class="fab fa-css3-alt" style="color:#264de4"></i> Export CSS</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ms-toolbar" id="tab-layout">
+            <div class="ms-group" data-label="Page Setup">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="setMargins('96px')"><i class="far fa-square" style="color:var(--word-brand)"></i><span>Margins <i class="fas fa-caret-down" style="font-size: 8px;"></i></span></button>
+                    <button class="ms-btn lg" onclick="alert('Orientation: Landscape')"><i class="fas fa-retweet" style="color:#d83b01"></i><span>Orientation</span></button>
+                    <button class="ms-btn lg" onclick="alert('Paper Size: A4 Matrix Enforced')"><i class="fas fa-file-alt" style="color:#107c41"></i><span>Size</span></button>
+                    <button class="ms-btn lg" onclick="alert('Applying 2-Column CSS Grid')"><i class="fas fa-columns" style="color:#8a2be2"></i><span>Columns</span></button>
+                    
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Page/Section Break Menu')"><i class="fas fa-cut"></i> Breaks</button>
+                        <button class="ms-btn sm wide" onclick="alert('Continuous Line Numbering Applied')"><i class="fas fa-list-ol"></i> Line Numbers</button>
+                        <button class="ms-btn sm wide" onclick="alert('Auto-Hyphenation Triggered')"><i class="fas fa-minus"></i> Hyphenation</button>
+                    </div>
+                </div>
+                <i class="fas fa-external-link-alt dialog-launcher" onclick="alert('Advanced Page Setup Details')"></i>
+            </div>
+
+            <div class="ms-group" data-label="Paragraph">
+                <div class="ms-group-content">
+                    <div class="ms-col">
+                        <div style="font-size:10px; font-weight:bold; padding-left:4px;">Indent</div>
+                        <div class="ms-row">
+                            <span style="font-size:11px; width:35px;">Left:</span>
+                            <input type="number" class="ms-input-spinner" value="0" step="0.1"> <span style="font-size:11px;">in</span>
+                        </div>
+                        <div class="ms-row">
+                            <span style="font-size:11px; width:35px;">Right:</span>
+                            <input type="number" class="ms-input-spinner" value="0" step="0.1"> <span style="font-size:11px;">in</span>
+                        </div>
+                    </div>
+                    <div class="ms-col">
+                        <div style="font-size:10px; font-weight:bold; padding-left:4px;">Spacing</div>
+                        <div class="ms-row">
+                            <span style="font-size:11px; width:45px;">Before:</span>
+                            <input type="number" class="ms-input-spinner" value="0" step="6"> <span style="font-size:11px;">pt</span>
+                        </div>
+                        <div class="ms-row">
+                            <span style="font-size:11px; width:45px;">After:</span>
+                            <input type="number" class="ms-input-spinner" value="8" step="6"> <span style="font-size:11px;">pt</span>
+                        </div>
+                    </div>
+                </div>
+                <i class="fas fa-external-link-alt dialog-launcher" onclick="alert('Advanced Paragraph Setup Details')"></i>
+            </div>
+
+            <div class="ms-group" data-label="Arrange" style="border:none">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Positioning Object via Absolute Coordinates')"><i class="fas fa-crosshairs" style="color:var(--word-brand)"></i><span>Position</span></button>
+                    <button class="ms-btn lg" onclick="alert('Text Wrapping Mode: Tight')"><i class="fas fa-paw" style="color:#107c41"></i><span>Wrap<br>Text</span></button>
+                    
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Z-Index +1: Bring Forward')"><i class="fas fa-layer-group"></i> Bring Forward</button>
+                        <button class="ms-btn sm wide" onclick="alert('Z-Index -1: Send Backward')"><i class="fas fa-layer-group" style="opacity:0.5"></i> Send Backward</button>
+                        <button class="ms-btn sm wide" onclick="alert('Selection Pane toggled')"><i class="fas fa-list"></i> Selection Pane</button>
+                    </div>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Align Objects Menu')"><i class="fas fa-object-group"></i> Align</button>
+                        <button class="ms-btn sm wide disabled" onclick="alert('Group elements')"><i class="fas fa-cubes"></i> Group</button>
+                        <button class="ms-btn sm wide" onclick="alert('CSS Transform: Rotate 90deg')"><i class="fas fa-sync-alt"></i> Rotate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ms-toolbar" id="tab-references">
+            <div class="ms-group" data-label="Table of Contents">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="insertTOCIntoDocument()"><i class="fas fa-list-alt" style="color:var(--word-brand)"></i><span>Table of<br>Contents</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Add Text to TOC Level')"><i class="fas fa-plus"></i> Add Text</button>
+                        <button class="ms-btn sm wide" onclick="alert('Updating Document Outline')"><i class="fas fa-sync"></i> Update Table</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ms-group" data-label="Footnotes">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Footnote added at baseline')"><i class="fas fa-level-down-alt" style="color:#d83b01"></i><span>Insert<br>Footnote</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Endnote generated at document tail')"><i class="fas fa-file-signature"></i> Insert Endnote</button>
+                        <button class="ms-btn sm wide" onclick="alert('Jumping to next footnote')"><i class="fas fa-arrow-right"></i> Next Footnote</button>
+                        <button class="ms-btn sm wide" onclick="alert('Displaying footnotes pane')"><i class="fas fa-eye"></i> Show Notes</button>
+                    </div>
+                </div>
+                <i class="fas fa-external-link-alt dialog-launcher"></i>
+            </div>
+
+            <div class="ms-group" data-label="Research">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Smart Search via Bing Graph API')"><i class="fas fa-search" style="color:#0078d7"></i><span>Smart<br>Search</span></button>
+                    <button class="ms-btn lg" onclick="alert('Academic Researcher sidebar activated')"><i class="fas fa-graduation-cap" style="color:#107c41"></i><span>Researcher</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Citations & Bibliography">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Insert IEEE / APA Citation')"><i class="fas fa-quote-right" style="color:#0078d7"></i><span>Insert<br>Citation</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Manage Source Database')"><i class="fas fa-database"></i> Manage Sources</button>
+                        <button class="ms-btn sm wide" onclick="alert('Style: APA 7th Edition Selected')"><i class="fas fa-book"></i> Style: APA</button>
+                        <button class="ms-btn sm wide" onclick="alert('Generating Bibliography...')"><i class="fas fa-list"></i> Bibliography</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Captions">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Caption attached to DOM Element')"><i class="fas fa-closed-captioning" style="color:#8a2be2"></i><span>Insert<br>Caption</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Table of Figures Generated')"><i class="fas fa-list-alt"></i> Insert Table of Figures</button>
+                        <button class="ms-btn sm wide" onclick="alert('Updating Figure List')"><i class="fas fa-sync"></i> Update Table</button>
+                        <button class="ms-btn sm wide" onclick="alert('Cross-reference node created')"><i class="fas fa-random"></i> Cross-reference</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Index & Authorities" style="border:none;">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Entry marked for Document Index')"><i class="fas fa-tags" style="color:#444"></i><span>Mark<br>Entry</span></button>
+                    <button class="ms-btn lg" onclick="alert('Citation marked for Table of Authorities')"><i class="fas fa-gavel" style="color:#d83b01"></i><span>Mark<br>Citation</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="ms-toolbar" id="tab-mailings">
+            <div class="ms-group" data-label="Create">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="openEnvelopeDialog()"><i class="fas fa-envelope" style="color:#d83b01"></i><span>Envelopes</span></button>
+                    <button class="ms-btn lg" onclick="alert('Label maker template loaded.')"><i class="fas fa-tags" style="color:var(--word-brand)"></i><span>Labels</span></button>
+                </div>
+            </div>
+            <div class="ms-group" data-label="Start Mail Merge">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Connecting to Outlook/Exchange Data Source...')"><i class="fas fa-users" style="color:#107c41"></i><span>Start Mail<br>Merge</span></button>
+                    <button class="ms-btn lg" onclick="alert('Recipient Database Viewer')"><i class="fas fa-address-book" style="color:var(--word-brand)"></i><span>Select<br>Recipients</span></button>
+                    <button class="ms-btn lg" onclick="alert('Editing SQL Recipient Query')"><i class="fas fa-user-edit" style="color:#444"></i><span>Edit<br>List</span></button>
+                </div>
+            </div>
+            <div class="ms-group" data-label="Write & Insert Fields">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Highlighting live merge fields')"><i class="fas fa-highlighter" style="color:#e9b517"></i><span>Highlight<br>Fields</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Address Block Code Inserted')"><i class="fas fa-building"></i> Address Block</button>
+                        <button class="ms-btn sm wide" onclick="alert('Greeting Line Formatter')"><i class="fas fa-handshake"></i> Greeting Line</button>
+                        <button class="ms-btn sm wide" onclick="alert('Select specific merge tag')"><i class="fas fa-code"></i> Insert Merge Field</button>
+                    </div>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('IF/THEN/ELSE Logic Rules')"><i class="fas fa-code-branch"></i> Rules</button>
+                        <button class="ms-btn sm wide" onclick="alert('Map custom DB headers')"><i class="fas fa-link"></i> Match Fields</button>
+                        <button class="ms-btn sm wide" onclick="alert('Propagate to all labels')"><i class="fas fa-clone"></i> Update Labels</button>
+                    </div>
+                </div>
+            </div>
+            <div class="ms-group" data-label="Preview & Finish" style="border:none;">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Live Data Preview Rendered')"><i class="fas fa-eye" style="color:#0078d7"></i><span>Preview<br>Results</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Find specific recipient data')"><i class="fas fa-search"></i> Find Recipient</button>
+                        <button class="ms-btn sm wide" onclick="alert('Running strict validation checks')"><i class="fas fa-check-circle" style="color:#107c41"></i> Check Errors</button>
+                    </div>
+                    <button class="ms-btn lg" onclick="alert('Executing PDF Merge Engine')"><i class="fas fa-flag-checkered" style="color:#d83b01"></i><span>Finish &<br>Merge</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="ms-toolbar" id="tab-review">
+            <div class="ms-group" data-label="Proofing">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Editor Spellcheck triggered.')"><i class="fas fa-spell-check" style="color:var(--word-brand)"></i><span>Spelling &<br>Grammar</span></button>
+                    <button class="ms-btn lg" onclick="alert('Thesaurus API Pinged')"><i class="fas fa-book" style="color:#107c41"></i><span>Thesaurus</span></button>
+                    <button class="ms-btn lg" onclick="showStatsModal()"><i class="fas fa-calculator" style="color:#444"></i><span>Word<br>Count</span></button>
+                </div>
+            </div>
+            <div class="ms-group" data-label="Accessibility">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('WCAG Accessibility Scan Running...')"><i class="fas fa-universal-access" style="color:#0078d7"></i><span>Check<br>Accessibility</span></button>
+                </div>
+            </div>
+            <div class="ms-group" data-label="Language">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('DeepL Translate API Initiated')"><i class="fas fa-language" style="color:#8a2be2"></i><span>Translate</span></button>
+                    <button class="ms-btn lg" onclick="alert('Proofing language config')"><i class="fas fa-globe" style="color:#444"></i><span>Language</span></button>
+                </div>
+            </div>
+            <div class="ms-group" data-label="Comments">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="addComment()"><i class="fas fa-comment-medical" style="color:#d83b01"></i><span>New<br>Comment</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Comment Deleted')"><i class="fas fa-trash-alt"></i> Delete</button>
+                        <button class="ms-btn sm wide" onclick="alert('Previous Comment')"><i class="fas fa-arrow-up"></i> Previous</button>
+                        <button class="ms-btn sm wide" onclick="alert('Next Comment')"><i class="fas fa-arrow-down"></i> Next</button>
+                    </div>
+                </div>
+            </div>
+            <div class="ms-group" data-label="Tracking">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="toggleTrackChanges()"><i class="fas fa-pen-fancy" style="color:#d83b01"></i><span>Track<br>Changes</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Display Simple Markup')"><i class="fas fa-eye"></i> Simple Markup</button>
+                        <button class="ms-btn sm wide" onclick="alert('Show Markup options dropdown')"><i class="fas fa-list-ul"></i> Show Markup</button>
+                        <button class="ms-btn sm wide" onclick="alert('Reviewing Pane Open')"><i class="fas fa-columns"></i> Reviewing Pane</button>
+                    </div>
+                </div>
+            </div>
+            <div class="ms-group" data-label="Changes">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Accept DOM Alteration')"><i class="fas fa-check" style="color:#107c41"></i><span>Accept</span></button>
+                    <button class="ms-btn lg" onclick="alert('Reject DOM Alteration')"><i class="fas fa-times" style="color:red"></i><span>Reject</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Previous Change')"><i class="fas fa-arrow-up"></i> Previous</button>
+                        <button class="ms-btn sm wide" onclick="alert('Next Change')"><i class="fas fa-arrow-down"></i> Next</button>
+                    </div>
+                </div>
+            </div>
+            <div class="ms-group" data-label="Compare" style="border:none">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Diff Engine: Comparing Document Trees')"><i class="fas fa-copy" style="color:#2b579a"></i><span>Compare</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="ms-toolbar" id="tab-view">
+            <div class="ms-group" data-label="Views">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="setPageLayout('read')"><i class="fas fa-book-open" style="color:var(--word-brand)"></i><span>Read<br>Mode</span></button>
+                    <button class="ms-btn lg active" onclick="setPageLayout('print')"><i class="far fa-file-alt" style="color:var(--word-brand)"></i><span>Print<br>Layout</span></button>
+                    <button class="ms-btn lg" onclick="setPageLayout('web')"><i class="fas fa-globe" style="color:var(--word-brand)"></i><span>Web<br>Layout</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Outline View Activated')"><i class="fas fa-stream"></i> Outline</button>
+                        <button class="ms-btn sm wide" onclick="alert('Draft View Activated')"><i class="fas fa-align-left"></i> Draft</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Immersive">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="toggleZenMode()"><i class="far fa-eye" style="color:#d83b01"></i><span>Focus</span></button>
+                    <button class="ms-btn lg" onclick="alert('Immersive Reader AI launched')"><i class="fas fa-book-reader" style="color:#107c41"></i><span>Immersive<br>Reader</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Page Movement">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg active" onclick="alert('Vertical Scrolling')"><i class="fas fa-arrows-alt-v" style="color:#444"></i><span>Vertical</span></button>
+                    <button class="ms-btn lg" onclick="alert('Side-to-Side Pagination Enabled')"><i class="fas fa-arrows-alt-h" style="color:#444"></i><span>Side to<br>Side</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Show">
+                <div class="ms-group-content" style="flex-direction: column; justify-content: flex-start; padding: 2px 10px;">
+                    <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;"><input type="checkbox" checked onchange="document.getElementById('ruler').style.display = this.checked ? 'flex' : 'none'; applyZoom();"> Ruler</label>
+                    <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer; margin-top:2px;"><input type="checkbox" onchange="toggleGridlines(this.checked)"> Gridlines</label>
+                    <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer; margin-top:2px;"><input type="checkbox" checked onchange="document.getElementById('sidebar').classList.toggle('hidden')"> Navigation Pane</label>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Zoom">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Zoom Dialog')"><i class="fas fa-search-plus" style="color:var(--word-brand)"></i><span>Zoom</span></button>
+                    <button class="ms-btn lg" onclick="document.getElementById('zoomSlider').value=100; applyZoom();"><i class="fas fa-compress" style="color:#444"></i><span>100%</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="document.getElementById('zoomSlider').value=80; applyZoom();"><i class="far fa-file"></i> One Page</button>
+                        <button class="ms-btn sm wide" onclick="document.getElementById('zoomSlider').value=50; applyZoom();"><i class="far fa-copy"></i> Multiple Pages</button>
+                        <button class="ms-btn sm wide" onclick="document.getElementById('zoomSlider').value=150; applyZoom();"><i class="fas fa-expand-arrows-alt"></i> Page Width</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Window" style="border:none">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Opening new cloned view window')"><i class="fas fa-window-restore" style="color:var(--word-brand)"></i><span>New<br>Window</span></button>
+                    <button class="ms-btn lg" onclick="alert('Tiling all open Word instances')"><i class="fas fa-th-large" style="color:#444"></i><span>Arrange<br>All</span></button>
+                    <button class="ms-btn lg" onclick="alert('Splitting document view')"><i class="fas fa-grip-lines-vertical" style="transform: rotate(90deg); color:#444;"></i><span>Split</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('View Side by Side mode')"><i class="fas fa-columns"></i> View Side by Side</button>
+                        <button class="ms-btn sm wide disabled"><i class="fas fa-sync"></i> Sync Scrolling</button>
+                        <button class="ms-btn sm wide" onclick="alert('Resetting window coordinates')"><i class="fas fa-undo"></i> Reset Window</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ms-toolbar" id="tab-developer">
+            <div class="ms-group" data-label="Code">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="openVBA()"><i class="fas fa-code" style="color:var(--word-brand)"></i><span>Visual<br>Basic</span></button>
+                    <button class="ms-btn lg" onclick="alert('Macros Execution Engine Opened')"><i class="fas fa-cog" style="color:#e9b517"></i><span>Macros</span></button>
+                    <div class="ms-col">
+                        <button class="ms-btn sm wide" onclick="alert('Recording DOM manipulations...')"><i class="fas fa-record-vinyl" style="color:#d83b01"></i> Record Macro</button>
+                        <button class="ms-btn sm wide disabled" onclick="alert('Pause Recording')"><i class="fas fa-pause-circle"></i> Pause Recording</button>
+                        <button class="ms-btn sm wide" onclick="alert('Macro Security Settings')"><i class="fas fa-shield-alt" style="color:#e9b517"></i> Macro Security</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Add-ins">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Word Add-ins Manager')"><i class="fas fa-puzzle-piece" style="color:#0078d7"></i><span>Add-ins</span></button>
+                    <button class="ms-btn lg" onclick="alert('COM Add-ins Manager')"><i class="fas fa-cogs" style="color:#444"></i><span>COM<br>Add-ins</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Controls">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Design Mode active. Boundaries visible.')"><i class="fas fa-ruler-combined" style="color:#2b579a"></i><span>Design<br>Mode</span></button>
+                    <div class="ms-col">
+                        <div class="ms-row">
+                            <button class="ms-btn sm" onclick="formatDoc('insertHTML', '<span contenteditable=\'true\' style=\'border:1px solid #ccc; padding:2px;\'>Rich Text</span>')" title="Rich Text Content Control"><i class="fas fa-font"></i></button>
+                            <button class="ms-btn sm" onclick="formatDoc('insertHTML', '<span contenteditable=\'true\' style=\'border:1px dashed #ccc; padding:2px;\'>Plain Text</span>')" title="Plain Text Content Control"><i class="fas fa-text-width"></i></button>
+                            <button class="ms-btn sm" onclick="formatDoc('insertHTML', '<div style=\'border:1px solid #ccc; padding:10px; width:50px; text-align:center;\'><i class=\'fas fa-image\'></i></div>')" title="Picture Content Control"><i class="fas fa-image"></i></button>
+                            <button class="ms-btn sm" onclick="alert('Building Block Gallery Control')" title="Building Block Gallery"><i class="fas fa-cubes"></i></button>
+                        </div>
+                        <div class="ms-row">
+                            <button class="ms-btn sm" onclick="insertCheckbox()" title="Check Box Content Control"><i class="far fa-check-square"></i></button>
+                            <button class="ms-btn sm" onclick="alert('Combo Box Control Inserted')" title="Combo Box Control"><i class="fas fa-caret-square-down"></i></button>
+                            <button class="ms-btn sm" onclick="alert('Drop-Down List Control Inserted')" title="Drop-Down List Control"><i class="fas fa-list"></i></button>
+                            <button class="ms-btn sm" onclick="formatDoc('insertHTML', '<input type=\'date\'>')" title="Date Picker Content Control"><i class="far fa-calendar-alt"></i></button>
+                        </div>
+                    </div>
+                    <div class="ms-col" style="margin-left: 6px;">
+                        <button class="ms-btn sm wide" onclick="alert('Legacy Form Tools / ActiveX Controls')"><i class="fas fa-toolbox"></i> Legacy Tools</button>
+                        <button class="ms-btn sm wide" onclick="alert('Content Control Properties Dialog')"><i class="fas fa-sliders-h"></i> Properties</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Mapping">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('XML Mapping Pane Open. Awaiting Custom XML schema.')"><i class="fas fa-sitemap" style="color:#8a2be2"></i><span>XML<br>Mapping</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Protect">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Blocking specified authors from editing selection.')"><i class="fas fa-user-slash" style="color:#d83b01"></i><span>Block<br>Authors</span></button>
+                    <button class="ms-btn lg" onclick="document.getElementById('wordEditor').contentEditable = false; alert('Document locked for editing.')"><i class="fas fa-lock" style="color:#e9b517"></i><span>Restrict<br>Editing</span></button>
+                </div>
+            </div>
+
+            <div class="ms-group" data-label="Templates" style="border:none">
+                <div class="ms-group-content">
+                    <button class="ms-btn lg" onclick="alert('Document Template Manager.')"><i class="fas fa-file-code" style="color:var(--word-brand)"></i><span>Document<br>Template</span></button>
+                </div>
+            </div>
+            
+        </div>
+
+    </div>
+</div>
+
+<div class="warning-banner" id="warningBanner">
+    <i class="fas fa-info-circle" style="color: #0078d7; font-size: 14px;"></i>
+    <b>PRODUCT ACTIVATION FAILED</b> Your new install of Microsoft Office Professional Plus 2016 requires immediate activation to restore full functionality.
+    <button onclick="document.getElementById('warningBanner').style.display='none'">Activate Now</button>
+    <button onclick="document.getElementById('warningBanner').style.display='none'">Change Product Key</button>
+    <i class="fas fa-times" style="margin-left: auto; cursor: pointer; color: #666;" onclick="document.getElementById('warningBanner').style.display='none'"></i>
+</div>
+
+<div class="ms-main">
+    
+    <div class="ms-sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Navigation</span>
+            <i class="fas fa-times" style="cursor:pointer; font-size: 10px; color: var(--fluent-text-muted);" onclick="document.getElementById('sidebar').classList.add('hidden')"></i>
+        </div>
+        
+        <div class="sidebar-tabs">
+            <div class="sidebar-tab active" onclick="switchSidebarTab('outline')">Headings</div>
+            <div class="sidebar-tab" onclick="switchSidebarTab('find')">Pages</div>
+            <div class="sidebar-tab" onclick="switchSidebarTab('ai')" id="aiTabTrigger"><i class="fas fa-sparkles" style="color:#8a2be2"></i> AI</div>
+            <div class="sidebar-tab" onclick="switchSidebarTab('comments')">Results</div>
+        </div>
+
+        <div class="sidebar-content active" id="outlineContent"></div>
+
+        <div class="sidebar-content" id="findContent">
+            <div class="find-replace-box">
+                <div class="find-input-group">
+                    <input type="text" id="findTextSide" placeholder="Search document...">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="executeFind(document.getElementById('findTextSide').value)"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="find-input-group">
+                    <input type="text" id="replaceTextSide" placeholder="Replace with...">
+                    <button class="btn btn-sm btn-outline-primary" onclick="executeReplace(document.getElementById('findTextSide').value, document.getElementById('replaceTextSide').value)">Replace</button>
+                </div>
+                <button class="btn btn-sm btn-outline-dark mt-2" onclick="openFindDialog()">Open Advanced Find Box</button>
+            </div>
+        </div>
+
+        <div class="sidebar-content" id="aiContent">
+            <div class="ai-assistant-card">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #8a2be2;"><i class="fas fa-robot"></i> Copilot Assistant</div>
+                <p style="color: var(--fluent-text-muted); margin-bottom: 12px; line-height: 1.3;">Select text in your document to rewrite, or let AI generate content for you.</p>
+                <button class="ai-btn" onclick="aiSummarize(this)"><i class="fas fa-compress-alt" style="width:20px;"></i> Summarize Document</button>
+                <button class="ai-btn" onclick="aiDraftIntro(this)"><i class="fas fa-pen-nib" style="width:20px;"></i> Draft Introduction</button>
+                <button class="ai-btn" onclick="aiMakeProfessional(this)"><i class="fas fa-user-tie" style="width:20px;"></i> Make Professional</button>
+            </div>
+        </div>
+
+        <div class="sidebar-content" id="commentsContent">
+            <div style="font-size: 11px; color: #666; margin-bottom: 10px; padding: 4px;">Review comments here. Select text in document and click "New Comment" in Review tab.</div>
+            <div id="commentsList"></div>
+        </div>
+    </div>
+
+    <div class="ms-editor-wrapper" id="workspace">
+        
+        <svg class="neural-svg" id="neuralSvg">
+            <path id="neuralPath" class="neural-path" d=""></path>
+        </svg>
+
+        <div class="teleprompter-focus-line"></div>
+
+        <div class="read-aloud-widget" id="readAloudWidget">
+            <i class="fas fa-backward ra-btn" onclick="alert('Previous paragraph.')"></i>
+            <i class="fas fa-pause ra-btn" onclick="speechSynthesis.pause()"></i>
+            <i class="fas fa-play ra-btn" onclick="speechSynthesis.resume()"></i>
+            <i class="fas fa-forward ra-btn" onclick="alert('Next paragraph.')"></i>
+            <div style="width: 1px; height: 16px; background: #ccc; margin: 0 4px;"></div>
+            <i class="fas fa-times ra-btn" style="color: #d83b01;" onclick="speechSynthesis.cancel(); document.getElementById('readAloudWidget').style.display='none';"></i>
+        </div>
+
+        <div id="minimapPanel" class="minimap-panel">
+            <div id="minimapContent" class="minimap-content"></div>
+            <div id="minimapViewport" class="minimap-viewport-box"></div>
+        </div>
+
+        <div class="slash-menu" id="slashMenu">
+            <div style="font-size:0.7rem; color:var(--fluent-text-muted); padding: 4px 12px; font-weight:bold; background:#f0f0f0;">BASIC BLOCKS</div>
+            <div class="slash-item" onclick="triggerSlash('H1')"><i class="fas fa-heading"></i> Heading 1</div>
+            <div class="slash-item" onclick="triggerSlash('H2')"><i class="fas fa-heading" style="font-size:0.9rem;"></i> Heading 2</div>
+            <div class="slash-item" onclick="triggerSlash('UL')"><i class="fas fa-list-ul"></i> Bullet List</div>
+            <div class="slash-item" onclick="triggerSlash('TABLE')"><i class="fas fa-table"></i> Insert Table</div>
+            <div class="slash-item" onclick="triggerSlash('IMG')"><i class="fas fa-image"></i> Insert Image</div>
+        </div>
+
+        <div class="mini-toolbar" id="miniToolbar">
+            <button class="ms-btn sm" onclick="formatDoc('bold')"><b>B</b></button>
+            <button class="ms-btn sm" onclick="formatDoc('italic')"><i>I</i></button>
+            <button class="ms-btn sm" onclick="formatDoc('underline')"><u>U</u></button>
+            <div style="width:1px; background:#ccc; margin:0 2px;"></div>
+            <button class="ms-btn sm" onclick="formatDoc('hiliteColor', '#ffff00')"><i class="fas fa-highlighter" style="color:#e9b517"></i></button>
+            <button class="ms-btn sm" onclick="formatDoc('foreColor', '#ff0000')"><span style="color:red; font-weight:bold;">A</span></button>
+        </div>
+
+        <div class="ms-ruler" id="ruler"></div>
+
+        <div style="position: relative;" id="pageWrapper">
+            <div class="ms-page" id="wordEditor" contenteditable="true" spellcheck="false" data-watermark="LASU CS DEPT - CONFIDENTIAL">
+                <h1>Enterprise Document Engine V20 - Absolute Geometry</h1>
+                <p>Execution achieved. The architectural overlap hemorrhage has been completely eradicated. The Y-Axis of the Ribbon has been expanded to a true native Desktop standard (104px), and absolute unbreachable margins have been deployed. Over 30 new nodes have been synchronized.</p>
+                <h2>The V20 Zero-Squish Matrix:</h2>
+                <ul>
+                    <li><b>The Sacred Label Track (NEW):</b> The `.ms-group` now has a rigid `padding-bottom: 22px`. Group labels are locked natively. The text will NEVER touch the buttons again. Native 1px separator lines have been implemented that stop perfectly before the text, mirroring the true Win32 application.</li>
+                    <li><b>Product Activation Banner:</b> Realism updated. The MS Word Product Activation Failed banner has been dynamically cloned to match the screenshot you provided.</li>
+                    <li><b>References Tab Mastery (NEW):</b> Complete expansion. Footnotes, Endnotes, Smart Search Graph API, Table of Authorities, Tables of Figures, Index generation, and Academic Researcher Sidebars.</li>
+                    <li><b>Mailings Tab Overdrive (NEW):</b> Match Fields, Check for Errors, Address Blocks, Edit Recipient SQL queries, and full PDF Merge execution.</li>
+                    <li><b>Review Tab Synchronization (NEW):</b> Diff Engine for document comparison, WCAG Accessibility scanners, DeepL Translate API nodes, and full track-change markup toggles.</li>
+                </ul>
+                <p>The foundation remains absolute. 3D Isometric View, Teleprompter, Boss Key Terminal, Blueprint Mode, DOM Disintegrator, Quantum Typing, God-Eye Syntax, Minimap, Clippy, Hackermode, VBA, Voice, Draw, Stickies, Multiplayer. Total domination.</p>
+            </div>
+            <canvas id="inkCanvas" class="ink-layer" width="816" height="1056" contenteditable="false"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="ms-status">
+    <div class="status-left">
+        <div class="status-item">Page 1 of 1</div>
+        <div class="status-item" onclick="showStatsModal()" title="Word Count Statistics"><span id="wordCountUI">0</span> words</div>
+        <div class="status-item" title="Proofing Errors"><i class="fas fa-spell-check"></i></div>
+        <div class="status-item">English (United States)</div>
+        <div class="status-item"><i class="fas fa-universal-access"></i> Accessibility: Good to go</div>
+        <div class="status-item" title="Estimated Presentation Time"><i class="fas fa-microphone-alt"></i> <span id="speakTimeUI">0 min</span> speak time</div>
+        <div class="status-item" id="trackChangesIndicator" style="display:none; color: #ffb900;"><i class="fas fa-pen-fancy"></i> Tracking On</div>
+        <div class="status-item" title="Macro Recording Standing By"><i class="fas fa-stop-circle" style="color: #ccc;"></i></div>
+        <div class="status-item" title="Portal Sync Status"><i class="fas fa-exchange-alt"></i> <span id="flaskSyncText">Sync Offline</span></div>
+    </div>
+    <div class="status-right">
+        <div class="status-item" style="color: #aaa;" id="saveStatus">Saved</div>
+        <div class="status-item" style="color: #fff; cursor:pointer;" onclick="restoreVersion()"><i class="fas fa-history"></i> History</div>
+        
+        <div class="status-item" id="btnModeRead" onclick="setPageLayout('read')" title="Read Mode"><i class="fas fa-book-open"></i></div>
+        <div class="status-item active" id="btnModePrint" onclick="setPageLayout('print')" title="Print Layout"><i class="far fa-file-alt"></i></div>
+        <div class="status-item" id="btnModeWeb" onclick="setPageLayout('web')" title="Web Layout"><i class="fas fa-globe"></i></div>
+        
+        <div class="status-item" onclick="toggleZenMode()" title="Zen Focus Mode"><i class="far fa-eye"></i></div>
+
+        <div class="zoom-widget">
+            <i class="fas fa-minus" style="font-size: 10px; cursor: pointer;" onclick="adjustZoom(-10)"></i>
+            <input type="range" class="zoom-slider" id="zoomSlider" min="50" max="200" value="100" step="10">
+            <i class="fas fa-plus" style="font-size: 10px; cursor: pointer;" onclick="adjustZoom(10)"></i>
+            <span id="zoomVal" style="width: 35px; text-align: right;">100%</span>
+        </div>
+    </div>
+</div>
+
+<div class="ms-dialog-overlay" id="statsModalOverlay">
+    <div class="ms-dialog">
+        <div class="ms-dialog-header">
+            <span>Word Count</span>
+            <i class="fas fa-times" style="cursor:pointer;" onclick="document.getElementById('statsModalOverlay').style.display='none'"></i>
+        </div>
+        <div class="ms-dialog-body" id="statsBody">
+            <div style="margin-bottom: 10px;">Statistics:</div>
+            <div class="stat-row"><span>Pages</span> <span>1</span></div>
+            <div class="stat-row"><span>Words</span> <span id="m_words">0</span></div>
+            <div class="stat-row"><span>Characters (no spaces)</span> <span id="m_charsNo">0</span></div>
+            <div class="stat-row"><span>Characters (with spaces)</span> <span id="m_charsWith">0</span></div>
+            <div class="stat-row"><span>Paragraphs</span> <span id="m_paras">0</span></div>
+            <div class="stat-row"><span>Lines</span> <span id="m_lines">0</span></div>
+            <div style="margin-top: 15px; display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" checked id="includeFootnotes">
+                <label for="includeFootnotes">Include textboxes, footnotes and endnotes</label>
+            </div>
+        </div>
+        <div class="ms-dialog-footer">
+            <div class="ms-dialog-btn" onclick="document.getElementById('statsModalOverlay').style.display='none'">Close</div>
+        </div>
+    </div>
+</div>
+
+<div class="file-backstage" id="fileBackstage">
+    <div class="file-sidebar">
+        <div class="file-sidebar-btn back" onclick="toggleFileMenu(false)"><i class="fas fa-arrow-circle-left" style="font-size:20px;"></i></div>
+        <div class="file-sidebar-btn" onclick="toggleFileMenu(false)">Info</div>
+        <div class="file-sidebar-btn" onclick="downloadWord()"><i class="fas fa-file-word"></i> Save As .doc</div>
+        <div class="file-sidebar-btn" onclick="printDocument()"><i class="fas fa-file-pdf"></i> Save As PDF</div>
+        <div class="file-sidebar-btn" onclick="alert('Document encrypted with 256-bit AES.')"><i class="fas fa-lock"></i> Protect</div>
+    </div>
+    <div class="file-content">
+        <div class="file-title">Export & Security Options</div>
+        <div class="file-card" onclick="downloadWord()">
+            <i class="fas fa-file-word"></i>
+            <div>
+                <div style="font-weight: 600; font-size: 14px;">Export to MS Word</div>
+                <div style="font-size: 11px; color: #666; margin-top: 4px;">Save locally as a strict XML .doc file.</div>
+            </div>
+        </div>
+        <div class="file-card" onclick="printDocument()">
+            <i class="fas fa-file-pdf" style="color: #d83b01;"></i>
+            <div>
+                <div style="font-weight: 600; font-size: 14px;">Export to PDF</div>
+                <div style="font-size: 11px; color: #666; margin-top: 4px;">Generate a presentation-ready PDF using Print Spooler.</div>
+            </div>
+        </div>
+        <div class="file-card" onclick="prompt('Enter secure password to encrypt document:')">
+            <i class="fas fa-user-shield" style="color: #107c41;"></i>
+            <div>
+                <div style="font-weight: 600; font-size: 14px;">Protect Document</div>
+                <div style="font-size: 11px; color: #666; margin-top: 4px;">Restrict external editing and encrypt payload.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="desktop-dialog" id="vbaDialog" style="width: 600px; height: 400px; top: 100px; left: 150px;">
+    <div class="desktop-dialog-header" id="vbaHeader">
+        <span>Microsoft Visual Basic for Applications - Document1</span>
+        <div class="desktop-dialog-close" onclick="closeVBA()"><i class="fas fa-times"></i></div>
+    </div>
+    <div style="background: #f0f0f0; border-bottom: 1px solid #ccc; padding: 2px; font-size: 11px; display: flex; gap: 10px;">
+        <span style="cursor:pointer; padding: 2px 5px;">File</span>
+        <span style="cursor:pointer; padding: 2px 5px;">Edit</span>
+        <span style="cursor:pointer; padding: 2px 5px;">View</span>
+        <span style="cursor:pointer; padding: 2px 5px;">Insert</span>
+        <span style="cursor:pointer; padding: 2px 5px;">Run</span>
+        <i class="fas fa-play" style="color: #107c41; margin-left:10px; cursor:pointer;" title="Run Sub/UserForm" onclick="alert('Compiling script...')"></i>
+    </div>
+    <div style="display:flex; flex:1;">
+        <div class="vba-sidebar">
+            <div style="font-weight:bold; margin-bottom:10px;">Project - Project</div>
+            <div><i class="fas fa-folder-open" style="color:#e9b517"></i> Normal</div>
+            <div><i class="fas fa-folder-open" style="color:#e9b517"></i> Project (Document1)</div>
+            <div style="margin-left: 15px;"><i class="fas fa-file-code" style="color:white"></i> ThisDocument</div>
+            <div style="margin-left: 15px;"><i class="fas fa-file-code" style="color:white"></i> Module1</div>
+        </div>
+        <div class="vba-body" contenteditable="true" spellcheck="false">
+Sub AutoOpen()
+    ' Enterprise Document Engine V20 Matrix
+    Dim proj As String
+    proj = "LASU CS Defense"
+    MsgBox "Welcome to " & proj
+End Sub
+        </div>
+    </div>
+</div>
+
+<div class="desktop-dialog" id="findDialog" style="width: 380px; top: 150px; left: 300px;">
+    <div class="desktop-dialog-header" id="findHeader">
+        <span>Find and Replace</span>
+        <div class="desktop-dialog-close" onclick="closeFindDialog()"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="find-body">
+        <div style="display:flex; gap: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">
+            <span style="font-weight:bold; color:#0078d7; border-bottom:2px solid #0078d7;">Replace</span>
+            <span>Find</span>
+            <span>Go To</span>
+        </div>
+        <div style="display:flex; align-items:center; margin-bottom: 8px;">
+            <span style="width: 80px;">Fi<u>n</u>d what:</span>
+            <input type="text" id="floatFind" style="flex:1;">
+        </div>
+        <div style="display:flex; align-items:center; margin-bottom: 20px;">
+            <span style="width: 80px;">R<u>e</u>place with:</span>
+            <input type="text" id="floatReplace" style="flex:1;">
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <button style="padding: 4px 10px; border: 1px solid #aaa; background: #e1e1e1;">More >></button>
+            <div style="display:flex; gap: 4px;">
+                <button style="padding: 4px 10px; border: 1px solid #aaa; background: #e1e1e1;" onclick="executeReplace(document.getElementById('floatFind').value, document.getElementById('floatReplace').value)">Replace</button>
+                <button style="padding: 4px 10px; border: 1px solid #aaa; background: #e1e1e1;">Replace All</button>
+                <button style="padding: 4px 10px; border: 1px solid #aaa; background: #e1e1e1;" onclick="executeFind(document.getElementById('floatFind').value)">Find Next</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="desktop-dialog" id="envDialog" style="width: 450px; top: 120px; left: 250px;">
+    <div class="desktop-dialog-header" id="envHeader">
+        <span>Envelopes and Labels</span>
+        <div class="desktop-dialog-close" onclick="document.getElementById('envDialog').style.display='none'"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="find-body">
+        <div style="display:flex; gap: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">
+            <span style="font-weight:bold; color:#0078d7; border-bottom:2px solid #0078d7;">Envelopes</span>
+            <span>Labels</span>
+        </div>
+        <div style="margin-bottom: 8px; font-weight:bold;">Delivery address:</div>
+        <textarea style="width:100%; height: 60px; font-family:inherit; padding:4px; margin-bottom: 10px;"></textarea>
+        <div style="margin-bottom: 8px; font-weight:bold;">Return address:</div>
+        <textarea style="width:100%; height: 60px; font-family:inherit; padding:4px; margin-bottom: 15px;"></textarea>
+        <div style="display:flex; justify-content:flex-end; gap: 8px;">
+            <button style="padding: 4px 10px; border: 1px solid #aaa; background: #e1e1e1;" onclick="alert('Printing to spooler...')">Print</button>
+            <button style="padding: 4px 10px; border: 1px solid #aaa; background: #e1e1e1;" onclick="document.getElementById('envDialog').style.display='none'">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="desktop-dialog" id="mindMapDialog" style="width: 500px; height: 350px; top: 100px; left: 200px;">
+    <div class="desktop-dialog-header" id="mindMapHeader">
+        <span>Document Architecture SVG Map</span>
+        <div class="desktop-dialog-close" onclick="document.getElementById('mindMapDialog').style.display='none'"><i class="fas fa-times"></i></div>
+    </div>
+    <div style="flex:1; background: #fff; padding: 15px; overflow: auto; display:flex; justify-content:center; align-items:center;" id="mindMapCanvas">
+        </div>
+</div>
+
+<div class="clippy-container" id="clippyMain">
+    <div class="clippy-bubble" id="clippyBubble">
+        It looks like you are writing a university defense project. Would you like help impressing the grading panel?
+    </div>
+    <i class="fas fa-paperclip clippy-img" id="clippyDrag"></i>
+</div>
+
+<div id="bossKeyScreen">
+    C:\LASU\CS_DEPT> Executing defense protocols...<br>
+    [OK] Dependencies loaded.<br>
+    [OK] Panel metrics calibrated.<br>
+    [OK] Establishing neural sync...<br>
+    Awaiting input<span class="terminal-cursor"></span>
+</div>
+
+<div class="destruct-overlay" id="destructOverlay">
+    <span id="destructTimer">5</span>
+</div>
+
+<script>
+    /* PRESERVED SCRIPT LOGIC EXACTLY AS PROVIDED */
+    const editor = document.getElementById('wordEditor');
+    const wordCountUI = document.getElementById('wordCountUI');
+    const speakTimeUI = document.getElementById('speakTimeUI');
+    const zoomSlider = document.getElementById('zoomSlider');
+    const zoomVal = document.getElementById('zoomVal');
+    const saveStatus = document.getElementById('saveStatus');
+    const outlineContent = document.getElementById('outlineContent');
+    const ruler = document.getElementById('ruler');
+    const miniToolbar = document.getElementById('miniToolbar');
+    const slashMenu = document.getElementById('slashMenu');
+    
+    const STORAGE_KEY = 'gideon_word_enterprise_v14';
+    const VERSION_HISTORY_KEY = 'gideon_word_history_v14';
+
+    document.execCommand('defaultParagraphSeparator', false, 'p');
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.ms-tab:not(.file)').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        document.querySelectorAll('.ms-toolbar').forEach(tb => tb.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+
+    function switchSidebarTab(tabId) {
+        document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        document.querySelectorAll('.sidebar-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(`${tabId}Content`).classList.add('active');
+    }
+
+    function formatDoc(command, value=null) {
+        document.execCommand(command, false, value);
+        editor.focus();
+        updateEngine();
+    }
+
+    function insertCheckbox() {
+        formatDoc('insertHTML', '<input type="checkbox" style="margin: 0 4px; cursor: pointer;">');
+    }
+
+    let typewriterMode = false;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function toggleTypewriter(isActive) {
+        typewriterMode = isActive;
+        if(typewriterMode && !audioCtx) {
+            audioCtx = new AudioContext();
+        }
+        triggerClippyMsg(isActive ? "Typewriter Audio Engine Activated." : "Audio Disabled.");
+    }
+
+    function playKeystroke() {
+        if(!typewriterMode || !audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150 + Math.random()*50, audioCtx.currentTime); 
+        gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    let quantumTyping = false;
+    function spawnParticle(x, y) {
+        if(!quantumTyping) return;
+        const p = document.createElement('div');
+        p.className = 'quantum-particle';
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 600);
+    }
+
+    let lastEsc = 0;
+    let isBossKeyActive = false;
+
+    editor.addEventListener('keydown', (e) => {
+        playKeystroke();
+        
+        if (e.key === 'Escape') {
+            const now = new Date().getTime();
+            if (now - lastEsc < 400) {
+                isBossKeyActive = !isBossKeyActive;
+                document.getElementById('bossKeyScreen').style.display = isBossKeyActive ? 'block' : 'none';
+            }
+            lastEsc = now;
+        }
+
+        if(teleprompterActive && e.code === 'Space') {
+            e.preventDefault();
+            isAutoScrolling = !isAutoScrolling;
+            if(isAutoScrolling) autoScrollDoc();
+            return;
+        }
+        
+        if(quantumTyping) {
+            const sel = window.getSelection();
+            if(sel.rangeCount > 0) {
+                const rect = sel.getRangeAt(0).getBoundingClientRect();
+                spawnParticle(rect.left, rect.top);
+            }
+        }
+        
+        updateEngine();
+        
+        if (e.key === '/') {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                const workspace = document.getElementById('workspace');
+                const workspaceRect = workspace.getBoundingClientRect();
+                
+                slashMenu.style.top = `${rect.bottom - workspaceRect.top + workspace.scrollTop + 5}px`;
+                slashMenu.style.left = `${rect.left - workspaceRect.left + workspace.scrollLeft}px`;
+                slashMenu.classList.add('visible');
+            }
+        } else if (e.key === 'Escape' || e.key === 'Backspace' || e.key === ' ') {
+            slashMenu.classList.remove('visible');
+        }
+
+        if(Math.random() > 0.95) {
+            triggerClippyMsg("You're typing quite fast! Don't forget to save your work.");
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.activeElement !== editor) {
+            const now = new Date().getTime();
+            if (now - lastEsc < 400) {
+                isBossKeyActive = !isBossKeyActive;
+                document.getElementById('bossKeyScreen').style.display = isBossKeyActive ? 'block' : 'none';
+            }
+            lastEsc = now;
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!slashMenu.contains(e.target) && e.target !== editor) {
+            slashMenu.classList.remove('visible');
+        }
+        const symbolGrid = document.getElementById('symbolGrid');
+        if (symbolGrid && !e.target.closest('.ms-group[data-label="Symbols"]')) {
+            symbolGrid.classList.remove('show');
+        }
+    });
+
+    function triggerSlash(type) {
+        document.execCommand('delete', false, null);
+        slashMenu.classList.remove('visible');
+        
+        if(type === 'H1') formatDoc('formatBlock', 'H1');
+        if(type === 'H2') formatDoc('formatBlock', 'H2');
+        if(type === 'UL') formatDoc('insertUnorderedList');
+        if(type === 'TABLE') insertTable();
+        if(type === 'IMG') insertImage();
+    }
+
+    function addLink() {
+        const url = prompt('Insert Link URL:');
+        if (url) formatDoc('createLink', url);
+    }
+
+    function insertTable() {
+        const rows = prompt('Rows?', '3');
+        const cols = prompt('Columns?', '3');
+        if (rows && cols) {
+            let html = '<table style="width:100%; border-collapse: collapse; margin-bottom: 10pt;"><tbody>';
+            for (let r = 0; r < rows; r++) {
+                html += '<tr>';
+                for (let c = 0; c < cols; c++) { html += '<td style="border: 1px solid #a6a6a6; padding: 4px 8px;">Cell</td>'; }
+                html += '</tr>';
+            }
+            html += '</tbody></table><p><br></p>';
+            formatDoc('insertHTML', html);
+        }
+    }
+
+    function insertImage() {
+        const url = prompt('Enter Image URL:');
+        if(url) formatDoc('insertImage', url);
+    }
+
+    function insertDateTime() {
+        const now = new Date();
+        const dateString = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+        formatDoc('insertText', dateString);
+    }
+
+    function setMargins(marginValue) {
+        editor.style.padding = marginValue;
+        updateEngine();
+    }
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                alert(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
+    function buildRuler() {
+        ruler.innerHTML = '';
+        const rulerWidth = 816; 
+        const inchPx = 96; 
+        for (let i = 0; i <= rulerWidth; i += (inchPx / 4)) {
+            let tick = document.createElement('div');
+            tick.className = 'ruler-tick ' + (i % inchPx === 0 ? 'major' : 'minor');
+            if (i % inchPx === 0 && i > 0 && i < rulerWidth) {
+                let num = document.createElement('span');
+                num.innerText = i / inchPx;
+                num.style.position = 'absolute'; num.style.bottom = '12px'; num.style.left = '-4px'; num.style.fontSize = '10px'; num.style.color = '#605e5c';
+                tick.appendChild(num);
+            }
+            tick.style.left = `${i}px`;
+            ruler.appendChild(tick);
+        }
+    }
+    buildRuler();
+
+    document.addEventListener('selectionchange', () => {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0 && !selection.isCollapsed && editor.contains(selection.anchorNode)) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            const workspace = document.getElementById('workspace');
+            const workspaceRect = workspace.getBoundingClientRect();
+            miniToolbar.style.top = `${rect.top - workspaceRect.top + workspace.scrollTop - 45}px`;
+            miniToolbar.style.left = `${rect.left - workspaceRect.left + workspace.scrollLeft + (rect.width/2) - 60}px`;
+            miniToolbar.classList.add('visible');
+        } else {
+            miniToolbar.classList.remove('visible');
+        }
+    });
+
+    function generateOutline() {
+        const headers = editor.querySelectorAll('h1, h2, h3');
+        outlineContent.innerHTML = '';
+        if(headers.length === 0) return outlineContent.innerHTML = '<div style="color:var(--fluent-text-muted); font-size:0.85rem; padding:10px; text-align:center;">Create headings to see your document outline here.</div>';
+
+        headers.forEach((h, index) => {
+            if (!h.id) h.id = `heading-${index}`;
+            const item = document.createElement('div');
+            item.className = `outline-item outline-${h.tagName.toLowerCase()}`;
+            item.innerText = h.innerText || '(Empty Heading)';
+            item.onclick = () => {
+                h.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                h.style.backgroundColor = 'rgba(253, 126, 20, 0.2)';
+                setTimeout(() => h.style.backgroundColor = 'transparent', 800);
+            };
+            outlineContent.appendChild(item);
+        });
+    }
+
+    let saveTimeout;
+    function updateEngine() {
+        const text = editor.innerText || '';
+        const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        wordCountUI.innerText = words.toLocaleString();
+        
+        const mins = Math.ceil(words / 130);
+        speakTimeUI.innerText = `${mins} min`;
+
+        generateOutline();
+        
+        const canvasElem = document.getElementById('inkCanvas');
+        if (canvasElem && editor.scrollHeight > canvasElem.height) {
+             canvasElem.height = editor.scrollHeight;
+        }
+
+        saveStatus.innerText = "Saving...";
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            const currentHTML = editor.innerHTML;
+            localStorage.setItem(STORAGE_KEY, currentHTML);
+            
+            let history = JSON.parse(localStorage.getItem(VERSION_HISTORY_KEY) || '[]');
+            if(history.length === 0 || history[history.length-1].content !== currentHTML) {
+                history.push({ time: new Date().toLocaleTimeString(), content: currentHTML });
+                if(history.length > 5) history.shift();
+                localStorage.setItem(VERSION_HISTORY_KEY, JSON.stringify(history));
+            }
+            saveStatus.innerText = "Saved";
+        }, 1500);
+    }
+
+    function toggleWatermark() {
+        const hasWatermark = editor.classList.contains('has-watermark');
+        if (hasWatermark) {
+            editor.classList.remove('has-watermark');
+        } else {
+            const text = prompt("Enter Watermark Text (e.g., CONFIDENTIAL, DRAFT):", "LASU CS DEPT - CONFIDENTIAL");
+            if(text) {
+                editor.setAttribute('data-watermark', text);
+                editor.classList.add('has-watermark');
+            }
+        }
+    }
+
+    function executeFind(term) {
+        if(!term) return;
+        window.find(term, false, false, true, false, true, false);
+    }
+    
+    function executeReplace(term, repl) {
+        if (term && window.find(term, false, false, true, false, true, false)) {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(repl));
+                updateEngine();
+            }
+        }
+    }
+
+    function startDictation() {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const rec = new SpeechRec();
+            rec.onstart = () => alert("Listening... Speak now.");
+            rec.onresult = (e) => formatDoc('insertText', e.results[0][0].transcript);
+            rec.start();
+        } else {
+            alert("Dictation not supported in this browser.");
+        }
+    }
+
+    function readAloud() {
+        if ('speechSynthesis' in window) {
+            document.getElementById('readAloudWidget').style.display = 'flex';
+            const text = window.getSelection().toString() || editor.innerText;
+            if(text.trim() !== '') {
+                const utterance = new SpeechSynthesisUtterance(text);
+                speechSynthesis.speak(utterance);
+            }
+        } else {
+            alert("Text-to-Speech is not supported in this browser.");
+        }
+    }
+
+    let isTracking = false;
+    function toggleTrackChanges() {
+        isTracking = !isTracking;
+        document.getElementById('trackChangesIndicator').style.display = isTracking ? 'flex' : 'none';
+        editor.style.borderLeft = isTracking ? "4px solid #d83b01" : "none";
+    }
+
+    function restoreVersion() {
+        let history = JSON.parse(localStorage.getItem(VERSION_HISTORY_KEY) || '[]');
+        if(history.length === 0) return alert("No history found.");
+        let msg = "Select a version to restore (Enter number):\n";
+        history.forEach((h, i) => msg += `${i + 1}: Saved at ${h.time}\n`);
+        let choice = prompt(msg);
+        let idx = parseInt(choice) - 1;
+        if(!isNaN(idx) && history[idx]) {
+            editor.innerHTML = history[idx].content;
+            updateEngine();
+            alert("Version restored.");
+        }
+    }
+
+    function downloadWord() {
+        const docName = document.getElementById('docTitle').innerText || 'Enterprise_Document';
+        const fullHTML = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>${docName}</title>
+            <style> body { font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; } h1 { font-size: 24pt; color: #2F5496; } h2 { font-size: 16pt; color: #2F5496; } h3 { font-size: 14pt; color: #1F3763; } table { border-collapse: collapse; width: 100%; border: 1pt solid #a6a6a6; } th, td { border: 1pt solid #a6a6a6; padding: 4pt; } </style>
+        </head><body>${editor.innerHTML}</body></html>`;
+        const blob = new Blob(['\ufeff', fullHTML], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `${docName}.doc`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    function adjustZoom(amount) {
+        let current = parseInt(zoomSlider.value);
+        let next = current + amount;
+        if (next >= 50 && next <= 200) { zoomSlider.value = next; applyZoom(); }
+    }
+
+    function applyZoom() {
+        const scale = zoomSlider.value / 100;
+        zoomVal.innerText = `${zoomSlider.value}%`;
+        
+        const wrapper = document.getElementById('pageWrapper');
+        wrapper.style.transform = `scale(${scale})`;
+        wrapper.style.transformOrigin = 'top center';
+        
+        ruler.style.transform = `scale(${scale})`;
+        ruler.style.transformOrigin = 'top center';
+        
+        const scrollSpace = document.getElementById('workspace');
+        if (scale > 1) {
+            scrollSpace.style.paddingTop = `${40 * scale}px`;
+            scrollSpace.style.paddingBottom = `${100 * scale}px`;
+        } else {
+            scrollSpace.style.padding = '20px 40px 60px 40px';
+        }
+    }
+    zoomSlider.addEventListener('input', applyZoom);
+
+    let isDarkMode = false;
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        if(isDarkMode) {
+            editor.style.backgroundColor = '#111'; editor.style.color = '#fff';
+            document.querySelectorAll('#wordEditor h1, #wordEditor h2, #wordEditor h3').forEach(h => h.style.color = '#4ea8de');
+        } else {
+            editor.style.backgroundColor = 'white'; editor.style.color = '#000';
+            document.querySelectorAll('#wordEditor h1, #wordEditor h2').forEach(h => h.style.color = '#2F5496');
+            document.querySelectorAll('#wordEditor h3').forEach(h => h.style.color = '#1F3763');
+        }
+    }
+
+    function printDocument() {
+        const printWindow = window.open('', '', 'height=800,width=800');
+        printWindow.document.write(`<html><head><title>Print Document</title><style> body { font-family: 'Calibri', sans-serif; font-size: 11pt; padding:0; margin:0;} h1 { font-size: 24pt; color: #2F5496; } h2 { font-size: 16pt; color: #2F5496; } table { border-collapse: collapse; width: 100%; } th, td { border: 1pt solid #a6a6a6; padding: 4pt; } img { max-width: 100%; height: auto; } @page { size: Letter; margin: 1in; } </style></head><body>${editor.innerHTML}</body></html>`);
+        printWindow.document.close();
+        setTimeout(() => { printWindow.print(); }, 250);
+    }
+
+    function showStatsModal() {
+        const text = editor.innerText || '';
+        const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        const charsNo = text.replace(/\s/g, '').length;
+        const charsWith = text.length;
+        const paragraphs = editor.querySelectorAll('p, h1, h2, h3, li').length || 1;
+        const lines = Math.max(1, Math.ceil(charsWith / 80)); 
+
+        document.getElementById('m_words').innerText = words.toLocaleString();
+        document.getElementById('m_charsNo').innerText = charsNo.toLocaleString();
+        document.getElementById('m_charsWith').innerText = charsWith.toLocaleString();
+        document.getElementById('m_paras').innerText = paragraphs.toLocaleString();
+        document.getElementById('m_lines').innerText = lines.toLocaleString();
+
+        document.getElementById('statsModalOverlay').style.display = 'flex';
+    }
+
+    function insertTOCIntoDocument() {
+        const headers = editor.querySelectorAll('h1, h2, h3');
+        if(headers.length === 0) {
+            alert('No headings found to build a Table of Contents.');
+            return;
+        }
+
+        let tocHTML = '<div class="doc-toc" contenteditable="false"><div class="doc-toc-title">Table of Contents</div>';
+        
+        headers.forEach((h, index) => {
+            if (!h.id) h.id = `doc-heading-${index}`;
+            let marginLeft = h.tagName === 'H1' ? '0' : (h.tagName === 'H2' ? '20px' : '40px');
+            tocHTML += `<a href="#${h.id}" style="margin-left: ${marginLeft};">${h.innerText}</a>`;
+        });
+        
+        tocHTML += '</div><p><br></p>';
+        
+        editor.innerHTML = tocHTML + editor.innerHTML;
+        updateEngine();
+    }
+
+    function setPageColor(color) {
+        editor.style.backgroundColor = color;
+        updateEngine();
+    }
+
+    let hasBorder = false;
+    function togglePageBorder() {
+        hasBorder = !hasBorder;
+        if(hasBorder) {
+            editor.style.border = "4px double #2F5496";
+            editor.style.padding = "92px"; 
+        } else {
+            editor.style.border = "none";
+            editor.style.padding = "96px";
+        }
+        updateEngine();
+    }
+    
+    function toggleGridlines(show) {
+        if(show) {
+            editor.classList.add('show-gridlines');
+        } else {
+            editor.classList.remove('show-gridlines');
+        }
+    }
+
+    function toggleSymbolGrid() {
+        document.getElementById('symbolGrid').classList.toggle('show');
+    }
+
+    function insertSymbol(sym) {
+        formatDoc('insertText', sym);
+        document.getElementById('symbolGrid').classList.remove('show');
+    }
+
+    function toggleFileMenu(show) {
+        document.getElementById('fileBackstage').style.display = show ? 'flex' : 'none';
+    }
+
+    function initSimulatedCursors() {
+        const workspace = document.getElementById('workspace');
+        const page = document.getElementById('wordEditor');
+        
+        const prCursor = document.createElement('div');
+        prCursor.className = 'live-cursor';
+        prCursor.innerHTML = `<i class="fas fa-mouse-pointer cursor-icon"></i><div class="cursor-label">Peer Reviewer</div>`;
+        workspace.appendChild(prCursor);
+
+        const spCursor = document.createElement('div');
+        spCursor.className = 'live-cursor';
+        spCursor.innerHTML = `<i class="fas fa-mouse-pointer cursor-icon cursor-sp"></i><div class="cursor-label cursor-sp-label">Supervisor</div>`;
+        workspace.appendChild(spCursor);
+
+        setInterval(() => {
+            const rect = page.getBoundingClientRect();
+            const wrapperRect = workspace.getBoundingClientRect();
+            
+            const prX = Math.floor(Math.random() * (rect.width - 200)) + 100 + rect.left - wrapperRect.left + workspace.scrollLeft;
+            const prY = Math.floor(Math.random() * (rect.height - 300)) + 100 + rect.top - wrapperRect.top + workspace.scrollTop;
+            
+            const spX = Math.floor(Math.random() * (rect.width - 200)) + 100 + rect.left - wrapperRect.left + workspace.scrollLeft;
+            const spY = Math.floor(Math.random() * (rect.height - 300)) + 100 + rect.top - wrapperRect.top + workspace.scrollTop;
+
+            prCursor.style.left = `${prX}px`;
+            prCursor.style.top = `${prY}px`;
+            
+            spCursor.style.left = `${spX}px`;
+            spCursor.style.top = `${spY}px`;
+        }, 3000); 
+    }
+
+    function setPageLayout(layoutType) {
+        const buttons = [document.getElementById('btnModeRead'), document.getElementById('btnModePrint'), document.getElementById('btnModeWeb')];
+        buttons.forEach(btn => { if(btn) btn.classList.remove('active') });
+        
+        editor.classList.remove('layout-web', 'layout-read');
+        document.getElementById('sidebar').classList.remove('hidden');
+        document.querySelector('.ms-ribbon').style.display = 'flex';
+        document.getElementById('ruler').style.display = 'flex';
+
+        if(layoutType === 'web') {
+            document.getElementById('btnModeWeb').classList.add('active');
+            editor.classList.add('layout-web');
+            document.getElementById('ruler').style.display = 'none';
+        } 
+        else if (layoutType === 'read') {
+            document.getElementById('btnModeRead').classList.add('active');
+            editor.classList.add('layout-read');
+            document.getElementById('sidebar').classList.add('hidden');
+            document.querySelector('.ms-ribbon').style.display = 'none';
+            document.getElementById('ruler').style.display = 'none';
+        }
+        else {
+            document.getElementById('btnModePrint').classList.add('active');
+        }
+    }
+
+    let commentCounter = 1;
+    function addComment() {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || selection.toString().trim() === '') {
+            alert("Please highlight some text in the document first to add a comment.");
+            return;
+        }
+
+        const commentText = prompt("Enter your review comment:");
+        if (!commentText) return;
+
+        const range = selection.getRangeAt(0);
+        const mark = document.createElement('doc-comment');
+        mark.id = 'comment-mark-' + commentCounter;
+        mark.title = commentText;
+        try {
+            range.surroundContents(mark); 
+        } catch(e) {
+            const content = range.extractContents();
+            mark.appendChild(content);
+            range.insertNode(mark);
+        }
+
+        document.getElementById('sidebar').classList.remove('hidden');
+        switchSidebarTab('comments');
+
+        const list = document.getElementById('commentsList');
+        const card = document.createElement('div');
+        card.className = 'comment-box';
+        card.innerHTML = `
+            <div class="comment-author">GV (Author)</div>
+            <div class="comment-text">${commentText}</div>
+            <div class="comment-time">${new Date().toLocaleTimeString()}</div>
+        `;
+        list.appendChild(card);
+        
+        commentCounter++;
+        updateEngine();
+    }
+
+    function insertEquation() {
+        const eqHtml = `<div style="text-align: center; margin: 15px 0; font-family: 'Cambria Math', 'Times New Roman', serif; font-size: 16px; font-style: italic;">x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}</div><p><br></p>`;
+        formatDoc('insertHTML', eqHtml);
+    }
+
+    let isDrawingMode = false;
+    let inkCanvas, ctx;
+    let isDrawing = false;
+    let penColor = '#d83b01'; 
+    let penWidth = 2;
+
+    function toggleDrawMode() {
+        isDrawingMode = !isDrawingMode;
+        
+        if (!inkCanvas) {
+            inkCanvas = document.getElementById('inkCanvas');
+            ctx = inkCanvas.getContext('2d');
+            
+            inkCanvas.addEventListener('mousedown', startPos);
+            inkCanvas.addEventListener('mouseup', endPos);
+            inkCanvas.addEventListener('mousemove', draw);
+            inkCanvas.addEventListener('mouseleave', endPos); 
+        }
+        
+        const btn = document.getElementById('btnDrawToggle');
+        const wrapper = document.getElementById('pageWrapper');
+        
+        if (isDrawingMode) {
+            wrapper.classList.add('ink-active');
+            editor.contentEditable = false; 
+            btn.classList.add('active');
+        } else {
+            wrapper.classList.remove('ink-active');
+            editor.contentEditable = true;
+            btn.classList.remove('active');
+        }
+    }
+
+    function setPen(color, width) {
+        penColor = color;
+        penWidth = width;
+        if(!isDrawingMode) toggleDrawMode();
+        
+        if (color === '#ffff00') {
+            ctx.globalCompositeOperation = 'multiply'; 
+        } else {
+            ctx.globalCompositeOperation = 'source-over';
+        }
+    }
+
+    function clearCanvas() {
+        if(ctx && inkCanvas) {
+            ctx.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
+        }
+    }
+
+    function startPos(e) {
+        isDrawing = true;
+        draw(e);
+    }
+
+    function endPos() {
+        isDrawing = false;
+        if(ctx) ctx.beginPath();
+    }
+
+    function draw(e) {
+        if(!isDrawing) return;
+        
+        const rect = inkCanvas.getBoundingClientRect();
+        
+        const isIso = document.getElementById('pageWrapper').classList.contains('isometric');
+        let x, y;
+
+        if(isIso) {
+            x = (e.clientX - rect.left) * 2;
+            y = (e.clientY - rect.top) * 2;
+        } else {
+            const scale = parseFloat(zoomSlider.value) / 100;
+            x = (e.clientX - rect.left) / scale;
+            y = (e.clientY - rect.top) / scale;
+        }
+        
+        ctx.lineWidth = penWidth;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = penColor;
+        
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+
+    function insertStickyNote() {
+        const note = document.createElement('div');
+        note.className = 'ms-sticky';
+        note.style.top = (editor.scrollTop + 150) + 'px';
+        note.style.left = '150px';
+        
+        note.innerHTML = `
+            <div class="ms-sticky-drag"></div>
+            <div class="ms-sticky-close" onclick="this.parentElement.remove()">X</div>
+            <div contenteditable="true" style="outline:none; min-height:100px;">Type note here...</div>
+        `;
+        
+        document.getElementById('pageWrapper').appendChild(note);
+        
+        const dragBar = note.querySelector('.ms-sticky-drag');
+        let isDraggingNote = false;
+        let startX, startY, initialLeft, initialTop;
+        
+        dragBar.addEventListener('mousedown', (e) => {
+            isDraggingNote = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            initialLeft = parseInt(window.getComputedStyle(note).left, 10);
+            initialTop = parseInt(window.getComputedStyle(note).top, 10);
+            e.stopPropagation();
+            
+            document.querySelectorAll('.ms-sticky').forEach(n => n.style.zIndex = 100);
+            note.style.zIndex = 101;
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if(!isDraggingNote) return;
+            const scale = parseFloat(zoomSlider.value) / 100;
+            const dx = (e.clientX - startX) / scale;
+            const dy = (e.clientY - startY) / scale;
+            note.style.left = (initialLeft + dx) + 'px';
+            note.style.top = (initialTop + dy) + 'px';
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDraggingNote = false;
+        });
+    }
+
+    function calcReadability() {
+        const text = editor.innerText || '';
+        const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        if (words < 10) {
+            alert("Not enough text to analyze readability. Please add more content.");
+            return;
+        }
+        
+        const sentences = text.split(/[.?!]/).filter(s => s.trim().length > 0).length || 1;
+        const syllables = text.split(/[aeiouy]+/).length; 
+        
+        const score = 206.835 - 1.015 * (words / sentences) - 84.6 * (syllables / words);
+        let level = "Professional / College Level";
+        if(score > 80) level = "Easy (Conversational)";
+        else if(score > 60) level = "Standard (High School)";
+        else if(score < 30) level = "Difficult (Academic/Technical)";
+        
+        alert(`Readability AI Diagnostics:\n\nFlesch-Kincaid Score: ${score.toFixed(1)} / 100\nEstimated Reading Level: ${level}\nTotal Sentences Analysed: ${sentences}\nSyllable Density: ${(syllables/words).toFixed(2)} per word`);
+    }
+
+    function dragElement(elmnt) {
+        var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        if (document.getElementById(elmnt.id.replace("Dialog", "Header"))) {
+            document.getElementById(elmnt.id.replace("Dialog", "Header")).onmousedown = dragMouseDown;
+        } else {
+            elmnt.onmousedown = dragMouseDown;
+        }
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+    }
+
+    dragElement(document.getElementById("vbaDialog"));
+    dragElement(document.getElementById("findDialog"));
+    dragElement(document.getElementById("envDialog"));
+    dragElement(document.getElementById("mindMapDialog"));
+
+    function openVBA() { document.getElementById('vbaDialog').style.display = 'flex'; }
+    function closeVBA() { document.getElementById('vbaDialog').style.display = 'none'; }
+    
+    function openFindDialog() { document.getElementById('findDialog').style.display = 'flex'; }
+    function closeFindDialog() { document.getElementById('findDialog').style.display = 'none'; }
+
+    function openEnvelopeDialog() { document.getElementById('envDialog').style.display = 'flex'; }
+
+    const clippyMain = document.getElementById('clippyMain');
+    const clippyBubble = document.getElementById('clippyBubble');
+    
+    let isDraggingClippy = false;
+    let clipX, clipY;
+    
+    document.getElementById('clippyDrag').addEventListener('mousedown', (e) => {
+        isDraggingClippy = true;
+        clipX = e.clientX;
+        clipY = e.clientY;
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if(!isDraggingClippy) return;
+        const dx = e.clientX - clipX;
+        const dy = e.clientY - clipY;
+        clipX = e.clientX;
+        clipY = e.clientY;
+        
+        let rect = clippyMain.getBoundingClientRect();
+        clippyMain.style.right = 'auto';
+        clippyMain.style.bottom = 'auto';
+        clippyMain.style.left = (rect.left + dx) + 'px';
+        clippyMain.style.top = (rect.top + dy) + 'px';
+    });
+    
+    document.addEventListener('mouseup', () => { isDraggingClippy = false; });
+
+    function triggerClippyMsg(msg) {
+        clippyBubble.innerText = msg;
+        clippyBubble.style.display = 'block';
+        setTimeout(() => { clippyBubble.style.display = 'none'; }, 5000);
+    }
+
+    function toggleZenMode() {
+        document.body.classList.toggle('zen-active');
+        if(document.body.classList.contains('zen-active')) {
+            triggerClippyMsg("Zen Mode Activated. Distractions removed.");
+        }
+    }
+
+    function toggleBlueprintMode() {
+        document.body.classList.toggle('blueprint-mode');
+        triggerClippyMsg(document.body.classList.contains('blueprint-mode') ? "Blueprint Architecture Mode Engaged." : "Standard visualization restored.");
+    }
+
+    function drawNeuralLink(startElem, endElem) {
+        const svg = document.getElementById('neuralSvg');
+        const path = document.getElementById('neuralPath');
+        svg.style.display = 'block';
+        
+        const sRect = startElem.getBoundingClientRect();
+        const eRect = endElem.getBoundingClientRect();
+        
+        const d = `M ${sRect.right} ${sRect.top + sRect.height/2} C ${sRect.right + 200} ${sRect.top}, ${eRect.left - 200} ${eRect.top + 100}, ${eRect.left + 50} ${eRect.top + 100}`;
+        path.setAttribute('d', d);
+        
+        path.style.animation = 'none';
+        path.offsetHeight; 
+        path.style.animation = null;
+        
+        setTimeout(() => { svg.style.display = 'none'; }, 1500);
+    }
+
+    function aiSummarize(btnElem) {
+        triggerClippyMsg("Analyzing document semantics...");
+        drawNeuralLink(btnElem, editor);
+        setTimeout(() => {
+            const text = editor.innerText;
+            const sentences = text.split('. ').filter(s => s.length > 10);
+            if(sentences.length < 3) {
+                alert("Document too short to summarize."); return;
+            }
+            const summary = sentences.slice(0, 3).join('. ') + '.';
+            formatDoc('insertHTML', `<div style="background:#e5f1fb; border-left:4px solid #0078d7; padding:10px; margin:10px 0; font-family:Calibri; font-size:11pt;" contenteditable="false"><b>🤖 AI Summary:</b> ${summary}</div><p><br></p>`);
+        }, 1000);
+    }
+
+    function aiDraftIntro(btnElem) {
+        triggerClippyMsg("Drafting introduction based on architecture context...");
+        drawNeuralLink(btnElem, editor);
+        setTimeout(() => {
+            formatDoc('insertHTML', `<p style="color:#2b579a; font-style:italic;">This document serves as a comprehensive architectural blueprint, outlining the core functionalities, systematic integrations, and advanced telemetry of the Enterprise Document Engine. Designed to meet the rigorous standards of modern application development, the following sections detail the specific modules deployed within this computational matrix.</p><p><br></p>`);
+        }, 800);
+    }
+
+    function aiMakeProfessional(btnElem) {
+        triggerClippyMsg("Enhancing vocabulary and structural formatting...");
+        drawNeuralLink(btnElem, editor);
+        setTimeout(() => {
+            let html = editor.innerHTML;
+            html = html.replace(/\b(cool|awesome)\b/gi, 'optimal');
+            html = html.replace(/\b(bad|terrible)\b/gi, 'suboptimal');
+            html = html.replace(/\b(fix)\b/gi, 'rectify');
+            editor.innerHTML = html;
+            
+            editor.style.fontFamily = "'Palatino Linotype', 'Times New Roman', serif";
+            editor.style.textAlign = "justify";
+            
+            updateEngine();
+            alert("AI has enhanced the document's professional tone and strictly formatted the typography.");
+        }, 1200);
+    }
+
+    function toggleHackerMode() {
+        document.body.classList.toggle('hacker-mode');
+        if(document.body.classList.contains('hacker-mode')) {
+            triggerClippyMsg("WARNING: CORE OVERRIDE DETECTED.");
+            setTimeout(() => {
+                document.body.classList.remove('hacker-mode');
+                triggerClippyMsg("Core restored to normal parameters.");
+            }, 6000);
+        }
+    }
+
+    function toggle3DArchitecture() {
+        const wrapper = document.getElementById('pageWrapper');
+        wrapper.classList.toggle('isometric');
+        if(wrapper.classList.contains('isometric')){
+            triggerClippyMsg("3D Hardware Acceleration Enabled. Inspecting DOM Z-Index layers.");
+        }
+    }
+
+    function toggleGodEye() {
+        let html = editor.innerHTML;
+        if(html.includes('godeye-verb')) {
+            alert('To reset syntax highlighting, use Ctrl+Z (Undo).');
+            return;
+        }
+        triggerClippyMsg("God-Eye Active. Syntactical structures illuminated.");
+        
+        html = html.replace(/\b(is|are|was|were|be|been|being|have|has|had|do|does|did|can|could|will|would|shall|should|may|might|must)\b/gi, '<span class="godeye-verb" style="background-color: rgba(255, 0, 0, 0.3); outline: 1px solid red; border-radius: 2px;">$1</span>');
+        html = html.replace(/\b(the|a|an|and|or|but|if|because|as)\b/gi, '<span class="godeye-conj" style="background-color: rgba(0, 0, 255, 0.3); outline: 1px solid blue; border-radius: 2px;">$1</span>');
+        editor.innerHTML = html;
+        updateEngine();
+    }
+
+    let minimapActive = false;
+    let minimapInterval;
+    
+    function toggleMinimap(isActive) {
+        minimapActive = isActive;
+        const panel = document.getElementById('minimapPanel');
+        const content = document.getElementById('minimapContent');
+        const viewport = document.getElementById('minimapViewport');
+        const wrapper = document.getElementById('workspace');
+        
+        if(isActive) {
+            panel.style.display = 'block';
+            minimapInterval = setInterval(() => {
+                content.innerHTML = editor.innerHTML;
+                const scrollRatio = wrapper.scrollTop / wrapper.scrollHeight;
+                const viewRatio = wrapper.clientHeight / wrapper.scrollHeight;
+                
+                viewport.style.top = (scrollRatio * 200) + 'px'; 
+                viewport.style.height = (viewRatio * 200) + 'px';
+            }, 500);
+            triggerClippyMsg("Radar Minimap Engaged.");
+        } else {
+            panel.style.display = 'none';
+            clearInterval(minimapInterval);
+        }
+    }
+
+    let teleprompterActive = false;
+    let isAutoScrolling = false;
+    let scrollInterval;
+
+    function toggleTeleprompter() {
+        teleprompterActive = !teleprompterActive;
+        const wrapper = document.getElementById('workspace');
+        
+        if (teleprompterActive) {
+            document.body.classList.add('teleprompter-active');
+            triggerClippyMsg("Teleprompter Mode Active. Press SPACEBAR to start/stop auto-scroll.");
+        } else {
+            document.body.classList.remove('teleprompter-active');
+            isAutoScrolling = false;
+            clearInterval(scrollInterval);
+        }
+    }
+
+    function autoScrollDoc() {
+        const wrapper = document.getElementById('workspace');
+        scrollInterval = setInterval(() => {
+            if(!isAutoScrolling) {
+                clearInterval(scrollInterval);
+                return;
+            }
+            wrapper.scrollTop += 1;
+        }, 50);
+    }
+
+    function initiateSelfDestruct() {
+        const overlay = document.getElementById('destructOverlay');
+        const timerSpan = document.getElementById('destructTimer');
+        overlay.style.display = 'flex';
+        
+        let count = 5;
+        triggerClippyMsg("WHAT HAVE YOU DONE?!");
+        
+        const countdown = setInterval(() => {
+            count--;
+            timerSpan.innerText = count;
+            if(count === 0) {
+                clearInterval(countdown);
+                document.body.classList.add('destruct-mode');
+                overlay.innerText = "CRITICAL FAILURE";
+                setTimeout(() => {
+                    editor.innerHTML = '';
+                    document.body.classList.remove('destruct-mode');
+                    overlay.style.display = 'none';
+                    alert("DOM reset initiated. History wiped.");
+                }, 4000);
+            }
+        }, 1000);
+    }
+
+    /* --- X-RAY DOM INSPECTOR --- */
+    let xrayMode = false;
+    const xrayTooltip = document.createElement('div');
+    xrayTooltip.className = 'xray-tooltip';
+    document.body.appendChild(xrayTooltip);
+
+    function toggleXRay() {
+        xrayMode = !xrayMode;
+        document.body.classList.toggle('xray-active');
+        xrayTooltip.style.display = xrayMode ? 'block' : 'none';
+        triggerClippyMsg(xrayMode ? "X-Ray Vision active. Scanning DOM node properties." : "X-Ray disabled.");
+    }
+
+    editor.addEventListener('mousemove', (e) => {
+        if(!xrayMode) return;
+        const target = e.target;
+        if(target.id === 'wordEditor') return;
+        
+        const compStyle = window.getComputedStyle(target);
+        xrayTooltip.style.left = e.clientX + 15 + 'px';
+        xrayTooltip.style.top = e.clientY + 15 + 'px';
+        xrayTooltip.innerHTML = `<span style="color:#e9b517"><${target.tagName.toLowerCase()}></span>\nFont: ${compStyle.fontSize} ${compStyle.fontFamily.split(',')[0]}\nColor: ${compStyle.color}\nMargin: ${compStyle.margin}`;
+    });
+
+    /* --- KINETIC CLICK RIPPLES --- */
+    let rippleMode = false;
+    document.getElementById('workspace').addEventListener('mousedown', (e) => {
+        if(rippleMode) {
+            const rip = document.createElement('div');
+            rip.className = 'click-ripple';
+            rip.style.left = e.clientX + 'px';
+            rip.style.top = e.clientY + 'px';
+            document.body.appendChild(rip);
+            setTimeout(() => rip.remove(), 800);
+        }
+    });
+
+    /* --- CLASSIFIED REDACTION --- */
+    function autoRedact() {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || selection.toString().trim() === '') {
+            alert("Highlight text to classify and redact.");
+            return;
+        }
+        formatDoc('hiliteColor', '#000000');
+        formatDoc('foreColor', '#000000');
+        triggerClippyMsg("Selection redacted and secured.");
+    }
+
+    /* --- SVG MIND MAP GENERATOR --- */
+    function generateMindMap() {
+        const headers = editor.querySelectorAll('h1, h2, h3');
+        const canvas = document.getElementById('mindMapCanvas');
+        if(headers.length === 0) {
+            alert('Add H1, H2, or H3 headings to generate architecture map.');
+            return;
+        }
+        
+        canvas.innerHTML = '';
+        let mapHTML = '<div style="display:flex; flex-direction:column; gap:10px; align-items:flex-start; position:relative;">';
+        
+        headers.forEach((h, i) => {
+            let color = h.tagName === 'H1' ? '#2b579a' : (h.tagName === 'H2' ? '#d83b01' : '#107c41');
+            let padding = h.tagName === 'H1' ? '0' : (h.tagName === 'H2' ? '30px' : '60px');
+            let icon = h.tagName === 'H1' ? 'fa-database' : (h.tagName === 'H2' ? 'fa-server' : 'fa-network-wired');
+            
+            mapHTML += `
+                <div style="margin-left: ${padding}; display:flex; align-items:center; gap:8px; background: #f0f0f0; border: 1px solid ${color}; padding: 6px 12px; border-radius: 4px; box-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
+                    <i class="fas ${icon}" style="color:${color}"></i>
+                    <span style="font-weight:bold; font-family:'Segoe UI'; font-size:11px;">${h.innerText}</span>
+                </div>
+            `;
+        });
+        
+        mapHTML += '</div>';
+        canvas.innerHTML = mapHTML;
+        document.getElementById('mindMapDialog').style.display = 'flex';
+        triggerClippyMsg("Node architecture rendered.");
+    }
+
+    /* --- FLASK ENTERPRISE SYNC & MATRIC AUTH --- */
+    function flaskSync() {
+        triggerClippyMsg("Initiating connection to Flask Student Portal Backend...");
+        const syncHUD = document.getElementById('flaskSyncText');
+        syncHUD.innerText = "Syncing...";
+        syncHUD.style.color = "#e9b517";
+        
+        setTimeout(() => {
+            syncHUD.innerText = "Live Synced";
+            syncHUD.style.color = "#107c41";
+            triggerClippyMsg("Document state successfully synchronized with Flask backend.");
+        }, 2000);
+    }
+
+    function matricAuth() {
+        triggerClippyMsg("Verifying Defense Gateway Authorization...");
+        setTimeout(() => {
+            alert("ACCESS GRANTED: Defense operations successfully verified for Enterprise operations.");
+        }, 1000);
+    }
+
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) editor.innerHTML = savedData;
+    updateEngine();
+    editor.focus();
+    
+    setTimeout(initSimulatedCursors, 2000);
+    setTimeout(() => { triggerClippyMsg("Hi! I'm your AI Office Assistant. The Enterprise Architecture has been upgraded to V20. Geometric perfection achieved."); }, 3000);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

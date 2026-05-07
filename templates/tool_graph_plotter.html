@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Plotter | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Controls Pane --- */
+        .controls-pane {
+            flex: 0 0 380px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .pane-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 700;
+            color: var(--lasu-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-area {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .input-equation {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--math-blue);
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 12px 15px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .input-equation:focus {
+            border-color: var(--math-blue);
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+            outline: none;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .grid-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .color-picker {
+            -webkit-appearance: none;
+            border: none;
+            width: 100%;
+            height: 40px;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+        }
+        .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-picker::-webkit-color-swatch { border: 2px solid #ced4da; border-radius: 6px; }
+
+        .btn-plot {
+            background-color: var(--math-blue);
+            color: white;
+            font-weight: 700;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+        .btn-plot:hover { background-color: #0b5ed7; color: white; }
+
+        /* --- Graph Pane --- */
+        .graph-pane {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .graph-header {
+            background: #212529;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .coord-display {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #00ff00;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 12px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-color: #ffffff;
+            position: relative;
+        }
+
+        #graphCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        /* Error Banner */
+        #errorBanner {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 100;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .controls-pane { flex: none; width: 100%; }
+            .canvas-container { min-height: 400px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-pane">
+        <div class="pane-header">
+            <i class="fas fa-project-diagram me-2"></i> Graph Parameters
+        </div>
+
+        <div class="form-area">
+            <div>
+                <label class="form-label text-primary">Function f(x) = </label>
+                <input type="text" class="input-equation" id="equationInput" placeholder="e.g. sin(x) * x" value="sin(x) * x">
+                <div class="small text-muted mt-2 fw-bold" style="font-size: 0.75rem;">
+                    Supported: <span class="text-dark">sin, cos, tan, log, sqrt, abs, x^2, pi, e</span>
+                </div>
+            </div>
+
+            <div class="settings-grid">
+                <div>
+                    <label class="form-label text-muted" style="font-size: 0.7rem;">X Min</label>
+                    <input type="number" id="xMin" class="grid-input" value="-10">
+                </div>
+                <div>
+                    <label class="form-label text-muted" style="font-size: 0.7rem;">X Max</label>
+                    <input type="number" id="xMax" class="grid-input" value="10">
+                </div>
+                <div>
+                    <label class="form-label text-muted" style="font-size: 0.7rem;">Y Min</label>
+                    <input type="number" id="yMin" class="grid-input" value="-10">
+                </div>
+                <div>
+                    <label class="form-label text-muted" style="font-size: 0.7rem;">Y Max</label>
+                    <input type="number" id="yMax" class="grid-input" value="10">
+                </div>
+            </div>
+
+            <div>
+                <label class="form-label">Line Color</label>
+                <input type="color" id="lineColor" class="color-picker" value="#0d6efd">
+            </div>
+
+            <button class="btn btn-plot w-100 mt-2" onclick="plotGraph()">
+                <i class="fas fa-draw-polygon me-2"></i> Plot Graph
+            </button>
+
+            <hr class="my-0">
+            <div class="alert alert-success py-2 mb-0 small border-0 shadow-sm text-center">
+                <i class="fas fa-shield-alt me-1"></i> Offline Native Engine Active
+            </div>
+        </div>
+    </div>
+
+    <div class="graph-pane">
+        <div class="graph-header">
+            <span class="fw-bold"><i class="fas fa-chart-line me-2"></i> Cartesian Plane</span>
+            <div class="coord-display" id="coordDisplay">x: 0.00, y: 0.00</div>
+        </div>
+        
+        <div id="errorBanner">Invalid Mathematical Expression!</div>
+
+        <div class="canvas-container" id="canvasContainer">
+            <canvas id="graphCanvas"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- ELEMENTS ---
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('canvasContainer');
+    
+    const eqInput = document.getElementById('equationInput');
+    const xMinIn = document.getElementById('xMin');
+    const xMaxIn = document.getElementById('xMax');
+    const yMinIn = document.getElementById('yMin');
+    const yMaxIn = document.getElementById('yMax');
+    const colorIn = document.getElementById('lineColor');
+    
+    const coordDisplay = document.getElementById('coordDisplay');
+    const errorBanner = document.getElementById('errorBanner');
+
+    // --- CANVAS SIZING ---
+    function resizeCanvas() {
+        // High-DPI support for retina displays
+        const dpr = window.devicePixelRatio || 1;
+        const rect = container.getBoundingClientRect();
+        
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        
+        // CSS scaling
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        
+        ctx.scale(dpr, dpr);
+        plotGraph(); // Redraw on resize
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // --- MATH COMPILER ENGINE ---
+    // Transforms human-readable math into valid Javascript AST logic securely.
+    function compileMathExpression(expr) {
+        let parsed = expr.toLowerCase();
+        
+        // 1. Map mathematical keywords to JS Math object
+        const mathFuncs = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sqrt', 'log', 'abs', 'exp', 'floor', 'ceil', 'round'];
+        mathFuncs.forEach(func => {
+            const regex = new RegExp('\\b' + func + '\\b', 'g');
+            parsed = parsed.replace(regex, 'Math.' + func);
+        });
+        
+        // 2. Map Constants
+        parsed = parsed.replace(/\bpi\b/g, 'Math.PI');
+        parsed = parsed.replace(/\be\b/g, 'Math.E');
+        
+        // 3. Handle implicit multiplication (e.g. 2x -> 2*x, 2(x) -> 2*(x))
+        parsed = parsed.replace(/(\d)([a-z\(])/gi, '$1*$2');
+        
+        // 4. Handle power operator (^ to **)
+        parsed = parsed.replace(/\^/g, '**');
+
+        // Create a safe runner function
+        return function(x) {
+            try {
+                // new Function creates an isolated scope. Safer than eval() and extremely fast for graphing loops.
+                const func = new Function('x', `return ${parsed};`);
+                return func(x);
+            } catch (e) {
+                return NaN;
+            }
+        };
+    }
+
+    // --- GRAPH PLOTTING ENGINE ---
+    function plotGraph() {
+        const width = canvas.width / (window.devicePixelRatio || 1);
+        const height = canvas.height / (window.devicePixelRatio || 1);
+        
+        const xMin = parseFloat(xMinIn.value) || -10;
+        const xMax = parseFloat(xMaxIn.value) || 10;
+        const yMin = parseFloat(yMinIn.value) || -10;
+        const yMax = parseFloat(yMaxIn.value) || 10;
+
+        if (xMin >= xMax || yMin >= yMax) {
+            showError("Invalid Axis Boundaries. Min must be less than Max.");
+            return;
+        }
+
+        // Clear Board
+        ctx.clearRect(0, 0, width, height);
+        errorBanner.style.display = 'none';
+
+        // Math-to-Pixel scaling functions
+        const scaleX = (x) => ((x - xMin) / (xMax - xMin)) * width;
+        const scaleY = (y) => height - (((y - yMin) / (yMax - yMin)) * height); // Y is inverted on canvas
+
+        // DRAW GRID & AXES
+        ctx.lineWidth = 1;
+        
+        // Calculate grid steps based on range to prevent clutter
+        const xRange = xMax - xMin;
+        const yRange = yMax - yMin;
+        const xStep = xRange > 100 ? 10 : (xRange > 20 ? 5 : 1);
+        const yStep = yRange > 100 ? 10 : (yRange > 20 ? 5 : 1);
+
+        // Draw Vertical Grid Lines
+        for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax; x += xStep) {
+            ctx.beginPath();
+            ctx.strokeStyle = x === 0 ? '#343a40' : '#e9ecef'; // Darker for Main Axis
+            ctx.lineWidth = x === 0 ? 2 : 1;
+            const px = scaleX(x);
+            ctx.moveTo(px, 0);
+            ctx.lineTo(px, height);
+            ctx.stroke();
+            
+            // Labels
+            if (x !== 0) {
+                ctx.fillStyle = '#6c757d';
+                ctx.font = '10px Arial';
+                ctx.fillText(x, px + 5, scaleY(0) + 15);
+            }
+        }
+
+        // Draw Horizontal Grid Lines
+        for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) {
+            ctx.beginPath();
+            ctx.strokeStyle = y === 0 ? '#343a40' : '#e9ecef';
+            ctx.lineWidth = y === 0 ? 2 : 1;
+            const py = scaleY(y);
+            ctx.moveTo(0, py);
+            ctx.lineTo(width, py);
+            ctx.stroke();
+
+            // Labels
+            if (y !== 0) {
+                ctx.fillStyle = '#6c757d';
+                ctx.font = '10px Arial';
+                ctx.fillText(y, scaleX(0) + 5, py - 5);
+            }
+        }
+
+        // ORIGIN LABEL
+        ctx.fillStyle = '#212529';
+        ctx.fillText('0', scaleX(0) + 5, scaleY(0) + 15);
+
+        // COMPILE AND PLOT FUNCTION
+        const rawExpr = eqInput.value.trim();
+        if (!rawExpr) return;
+
+        const mathFunc = compileMathExpression(rawExpr);
+
+        ctx.beginPath();
+        ctx.strokeStyle = colorIn.value;
+        ctx.lineWidth = 3;
+
+        let hasMoved = false;
+
+        // Draw left to right, pixel by pixel for maximum smoothness
+        for (let px = 0; px <= width; px += 1) {
+            // Convert pixel X to mathematical X
+            const mathX = xMin + (px / width) * (xMax - xMin);
+            
+            // Evaluate Math Y
+            const mathY = mathFunc(mathX);
+
+            // Safety check: is it a valid number?
+            if (isNaN(mathY) || !isFinite(mathY)) {
+                hasMoved = false; // Lift pen if undefined (like sqrt of negative)
+                continue;
+            }
+
+            // Convert mathematical Y to pixel Y
+            const py = scaleY(mathY);
+
+            // Draw line
+            if (!hasMoved) {
+                ctx.moveTo(px, py);
+                hasMoved = true;
+            } else {
+                // Prevent drawing giant vertical lines across asymptotes (like in tan(x) or 1/x)
+                if (py < -5000 || py > height + 5000) {
+                    hasMoved = false;
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+        }
+        ctx.stroke();
+
+        // Validate if function actually drew anything
+        const testY = mathFunc(1);
+        if (isNaN(testY) && rawExpr.length > 0) {
+            showError("Syntax Error. Check your equation formatting.");
+        }
+    }
+
+    function showError(msg) {
+        errorBanner.innerText = msg;
+        errorBanner.style.display = 'block';
+    }
+
+    // --- MOUSE TRACKING ---
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const py = e.clientY - rect.top;
+
+        const xMin = parseFloat(xMinIn.value) || -10;
+        const xMax = parseFloat(xMaxIn.value) || 10;
+        const yMin = parseFloat(yMinIn.value) || -10;
+        const yMax = parseFloat(yMaxIn.value) || 10;
+
+        const mathX = xMin + (px / rect.width) * (xMax - xMin);
+        const mathY = yMax - (py / rect.height) * (yMax - yMin);
+
+        coordDisplay.innerText = `x: ${mathX.toFixed(2)}, y: ${mathY.toFixed(2)}`;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        coordDisplay.innerText = `x: --, y: --`;
+    });
+
+    // --- INITIALIZATION ---
+    // Slight delay ensures the DOM container is fully sized before reading dimensions
+    setTimeout(() => {
+        resizeCanvas();
+        plotGraph();
+    }, 100);
+
+    // Auto-plot when pressing Enter in equation box
+    eqInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') plotGraph();
+    });
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

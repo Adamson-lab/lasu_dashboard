@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Interference Simulator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-preset {
+            font-weight: 700;
+            font-size: 0.8rem;
+            padding: 10px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-preset i { font-size: 1.2rem; }
+        .btn-preset:hover { background: #f8f9fa; border-color: #ced4da; }
+
+        .wave-section {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fdfdfd;
+        }
+
+        .wave-section.wave1 { border-color: rgba(13, 110, 253, 0.3); background: rgba(13, 110, 253, 0.02); }
+        .wave-section.wave2 { border-color: rgba(220, 53, 69, 0.3); background: rgba(220, 53, 69, 0.02); }
+
+        .wave-title {
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .wave1 .wave-title { color: var(--math-blue); }
+        .wave2 .wave-title { color: var(--math-red); }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+        .slider-group:last-child { margin-bottom: 0; }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .slider-label span { font-family: 'Fira Code', monospace; color: #212529; font-weight: 800; }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px; width: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        .wave1 input[type=range]::-webkit-slider-thumb { background: var(--math-blue); box-shadow: 0 0 10px rgba(13, 110, 253, 0.5); }
+        .wave2 input[type=range]::-webkit-slider-thumb { background: var(--math-red); box-shadow: 0 0 10px rgba(220, 53, 69, 0.5); }
+        
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 6px;
+            cursor: pointer;
+            background: #dee2e6;
+            border-radius: 3px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .status-badge {
+            background: #212529;
+            color: #00ff00;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.2rem;
+            font-weight: 800;
+            padding: 15px 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #343a40;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-badge.destructive { color: #dc3545; }
+        .status-badge.beats { color: #fd7e14; }
+
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        #waveCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #212529;
+            padding: 15px 25px;
+            border-top: 1px solid #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: var(--math-blue);
+            color: white;
+            border: none;
+            font-weight: 800;
+            padding: 10px 25px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .control-btn:hover { background: #0b5ed7; transform: scale(1.05); }
+        .control-btn.paused { background: var(--math-orange); }
+        .control-btn.paused:hover { background: #e06c00; }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #adb5bd;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.w1 { background: #0d6efd; }
+        .dot.w2 { background: #dc3545; }
+        .dot.res { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .telemetry-bar { flex-direction: column; gap: 15px; }
+            .status-badge { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-water"></i> Superposition Engine
+            </div>
+
+            <div class="preset-grid">
+                <button class="btn-preset" onclick="setPreset('constructive')">
+                    <i class="fas fa-plus-circle text-success"></i> Constructive
+                </button>
+                <button class="btn-preset" onclick="setPreset('destructive')">
+                    <i class="fas fa-minus-circle text-danger"></i> Destructive
+                </button>
+                <button class="btn-preset" onclick="setPreset('beats')">
+                    <i class="fas fa-wave-square text-warning"></i> Beats
+                </button>
+            </div>
+
+            <div class="wave-section wave1">
+                <div class="wave-title">
+                    <span>Wave 1 <small>(y&thinsp;&plus;&thinsp;)</small></span>
+                    <span>y₁ = A₁ sin(kx - &omega;t + &phi;₁)</span>
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">Amplitude (A₁) <span id="lblA1">1.0</span></div>
+                    <input type="range" id="valA1" min="0" max="2" step="0.1" value="1.0" oninput="updatePhysics()">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">Frequency (f₁) <span id="lblF1">1.0 Hz</span></div>
+                    <input type="range" id="valF1" min="0.5" max="5" step="0.1" value="1.0" oninput="updatePhysics()">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">Phase (&phi;₁) <span id="lblP1">0&deg;</span></div>
+                    <input type="range" id="valP1" min="0" max="360" step="15" value="0" oninput="updatePhysics()">
+                </div>
+            </div>
+
+            <div class="wave-section wave2">
+                <div class="wave-title">
+                    <span>Wave 2 <small>(y&thinsp;&plus;&thinsp;)</small></span>
+                    <span>y₂ = A₂ sin(kx - &omega;t + &phi;₂)</span>
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">Amplitude (A₂) <span id="lblA2">1.0</span></div>
+                    <input type="range" id="valA2" min="0" max="2" step="0.1" value="1.0" oninput="updatePhysics()">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">Frequency (f₂) <span id="lblF2">1.0 Hz</span></div>
+                    <input type="range" id="valF2" min="0.5" max="5" step="0.1" value="1.0" oninput="updatePhysics()">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">Phase (&phi;₂) <span id="lblP2">0&deg;</span></div>
+                    <input type="range" id="valP2" min="0" max="360" step="15" value="0" oninput="updatePhysics()">
+                </div>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-auto" onclick="setPreset('constructive')">
+                <i class="fas fa-undo me-2"></i> Reset Waves
+            </button>
+            
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="status-badge" id="statusBadge">
+            <span>Interference State:</span>
+            <span id="stateText">Pure Constructive</span>
+        </div>
+
+        <div class="simulation-box">
+            
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="waveCanvas"></canvas>
+            </div>
+
+            <div class="telemetry-bar">
+                <button class="control-btn" id="playBtn" onclick="togglePlay()">
+                    <i class="fas fa-pause"></i> Pause Time
+                </button>
+
+                <div class="legend">
+                    <div class="legend-item"><div class="dot w1"></div> Wave 1</div>
+                    <div class="legend-item"><div class="dot w2"></div> Wave 2</div>
+                    <div class="legend-item"><div class="dot res"></div> Superposition (y₁+y₂)</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Controls
+    const valA1 = document.getElementById('valA1'); const lblA1 = document.getElementById('lblA1');
+    const valF1 = document.getElementById('valF1'); const lblF1 = document.getElementById('lblF1');
+    const valP1 = document.getElementById('valP1'); const lblP1 = document.getElementById('lblP1');
+
+    const valA2 = document.getElementById('valA2'); const lblA2 = document.getElementById('lblA2');
+    const valF2 = document.getElementById('valF2'); const lblF2 = document.getElementById('lblF2');
+    const valP2 = document.getElementById('valP2'); const lblP2 = document.getElementById('lblP2');
+
+    const statusBadge = document.getElementById('statusBadge');
+    const stateText = document.getElementById('stateText');
+    const playBtn = document.getElementById('playBtn');
+
+    // Canvas
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // Engine State
+    let time = 0;
+    let isPlaying = true;
+    let animationFrameId = null;
+
+    let w1 = { A: 1, f: 1, p: 0 };
+    let w2 = { A: 1, f: 1, p: 0 };
+
+    function setPreset(type) {
+        if (type === 'constructive') {
+            valA1.value = 1; valF1.value = 1; valP1.value = 0;
+            valA2.value = 1; valF2.value = 1; valP2.value = 0;
+        } else if (type === 'destructive') {
+            valA1.value = 1; valF1.value = 1; valP1.value = 0;
+            valA2.value = 1; valF2.value = 1; valP2.value = 180;
+        } else if (type === 'beats') {
+            valA1.value = 1; valF1.value = 2.0; valP1.value = 0;
+            valA2.value = 1; valF2.value = 2.2; valP2.value = 0;
+        }
+        updatePhysics();
+    }
+
+    function updatePhysics() {
+        w1.A = parseFloat(valA1.value);
+        w1.f = parseFloat(valF1.value);
+        w1.p = parseFloat(valP1.value);
+
+        w2.A = parseFloat(valA2.value);
+        w2.f = parseFloat(valF2.value);
+        w2.p = parseFloat(valP2.value);
+
+        lblA1.innerText = w1.A.toFixed(1);
+        lblF1.innerText = `${w1.f.toFixed(1)} Hz`;
+        lblP1.innerText = `${w1.p}\u00B0`;
+
+        lblA2.innerText = w2.A.toFixed(1);
+        lblF2.innerText = `${w2.f.toFixed(1)} Hz`;
+        lblP2.innerText = `${w2.p}\u00B0`;
+
+        determineState();
+        if (!isPlaying) drawFrame(); // Force update if paused
+    }
+
+    function determineState() {
+        // Evaluate the mathematical relationship between the waves
+        let state = "Complex Interference";
+        let colorClass = "";
+
+        if (w1.A === 0 && w2.A === 0) {
+            state = "Zero Amplitude";
+        } else if (w1.A === 0 || w2.A === 0) {
+            state = "Single Wave Propagation";
+        } else if (w1.f === w2.f) {
+            // Same frequency, check phase difference
+            let phaseDiff = Math.abs(w1.p - w2.p) % 360;
+            if (phaseDiff === 0) {
+                state = "Pure Constructive";
+                colorClass = ""; // default green
+            } else if (phaseDiff === 180 && w1.A === w2.A) {
+                state = "Complete Cancellation (Destructive)";
+                colorClass = "destructive";
+            } else if (phaseDiff === 180) {
+                state = "Partial Destructive";
+                colorClass = "destructive";
+            } else {
+                state = `Phase Shifted (${phaseDiff}\u00B0)`;
+            }
+        } else {
+            // Different frequencies
+            let freqDiff = Math.abs(w1.f - w2.f);
+            if (freqDiff <= 0.5) {
+                state = `Beat Frequencies (f_beat = ${freqDiff.toFixed(1)}Hz)`;
+                colorClass = "beats";
+            } else {
+                state = "Complex Superposition";
+            }
+        }
+
+        stateText.innerText = state;
+        statusBadge.className = `status-badge ${colorClass}`;
+    }
+
+    function togglePlay() {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            playBtn.innerHTML = '<i class="fas fa-pause"></i> Pause Time';
+            playBtn.className = 'control-btn';
+            animate();
+        } else {
+            playBtn.innerHTML = '<i class="fas fa-play"></i> Resume Time';
+            playBtn.className = 'control-btn paused';
+            cancelAnimationFrame(animationFrameId);
+        }
+    }
+
+    function resizeCanvas() {
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        if(cw === 0 || ch === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = cw * dpr;
+        canvas.height = ch * dpr;
+        canvas.style.width = `${cw}px`;
+        canvas.style.height = `${ch}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        if (!isPlaying) drawFrame();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // --- CANVAS WAVE RENDERER ---
+    function drawFrame() {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const cy = ch / 2;
+        
+        // Auto Y Scaling: Max possible amplitude is A1 + A2.
+        const maxAmp = w1.A + w2.A;
+        // Leave 20% padding top and bottom. Scale Y so maxAmp fits in 40% of height.
+        const scaleY = maxAmp === 0 ? 1 : (ch * 0.4) / Math.max(maxAmp, 1); 
+        
+        // X Scaling: Map canvas width to 4*PI to show a few cycles
+        const numCycles = 4;
+        const scaleX = (numCycles * Math.PI * 2) / cw;
+
+        // Draw Center Axis
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#495057';
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(0, cy);
+        ctx.lineTo(cw, cy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Rendering Arrays
+        const pts1 = [];
+        const pts2 = [];
+        const ptsRes = [];
+
+        // Wave Equation: y(x,t) = A * sin(k*x - omega*t + phi)
+        // For visual clarity, we map x directly, and use f for frequency density, and subtract time.
+        const p1Rad = w1.p * (Math.PI / 180);
+        const p2Rad = w2.p * (Math.PI / 180);
+        
+        // Speed of animation
+        const speed = 2.0;
+
+        for (let px = 0; px <= cw; px += 2) { // step by 2 pixels for performance
+            let x = px * scaleX;
+            
+            // Calculate instantaneous Y
+            let y1 = w1.A * Math.sin((w1.f * x) - (speed * time) + p1Rad);
+            let y2 = w2.A * Math.sin((w2.f * x) - (speed * time) + p2Rad);
+            let yRes = y1 + y2;
+
+            pts1.push({x: px, y: cy - (y1 * scaleY)});
+            pts2.push({x: px, y: cy - (y2 * scaleY)});
+            ptsRes.push({x: px, y: cy - (yRes * scaleY)});
+        }
+
+        // Draw Wave 1 (Blue Ghost)
+        if (w1.A > 0) {
+            ctx.beginPath();
+            ctx.moveTo(pts1[0].x, pts1[0].y);
+            for(let i=1; i<pts1.length; i++) ctx.lineTo(pts1[i].x, pts1[i].y);
+            ctx.strokeStyle = 'rgba(13, 110, 253, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Draw Wave 2 (Red Ghost)
+        if (w2.A > 0) {
+            ctx.beginPath();
+            ctx.moveTo(pts2[0].x, pts2[0].y);
+            for(let i=1; i<pts2.length; i++) ctx.lineTo(pts2[i].x, pts2[i].y);
+            ctx.strokeStyle = 'rgba(220, 53, 69, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Draw Resultant Wave (Neon Green Solid)
+        ctx.beginPath();
+        ctx.moveTo(ptsRes[0].x, ptsRes[0].y);
+        for(let i=1; i<ptsRes.length; i++) ctx.lineTo(ptsRes[i].x, ptsRes[i].y);
+        
+        // Dynamic glow based on cancellation
+        if (w1.A > 0 && w2.A > 0 && w1.f === w2.f && Math.abs(w1.p - w2.p)%360 === 180 && w1.A === w2.A) {
+            // Complete cancellation (Flatline)
+            ctx.strokeStyle = '#dc3545';
+            ctx.shadowColor = '#dc3545';
+        } else {
+            ctx.strokeStyle = '#00ff00';
+            ctx.shadowColor = '#00ff00';
+        }
+        
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 10;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        ctx.shadowBlur = 0; // reset
+    }
+
+    function animate() {
+        if (!isPlaying) return;
+        
+        time += 0.05; // increment simulation time
+        drawFrame();
+        
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // SAFE INIT
+    setTimeout(() => {
+        resizeCanvas();
+        updatePhysics();
+        animate();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

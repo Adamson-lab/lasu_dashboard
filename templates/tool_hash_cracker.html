@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash Decryptor | INFINITY ULTRA GOD PRO MAX</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <style>
+        /* ==========================================
+           INFINITY ULTRA GOD PRO MAX THEME ENGINE
+           ========================================== */
+        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap');
+
+        /* LIGHT MODE (DEFAULT) */
+        [data-theme="light"] {
+            --bg-master: #e2e8f0;
+            --bg-surface: rgba(255, 255, 255, 0.85);
+            --term-bg: rgba(248, 250, 252, 0.9);
+            --border-core: rgba(148, 163, 184, 0.3);
+            --border-neon: #dc2626; 
+            --text-main: #0f172a;
+            --text-mute: #64748b;
+            --text-cyber: #b91c1c; 
+            --grid-line: rgba(0, 0, 0, 0.05);
+            --shadow-core: 0 8px 32px rgba(220, 38, 38, 0.05);
+            --alert: #dc2626;
+            --warn: #d97706;
+            --info: #0284c7;
+            --temporal: #7c3aed;
+            --success: #059669;
+        }
+
+        /* DARK MODE */
+        [data-theme="dark"] {
+            --bg-master: #050202;
+            --bg-surface: rgba(30, 5, 5, 0.7);
+            --term-bg: rgba(10, 2, 2, 0.85);
+            --border-core: rgba(100, 20, 20, 0.5);
+            --border-neon: #ef4444; 
+            --text-main: #f8fafc;
+            --text-mute: #94a3b8;
+            --text-cyber: #ef4444;
+            --grid-line: rgba(255, 0, 0, 0.03);
+            --shadow-core: 0 8px 32px rgba(239, 68, 68, 0.15);
+            --alert: #ef4444;
+            --warn: #f59e0b;
+            --info: #0ea5e9;
+            --temporal: #a855f7;
+            --success: #10b981;
+        }
+
+        /* 👑 GOD MODE (ULTRA PRO MAX EXCLUSIVE) */
+        [data-theme="god"] {
+            --bg-master: #050400;
+            --bg-surface: rgba(20, 15, 0, 0.8);
+            --term-bg: rgba(5, 3, 0, 0.9);
+            --border-core: rgba(255, 215, 0, 0.4);
+            --border-neon: #ffd700; /* Pure Celestial Gold */
+            --text-main: #fffbeb;
+            --text-mute: #b45309;
+            --text-cyber: #fbbf24;
+            --grid-line: rgba(255, 215, 0, 0.05);
+            --shadow-core: 0 0 40px rgba(255, 215, 0, 0.2);
+            --alert: #ff0000;
+            --warn: #f59e0b;
+            --info: #38bdf8;
+            --temporal: #c084fc;
+            --success: #34d399;
+        }
+
+        body { 
+            background-color: var(--bg-master); 
+            color: var(--text-main); 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-attachment: fixed;
+            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
+        }
+
+        /* CRT Effect (Dark/God mode only) */
+        [data-theme="dark"] body::before, [data-theme="god"] body::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 9999; background-size: 100% 2px, 3px 100%; pointer-events: none; opacity: 0.8;
+        }
+        [data-theme="god"] body::before {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 215, 0, 0.03), rgba(255, 0, 0, 0.02), rgba(255, 215, 0, 0.03));
+        }
+
+        /* Glassmorphism Panels */
+        .cyber-panel { 
+            background: var(--bg-surface); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-core); 
+            border-radius: 8px; 
+            padding: 20px; 
+            box-shadow: var(--shadow-core); 
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        /* Tactical Corner Cuts */
+        .cyber-panel::before, .cyber-panel::after {
+            content: ''; position: absolute; width: 15px; height: 15px; border: 2px solid transparent; pointer-events: none;
+        }
+        .cyber-panel::before { top: -1px; left: -1px; border-top-color: var(--border-neon); border-left-color: var(--border-neon); border-radius: 8px 0 0 0; }
+        .cyber-panel::after { bottom: -1px; right: -1px; border-bottom-color: var(--border-neon); border-right-color: var(--border-neon); border-radius: 0 0 8px 0; }
+
+        .panel-header {
+            border-bottom: 1px solid var(--border-core);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        /* THEME BUTTON (UPGRADED FOR TRINITY CYCLE) */
+        .btn-theme {
+            background: var(--bg-surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-core);
+            width: 45px; height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow-core);
+        }
+        .btn-theme:hover { border-color: var(--border-neon); color: var(--border-neon); transform: rotate(45deg) scale(1.15); box-shadow: 0 0 20px var(--border-neon); }
+
+        /* Hardware Meters */
+        .hardware-meter { display: flex; align-items: center; gap: 8px; padding: 5px 15px; background: rgba(0,0,0,0.03); border-radius: 20px; border: 1px solid var(--border-core); }
+        [data-theme="dark"] .hardware-meter, [data-theme="god"] .hardware-meter { background: rgba(255,255,255,0.03); }
+        .meter-bar { width: 50px; height: 4px; background: var(--border-core); border-radius: 2px; overflow: hidden; }
+        .meter-fill { height: 100%; transition: width 0.3s ease; }
+
+        /* Inputs & Controls */
+        .tz-select, .form-cyber {
+            background: var(--term-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-core);
+            font-family: 'JetBrains Mono', monospace;
+            padding: 10px 15px;
+            border-radius: 6px;
+            outline: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .tz-select { color: var(--temporal); border-color: var(--temporal); cursor: pointer; padding: 8px 12px; width: auto; font-size: 0.8rem; }
+        .tz-select:focus, .tz-select:hover { box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
+        .form-cyber:focus { border-color: var(--border-neon); box-shadow: 0 0 15px rgba(220, 38, 38, 0.2); }
+        [data-theme="god"] .form-cyber:focus { box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+
+        .btn-cyber { 
+            background: var(--bg-surface); 
+            border: 1px solid var(--border-core); 
+            color: var(--text-main); 
+            padding: 10px 20px; 
+            text-transform: uppercase; 
+            font-weight: 900; 
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            border-radius: 6px;
+            transition: all 0.2s; 
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-cyber:hover { 
+            background: var(--border-neon); 
+            color: #fff !important; 
+            border-color: var(--border-neon);
+            box-shadow: 0 5px 15px var(--border-neon);
+            transform: translateY(-2px);
+        }
+
+        /* Terminal Window */
+        .terminal { 
+            height: 350px; 
+            overflow-y: auto; 
+            background: var(--term-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.03);
+            scroll-behavior: smooth;
+        }
+        .log-line { margin-bottom: 8px; line-height: 1.5; opacity: 0; animation: fadeIn 0.3s forwards; border-left: 2px solid transparent; padding-left: 8px;}
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* Output Nodes */
+        .result-node {
+            background: var(--bg-master);
+            border: 1px solid var(--border-core);
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            word-break: break-all;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .result-label {
+            position: absolute;
+            top: 0; right: 0;
+            background: var(--border-core);
+            padding: 2px 8px;
+            font-size: 0.6rem;
+            font-weight: bold;
+            border-radius: 0 0 0 6px;
+            color: var(--text-mute);
+        }
+
+        /* 👑 NEW: DRAG & DROP ZONE */
+        .drop-zone {
+            border: 2px dashed var(--border-core);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            background: rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            color: var(--text-mute);
+        }
+        [data-theme="dark"] .drop-zone, [data-theme="god"] .drop-zone { background: rgba(255,255,255,0.02); }
+        .drop-zone.dragover {
+            border-color: var(--border-neon);
+            background: rgba(220, 38, 38, 0.05);
+            color: var(--border-neon);
+            transform: scale(1.02);
+        }
+        [data-theme="god"] .drop-zone.dragover { background: rgba(255, 215, 0, 0.1); }
+
+        /* Text Utilities */
+        .text-danger { color: var(--alert) !important; }
+        .text-warning { color: var(--warn) !important; }
+        .text-info { color: var(--info) !important; }
+        .text-temporal { color: var(--temporal) !important; }
+        .text-success { color: var(--success) !important; }
+        .text-cyber { color: var(--text-cyber) !important; font-weight: 900; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid position-relative" style="max-width: 1600px; z-index: 5;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 cyber-panel" style="padding: 15px 25px;">
+            <div class="d-flex align-items-center gap-4">
+                <h2 class="m-0 fs-3 fw-bold" style="letter-spacing: -1px;">
+                    <i class="fas fa-biohazard me-2 text-cyber" style="animation: pulse 2s infinite;"></i> 
+                    CRYPTOGRAPHIC <span class="text-mute fw-light">CORE</span>
+                    <span class="badge ms-2 text-white" style="font-size:0.65rem; vertical-align: middle; background: linear-gradient(135deg, #dc2626, #b45309); box-shadow: 0 0 15px rgba(220, 38, 38, 0.5); border: 1px solid #fff;">INFINITY ULTRA GOD PRO MAX</span>
+                </h2>
+                
+                <div class="d-none d-lg-flex gap-3 border-start ps-4" style="border-color: var(--border-core) !important;">
+                    <div class="hardware-meter">
+                        <i class="fas fa-microchip text-mute"></i>
+                        <div class="d-flex flex-column" style="width: 60px;">
+                            <div class="d-flex justify-content-between" style="font-size: 0.55rem; font-weight: 800;"><span>CPU</span> <span id="cpuText" class="text-danger">8%</span></div>
+                            <div class="meter-bar"><div class="meter-fill bg-danger" id="cpuBar" style="width: 8%;"></div></div>
+                        </div>
+                    </div>
+                    <div class="hardware-meter">
+                        <i class="fas fa-memory text-mute"></i>
+                        <div class="d-flex flex-column" style="width: 60px;">
+                            <div class="d-flex justify-content-between" style="font-size: 0.55rem; font-weight: 800;"><span>RAM</span> <span id="memText" class="text-warning">24%</span></div>
+                            <div class="meter-bar"><div class="meter-fill bg-warning" id="memBar" style="width: 24%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-none d-xl-flex flex-column align-items-end me-2">
+                    <span style="font-size: 0.6rem; color: var(--temporal); font-weight: 900; letter-spacing: 1px; margin-bottom: 3px;">TEMPORAL SYNC</span>
+                    <select id="temporalEngine" class="tz-select" onchange="recalibrateTimezone()">
+                        <option value="Africa/Lagos">WAT (Lagos / West Africa)</option>
+                        <option value="UTC">UTC (Zulu / Prime)</option>
+                        <option value="America/New_York">EST (New York)</option>
+                        <option value="Europe/London">GMT (London)</option>
+                        <option value="Asia/Tokyo">JST (Tokyo)</option>
+                    </select>
+                </div>
+
+                <div class="text-end me-3 px-4 border-end border-start" style="border-color: var(--border-core) !important;">
+                    <div style="font-size: 0.6rem; color: var(--text-mute); font-weight: 900; letter-spacing: 2px;">SYS.TIME</div>
+                    <div id="sysTime" class="fw-bold" style="font-size: 1.4rem; color: var(--text-main); font-family: 'JetBrains Mono', monospace; text-shadow: 0 0 10px rgba(255,255,255,0.2);">00:00:00.000</div>
+                </div>
+
+                <button class="btn-theme" id="themeToggleBtn" onclick="cycleGodTheme()" title="Cycle Engine State">
+                    <i class="fas fa-sun" id="themeIcon"></i>
+                </button>
+                
+                <button class="btn-cyber" onclick="window.history.back()" style="padding: 10px 14px; border-color: var(--alert); color: var(--alert);">
+                    <i class="fas fa-power-off"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-6 d-flex flex-column gap-4">
+                <div class="cyber-panel flex-grow-1">
+                    <div class="panel-header text-cyber">
+                        <span><i class="fas fa-search me-2"></i> SIGNATURE ANALYZER</span>
+                    </div>
+                    
+                    <label class="fw-bold text-mute small mb-2">TARGET HASH PAYLOAD</label>
+                    <input type="text" id="hashInput" class="form-cyber mb-3" placeholder="Paste unknown cryptographic signature here...">
+                    
+                    <div class="d-flex gap-2 mb-4">
+                        <button class="btn-cyber w-50" onclick="analyzeHash()"><i class="fas fa-fingerprint me-2"></i> Identify</button>
+                        <button class="btn-cyber w-50" onclick="simulateCracking()" style="border-color: var(--alert); color: var(--alert);"><i class="fas fa-bolt me-2"></i> Brute Force</button>
+                    </div>
+
+                    <div class="result-node" id="hashResult">
+                        <div class="result-label">ANALYSIS</div>
+                        <span class="text-mute" style="font-size: 0.85rem;">AWAITING INPUT SEQUENCE...</span>
+                    </div>
+                </div>
+
+                <div class="cyber-panel">
+                    <div class="panel-header text-info">
+                        <span><i class="fas fa-key me-2"></i> ONE-WAY ENCRYPTION FORGE</span>
+                    </div>
+                    
+                    <label class="fw-bold text-mute small mb-2">RAW STRING PAYLOAD</label>
+                    <input type="text" id="rawInput" class="form-cyber mb-3" placeholder="Enter plaintext to encrypt...">
+                    
+                    <div class="d-flex gap-2 mb-3">
+                        <select id="cryptoAlgo" class="form-cyber w-50">
+                            <option value="MD5">MD5 Engine</option>
+                            <option value="SHA1">SHA-1 Engine</option>
+                            <option value="SHA256" selected>SHA-256 (Military Grade)</option>
+                            <option value="SHA512">SHA-512 (Ultra Secure)</option>
+                        </select>
+                        <button class="btn-cyber w-50" onclick="generateHash()" style="background: var(--info); color: #fff; border-color: var(--info);"><i class="fas fa-lock me-2"></i> Hash Data</button>
+                    </div>
+
+                    <div class="result-node" id="genResult" style="font-size: 0.85rem;">
+                        <div class="result-label">OUTPUT</div>
+                        <span class="text-mute">ENCRYPTED PAYLOAD WILL APPEAR HERE...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6">
+                <div class="cyber-panel h-100 d-flex flex-column">
+                    <div class="panel-header text-warning">
+                        <span><i class="fas fa-terminal me-2"></i> MULTI-THREAD DECRYPTION MATRIX</span>
+                        <button class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.6rem; border-color: var(--border-core); color: var(--text-main);" onclick="document.getElementById('crackTerminal').innerHTML=''">CLEAR</button>
+                    </div>
+                    
+                    <div class="terminal flex-grow-1" id="crackTerminal">
+                        <div class="log-line text-cyber fw-bold">>> CRYPTO-ANALYSIS ENGINE ONLINE.</div>
+                        <div class="log-line text-mute">>> RAINBOW TABLES SECURED.</div>
+                        <div class="log-line text-mute">>> AWAITING TARGET ASSIGNMENT...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-xl-6">
+                <div class="cyber-panel h-100" style="border-color: var(--temporal); box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);">
+                    <div class="panel-header text-temporal">
+                        <span><i class="fas fa-user-secret me-2"></i> AES-256 SYMMETRIC CIPHER (TWO-WAY)</span>
+                        <span class="badge" style="background: var(--temporal); color: #fff; font-size: 0.6rem;">TOP SECRET</span>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="fw-bold text-mute small mb-1">DATA PAYLOAD</label>
+                            <input type="text" id="aesData" class="form-cyber" placeholder="Message or Ciphertext...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold text-mute small mb-1">SECRET KEY (PASSPHRASE)</label>
+                            <input type="password" id="aesKey" class="form-cyber" placeholder="Enter secure key...">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mb-3">
+                        <button class="btn-cyber w-50" onclick="processAES('encrypt')" style="background: var(--temporal); color: #fff; border-color: var(--temporal);"><i class="fas fa-lock me-2"></i> Encrypt (AES)</button>
+                        <button class="btn-cyber w-50" onclick="processAES('decrypt')" style="background: transparent; color: var(--temporal); border-color: var(--temporal);"><i class="fas fa-unlock me-2"></i> Decrypt (AES)</button>
+                    </div>
+
+                    <div class="result-node" id="aesResult" style="font-size: 0.85rem; min-height: 80px;">
+                        <div class="result-label">AES OUTPUT</div>
+                        <span class="text-mute">AWAITING ENCRYPTION/DECRYPTION PROTOCOL...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6">
+                <div class="cyber-panel h-100" style="border-color: var(--success); box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);">
+                    <div class="panel-header text-success">
+                        <span><i class="fas fa-file-shield me-2"></i> ORBITAL FILE HASHING NODE (LOCAL)</span>
+                    </div>
+                    
+                    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-success"></i>
+                        <h5 class="fw-bold text-main">DRAG & DROP FILE HERE</h5>
+                        <p class="small text-mute m-0">or click to browse local matrix. Files are hashed entirely in your browser. Zero server upload.</p>
+                        <input type="file" id="fileInput" class="d-none" onchange="handleFileSelect(event)">
+                    </div>
+
+                    <div class="result-node mt-3" id="fileHashResult" style="font-size: 0.85rem; display: none;">
+                        <div class="result-label">FILE SIGNATURE (SHA-256)</div>
+                        <div class="fw-bold text-success" id="fileHashOutput" style="word-wrap: break-word;"></div>
+                        <div class="mt-2 text-end">
+                            <button class="btn btn-sm btn-outline-secondary py-0" style="font-size: 0.6rem;" onclick="copyToClipboard(document.getElementById('fileHashOutput').innerText)">COPY SIGNATURE</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 👑 THE TRINITY THEME ENGINE (LIGHT -> DARK -> GOD)
+        // ==========================================
+        const themes = ['light', 'dark', 'god'];
+        let currentThemeIndex = 0;
+
+        function cycleGodTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            const newTheme = themes[currentThemeIndex];
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('lisa_god_theme', newTheme);
+            updateThemeIcon(newTheme);
+
+            if(newTheme === 'god') {
+                logTerminal('>> ⚠️ WARNING: CELESTIAL OMNI-MATRIX (GOD MODE) ENGAGED. OVERRIDING SAFETY PROTOCOLS.', 'text-cyber fw-bold', 'var(--border-neon)');
+            }
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'light') icon.className = 'fas fa-sun text-warning';
+            else if (theme === 'dark') icon.className = 'fas fa-moon text-info';
+            else if (theme === 'god') icon.className = 'fas fa-radiation text-danger'; // God Mode Icon
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = localStorage.getItem('lisa_god_theme') || 'light';
+            currentThemeIndex = themes.indexOf(savedTheme) > -1 ? themes.indexOf(savedTheme) : 0;
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        });
+
+        // ==========================================
+        // TEMPORAL CORE & HARDWARE SIMULATOR
+        // ==========================================
+        const tzSelect = document.getElementById('temporalEngine');
+        
+        function getTemporalString() {
+            const now = new Date();
+            const tz = tzSelect.value;
+            const formatter = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const parts = formatter.formatToParts(now);
+            let hh, mm, ss;
+            parts.forEach(p => { if(p.type==='hour') hh=p.value; if(p.type==='minute') mm=p.value; if(p.type==='second') ss=p.value; });
+            const ms = String(now.getMilliseconds()).padStart(3, '0');
+            return `${hh}:${mm}:${ss}.${ms}`;
+        }
+
+        function recalibrateTimezone() {
+            logTerminal(`>> TEMPORAL RE-ALIGNMENT: ${tzSelect.value} <<`, 'text-temporal');
+        }
+
+        setInterval(() => { document.getElementById('sysTime').innerText = getTemporalString(); }, 50);
+
+        let crackingActive = false;
+        setInterval(() => {
+            const cBase = crackingActive ? 85 : 8;
+            const mBase = crackingActive ? 75 : 24;
+            
+            const cpu = Math.floor(cBase + Math.random() * 14);
+            const mem = Math.floor(mBase + Math.random() * 10);
+            
+            const cColor = cpu > 80 ? 'var(--alert)' : (cpu > 40 ? 'var(--warn)' : 'var(--success)');
+            
+            document.getElementById('cpuText').innerText = `${cpu}%`;
+            document.getElementById('cpuText').style.color = cColor;
+            document.getElementById('cpuBar').style.width = `${cpu}%`;
+            document.getElementById('cpuBar').style.backgroundColor = cColor;
+
+            document.getElementById('memText').innerText = `${mem}%`;
+            document.getElementById('memBar').style.width = `${mem}%`;
+        }, 1000);
+
+        // ==========================================
+        // TERMINAL LOGGER
+        // ==========================================
+        const term = document.getElementById('crackTerminal');
+        function logTerminal(msg, colorClass = 'text-main', borderLeft = 'transparent') {
+            const time = getTemporalString().slice(0, -4);
+            const log = `<div class="log-line ${colorClass}" style="border-left-color: ${borderLeft}">
+                <span class="text-mute me-2">[${time}]</span> ${msg}
+            </div>`;
+            term.insertAdjacentHTML('beforeend', log);
+            term.scrollTop = term.scrollHeight;
+        }
+
+        // ==========================================
+        // HASH IDENTIFIER
+        // ==========================================
+        function analyzeHash() {
+            const hash = document.getElementById('hashInput').value.trim();
+            const res = document.getElementById('hashResult');
+            
+            if(!hash) { 
+                res.innerHTML = '<div class="result-label">ANALYSIS</div><span class="text-danger fw-bold"><i class="fas fa-times-circle me-1"></i> ERROR: NO PAYLOAD DETECTED</span>'; 
+                logTerminal('>> ERROR: Cannot analyze empty string.', 'text-danger');
+                return; 
+            }
+            
+            const len = hash.length;
+            let type = "UNKNOWN FORMAT";
+            let secLevel = "LOW";
+            let color = "var(--text-main)";
+            
+            if(/^[a-f0-9]{32}$/i.test(hash)) { type = "MD5"; secLevel = "VULNERABLE"; color = "var(--warn)"; }
+            else if(/^[a-f0-9]{40}$/i.test(hash)) { type = "SHA-1"; secLevel = "WEAK"; color = "var(--warn)"; }
+            else if(/^[a-f0-9]{64}$/i.test(hash)) { type = "SHA-256"; secLevel = "HIGH (MILITARY)"; color = "var(--success)"; }
+            else if(/^[a-f0-9]{128}$/i.test(hash)) { type = "SHA-512"; secLevel = "MAXIMUM"; color = "var(--info)"; }
+            else if(/^\$2[ayb]\$.{56}$/.test(hash)) { type = "BCRYPT"; secLevel = "EXTREME (SALTED)"; color = "var(--temporal)"; }
+            
+            res.innerHTML = `
+                <div class="result-label">ANALYSIS</div>
+                <div style="font-size: 0.8rem; color: var(--text-mute); margin-bottom: 5px;">SIGNATURE: <span style="color:var(--text-main); font-weight:bold;">${hash.substring(0,20)}...</span></div>
+                <div style="font-size: 0.8rem; color: var(--text-mute); margin-bottom: 5px;">LENGTH: <span style="color:var(--text-main); font-weight:bold;">${len} Bytes</span></div>
+                <div style="font-size: 0.8rem; color: var(--text-mute);">DETECTED ENGINE: <span class="fw-bold fs-5" style="color: ${color}; text-shadow: 0 0 10px ${color};">${type}</span></div>
+                <div style="font-size: 0.7rem; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-core);" class="text-mute">SECURITY TIER: <strong style="color: ${color}">${secLevel}</strong></div>
+            `;
+
+            logTerminal(`>> SIGNATURE ANALYZED: ${type} [${len} BYTES]`, 'text-info', 'var(--info)');
+        }
+
+        // ==========================================
+        // MULTI-THREAD BRUTE FORCE SIMULATOR
+        // ==========================================
+        function simulateCracking() {
+            const hash = document.getElementById('hashInput').value.trim();
+            if(!hash) return alert("Please enter a hash to decrypt.");
+
+            crackingActive = true;
+            logTerminal(`>> INITIATING MULTI-THREAD BRUTE FORCE ON: ${hash.substring(0, 12)}...`, 'text-danger fw-bold', 'var(--alert)');
+            logTerminal('>> MOUNTING DISTRIBUTED RAINBOW TABLES [THREADS: 8]...', 'text-warning');
+            
+            let attempts = 0;
+            const maxAttempts = Math.floor(Math.random() * 20) + 15;
+            
+            const crackInt = setInterval(() => {
+                attempts++;
+                
+                // Simulate multiple threads checking simultaneously
+                let threadOutput = "";
+                for(let t=0; t<3; t++){
+                    const fakeHash = Math.floor(Math.random()*16777215).toString(16).padStart(6, '0') + "..." + Math.floor(Math.random()*16777215).toString(16);
+                    threadOutput += `[T${t}] 0x${fakeHash} <span class="text-danger ms-1">MISMATCH</span>  |  `;
+                }
+                
+                logTerminal(`>> ${threadOutput}`, 'text-mute', 'rgba(255,255,255,0.1)');
+                
+                if(attempts >= maxAttempts) {
+                    clearInterval(crackInt);
+                    crackingActive = false;
+                    
+                    if (hash.length === 32 && Math.random() > 0.4) { 
+                        logTerminal(`>> COLLISION DETECTED BY THREAD 2! HASH CRACKED.`, 'text-success fw-bold', 'var(--success)');
+                        logTerminal(`>> DECRYPTED PAYLOAD: '<span class="text-white bg-success px-2 rounded">hunter2</span>'`, 'text-success fs-6');
+                    } else if (hash.length > 60) {
+                        logTerminal(`>> BRUTE FORCE FAILED. ENGINE TOO COMPLEX.`, 'text-danger fw-bold', 'var(--alert)');
+                        logTerminal(`>> RECOMMEND SWITCHING TO QUANTUM CLUSTER.`, 'text-mute');
+                    } else {
+                        logTerminal(`>> EXHAUSTED RAINBOW TABLE. NO MATCH FOUND.`, 'text-warning fw-bold', 'var(--warn)');
+                    }
+                }
+            }, 100); // Faster injection for God Mode
+        }
+
+        // ==========================================
+        // ONE-WAY CRYPTOGRAPHIC GENERATOR
+        // ==========================================
+        function generateHash() {
+            const raw = document.getElementById('rawInput').value;
+            const algo = document.getElementById('cryptoAlgo').value;
+            const res = document.getElementById('genResult');
+
+            if(!raw) {
+                res.innerHTML = '<div class="result-label">OUTPUT</div><span class="text-danger fw-bold"><i class="fas fa-exclamation-triangle"></i> NO PLAINTEXT PROVIDED</span>';
+                return;
+            }
+
+            let encrypted = "";
+            try {
+                if(algo === "MD5") encrypted = CryptoJS.MD5(raw).toString();
+                if(algo === "SHA1") encrypted = CryptoJS.SHA1(raw).toString();
+                if(algo === "SHA256") encrypted = CryptoJS.SHA256(raw).toString();
+                if(algo === "SHA512") encrypted = CryptoJS.SHA512(raw).toString();
+
+                res.innerHTML = `
+                    <div class="result-label">OUTPUT (${algo})</div>
+                    <div class="fw-bold" style="color: var(--info); word-wrap: break-word; font-size: 1.1rem; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 4px;">${encrypted}</div>
+                    <div class="mt-2 text-end">
+                        <button class="btn btn-sm btn-outline-secondary py-0" style="font-size: 0.65rem; font-weight: bold;" onclick="copyToClipboard('${encrypted}')"><i class="fas fa-copy me-1"></i> COPY</button>
+                    </div>
+                `;
+                logTerminal(`>> FORGED NEW ${algo} PAYLOAD: ${raw.substring(0,5)}...`, 'text-info', 'var(--info)');
+            } catch (err) {
+                res.innerHTML = `<span class="text-danger">ENCRYPTION ENGINE FAILED.</span>`;
+                console.error(err);
+            }
+        }
+
+        // ==========================================
+        // 👑 NEW: AES-256 TWO-WAY CIPHER MATRIX
+        // ==========================================
+        function processAES(action) {
+            const data = document.getElementById('aesData').value;
+            const key = document.getElementById('aesKey').value;
+            const res = document.getElementById('aesResult');
+
+            if(!data || !key) {
+                res.innerHTML = '<div class="result-label">AES OUTPUT</div><span class="text-danger fw-bold">ERROR: REQUIRE BOTH DATA AND SECRET KEY.</span>';
+                return;
+            }
+
+            try {
+                if(action === 'encrypt') {
+                    const ciphertext = CryptoJS.AES.encrypt(data, key).toString();
+                    res.innerHTML = `
+                        <div class="result-label bg-temporal text-white">ENCRYPTED CIPHERTEXT</div>
+                        <div class="fw-bold text-temporal" style="word-wrap: break-word;">${ciphertext}</div>
+                        <div class="mt-2 text-end"><button class="btn btn-sm btn-outline-secondary py-0" style="font-size: 0.6rem;" onclick="copyToClipboard('${ciphertext}')">COPY</button></div>
+                    `;
+                    logTerminal('>> AES-256 ENCRYPTION LOCK SECURED.', 'text-temporal fw-bold', 'var(--temporal)');
+                } else {
+                    const bytes = CryptoJS.AES.decrypt(data, key);
+                    const plaintext = bytes.toString(CryptoJS.enc.Utf8);
+                    
+                    if(!plaintext) throw new Error("Invalid Key or Malformed Cipher");
+
+                    res.innerHTML = `
+                        <div class="result-label bg-success text-white">DECRYPTED PLAINTEXT</div>
+                        <div class="fw-bold text-success fs-5">${plaintext}</div>
+                    `;
+                    logTerminal('>> AES-256 DECRYPTION SUCCESSFUL. PAYLOAD RECOVERED.', 'text-success fw-bold', 'var(--success)');
+                }
+            } catch(err) {
+                res.innerHTML = '<div class="result-label">AES OUTPUT</div><span class="text-danger fw-bold">DECRYPTION FAILED. INVALID KEY OR TAMPERED CIPHER.</span>';
+                logTerminal('>> ⚠️ AES-256 ACCESS DENIED. BAD SIGNATURE.', 'text-danger fw-bold', 'var(--alert)');
+            }
+        }
+
+        // ==========================================
+        // 👑 NEW: ORBITAL FILE HASHING NODE
+        // ==========================================
+        const dropZone = document.getElementById('dropZone');
+        
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFileSelect({target: {files: e.dataTransfer.files}}); });
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            logTerminal(`>> SCANNING LOCAL FILE: ${file.name} (${(file.size/1024).toFixed(2)} KB)`, 'text-success');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const fileData = CryptoJS.lib.WordArray.create(e.target.result);
+                const hash = CryptoJS.SHA256(fileData).toString();
+                
+                document.getElementById('fileHashResult').style.display = 'block';
+                document.getElementById('fileHashOutput').innerText = hash;
+                
+                logTerminal(`>> FILE SIGNATURE VERIFIED: 0x${hash.substring(0,8)}...`, 'text-success fw-bold', 'var(--success)');
+            };
+            reader.onerror = () => logTerminal('>> ERROR READING LOCAL FILE.', 'text-danger');
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Global Utility
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            logTerminal('>> DATA COPIED TO MATRIX CLIPBOARD.', 'text-mute');
+        }
+    </script>
+</body>
+</html>

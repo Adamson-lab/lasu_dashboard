@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>📝 Grading: {{ assignment.title }}</h3>
+        <a href="{{ url_for('manage_assignments', course_id=assignment.course_id) }}" class="btn btn-secondary">Done</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-striped align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-3">Student</th>
+                        <th>Submitted File</th>
+                        <th>Date</th>
+                        <th>Grade & Feedback</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in assignment.submissions_list %}
+                    <tr>
+                        <td class="ps-3">
+                            <div class="fw-bold">{{ sub.student.name }}</div>
+                            <small class="text-muted">{{ sub.student.matric_no }}</small>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('static', filename='assignments/' + sub.file_path) }}" class="btn btn-sm btn-outline-primary" download>
+                                📄 Download File
+                            </a>
+                        </td>
+                        <td>{{ sub.date_submitted.strftime('%d %b %H:%M') }}</td>
+                        <td>
+                            <form action="{{ url_for('view_submissions', id=assignment.id) }}" method="POST" class="d-flex gap-2">
+                                <input type="hidden" name="submission_id" value="{{ sub.id }}">
+                                <input type="number" name="score" class="form-control form-control-sm" style="width: 70px;" value="{{ sub.score or '' }}" placeholder="/ {{ assignment.points }}" max="{{ assignment.points }}" required>
+                                <input type="text" name="comment" class="form-control form-control-sm" value="{{ sub.lecturer_comment or '' }}" placeholder="Feedback...">
+                                <button type="submit" class="btn btn-sm btn-success">💾 Save</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center py-4 text-muted">No students have submitted yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

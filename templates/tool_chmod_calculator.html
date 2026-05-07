@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chmod Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --read-color: #0d6efd;
+            --write-color: #ffc107;
+            --execute-color: #dc3545;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .card-custom {
+            background: white; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 30px;
+        }
+
+        /* Results Display Area */
+        .results-area {
+            background: #212529;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .numeric-input {
+            background: transparent;
+            border: none;
+            color: #a6e22e;
+            font-family: 'Fira Code', monospace;
+            font-size: 4rem;
+            font-weight: 700;
+            width: 150px;
+            text-align: center;
+            outline: none;
+            border-bottom: 2px dashed #6c757d;
+            margin-bottom: 10px;
+        }
+        .numeric-input:focus {
+            border-bottom-color: #a6e22e;
+        }
+
+        .symbolic-output {
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        /* Checkbox Grid */
+        .permission-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+        
+        .permission-table th {
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            color: #6c757d;
+            padding-bottom: 10px;
+        }
+
+        .permission-table td {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+
+        .permission-table tr td:first-child {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+            font-weight: 700;
+            color: var(--lasu-green);
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        .permission-table tr td:last-child {
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        /* Custom Checkboxes */
+        .perm-checkbox {
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            accent-color: var(--lasu-green);
+        }
+
+        .perm-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .val-badge {
+            font-size: 0.7rem;
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 768px) {
+            .permission-table th { font-size: 0.7rem; }
+            .permission-table td { padding: 10px 5px; }
+            .permission-table tr td:first-child { padding-left: 10px; font-size: 0.9rem;}
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">LINUX TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="card-custom">
+        <h3 class="fw-bold text-dark mb-4 text-center"><i class="fas fa-user-shield text-success me-2"></i> chmod Calculator</h3>
+        
+        <div class="results-area shadow-sm">
+            <input type="text" id="numInput" class="numeric-input" value="755" maxlength="3" onkeyup="updateFromNumeric()">
+            <div class="symbolic-output" id="symOutput">-rwxr-xr-x</div>
+            <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-3" onclick="copyPermissions()"><i class="fas fa-copy"></i> Copy Command</button>
+        </div>
+
+        <table class="permission-table">
+            <thead>
+                <tr>
+                    <th>Class</th>
+                    <th><i class="fas fa-book-reader text-primary mb-1"></i><br>Read</th>
+                    <th><i class="fas fa-pen text-warning mb-1"></i><br>Write</th>
+                    <th><i class="fas fa-running text-danger mb-1"></i><br>Execute</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Owner (u)</td>
+                    <td>
+                        <label class="perm-label">
+                            <input type="checkbox" class="perm-checkbox" id="u_r" checked onchange="updateFromCheckboxes()">
+                            <span class="val-badge">4</span>
+                        </label>
+                    </td>
+                    <td>
+                        <label class="perm-label">
+                            <input type="checkbox" class="perm-checkbox" id="u_w" checked onchange="updateFromCheckboxes()">
+                            <span class="val-badge">2</span>
+                        </label>
+                    </td>
+                    <td>
+                        <label class="perm-label">
+                            <input type="checkbox" class="perm-checkbox" id="u_x" checked onchange="updateFromCheckboxes()">
+                            <span class="val-badge">1</span>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Group (g)</td>
+                    <td>
+                        <label class="perm-label">
+                            <input type="checkbox" class="perm-checkbox" id="g_r" checked onchange="updateFromCheckboxes()">
+                            <span class="val-badge">4</span>
+                        </label>
+                    </td>
+                    <td>
+                        <label class="perm-label">
+                            <input type="checkbox" class="perm-checkbox" id="g_w" onchange="updateFromCheckboxes()">
+                            <span class="val-badge">2</span>
+                        </label>
+                    </td>
+                    <td>
+                        <label class="perm-label">
+                            <input type="checkbox" class="perm-checkbox" id="g_x" checked onchange="updateFromCheckboxes()">
+                            <span class="val-badge">1</span>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Public (o)</td>
+                    <td>
+                        <label class="perm-label">
+                            <input type="checkbox" class="perm-checkbox" id="o_r" checked onchange="updateFromCheckboxes()">
+                            <span class="val-badge">4</span>
+                        </label>
+                    </td>
+                    <td>
+                        <label class="perm-label">
+                            <input type="checkbox" class="perm-checkbox" id="o_w" onchange="updateFromCheckboxes()">
+                            <span class="val-badge">2</span>
+                        </label>
+                    </td>
+                    <td>
+                        <label class="perm-label">
+                            <input type="checkbox" class="perm-checkbox" id="o_x" checked onchange="updateFromCheckboxes()">
+                            <span class="val-badge">1</span>
+                        </label>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="mt-4 border-top pt-4 text-center">
+            <h6 class="fw-bold mb-3 text-muted">Common Settings</h6>
+            <button class="btn btn-outline-secondary btn-sm m-1" onclick="setNumeric('777')">777 (All)</button>
+            <button class="btn btn-outline-secondary btn-sm m-1" onclick="setNumeric('755')">755 (Web Executable)</button>
+            <button class="btn btn-outline-secondary btn-sm m-1" onclick="setNumeric('644')">644 (Web File)</button>
+            <button class="btn btn-outline-secondary btn-sm m-1" onclick="setNumeric('600')">600 (Private Secret)</button>
+            <button class="btn btn-outline-secondary btn-sm m-1" onclick="setNumeric('400')">400 (Read-Only Secret)</button>
+        </div>
+    </div>
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    const numInput = document.getElementById('numInput');
+    const symOutput = document.getElementById('symOutput');
+
+    // Mappings
+    const checkboxes = {
+        u: { r: 'u_r', w: 'u_w', x: 'u_x' },
+        g: { r: 'g_r', w: 'g_w', x: 'g_x' },
+        o: { r: 'o_r', w: 'o_w', x: 'o_x' }
+    };
+
+    function updateFromCheckboxes() {
+        let numeric = '';
+        let symbolic = '-'; // Assuming file, not directory 'd'
+
+        for (const entity of ['u', 'g', 'o']) {
+            let val = 0;
+            let sym = '';
+            
+            const r = document.getElementById(checkboxes[entity].r).checked;
+            const w = document.getElementById(checkboxes[entity].w).checked;
+            const x = document.getElementById(checkboxes[entity].x).checked;
+
+            if (r) { val += 4; sym += 'r'; } else { sym += '-'; }
+            if (w) { val += 2; sym += 'w'; } else { sym += '-'; }
+            if (x) { val += 1; sym += 'x'; } else { sym += '-'; }
+
+            numeric += val.toString();
+            symbolic += sym;
+        }
+
+        numInput.value = numeric;
+        symOutput.innerText = symbolic;
+    }
+
+    function updateFromNumeric() {
+        // Strip non-numbers and limit to 3 chars
+        let val = numInput.value.replace(/[^0-7]/g, '').substring(0, 3);
+        numInput.value = val;
+
+        if (val.length === 3) {
+            setCheckboxesFromNumeric(val);
+        } else {
+            symOutput.innerText = "---";
+        }
+    }
+
+    function setNumeric(val) {
+        numInput.value = val;
+        setCheckboxesFromNumeric(val);
+    }
+
+    function setCheckboxesFromNumeric(numericStr) {
+        let symbolic = '-';
+        const entities = ['u', 'g', 'o'];
+
+        for (let i = 0; i < 3; i++) {
+            const num = parseInt(numericStr[i]);
+            const entity = entities[i];
+
+            const r = (num & 4) === 4;
+            const w = (num & 2) === 2;
+            const x = (num & 1) === 1;
+
+            document.getElementById(checkboxes[entity].r).checked = r;
+            document.getElementById(checkboxes[entity].w).checked = w;
+            document.getElementById(checkboxes[entity].x).checked = x;
+
+            symbolic += (r ? 'r' : '-') + (w ? 'w' : '-') + (x ? 'x' : '-');
+        }
+        symOutput.innerText = symbolic;
+    }
+
+    function copyPermissions() {
+        const cmd = `chmod ${numInput.value} <file>`;
+        navigator.clipboard.writeText(cmd).then(() => {
+            showToast(`Copied: ${cmd}`, 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        const toastBox = document.getElementById('toastBox');
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Initialize on load
+    updateFromCheckboxes();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

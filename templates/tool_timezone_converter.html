@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tactile Meeting Planner | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           TACTILE NEUMORPHISM THEME ENGINE
+           ========================================== */
+        
+        [data-theme="light"] {
+            --neu-bg: #e0e5ec;
+            --neu-text: #4a5568;
+            --neu-text-light: #a0aec0;
+            --neu-accent: #3182ce;
+            --neu-shadow-light: #ffffff;
+            --neu-shadow-dark: #a3b1c6;
+            
+            --status-good: #38a169;
+            --status-warn: #d69e2e;
+            --status-bad: #e53e3e;
+        }
+
+        [data-theme="dark"] {
+            --neu-bg: #2d3748;
+            --neu-text: #e2e8f0;
+            --neu-text-light: #718096;
+            --neu-accent: #63b3ed;
+            --neu-shadow-light: #4a5568;
+            --neu-shadow-dark: #1a202c;
+
+            --status-good: #48bb78;
+            --status-warn: #ecc94b;
+            --status-bad: #fc8181;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--neu-bg);
+            color: var(--neu-text);
+            padding: 40px 20px;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* Outset Shape (Pops out of the screen) */
+        .neu-outset {
+            background-color: var(--neu-bg);
+            border-radius: 16px;
+            box-shadow: 9px 9px 16px var(--neu-shadow-dark), 
+                       -9px -9px 16px var(--neu-shadow-light);
+            transition: all 0.3s ease;
+        }
+
+        /* Inset Shape (Pushed into the screen) */
+        .neu-inset {
+            background-color: var(--neu-bg);
+            border-radius: 16px;
+            box-shadow: inset 6px 6px 10px 0 var(--neu-shadow-dark), 
+                        inset -6px -6px 10px 0 var(--neu-shadow-light);
+            transition: all 0.3s ease;
+        }
+
+        /* Hover states for interactive outsets */
+        .neu-btn {
+            cursor: pointer;
+            border: none;
+            color: var(--neu-text);
+            font-weight: 700;
+        }
+        .neu-btn:active {
+            box-shadow: inset 4px 4px 8px var(--neu-shadow-dark), 
+                        inset -4px -4px 8px var(--neu-shadow-light);
+            color: var(--neu-accent);
+        }
+
+        .tool-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* Header */
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .theme-toggle-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* Master Time Slider Control */
+        .slider-control-deck {
+            padding: 30px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .local-time-display {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+            color: var(--neu-accent);
+        }
+
+        /* Custom Neumorphic Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            padding: 20px 0;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        /* Track */
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 12px;
+            cursor: pointer;
+            background: var(--neu-bg);
+            border-radius: 10px;
+            box-shadow: inset 4px 4px 6px var(--neu-shadow-dark), 
+                        inset -4px -4px 6px var(--neu-shadow-light);
+        }
+        /* Thumb (The handle) */
+        input[type=range]::-webkit-slider-thumb {
+            height: 30px;
+            width: 30px;
+            border-radius: 50%;
+            background: var(--neu-bg);
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -9px; /* Align with track */
+            box-shadow: 3px 3px 6px var(--neu-shadow-dark), 
+                       -3px -3px 6px var(--neu-shadow-light);
+            border: 2px solid var(--neu-bg);
+        }
+        input[type=range]::-webkit-slider-thumb:active {
+            border-color: var(--neu-accent);
+        }
+
+        /* City Roster */
+        .city-deck {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .city-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+        }
+
+        .city-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .city-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .city-name {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .city-status {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .city-time {
+            font-size: 2.5rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .remove-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--status-bad);
+            margin-left: 20px;
+        }
+
+        /* Input Area */
+        .add-city-area {
+            display: flex;
+            gap: 20px;
+            margin-top: 40px;
+            padding: 20px;
+        }
+
+        .neu-select {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--neu-text);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .neu-select option {
+            background-color: var(--neu-bg);
+            color: var(--neu-text);
+        }
+
+        .add-btn {
+            padding: 0 30px;
+            font-size: 1.1rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="tool-container neu-outset">
+        
+        <div class="header-area">
+            <div class="d-flex align-items-center gap-3">
+                <a href="{{ url_for('student_portal') }}" class="neu-btn neu-outset theme-toggle-btn text-decoration-none">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h2 class="fw-bold m-0" style="letter-spacing: -0.5px;">Global Meeting Planner</h2>
+            </div>
+            
+            <button class="neu-btn neu-outset theme-toggle-btn" id="themeToggleBtn" onclick="toggleTactileTheme()">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+        </div>
+
+        <div class="slider-control-deck neu-inset">
+            <div style="font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--neu-text-light);">
+                Your Local Time Coordinator
+            </div>
+            <div class="local-time-display" id="displayLocalTime">
+                12:00 PM
+            </div>
+            <input type="range" id="timeSlider" min="0" max="23" value="12" oninput="executeTimeSync()">
+        </div>
+
+        <div class="city-deck" id="cityListContainer">
+            </div>
+
+        <div class="add-city-area neu-inset">
+            <select id="timezoneSelector" class="neu-select">
+                <option value="America/New_York">New York (EST/EDT)</option>
+                <option value="America/Los_Angeles">Los Angeles (PST/PDT)</option>
+                <option value="Europe/London">London (GMT/BST)</option>
+                <option value="Europe/Paris">Paris (CET/CEST)</option>
+                <option value="Asia/Tokyo">Tokyo (JST)</option>
+                <option value="Asia/Shanghai">Shanghai (CST)</option>
+                <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
+                <option value="Asia/Dubai">Dubai (GST)</option>
+                <option value="Africa/Lagos" selected>Lagos (WAT)</option>
+            </select>
+            <button class="neu-btn neu-outset add-btn" onclick="addTimezoneCard()">
+                <i class="fas fa-plus me-2"></i> Add Participant
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // TACTILE THEME ENGINE
+        // ==========================================
+        function toggleTactileTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let newTheme;
+            
+            if (currentTheme === 'light') {
+                newTheme = 'dark';
+            } else {
+                newTheme = 'light';
+            }
+
+            htmlElement.setAttribute('data-theme', newTheme);
+            
+            let themeIconElement = document.getElementById('themeIcon');
+            if (newTheme === 'dark') {
+                themeIconElement.className = 'fas fa-sun';
+            } else {
+                themeIconElement.className = 'fas fa-moon';
+            }
+
+            localStorage.setItem('lisa_tactile_theme', newTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_tactile_theme');
+            
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                let themeIconElement = document.getElementById('themeIcon');
+                
+                if (savedTheme === 'dark') {
+                    themeIconElement.className = 'fas fa-sun';
+                } else {
+                    themeIconElement.className = 'fas fa-moon';
+                }
+            }
+
+            // Initialize the board
+            executeTimeSync();
+        });
+
+        // ==========================================
+        // STATE ARCHITECTURE
+        // ==========================================
+        
+        let activeTimezonesArray = [
+            { id: "tz_lagos", zoneString: "Africa/Lagos", displayName: "Lagos HQ" },
+            { id: "tz_london", zoneString: "Europe/London", displayName: "London Branch" },
+            { id: "tz_tokyo", zoneString: "Asia/Tokyo", displayName: "Tokyo Office" }
+        ];
+
+        function generateUniqueId() {
+            let randomFraction = Math.random();
+            let base36String = randomFraction.toString(36);
+            let shortString = base36String.substr(2, 9);
+            return "tz_" + shortString;
+        }
+
+        function addTimezoneCard() {
+            let selectorElement = document.getElementById('timezoneSelector');
+            let selectedZoneString = selectorElement.value;
+            
+            // Get text of selected option and remove the parenthesis part for a cleaner display
+            let rawOptionText = selectorElement.options[selectorElement.selectedIndex].text;
+            let textPartsArray = rawOptionText.split(' (');
+            let cleanDisplayName = textPartsArray[0];
+
+            // Prevent duplicates
+            let isDuplicate = false;
+            for (let i = 0; i < activeTimezonesArray.length; i = i + 1) {
+                if (activeTimezonesArray[i].zoneString === selectedZoneString) {
+                    isDuplicate = true;
+                }
+            }
+
+            if (isDuplicate === true) {
+                alert("Participant timezone is already on the board.");
+                return;
+            }
+
+            let newTimezoneObject = {
+                id: generateUniqueId(),
+                zoneString: selectedZoneString,
+                displayName: cleanDisplayName
+            };
+
+            activeTimezonesArray.push(newTimezoneObject);
+            executeTimeSync();
+        }
+
+        function removeTimezoneCard(targetId) {
+            let updatedArray = [];
+            
+            for (let i = 0; i < activeTimezonesArray.length; i = i + 1) {
+                if (activeTimezonesArray[i].id !== targetId) {
+                    updatedArray.push(activeTimezonesArray[i]);
+                }
+            }
+
+            activeTimezonesArray = updatedArray;
+            executeTimeSync();
+        }
+
+        // ==========================================
+        // TIME SYNCHRONIZATION MATHEMATICS
+        // ==========================================
+
+        function executeTimeSync() {
+            let sliderElement = document.getElementById('timeSlider');
+            let selectedHourInteger = parseInt(sliderElement.value);
+
+            // Establish the base mathematical time
+            let baseDateObject = new Date();
+            baseDateObject.setHours(selectedHourInteger);
+            baseDateObject.setMinutes(0);
+            baseDateObject.setSeconds(0);
+
+            // Format Local Display
+            let localAmPm;
+            let displayLocalHour;
+
+            if (selectedHourInteger >= 12) {
+                localAmPm = "PM";
+            } else {
+                localAmPm = "AM";
+            }
+
+            if (selectedHourInteger % 12 === 0) {
+                displayLocalHour = 12;
+            } else {
+                displayLocalHour = selectedHourInteger % 12;
+            }
+
+            let localTimeString = String(displayLocalHour) + ":00 " + localAmPm;
+            document.getElementById('displayLocalTime').innerText = localTimeString;
+
+            // Render City Roster
+            let containerElement = document.getElementById('cityListContainer');
+            containerElement.innerHTML = ""; // Clear existing elements
+
+            for (let i = 0; i < activeTimezonesArray.length; i = i + 1) {
+                let currentZoneObject = activeTimezonesArray[i];
+
+                // Extract formatted time string (e.g. "2:00 PM")
+                let timeOptions = { timeZone: currentZoneObject.zoneString, hour: 'numeric', minute: '2-digit', hour12: true };
+                let targetTimeString = baseDateObject.toLocaleTimeString('en-US', timeOptions);
+
+                // Extract raw 24-hour integer to evaluate meeting suitability
+                let hourOptions = { timeZone: currentZoneObject.zoneString, hour: 'numeric', hour12: false };
+                let targetHourRawString = baseDateObject.toLocaleTimeString('en-US', hourOptions);
+                let targetHourInteger = parseInt(targetHourRawString);
+
+                // Evaluate Status
+                let statusText = "";
+                let statusColorClass = "";
+                let statusIconClass = "";
+
+                if (targetHourInteger >= 9 && targetHourInteger < 17) {
+                    // Normal Working Hours (9 AM to 5 PM)
+                    statusText = "Optimal Working Hours";
+                    statusColorClass = "var(--status-good)";
+                    statusIconClass = "fas fa-briefcase";
+                } else if (targetHourInteger >= 17 && targetHourInteger < 22) {
+                    // Evening / After Hours (5 PM to 10 PM)
+                    statusText = "Compromised (After Hours)";
+                    statusColorClass = "var(--status-warn)";
+                    statusIconClass = "fas fa-coffee";
+                } else if (targetHourInteger >= 6 && targetHourInteger < 9) {
+                    // Early Morning (6 AM to 9 AM)
+                    statusText = "Compromised (Early Morning)";
+                    statusColorClass = "var(--status-warn)";
+                    statusIconClass = "fas fa-sunrise";
+                } else {
+                    // Sleeping Hours (10 PM to 6 AM)
+                    statusText = "Unacceptable (Sleeping)";
+                    statusColorClass = "var(--status-bad)";
+                    statusIconClass = "fas fa-bed";
+                }
+
+                // Construct DOM Element manually to avoid condensed template literals
+                let cardDiv = document.createElement('div');
+                cardDiv.className = "city-card neu-outset";
+
+                let infoDiv = document.createElement('div');
+                infoDiv.className = "city-info";
+
+                let iconDiv = document.createElement('div');
+                iconDiv.className = "city-icon neu-inset";
+                iconDiv.style.color = statusColorClass;
+                
+                let iconElement = document.createElement('i');
+                iconElement.className = statusIconClass;
+                iconDiv.appendChild(iconElement);
+
+                let textDiv = document.createElement('div');
+                
+                let nameDiv = document.createElement('div');
+                nameDiv.className = "city-name";
+                nameDiv.innerText = currentZoneObject.displayName;
+
+                let statusDiv = document.createElement('div');
+                statusDiv.className = "city-status";
+                statusDiv.style.color = statusColorClass;
+                statusDiv.innerText = statusText;
+
+                textDiv.appendChild(nameDiv);
+                textDiv.appendChild(statusDiv);
+
+                infoDiv.appendChild(iconDiv);
+                infoDiv.appendChild(textDiv);
+
+                let rightSideDiv = document.createElement('div');
+                rightSideDiv.style.display = "flex";
+                rightSideDiv.style.alignItems = "center";
+
+                let timeDiv = document.createElement('div');
+                timeDiv.className = "city-time";
+                timeDiv.innerText = targetTimeString;
+
+                let removeButton = document.createElement('button');
+                removeButton.className = "neu-btn neu-outset remove-btn";
+                // Using an explicit function wrapper instead of arrow functions
+                removeButton.onclick = function() {
+                    removeTimezoneCard(currentZoneObject.id);
+                };
+                
+                let removeIcon = document.createElement('i');
+                removeIcon.className = "fas fa-times";
+                removeButton.appendChild(removeIcon);
+
+                rightSideDiv.appendChild(timeDiv);
+                rightSideDiv.appendChild(removeButton);
+
+                cardDiv.appendChild(infoDiv);
+                cardDiv.appendChild(rightSideDiv);
+
+                containerElement.appendChild(cardDiv);
+            }
+        }
+    </script>
+</body>
+</html>

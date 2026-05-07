@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Blindness Simulator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        /* Custom File Upload Button */
+        .file-upload-wrapper {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+        .file-upload-wrapper:hover, .file-upload-wrapper.dragover {
+            border-color: var(--math-blue);
+            background: rgba(13, 110, 253, 0.05);
+        }
+        .file-upload-wrapper i { font-size: 2.5rem; color: #adb5bd; margin-bottom: 10px; transition: 0.2s;}
+        .file-upload-wrapper:hover i { color: var(--math-blue); }
+        .file-upload-wrapper span { font-weight: 700; color: #495057; }
+        
+        #imageInput {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; cursor: pointer;
+        }
+
+        .mode-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: #ffffff;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .mode-btn:hover { background: #f8f9fa; border-color: #ced4da; }
+        .mode-btn.active {
+            background: rgba(13, 110, 253, 0.05);
+            border-color: var(--math-blue);
+            color: var(--math-blue);
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.1);
+        }
+        .mode-btn small { display: block; font-size: 0.75rem; color: #adb5bd; font-weight: 600; margin-top: 2px;}
+        .mode-btn.active small { color: var(--math-blue); opacity: 0.8;}
+
+        /* --- Right Pane: Visualizer --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .simulation-box {
+            flex: 1;
+            background: #121212; 
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            min-height: 500px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #simCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .formula-bar span { color: #adb5bd; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; text-transform: uppercase; margin-right: 8px;}
+
+        .btn-download {
+            background: var(--lasu-accent);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            transition: 0.2s;
+        }
+        .btn-download:hover { background: #146c43; transform: translateY(-2px); }
+
+        #loadingOverlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(18, 18, 18, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 10;
+            display: none;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .telemetry-bar { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-eye"></i> Simulation Setup
+            </div>
+
+            <div class="file-upload-wrapper" id="dropZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Click or Drag Image Here</span>
+                <input type="file" id="imageInput" accept="image/png, image/jpeg, image/jpg, image/webp">
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please upload a valid image file.
+            </div>
+
+            <div class="pane-header border-0 mb-2 pb-0 mt-2" style="font-size: 0.85rem; color: #495057;">
+                Visual Condition
+            </div>
+
+            <button class="mode-btn active" id="btnNormal" onclick="setMode('normal')">
+                <div>Normal Vision<small>Trichromacy (Full Color)</small></div>
+                <i class="fas fa-check-circle"></i>
+            </button>
+            
+            <button class="mode-btn" id="btnProtanopia" onclick="setMode('protanopia')">
+                <div>Protanopia<small>Red-Blind (1% of males)</small></div>
+                <i class="fas fa-eye-slash"></i>
+            </button>
+            
+            <button class="mode-btn" id="btnDeuteranopia" onclick="setMode('deuteranopia')">
+                <div>Deuteranopia<small>Green-Blind (1% of males)</small></div>
+                <i class="fas fa-eye-slash"></i>
+            </button>
+            
+            <button class="mode-btn" id="btnTritanopia" onclick="setMode('tritanopia')">
+                <div>Tritanopia<small>Blue-Blind (Very rare)</small></div>
+                <i class="fas fa-eye-slash"></i>
+            </button>
+            
+            <button class="mode-btn" id="btnAchromatopsia" onclick="setMode('achromatopsia')">
+                <div>Achromatopsia<small>Monochromacy (Total color blind)</small></div>
+                <i class="fas fa-eye-slash"></i>
+            </button>
+
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="simulation-box">
+            
+            <div id="loadingOverlay">
+                <i class="fas fa-circle-notch fa-spin fa-3x mb-3" style="color: var(--math-blue);"></i>
+                <h5 class="fw-bold">Processing Pixels...</h5>
+            </div>
+
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="simCanvas"></canvas>
+            </div>
+            
+            <div class="telemetry-bar">
+                <div class="formula-bar">
+                    <span>Engine:</span> Mathematical Pixel Matrix Transformation
+                </div>
+                <button class="btn-download" onclick="downloadImage()">
+                    <i class="fas fa-download me-2"></i> Save Image
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const dropZone = document.getElementById('dropZone');
+    const errorBanner = document.getElementById('errorBanner');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimize for pixel manipulation
+
+    let originalImage = null;
+    let currentMode = 'normal';
+
+    // Transformation Matrices based on Machado et al. (2009) algorithms for color blindness simulation
+    const matrices = {
+        normal: [
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1
+        ],
+        protanopia: [
+            0.56667, 0.43333, 0.00000,
+            0.55833, 0.44167, 0.00000,
+            0.00000, 0.24167, 0.75833
+        ],
+        deuteranopia: [
+            0.625, 0.375, 0.000,
+            0.700, 0.300, 0.000,
+            0.000, 0.300, 0.700
+        ],
+        tritanopia: [
+            0.950, 0.050, 0.000,
+            0.000, 0.433, 0.567,
+            0.000, 0.475, 0.525
+        ],
+        achromatopsia: [
+            0.299, 0.587, 0.114,
+            0.299, 0.587, 0.114,
+            0.299, 0.587, 0.114
+        ]
+    };
+
+    // --- Drag and Drop Logic ---
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+    });
+
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) handleFiles(files[0]);
+    }
+
+    imageInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) handleFiles(this.files[0]);
+    });
+
+    function handleFiles(file) {
+        if (!file.type.match('image.*')) {
+            errorBanner.style.display = 'block';
+            return;
+        }
+        errorBanner.style.display = 'none';
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                originalImage = img;
+                
+                // Set Canvas size to match image exactly
+                // We use CSS object-fit: contain to make it fit the screen without losing resolution
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                applySimulation();
+            }
+            img.src = event.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+
+    // --- UI Control ---
+    function setMode(mode) {
+        currentMode = mode;
+        
+        // UI Button highlight
+        ['normal', 'protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia'].forEach(m => {
+            const btn = document.getElementById(`btn${m.charAt(0).toUpperCase() + m.slice(1)}`);
+            if (m === mode) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+
+        applySimulation();
+    }
+
+    // --- PIXEL MATRIX ENGINE ---
+    function applySimulation() {
+        if (!originalImage) return;
+
+        // Show loading overlay because pixel manipulation can block the thread on huge images
+        loadingOverlay.style.display = 'flex';
+
+        // Use setTimeout to allow the UI to render the loading screen before blocking the thread
+        setTimeout(() => {
+            // 1. Draw original image to canvas
+            ctx.drawImage(originalImage, 0, 0);
+
+            if (currentMode !== 'normal') {
+                // 2. Extract raw pixel data
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                const matrix = matrices[currentMode];
+
+                // 3. Mathematical Transformation Loop
+                for (let i = 0; i < data.length; i += 4) {
+                    let r = data[i];
+                    let g = data[i + 1];
+                    let b = data[i + 2];
+
+                    // Apply Matrix Multiplication
+                    let newR = (r * matrix[0]) + (g * matrix[1]) + (b * matrix[2]);
+                    let newG = (r * matrix[3]) + (g * matrix[4]) + (b * matrix[5]);
+                    let newB = (r * matrix[6]) + (g * matrix[7]) + (b * matrix[8]);
+
+                    // Clamp values
+                    data[i] = Math.min(255, Math.max(0, newR));
+                    data[i + 1] = Math.min(255, Math.max(0, newG));
+                    data[i + 2] = Math.min(255, Math.max(0, newB));
+                }
+
+                // 4. Paint transformed pixels back to canvas
+                ctx.putImageData(imageData, 0, 0);
+            }
+            
+            loadingOverlay.style.display = 'none';
+        }, 50);
+    }
+
+    function downloadImage() {
+        if (!originalImage) return;
+        const link = document.createElement('a');
+        link.download = `simulation_${currentMode}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+
+    // Draw placeholder initially
+    ctx.fillStyle = '#121212';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#495057';
+    ctx.font = 'bold 20px "Segoe UI"';
+    ctx.textAlign = 'center';
+    ctx.fillText('Awaiting Image Upload...', canvas.width/2, canvas.height/2);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

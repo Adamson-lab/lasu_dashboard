@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crontab Generator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --cron-box: #e9ecef;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .card-custom {
+            background: white; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 30px;
+        }
+
+        .cron-display {
+            background: #212529;
+            color: #a6e22e;
+            font-family: 'Fira Code', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            letter-spacing: 5px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .human-readable {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--lasu-green);
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #c8e6c9;
+        }
+
+        .field-group {
+            background: var(--cron-box);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--lasu-green);
+        }
+
+        .field-label {
+            font-weight: 700;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+        }
+
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1rem;
+            letter-spacing: normal;
+        }
+
+        /* Syntax helper */
+        .syntax-helper {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">DEV TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="card-custom">
+        <h3 class="fw-bold text-dark mb-4 text-center"><i class="fas fa-clock text-success me-2"></i> Crontab Generator</h3>
+        
+        <div class="cron-display shadow-sm">
+            <span id="outputMinute">*</span> 
+            <span id="outputHour">*</span> 
+            <span id="outputDay">*</span> 
+            <span id="outputMonth">*</span> 
+            <span id="outputWeekday">*</span>
+            <button class="btn btn-sm btn-light copy-btn" onclick="copyCron()"><i class="fas fa-copy"></i> Copy</button>
+        </div>
+        
+        <div class="human-readable shadow-sm" id="humanReadable">
+            <i class="fas fa-magic me-2"></i> Every minute
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4 col-lg-2">
+                <div class="field-group">
+                    <div class="field-label">Minute</div>
+                    <input type="text" class="form-control text-center" id="inputMinute" value="*" oninput="updateCron()">
+                    <span class="syntax-helper">0-59, *, */2</span>
+                </div>
+            </div>
+            
+            <div class="col-md-4 col-lg-2">
+                <div class="field-group">
+                    <div class="field-label">Hour</div>
+                    <input type="text" class="form-control text-center" id="inputHour" value="*" oninput="updateCron()">
+                    <span class="syntax-helper">0-23, *, */2</span>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-lg-2">
+                <div class="field-group">
+                    <div class="field-label">Day (Month)</div>
+                    <input type="text" class="form-control text-center" id="inputDay" value="*" oninput="updateCron()">
+                    <span class="syntax-helper">1-31, *, ?</span>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="field-group">
+                    <div class="field-label">Month</div>
+                    <select class="form-select" id="inputMonth" onchange="updateCron()">
+                        <option value="*">Every Month (*)</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="field-group">
+                    <div class="field-label">Day (Week)</div>
+                    <select class="form-select" id="inputWeekday" onchange="updateCron()">
+                        <option value="*">Every Day (*)</option>
+                        <option value="0">Sunday</option>
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                        <option value="1-5">Mon-Fri (1-5)</option>
+                        <option value="0,6">Weekend (0,6)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 border-top pt-4">
+            <h6 class="fw-bold mb-3 text-muted">Quick Presets</h6>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-outline-secondary btn-sm" onclick="setPreset('*', '*', '*', '*', '*')">Every minute</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="setPreset('*/5', '*', '*', '*', '*')">Every 5 minutes</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="setPreset('0', '*', '*', '*', '*')">Every hour</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="setPreset('0', '0', '*', '*', '*')">Every day at midnight</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="setPreset('0', '9', '*', '*', '1-5')">9 AM on Weekdays</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script src="https://unpkg.com/cronstrue@latest/dist/cronstrue.min.js"></script>
+
+<script>
+    // Inputs
+    const iMin = document.getElementById('inputMinute');
+    const iHour = document.getElementById('inputHour');
+    const iDay = document.getElementById('inputDay');
+    const iMonth = document.getElementById('inputMonth');
+    const iWeek = document.getElementById('inputWeekday');
+
+    // Outputs
+    const oMin = document.getElementById('outputMinute');
+    const oHour = document.getElementById('outputHour');
+    const oDay = document.getElementById('outputDay');
+    const oMonth = document.getElementById('outputMonth');
+    const oWeek = document.getElementById('outputWeekday');
+    
+    const humanTxt = document.getElementById('humanReadable');
+
+    function updateCron() {
+        // Sanitize empty inputs to *
+        let vMin = iMin.value.trim() || '*';
+        let vHour = iHour.value.trim() || '*';
+        let vDay = iDay.value.trim() || '*';
+        let vMonth = iMonth.value;
+        let vWeek = iWeek.value;
+
+        // Update Big Display
+        oMin.innerText = vMin;
+        oHour.innerText = vHour;
+        oDay.innerText = vDay;
+        oMonth.innerText = vMonth;
+        oWeek.innerText = vWeek;
+
+        const cronString = `${vMin} ${vHour} ${vDay} ${vMonth} ${vWeek}`;
+
+        try {
+            // Translate to Human
+            const readable = cronstrue.toString(cronString);
+            humanTxt.innerHTML = `<i class="fas fa-magic me-2"></i> ${readable}`;
+            humanTxt.classList.remove('text-danger');
+            humanTxt.classList.add('text-success');
+        } catch (e) {
+            humanTxt.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> Invalid Cron Syntax`;
+            humanTxt.classList.remove('text-success');
+            humanTxt.classList.add('text-danger');
+        }
+    }
+
+    function setPreset(min, hr, day, mon, week) {
+        iMin.value = min;
+        iHour.value = hr;
+        iDay.value = day;
+        iMonth.value = mon;
+        iWeek.value = week;
+        updateCron();
+    }
+
+    function copyCron() {
+        const cronString = `${oMin.innerText} ${oHour.innerText} ${oDay.innerText} ${oMonth.innerText} ${oWeek.innerText}`;
+        navigator.clipboard.writeText(cronString).then(() => {
+            showToast(`Copied: ${cronString}`, 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        const toastBox = document.getElementById('toastBox');
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

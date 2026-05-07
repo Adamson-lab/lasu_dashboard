@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projectile Motion Simulator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1.1rem;
+            color: #495057;
+            width: 170px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        .input-label small { font-size: 0.75rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; margin-top: 2px;}
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-label {
+            background: #f8f9fa;
+            border-left: 1px solid #ced4da;
+            padding: 0 15px;
+            font-weight: 800;
+            color: var(--math-blue);
+            display: flex;
+            align-items: center;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .planet-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-planet {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 10px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-planet:hover { background: #f8f9fa; border-color: #ced4da; }
+        .btn-planet.active {
+            background: rgba(13, 110, 253, 0.1);
+            color: var(--math-blue);
+            border-color: var(--math-blue);
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stat-card.highlight {
+            background: rgba(13, 110, 253, 0.05);
+            border-color: rgba(13, 110, 253, 0.2);
+        }
+
+        .stat-label {
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+        }
+        
+        .highlight .stat-val { color: var(--math-blue); }
+        .res-unit { font-size: 1.1rem; color: #adb5bd; }
+
+        /* Animation & Canvas Area */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        #physicsCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #212529;
+            padding: 15px 25px;
+            border-top: 1px solid #495057;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .fire-btn {
+            background: var(--math-orange);
+            color: white;
+            border: none;
+            font-weight: 800;
+            padding: 10px 25px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .fire-btn:hover { background: #e06c00; transform: scale(1.05); }
+
+        .time-scrubber {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .scrubber-label {
+            color: #adb5bd;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px; width: 20px;
+            border-radius: 50%;
+            background: var(--math-blue);
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: #495057;
+            border-radius: 2px;
+        }
+
+        .live-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 10px 25px;
+            background: #1a1d20;
+            border-top: 1px solid #343a40;
+        }
+        .live-stat-item {
+            font-family: 'Fira Code', monospace;
+            color: #00ff00;
+            font-size: 0.95rem;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+        }
+        .live-stat-item span { color: #adb5bd; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; align-items: stretch; }
+            .live-stats { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-rocket"></i> Kinematic Params
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid numerical values.
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-primary">Velocity <small>(v_0)</small></div>
+                <input type="number" class="num-input" id="valV0" value="50" step="any" oninput="initPhysics()">
+                <div class="unit-label">m/s</div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-danger">Launch Angle <small>(&theta;)</small></div>
+                <input type="number" class="num-input" id="valAngle" value="45" step="any" oninput="initPhysics()">
+                <div class="unit-label">&deg;</div>
+            </div>
+
+            <label class="fw-bold text-muted small text-uppercase mb-2 d-block mt-4">Gravity Constant (g)</label>
+            <div class="planet-selector">
+                <button class="btn-planet active" id="btnEarth" onclick="setGravity(9.81, 'Earth')">Earth (9.81)</button>
+                <button class="btn-planet" id="btnMoon" onclick="setGravity(1.62, 'Moon')">Moon (1.62)</button>
+                <button class="btn-planet" id="btnMars" onclick="setGravity(3.71, 'Mars')">Mars (3.71)</button>
+                <button class="btn-planet" id="btnJup" onclick="setGravity(24.79, 'Jup')">Jupiter (24.7)</button>
+            </div>
+
+            <div class="input-group-custom mb-0">
+                <div class="input-label text-warning">Custom Gravity <small>(g)</small></div>
+                <input type="number" class="num-input" id="valG" value="9.81" step="any" oninput="customGravity()">
+                <div class="unit-label">m/s&sup2;</div>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="top-stats-grid">
+            <div class="stat-card highlight">
+                <div class="res-label text-primary">Max Range (R)</div>
+                <div class="res-val" id="resRange">254.84 <span class="res-unit">m</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="res-label text-success">Max Height (H)</div>
+                <div class="res-val" id="resHeight">63.71 <span class="res-unit">m</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="res-label text-danger">Time of Flight (T)</div>
+                <div class="res-val" id="resTime">7.21 <span class="res-unit">s</span></div>
+            </div>
+        </div>
+
+        <div class="simulation-box">
+            
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="physicsCanvas"></canvas>
+            </div>
+
+            <div class="live-stats">
+                <div class="live-stat-item"><span>Current Time (t)</span><div id="teleTime">0.00 s</div></div>
+                <div class="live-stat-item"><span>Current Height (y)</span><div id="teleY">0.00 m</div></div>
+                <div class="live-stat-item"><span>Distance (x)</span><div id="teleX">0.00 m</div></div>
+                <div class="live-stat-item"><span>Velocity (v)</span><div id="teleV">50.00 m/s</div></div>
+            </div>
+
+            <div class="telemetry-bar">
+                <button class="fire-btn" onclick="fireCannon()">
+                    <i class="fas fa-fire"></i> Fire
+                </button>
+                
+                <div class="time-scrubber">
+                    <div class="scrubber-label">
+                        <span>Time Scrubber</span>
+                        <span id="scrubberPct">0%</span>
+                    </div>
+                    <input type="range" id="timeSlider" min="0" max="100" value="0" step="0.1" oninput="scrubTime()">
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valV0 = document.getElementById('valV0');
+    const valAngle = document.getElementById('valAngle');
+    const valG = document.getElementById('valG');
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const resRange = document.getElementById('resRange');
+    const resHeight = document.getElementById('resHeight');
+    const resTime = document.getElementById('resTime');
+    
+    const teleTime = document.getElementById('teleTime');
+    const teleX = document.getElementById('teleX');
+    const teleY = document.getElementById('teleY');
+    const teleV = document.getElementById('teleV');
+    
+    const timeSlider = document.getElementById('timeSlider');
+    const scrubberPct = document.getElementById('scrubberPct');
+
+    const canvas = document.getElementById('physicsCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // Physics State Variables
+    let P = { v0: 0, theta: 0, g: 0, T: 0, R: 0, H: 0 };
+    let animationFrameId = null;
+    let isPlaying = false;
+    let startTime = 0;
+
+    function setGravity(g, planet) {
+        document.querySelectorAll('.btn-planet').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn${planet}`).classList.add('active');
+        valG.value = g;
+        initPhysics();
+    }
+
+    function customGravity() {
+        document.querySelectorAll('.btn-planet').forEach(btn => btn.classList.remove('active'));
+        initPhysics();
+    }
+
+    function resizeCanvas() {
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        if(cw === 0 || ch === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = cw * dpr;
+        canvas.height = ch * dpr;
+        canvas.style.width = `${cw}px`;
+        canvas.style.height = `${ch}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        drawFrame(timeSlider.value / 100);
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function roundSafe(num) { return (Math.round(num * 100) / 100).toFixed(2); }
+
+    // --- MATH ENGINE ---
+    function initPhysics() {
+        cancelAnimationFrame(animationFrameId);
+        isPlaying = false;
+
+        const v0 = parseFloat(valV0.value);
+        const angleDeg = parseFloat(valAngle.value);
+        const g = parseFloat(valG.value);
+
+        if (isNaN(v0) || isNaN(angleDeg) || isNaN(g) || v0 < 0 || angleDeg < 0 || angleDeg > 90 || g <= 0) {
+            errorBanner.style.display = 'block';
+            return;
+        }
+        errorBanner.style.display = 'none';
+
+        const rad = angleDeg * (Math.PI / 180);
+        const v0x = v0 * Math.cos(rad);
+        const v0y = v0 * Math.sin(rad);
+
+        P.v0 = v0;
+        P.theta = rad;
+        P.g = g;
+        
+        P.T = (2 * v0y) / g; // Time of flight
+        P.H = (v0y * v0y) / (2 * g); // Max Height
+        P.R = v0x * P.T; // Range
+
+        // Edge case: straight up (90 deg)
+        if (angleDeg === 90) P.R = 0;
+
+        // UI Updates
+        resRange.innerHTML = `${roundSafe(P.R)} <span class="res-unit">m</span>`;
+        resHeight.innerHTML = `${roundSafe(P.H)} <span class="res-unit">m</span>`;
+        resTime.innerHTML = `${roundSafe(P.T)} <span class="res-unit">s</span>`;
+
+        timeSlider.value = 0;
+        scrubTime(); // Reset drawing
+    }
+
+    // Kinematic equations at specific time t
+    function getPosAtTime(t) {
+        const x = P.v0 * Math.cos(P.theta) * t;
+        const y = (P.v0 * Math.sin(P.theta) * t) - (0.5 * P.g * t * t);
+        const vx = P.v0 * Math.cos(P.theta);
+        const vy = (P.v0 * Math.sin(P.theta)) - (P.g * t);
+        const v = Math.sqrt(vx*vx + vy*vy);
+        return { x, y, vx, vy, v };
+    }
+
+    function scrubTime() {
+        if (isPlaying) {
+            cancelAnimationFrame(animationFrameId);
+            isPlaying = false;
+        }
+        const pct = timeSlider.value / 100;
+        scrubberPct.innerText = `${Math.round(pct * 100)}%`;
+        drawFrame(pct);
+    }
+
+    function fireCannon() {
+        if (P.T === 0) return;
+        
+        cancelAnimationFrame(animationFrameId);
+        timeSlider.value = 0;
+        isPlaying = true;
+        
+        // Map simulation time to real time. 
+        // If flight is > 5s, speed it up to max 5s for UI UX.
+        const durationMS = Math.min(P.T * 1000, 5000); 
+        startTime = performance.now();
+
+        function animate(now) {
+            let elapsed = now - startTime;
+            let pct = elapsed / durationMS;
+
+            if (pct >= 1) {
+                pct = 1;
+                isPlaying = false;
+            }
+
+            timeSlider.value = pct * 100;
+            scrubberPct.innerText = `${Math.round(pct * 100)}%`;
+            drawFrame(pct);
+
+            if (isPlaying) {
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // --- CANVAS KINEMATIC RENDERING ENGINE ---
+    function drawArrow(fromx, fromy, tox, toy, color) {
+        const headlen = 10;
+        const dx = tox - fromx;
+        const dy = toy - fromy;
+        const angle = Math.atan2(dy, dx);
+        
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(fromx, fromy);
+        ctx.lineTo(tox, toy);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(tox, toy);
+        ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+    }
+
+    function drawFrame(pct) {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const paddingX = 50;
+        const paddingY = 50;
+        const graphW = cw - (paddingX * 2);
+        const graphH = ch - (paddingY * 2);
+        const originX = paddingX;
+        const originY = ch - paddingY;
+
+        // Auto-Scale Logic
+        // We want the trajectory to fit nicely. 
+        // We scale X based on Range, and Y based on Max Height.
+        // If 90 degrees, Range is 0, so we fake an X width.
+        const logicMaxX = P.R === 0 ? P.H : P.R; 
+        const logicMaxY = P.H;
+
+        // Ensure we don't divide by zero
+        if (logicMaxX === 0 || logicMaxY === 0) return;
+
+        const scaleX = graphW / logicMaxX;
+        const scaleY = graphH / logicMaxY;
+
+        const getPx = (x) => originX + (x * scaleX);
+        const getPy = (y) => originY - (y * scaleY); // Invert Y
+
+        // 1. Draw Axes
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#495057';
+        ctx.beginPath();
+        ctx.moveTo(originX, paddingY - 20); ctx.lineTo(originX, originY); // Y
+        ctx.lineTo(cw - paddingX + 20, originY); // X
+        ctx.stroke();
+
+        ctx.fillStyle = '#adb5bd';
+        ctx.font = '12px "Fira Code"';
+        ctx.fillText(`Y(m)`, originX - 10, paddingY - 10);
+        ctx.fillText(`X(m)`, cw - paddingX + 20, originY + 20);
+
+        // 2. Draw Full Ghost Trajectory (Dashed)
+        ctx.beginPath();
+        ctx.strokeStyle = '#343a40';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(originX, originY);
+        
+        for (let i = 0; i <= 100; i++) {
+            let t = (i / 100) * P.T;
+            let pos = getPosAtTime(t);
+            // Don't draw below ground
+            if (pos.y >= 0) {
+                ctx.lineTo(getPx(pos.x), getPy(pos.y));
+            }
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 3. Get Current State
+        const currentT = pct * P.T;
+        const state = getPosAtTime(currentT);
+        
+        // Prevent floating point errors putting it below ground
+        if(state.y < 0) state.y = 0;
+
+        const px = getPx(state.x);
+        const py = getPy(state.y);
+
+        // 4. Update Telemetry Dashboard
+        teleTime.innerText = `${roundSafe(currentT)} s`;
+        teleX.innerText = `${roundSafe(state.x)} m`;
+        teleY.innerText = `${roundSafe(state.y)} m`;
+        teleV.innerText = `${roundSafe(state.v)} m/s`;
+
+        // 5. Draw Velocity Vectors
+        // Scale vector visually so it fits on screen
+        const vScale = 50 / P.v0; // normalized visual length
+        
+        const vxPx = state.vx * vScale;
+        const vyPx = state.vy * vScale; // Y velocity is positive up in physics, but negative in canvas
+
+        // Vx Vector (Blue)
+        drawArrow(px, py, px + vxPx, py, '#0d6efd');
+        // Vy Vector (Red) - Remember Canvas Y is inverted, so subtract Vy
+        drawArrow(px, py, px, py - vyPx, '#dc3545');
+        // Resultant Vector (Orange)
+        drawArrow(px, py, px + vxPx, py - vyPx, '#fd7e14');
+
+        // 6. Draw Cannonball
+        ctx.beginPath();
+        ctx.arc(px, py, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#00ff00';
+        ctx.shadowColor = '#00ff00';
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+    }
+
+    function clearInputs() {
+        valV0.value = '';
+        valAngle.value = '';
+        errorBanner.style.display = 'block';
+        errorBanner.innerText = 'Waiting for input...';
+        ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    }
+
+    // SAFE INIT
+    setTimeout(() => {
+        resizeCanvas();
+        initPhysics();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

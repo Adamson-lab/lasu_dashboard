@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wealth Architect V4 | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Modern Fintech Color Palette */
+        :root {
+            --brand-main: #0f172a;       /* Obsidian */
+            --brand-accent: #3b82f6;     /* Trust Blue */
+            --brand-success: #10b981;    /* Wealth Green */
+            --brand-warning: #f59e0b;    /* Alert Amber */
+            --brand-danger: #ef4444;     /* Deficit Red */
+            --brand-debt: #8b5cf6;       /* Debt Purple */
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --glass-border: #e2e8f0;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--brand-main);
+            padding: 40px 20px;
+        }
+
+        .tool-container {
+            max-width: 1450px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        
+        /* Left Column: Input Panel */
+        .input-panel {
+            background: #f1f5f9;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+            max-height: 900px;
+            overflow-y: auto;
+        }
+        
+        .input-panel::-webkit-scrollbar { width: 6px; }
+        .input-panel::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        .form-label {
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        
+        .section-title {
+            background: var(--brand-main);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 25px 0 15px 0;
+            display: inline-block;
+        }
+
+        /* Array Rows (Incomes/Expenses) */
+        .ledger-row {
+            background: white;
+            border: 1px solid var(--glass-border);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            transition: border-color 0.2s ease;
+        }
+
+        .ledger-row:focus-within {
+            border-color: var(--brand-accent);
+        }
+
+        .delete-btn {
+            background: #f1f5f9;
+            color: var(--brand-danger);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            min-width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .delete-btn:hover {
+            background: var(--brand-danger);
+            color: white;
+            border-color: var(--brand-danger);
+        }
+
+        /* Right Column: Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .dash-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Hero Card (Zero-Based Output) */
+        .dash-card.hero {
+            grid-column: span 2;
+            background: linear-gradient(135deg, var(--brand-main) 0%, #1e293b 100%);
+            color: white;
+            text-align: center;
+            padding: 35px;
+        }
+        .dash-card.hero.success { background: linear-gradient(135deg, var(--brand-success) 0%, #059669 100%); }
+        .dash-card.hero.danger { background: linear-gradient(135deg, var(--brand-danger) 0%, #b91c1c 100%); }
+        
+        .hero-val {
+            font-size: 3.8rem;
+            font-weight: 900;
+            margin: 10px 0;
+            letter-spacing: -1.5px;
+        }
+
+        /* Health Score UI */
+        .score-circle {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin: 0 auto 15px auto;
+            border: 8px solid var(--brand-accent);
+            color: var(--brand-main);
+            transition: all 0.4s ease;
+        }
+
+        /* 50/30/20 Progress Bars - BUG FIXED HERE */
+        .rule-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .progress {
+            position: relative; /* THIS FIXES THE BLACK LINES BUG */
+            height: 14px;
+            border-radius: 10px;
+            background-color: #e2e8f0;
+            margin-bottom: 18px;
+            overflow: visible; /* Kept visible so the marker can extend slightly outside */
+        }
+        .progress-bar {
+            border-radius: 10px;
+            transition: width 0.4s ease, background-color 0.4s ease;
+        }
+        .progress-bar.over {
+            background-color: var(--brand-danger) !important;
+        }
+        .target-marker {
+            position: absolute;
+            top: -4px;
+            bottom: -4px;
+            width: 3px;
+            background: var(--brand-main);
+            z-index: 10;
+            border-radius: 2px;
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            background: #f8fafc;
+            border-left: 4px solid var(--brand-accent);
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #334155;
+            margin-top: 10px;
+        }
+        .insights-panel.danger { border-left-color: var(--brand-danger); }
+        .insights-panel.success { border-left-color: var(--brand-success); }
+
+        /* Summary Ledger */
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 700;
+            color: #334155;
+            font-size: 1.05rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        .export-btn {
+            background: var(--brand-main);
+            color: white;
+            font-weight: 800;
+            padding: 15px 24px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            transition: 0.2s;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        .export-btn:hover {
+            background: #1e293b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-landmark me-2" style="color: var(--brand-accent);"></i> Wealth Architect V4</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="input-panel">
+                    
+                    <div class="d-flex justify-content-between align-items-end mb-3">
+                        <div class="flex-grow-1 me-2">
+                            <label class="form-label">Current Liquid Savings (For Runway)</label>
+                            <div class="input-group">
+                                <span class="input-group-text cur-sym">$</span>
+                                <input type="number" id="liquidCash" class="form-control" value="15000" min="0" oninput="executeFinancialEngine()">
+                            </div>
+                        </div>
+                        <div style="width: 100px;">
+                            <label class="form-label">Currency</label>
+                            <select id="currencySelect" class="form-select fw-bold" onchange="executeFinancialEngine()">
+                                <option value="$" selected>USD</option>
+                                <option value="₦">NGN</option>
+                                <option value="€">EUR</option>
+                                <option value="£">GBP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="section-title"><i class="fas fa-arrow-down me-1"></i> Income Streams</div>
+                    <div id="incomeContainer"></div>
+                    <button class="btn btn-sm btn-outline-primary fw-bold w-100" onclick="addIncomeRow()">
+                        <i class="fas fa-plus me-1"></i> Add Income Source
+                    </button>
+
+                    <div class="section-title mt-4"><i class="fas fa-arrow-up me-1"></i> Expenses, Debts & Savings</div>
+                    <div id="expenseContainer"></div>
+                    <button class="btn btn-sm btn-outline-danger fw-bold w-100 mb-4" onclick="addExpenseRow()">
+                        <i class="fas fa-plus me-1"></i> Add Line Item
+                    </button>
+
+                    <button class="btn btn-outline-secondary w-100 fw-bold" onclick="resetArchitect()">
+                        <i class="fas fa-redo-alt me-1"></i> Reset Architecture
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                
+                <div class="dashboard-grid">
+                    
+                    <div class="dash-card hero" id="statusCard">
+                        <div class="text-uppercase fw-bold" style="font-size: 0.9rem; letter-spacing: 2px; opacity: 0.8;" id="statusTitle">Unallocated Capital</div>
+                        <div class="hero-val" id="leftToBudgetDisplay">$0.00</div>
+                        <div style="font-size: 1rem; opacity: 0.9; font-weight: 600;" id="statusSubtitle">Give every dollar a designated job.</div>
+                    </div>
+
+                    <div class="dash-card text-center">
+                        <div class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">Financial Health Score</div>
+                        <div class="score-circle" id="healthScoreRing">0</div>
+                        <div class="fw-bold" id="healthScoreText">Analyzing...</div>
+                    </div>
+
+                    <div class="dash-card text-center">
+                        <div class="text-muted text-uppercase fw-bold mb-1" style="font-size: 0.8rem; letter-spacing: 1px;">Survival Runway</div>
+                        <div class="fs-1 fw-bold" style="color: var(--brand-accent);" id="runwayDisplay">0.0</div>
+                        <div class="small fw-bold text-muted mb-3">Months of Fixed Needs</div>
+                        
+                        <hr class="my-2" style="border-color: var(--glass-border);">
+                        
+                        <div class="text-muted text-uppercase fw-bold mt-2 mb-1" style="font-size: 0.8rem; letter-spacing: 1px;">Debt-to-Income (DTI)</div>
+                        <div class="fs-3 fw-bold" id="dtiDisplay">0%</div>
+                    </div>
+
+                    <div class="dash-card">
+                        <div class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">
+                            <i class="fas fa-balance-scale me-1"></i> Allocation Split
+                        </div>
+                        
+                        <div class="rule-label"><span>Needs (Target 50%)</span><span id="pctNeeds">0%</span></div>
+                        <div class="progress">
+                            <div class="progress-bar" id="barNeeds" style="background-color: var(--brand-main);"></div>
+                            <div class="target-marker" style="left: 50%;"></div>
+                        </div>
+
+                        <div class="rule-label"><span>Wants (Target 30%)</span><span id="pctWants">0%</span></div>
+                        <div class="progress">
+                            <div class="progress-bar" id="barWants" style="background-color: var(--brand-warning);"></div>
+                            <div class="target-marker" style="left: 30%;"></div>
+                        </div>
+
+                        <div class="rule-label"><span>Savings (Target 20%)</span><span id="pctSavings">0%</span></div>
+                        <div class="progress" style="margin:0;">
+                            <div class="progress-bar" id="barSavings" style="background-color: var(--brand-success);"></div>
+                            <div class="target-marker" style="left: 20%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="dash-card">
+                        <div class="chart-container">
+                            <canvas id="budgetChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="dash-card" style="grid-column: span 2;">
+                        <div class="summary-row">
+                            <span>Total Net Income</span>
+                            <span class="text-success" id="sumIncome">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total Needs (Fixed Costs)</span>
+                            <span class="text-danger" id="sumNeedsObj">-$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total Wants (Lifestyle)</span>
+                            <span class="text-warning" id="sumWantsObj">-$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total Debt Payments</span>
+                            <span style="color: var(--brand-debt);" id="sumDebtObj">-$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total Savings/Investments</span>
+                            <span class="text-success" id="sumSaveObj">+$0.00</span>
+                        </div>
+                        <div class="summary-row border-0 mt-3 fs-4" style="color: var(--brand-main);">
+                            <span>Zero-Based Drift</span>
+                            <span class="fw-bold" id="sumBalance">$0.00</span>
+                        </div>
+
+                        <div class="insights-panel" id="aiInsightsBox">
+                            <i class="fas fa-lightbulb me-2 text-warning"></i> 
+                            <span id="aiInsightsText">Awaiting data to generate insights...</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <button class="export-btn" onclick="exportDataToCSV()">
+                    <i class="fas fa-file-csv me-2"></i> Export Architecture Ledger (CSV)
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // STATE MANAGEMENT (Data Arrays)
+        // ==========================================
+        let incomeData = [
+            { id: 1, name: 'Primary Salary', amount: 6500 }
+        ];
+        
+        let expenseData = [
+            { id: 1, name: 'Rent / Mortgage', amount: 2000, category: 'need' },
+            { id: 2, name: 'Groceries / Utilities', amount: 600, category: 'need' },
+            { id: 3, name: 'Dining / Entertainment', amount: 500, category: 'want' },
+            { id: 4, name: 'Car Loan / Credit Card', amount: 400, category: 'debt' },
+            { id: 5, name: 'Index Funds / Savings', amount: 1000, category: 'save' }
+        ];
+
+        let visualChartInstance = null;
+
+        // Initialize Application
+        document.addEventListener("DOMContentLoaded", () => {
+            renderIncomeDOM();
+            renderExpenseDOM();
+            executeFinancialEngine();
+        });
+
+        // ==========================================
+        // DOM RENDERING ENGINES
+        // ==========================================
+        function renderIncomeDOM() {
+            const container = document.getElementById('incomeContainer');
+            container.innerHTML = '';
+            
+            incomeData.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'ledger-row';
+                row.innerHTML = `
+                    <input type="text" class="form-control form-control-sm fw-bold" placeholder="Income Source" value="${item.name}" oninput="updateIncomeData(${item.id}, 'name', this.value)" style="flex: 2;">
+                    <input type="number" class="form-control form-control-sm" placeholder="0.00" value="${item.amount}" min="0" oninput="updateIncomeData(${item.id}, 'amount', this.value)" style="flex: 1;">
+                    <button class="delete-btn" onclick="deleteIncomeRow(${item.id})" title="Delete Income"><i class="fas fa-trash"></i></button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function renderExpenseDOM() {
+            const container = document.getElementById('expenseContainer');
+            container.innerHTML = '';
+            
+            expenseData.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'ledger-row';
+                
+                // Category Dropdown options with the new 'Debt' type
+                const selectHTML = `
+                    <select class="form-select form-select-sm" onchange="updateExpenseData(${item.id}, 'category', this.value)" style="flex: 1.5;">
+                        <option value="need" ${item.category === 'need' ? 'selected' : ''}>Need (Fixed)</option>
+                        <option value="want" ${item.category === 'want' ? 'selected' : ''}>Want (Flex)</option>
+                        <option value="debt" ${item.category === 'debt' ? 'selected' : ''}>Debt Payoff</option>
+                        <option value="save" ${item.category === 'save' ? 'selected' : ''}>Savings/Invest</option>
+                    </select>
+                `;
+
+                row.innerHTML = `
+                    <input type="text" class="form-control form-control-sm fw-bold" placeholder="Expense Name" value="${item.name}" oninput="updateExpenseData(${item.id}, 'name', this.value)" style="flex: 2;">
+                    ${selectHTML}
+                    <input type="number" class="form-control form-control-sm" placeholder="0.00" value="${item.amount}" min="0" oninput="updateExpenseData(${item.id}, 'amount', this.value)" style="flex: 1.2;">
+                    <button class="delete-btn" onclick="deleteExpenseRow(${item.id})" title="Delete Line Item"><i class="fas fa-trash"></i></button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // ==========================================
+        // DATA MUTATION CONTROLLERS
+        // ==========================================
+        function addIncomeRow() {
+            const newId = incomeData.length > 0 ? Math.max(...incomeData.map(i => i.id)) + 1 : 1;
+            incomeData.push({ id: newId, name: '', amount: 0 });
+            renderIncomeDOM(); 
+            executeFinancialEngine();
+        }
+
+        function deleteIncomeRow(id) {
+            incomeData = incomeData.filter(i => i.id !== id);
+            renderIncomeDOM(); 
+            executeFinancialEngine();
+        }
+
+        function updateIncomeData(id, field, value) {
+            const item = incomeData.find(i => i.id === id);
+            if (item) {
+                item[field] = field === 'amount' ? (parseFloat(value) || 0) : value;
+                executeFinancialEngine();
+            }
+        }
+
+        function addExpenseRow() {
+            const newId = expenseData.length > 0 ? Math.max(...expenseData.map(i => i.id)) + 1 : 1;
+            expenseData.push({ id: newId, name: '', amount: 0, category: 'need' });
+            renderExpenseDOM(); 
+            executeFinancialEngine();
+        }
+
+        function deleteExpenseRow(id) {
+            expenseData = expenseData.filter(i => i.id !== id);
+            renderExpenseDOM(); 
+            executeFinancialEngine();
+        }
+
+        function updateExpenseData(id, field, value) {
+            const item = expenseData.find(i => i.id === id);
+            if (item) {
+                item[field] = field === 'amount' ? (parseFloat(value) || 0) : value;
+                executeFinancialEngine();
+            }
+        }
+
+        // ==========================================
+        // THE HOLISTIC FINANCIAL ENGINE
+        // ==========================================
+        function executeFinancialEngine() {
+            // 1. Fetch Formatting Needs
+            const currencySymbol = document.getElementById('currencySelect').value;
+            document.querySelectorAll('.cur-sym').forEach(el => el.innerText = currencySymbol);
+            
+            const formatMoney = (num) => currencySymbol + new Intl.NumberFormat('en-US', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            }).format(num);
+
+            // 2. Aggregate Data
+            const totalIncome = incomeData.reduce((sum, item) => sum + item.amount, 0);
+            
+            let sumNeeds = 0;
+            let sumWants = 0;
+            let sumDebt = 0;
+            let sumSavings = 0;
+
+            expenseData.forEach(exp => {
+                if (exp.category === 'need') sumNeeds += exp.amount;
+                if (exp.category === 'want') sumWants += exp.amount;
+                if (exp.category === 'debt') sumDebt += exp.amount;
+                if (exp.category === 'save') sumSavings += exp.amount;
+            });
+
+            const totalOutflow = sumNeeds + sumWants + sumDebt + sumSavings;
+            const zeroBasedBalance = totalIncome - totalOutflow;
+
+            // 3. Process Zero-Based Logic
+            updateZeroBasedCard(zeroBasedBalance, totalIncome, formatMoney);
+
+            // 4. Process DTI & Runway
+            const liquidCash = parseFloat(document.getElementById('liquidCash').value) || 0;
+            
+            // Debt-to-Income (DTI)
+            const dtiRatio = totalIncome > 0 ? (sumDebt / totalIncome) * 100 : 0;
+            const dtiDisplay = document.getElementById('dtiDisplay');
+            dtiDisplay.innerText = `${dtiRatio.toFixed(1)}%`;
+            dtiDisplay.style.color = dtiRatio > 36 ? 'var(--brand-danger)' : (dtiRatio > 20 ? 'var(--brand-warning)' : 'var(--brand-success)');
+
+            // Emergency Runway (Months) - Usually calculated against Needs + Minimum Debt payments
+            const coreExpenses = sumNeeds + sumDebt;
+            const runwayMonths = coreExpenses > 0 ? (liquidCash / coreExpenses) : 0;
+            const runwayDisplay = document.getElementById('runwayDisplay');
+            runwayDisplay.innerText = runwayMonths.toFixed(1);
+            runwayDisplay.style.color = runwayMonths >= 6 ? 'var(--brand-success)' : (runwayMonths < 3 ? 'var(--brand-danger)' : 'var(--brand-warning)');
+
+            // 5. Process 50/30/20 Analyzer
+            // For the rule, Debt is often categorized under Needs or Savings depending on the philosophy. We will group it into Needs for strict budgeting.
+            updateProgressBars('Needs', (sumNeeds + sumDebt), totalIncome);
+            updateProgressBars('Wants', sumWants, totalIncome);
+            updateProgressBars('Savings', sumSavings, totalIncome);
+
+            // 6. Process Health Score Algorithm
+            const healthScore = calculateHealthScore(totalIncome, sumSavings, sumNeeds, sumDebt, zeroBasedBalance, dtiRatio, runwayMonths);
+            updateHealthUI(healthScore);
+
+            // 7. Update Ledger Summaries
+            document.getElementById('sumIncome').innerText = formatMoney(totalIncome);
+            document.getElementById('sumNeedsObj').innerText = `-${formatMoney(sumNeeds)}`;
+            document.getElementById('sumWantsObj').innerText = `-${formatMoney(sumWants)}`;
+            document.getElementById('sumDebtObj').innerText = `-${formatMoney(sumDebt)}`;
+            document.getElementById('sumSaveObj').innerText = `+${formatMoney(sumSavings)}`;
+            
+            const balElement = document.getElementById('sumBalance');
+            balElement.innerText = formatMoney(zeroBasedBalance);
+            balElement.style.color = zeroBasedBalance < 0 ? 'var(--brand-danger)' : (zeroBasedBalance === 0 ? 'var(--brand-success)' : 'var(--brand-main)');
+
+            // 8. Generate L.I.S.A. Insights
+            generateAIInsights(dtiRatio, runwayMonths, zeroBasedBalance, sumSavings, totalIncome);
+
+            // 9. Render Chart
+            renderVisualizationChart(sumNeeds, sumWants, sumDebt, sumSavings, zeroBasedBalance);
+        }
+
+        function updateZeroBasedCard(balance, income, formatter) {
+            const card = document.getElementById('statusCard');
+            const title = document.getElementById('statusTitle');
+            const sub = document.getElementById('statusSubtitle');
+            
+            document.getElementById('leftToBudgetDisplay').innerText = formatter(balance);
+            
+            if (balance === 0 && income > 0) {
+                card.className = "dash-card hero success"; 
+                title.innerText = "Financial Harmony Reached"; 
+                sub.innerText = "Perfect Zero-Based Assignment. Every dollar has a job.";
+            } else if (balance < 0) {
+                card.className = "dash-card hero danger"; 
+                title.innerText = "Deficit Warning"; 
+                sub.innerText = "You are allocating more capital than you generate.";
+            } else {
+                card.className = "dash-card hero"; 
+                title.innerText = "Unallocated Capital"; 
+                sub.innerText = "Assign these remaining funds to Debt Payoff or Investments.";
+            }
+        }
+
+        function updateProgressBars(type, amount, totalIncome) {
+            const pctText = document.getElementById(`pct${type}`);
+            const bar = document.getElementById(`bar${type}`);
+            
+            if (totalIncome === 0) { 
+                pctText.innerText = '0%'; 
+                bar.style.width = '0%'; 
+                bar.classList.remove('over'); 
+                return; 
+            }
+
+            const percentage = (amount / totalIncome) * 100;
+            pctText.innerText = `${percentage.toFixed(1)}%`;
+            
+            // Limit width to 100% so the bar doesn't break out visually
+            bar.style.width = `${Math.min(percentage, 100)}%`;
+            
+            if ((type === 'Needs' && percentage > 50) || (type === 'Wants' && percentage > 30)) {
+                bar.classList.add('over');
+            } else {
+                bar.classList.remove('over');
+            }
+        }
+
+        function calculateHealthScore(income, savings, needs, debt, balance, dti, runway) {
+            if (income <= 0) return 0;
+            
+            let score = 50; // Baseline
+            
+            // Savings Metric (+25 max)
+            const savePct = (savings / income) * 100;
+            score += Math.min(savePct, 25); 
+
+            // Debt Metric (-20 max)
+            if (dti > 36) score -= 15;
+            else if (dti > 20) score -= 5;
+            else score += 10;
+
+            // Runway Metric (+15 max)
+            if (runway >= 6) score += 15;
+            else if (runway >= 3) score += 5;
+            else score -= 10;
+
+            // Budget Compliance
+            if (balance === 0) score += 10;
+            if (balance < 0) score -= 20;
+
+            // Constrain 0 to 100
+            return Math.max(0, Math.min(100, Math.round(score)));
+        }
+
+        function updateHealthUI(score) {
+            const ring = document.getElementById('healthScoreRing');
+            const text = document.getElementById('healthScoreText');
+            
+            ring.innerText = score;
+            
+            if (score >= 80) { 
+                ring.style.borderColor = 'var(--brand-success)'; 
+                ring.style.color = 'var(--brand-success)'; 
+                text.innerText = 'Excellent Discipline'; 
+            } else if (score >= 50) { 
+                ring.style.borderColor = 'var(--brand-warning)'; 
+                ring.style.color = 'var(--brand-warning)'; 
+                text.innerText = 'Room for Optimization'; 
+            } else { 
+                ring.style.borderColor = 'var(--brand-danger)'; 
+                ring.style.color = 'var(--brand-danger)'; 
+                text.innerText = 'Critical Financial Risk'; 
+            }
+        }
+
+        function generateAIInsights(dti, runway, balance, savings, income) {
+            const box = document.getElementById('aiInsightsBox');
+            const text = document.getElementById('aiInsightsText');
+            
+            let insight = "";
+            let statusClass = "";
+
+            if (balance < 0) {
+                insight = "Urgent: You are running a monthly deficit. Review your 'Wants' category immediately and cut expenses.";
+                statusClass = "danger";
+            } else if (dti > 36) {
+                insight = "High Debt Warning: Your DTI is over 36%. Direct your unallocated cash strictly toward debt payoff to avoid interest traps.";
+                statusClass = "danger";
+            } else if (runway < 3) {
+                insight = "Low Liquidity: You have less than 3 months of emergency runway. Prioritize liquid savings before heavy investing.";
+                statusClass = "danger";
+            } else if (balance > 0) {
+                insight = "Lazy Capital Detected: You have unallocated cash. Move this to an index fund or savings account to achieve a true Zero-Based Budget.";
+                statusClass = "";
+            } else if ((savings / income) * 100 >= 20) {
+                insight = "Optimal Architecture: Your DTI is healthy, your runway is secure, and you are saving aggressively. Stay the course.";
+                statusClass = "success";
+            } else {
+                insight = "Stable Baseline: You are balanced, but try to increase your savings rate towards the 20% target for long-term wealth building.";
+                statusClass = "";
+            }
+
+            text.innerText = insight;
+            box.className = `insights-panel ${statusClass}`;
+        }
+
+        // ==========================================
+        // CHART.JS VISUALIZER
+        // ==========================================
+        function renderVisualizationChart(needs, wants, debt, savings, unallocated) {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            
+            if (visualChartInstance) {
+                visualChartInstance.destroy();
+            }
+
+            if (needs === 0 && wants === 0 && debt === 0 && savings === 0 && unallocated <= 0) return;
+
+            let labels = ['Needs', 'Wants', 'Debt', 'Savings'];
+            let data = [needs, wants, debt, savings];
+            let colors = ['#0f172a', '#f59e0b', '#8b5cf6', '#10b981']; // Obsidian, Amber, Purple, Green
+
+            // Show unallocated money as a gray void
+            if (unallocated > 0) {
+                labels.push('Unallocated');
+                data.push(unallocated);
+                colors.push('#e2e8f0');
+            }
+
+            visualChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // EXPORT ENGINE (CSV)
+        // ==========================================
+        function exportDataToCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Category,Classification,Name,Amount\r\n";
+            
+            incomeData.forEach(inc => { 
+                if (inc.name) csvContent += `Income,-,${inc.name},${inc.amount}\r\n`; 
+            });
+            
+            expenseData.forEach(exp => { 
+                if (exp.name) {
+                    let niceType = exp.category.toUpperCase();
+                    csvContent += `Outflow,${niceType},${exp.name},${exp.amount}\r\n`; 
+                }
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "LISA_Wealth_Architecture_V4.csv");
+            document.body.appendChild(link); 
+            link.click(); 
+            document.body.removeChild(link);
+        }
+
+        // ==========================================
+        // UTILITY
+        // ==========================================
+        function resetArchitect() {
+            incomeData = [{ id: 1, name: 'Primary Salary', amount: 6500 }];
+            expenseData = [
+                { id: 1, name: 'Rent / Mortgage', amount: 2000, category: 'need' },
+                { id: 2, name: 'Groceries / Utilities', amount: 600, category: 'need' },
+                { id: 3, name: 'Dining / Entertainment', amount: 500, category: 'want' },
+                { id: 4, name: 'Car Loan / Credit Card', amount: 400, category: 'debt' },
+                { id: 5, name: 'Index Funds / Savings', amount: 1000, category: 'save' }
+            ];
+            document.getElementById('liquidCash').value = 15000;
+            renderIncomeDOM(); 
+            renderExpenseDOM(); 
+            executeFinancialEngine();
+        }
+    </script>
+</body>
+</html>

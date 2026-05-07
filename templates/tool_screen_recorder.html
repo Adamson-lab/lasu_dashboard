@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screen Recorder | Tool</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #dc3545; /* Red for recording */
+            --accent-hover: #bb2d3b;
+            --success: #198754;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; }
+        .back-link { color: #2563eb; text-decoration: none; font-weight: 600; display: inline-block; margin-bottom: 0.5rem; }
+        
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .video-container {
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        video { width: 100%; height: 100%; object-fit: contain; }
+
+        .placeholder-text {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-record { background: var(--accent); }
+        .btn-record:not(:disabled):hover { background: var(--accent-hover); }
+        
+        .btn-stop { background: var(--primary); }
+        .btn-stop:not(:disabled):hover { background: #334155; }
+        
+        .btn-download { background: var(--success); display: none; }
+        .btn-download:hover { background: #157347; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            background: #e2e8f0;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .status-recording {
+            background: #fee2e2;
+            color: var(--accent);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <div>
+            <a href="{{ url_for('student_portal') }}" class="back-link">← Back To Dashboard</a>
+            <h1>Screen Recorder</h1>
+            <p style="color: var(--text-muted);">Capture high-fidelity browser, window, or display footage.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div id="statusBadge" class="status-badge">● Idle</div>
+        
+        <div class="video-container">
+            <span class="placeholder-text" id="placeholder">Video preview will appear here</span>
+            <video id="videoElement" autoplay muted playsinline></video>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-record" id="startBtn">
+                <i class="fas fa-circle"></i> Start Recording
+            </button>
+            <button class="btn btn-stop" id="stopBtn" disabled>
+                <i class="fas fa-square"></i> Stop Recording
+            </button>
+            <button class="btn btn-download" id="downloadBtn">
+                <i class="fas fa-download"></i> Download WebM
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Enterprise Screen Recorder Architecture
+     * Handles MediaDevices API stream capturing and Blob compilation.
+     */
+    class ScreenRecorderApp {
+        constructor() {
+            this.videoElement = document.getElementById('videoElement');
+            this.placeholder = document.getElementById('placeholder');
+            this.startBtn = document.getElementById('startBtn');
+            this.stopBtn = document.getElementById('stopBtn');
+            this.downloadBtn = document.getElementById('downloadBtn');
+            this.statusBadge = document.getElementById('statusBadge');
+
+            this.stream = null;
+            this.mediaRecorder = null;
+            this.recordedChunks = [];
+            this.videoUrl = null;
+
+            this.initBindings();
+        }
+
+        initBindings() {
+            this.startBtn.addEventListener('click', () => this.startRecording());
+            this.stopBtn.addEventListener('click', () => this.stopRecording());
+            this.downloadBtn.addEventListener('click', () => this.downloadVideo());
+        }
+
+        async startRecording() {
+            try {
+                // Request Display Media (Screen) with Audio
+                this.stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { cursor: "always" },
+                    audio: true
+                });
+
+                // Set up live preview
+                this.videoElement.srcObject = this.stream;
+                this.placeholder.style.display = 'none';
+
+                // Initialize MediaRecorder
+                this.recordedChunks = [];
+                // Use webm, standard for web recordings
+                const options = { mimeType: 'video/webm; codecs=vp9' };
+                
+                try {
+                    this.mediaRecorder = new MediaRecorder(this.stream, options);
+                } catch (e) {
+                    // Fallback for browsers that don't support vp9
+                    this.mediaRecorder = new MediaRecorder(this.stream);
+                }
+
+                this.mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        this.recordedChunks.push(event.data);
+                    }
+                };
+
+                this.mediaRecorder.onstop = () => this.compileVideo();
+
+                // If user clicks "Stop sharing" on the browser's native UI bar
+                this.stream.getVideoTracks()[0].onended = () => {
+                    if(this.mediaRecorder.state === "recording") {
+                        this.stopRecording();
+                    }
+                };
+
+                this.mediaRecorder.start();
+                this.updateUI('recording');
+
+            } catch (err) {
+                console.error("Error starting recording:", err);
+                if (err.name === 'NotAllowedError') {
+                    alert("Permission denied. You must allow screen capture to record.");
+                } else {
+                    alert("System error accessing media devices. Ensure you are on HTTPS or Localhost.");
+                }
+            }
+        }
+
+        stopRecording() {
+            if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+                this.mediaRecorder.stop();
+            }
+            
+            // Terminate hardware tracks
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+            }
+            
+            this.videoElement.srcObject = null;
+            this.updateUI('processing');
+        }
+
+        compileVideo() {
+            // Memory compilation
+            const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+            this.videoUrl = URL.createObjectURL(blob);
+            
+            // Set video element to allow playback of the recording
+            this.videoElement.src = this.videoUrl;
+            this.videoElement.controls = true; // Allow user to play/pause their recording
+            
+            this.updateUI('finished');
+        }
+
+        downloadVideo() {
+            if (!this.videoUrl) return;
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = this.videoUrl;
+            a.download = `screen_capture_${Date.now()}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        updateUI(state) {
+            switch(state) {
+                case 'recording':
+                    this.startBtn.disabled = true;
+                    this.stopBtn.disabled = false;
+                    this.downloadBtn.style.display = 'none';
+                    this.videoElement.controls = false;
+                    this.statusBadge.textContent = "● Recording";
+                    this.statusBadge.className = "status-badge status-recording";
+                    break;
+                case 'processing':
+                    this.startBtn.disabled = false;
+                    this.stopBtn.disabled = true;
+                    this.statusBadge.textContent = "● Processing...";
+                    this.statusBadge.className = "status-badge";
+                    break;
+                case 'finished':
+                    this.downloadBtn.style.display = 'inline-flex';
+                    this.statusBadge.textContent = "● Ready to Download";
+                    this.statusBadge.className = "status-badge";
+                    break;
+            }
+        }
+    }
+
+    // Initialize application
+    document.addEventListener('DOMContentLoaded', () => new ScreenRecorderApp());
+</script>
+
+</body>
+</html>

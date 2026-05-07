@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prime Factorization | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1300px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .number-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .main-input {
+            width: 100%;
+            font-family: 'Fira Code', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 15px;
+            border: 3px solid #e9ecef;
+            border-radius: 12px;
+            color: #212529;
+            transition: all 0.3s;
+            outline: none;
+            -moz-appearance: textfield;
+        }
+        .main-input::-webkit-outer-spin-button,
+        .main-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .main-input:focus {
+            border-color: var(--math-orange);
+            box-shadow: 0 0 0 5px rgba(253, 126, 20, 0.1);
+        }
+
+        .alert-info-custom {
+            background: rgba(13, 110, 253, 0.05);
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            color: #0d6efd;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: auto;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .result-display-area {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .equation-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .equation-result {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--math-blue);
+            word-break: break-all;
+            line-height: 1.4;
+        }
+
+        .equation-result sup {
+            font-size: 1.2rem;
+            color: var(--math-orange);
+            margin-left: 2px;
+        }
+
+        .expanded-result {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.1rem;
+            color: #6c757d;
+            font-weight: 600;
+            margin-top: 15px;
+            word-break: break-all;
+        }
+
+        /* Table */
+        .table-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .table-custom {
+            margin-bottom: 0;
+            font-family: 'Fira Code', monospace;
+            text-align: center;
+        }
+        
+        .table-custom thead th {
+            position: sticky;
+            top: 0;
+            background: #212529;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            padding: 12px;
+            z-index: 1;
+        }
+
+        .table-custom tbody td {
+            padding: 12px;
+            vertical-align: middle;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .col-step { color: #adb5bd; font-size: 0.9rem !important; }
+        .col-div { color: var(--math-orange); font-weight: 800 !important; }
+        .col-res { color: var(--math-blue); }
+
+        .benchmark {
+            text-align: right;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: #adb5bd;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .equation-result { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-cubes"></i> Factorization Engine
+            </div>
+            
+            <div class="number-input-wrapper">
+                <label class="form-label fw-bold text-muted small text-uppercase d-block mb-2">Integer to Factorize</label>
+                <input type="number" class="main-input" id="numInput" placeholder="e.g. 360" autocomplete="off" oninput="processFactorization()">
+                <div class="small text-danger mt-2 fw-bold d-none text-center" id="errorMsg">
+                    <i class="fas fa-exclamation-triangle"></i> Exceeds Max Safe Integer.
+                </div>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mb-4" onclick="clearInput()">
+                <i class="fas fa-eraser me-2"></i> Clear Input
+            </button>
+
+            <div class="alert-info-custom">
+                <i class="fas fa-info-circle mb-2 fa-lg"></i><br>
+                Prime factorization is the process of breaking down a composite number into a set of prime numbers that, when multiplied together, equal the original number. It is the fundamental building block of modern cryptography (RSA).
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="pane-header text-dark border-0 mb-0 pb-0">
+                <i class="fas fa-project-diagram text-primary"></i> Algorithm Results
+            </div>
+            
+            <div class="result-display-area mt-3" id="resultArea">
+                <div class="equation-title">Awaiting Input...</div>
+                <div class="equation-result text-muted opacity-25">N = ?</div>
+            </div>
+
+            <div class="table-wrapper d-none" id="tableWrapper">
+                <table class="table table-borderless table-custom" id="stepTable">
+                    <thead>
+                        <tr>
+                            <th>Step</th>
+                            <th>Current Value</th>
+                            <th>Prime Divisor</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="benchmark" id="benchmark">
+                Engine execution time: 0.00 ms
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const numInput = document.getElementById('numInput');
+    const resultArea = document.getElementById('resultArea');
+    const tableWrapper = document.getElementById('tableWrapper');
+    const tableBody = document.getElementById('tableBody');
+    const errorMsg = document.getElementById('errorMsg');
+    const benchmark = document.getElementById('benchmark');
+
+    let debounceTimer;
+
+    // --- ALGORITHM ---
+    function computePrimeFactors(n) {
+        let factors = [];
+        let steps = [];
+        let stepCount = 1;
+        let current = n;
+
+        // 1. Extract all 2s
+        while (current % 2 === 0) {
+            factors.push(2);
+            let next = current / 2;
+            steps.push({ step: stepCount++, current: current, divisor: 2, result: next });
+            current = next;
+        }
+
+        // 2. Extract odd factors starting from 3 up to sqrt(n)
+        for (let i = 3; i * i <= current; i += 2) {
+            while (current % i === 0) {
+                factors.push(i);
+                let next = current / i;
+                steps.push({ step: stepCount++, current: current, divisor: i, result: next });
+                current = next;
+            }
+        }
+
+        // 3. If remaining current is a prime > 2
+        if (current > 2) {
+            factors.push(current);
+            steps.push({ step: stepCount++, current: current, divisor: current, result: 1 });
+        }
+
+        return { factors, steps };
+    }
+
+    // --- UI CONTROLLER ---
+    function processFactorization() {
+        clearTimeout(debounceTimer);
+        
+        debounceTimer = setTimeout(() => {
+            const rawVal = numInput.value.trim();
+            
+            if (!rawVal) {
+                resetUI();
+                return;
+            }
+
+            const n = parseInt(rawVal, 10);
+
+            // Validation
+            if (isNaN(n) || n < 2) {
+                errorMsg.classList.remove('d-none');
+                errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please enter an integer greater than 1.';
+                resetOutputOnly();
+                return;
+            }
+            if (n > Number.MAX_SAFE_INTEGER) {
+                errorMsg.classList.remove('d-none');
+                errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Exceeds JS Max Safe Integer (9,007,199,254,740,991).';
+                resetOutputOnly();
+                return;
+            }
+
+            errorMsg.classList.add('d-none');
+
+            // Timer start
+            const t0 = performance.now();
+
+            // Run Core Algorithm
+            const data = computePrimeFactors(n);
+
+            // Timer end
+            const t1 = performance.now();
+
+            renderResults(n, data.factors, data.steps);
+            benchmark.innerText = `Engine execution time: ${(t1 - t0).toFixed(2)} ms`;
+
+        }, 150); // Small debounce
+    }
+
+    function renderResults(n, factors, steps) {
+        // Build Exponential String
+        let freqMap = {};
+        factors.forEach(f => {
+            freqMap[f] = (freqMap[f] || 0) + 1;
+        });
+
+        let expHtmlArray = [];
+        for (let base in freqMap) {
+            if (freqMap[base] > 1) {
+                expHtmlArray.push(`${base}<sup>${freqMap[base]}</sup>`);
+            } else {
+                expHtmlArray.push(`${base}`);
+            }
+        }
+        
+        const expHtml = expHtmlArray.join(' &times; ');
+        const expandedStr = factors.join(' &times; ');
+
+        // Update Top Display
+        if (factors.length === 1) {
+            resultArea.innerHTML = `
+                <div class="equation-title text-success"><i class="fas fa-check-circle"></i> Prime Number Detected</div>
+                <div class="equation-result">${n} is Prime</div>
+                <div class="expanded-result">It can only be divided by 1 and itself.</div>
+            `;
+        } else {
+            resultArea.innerHTML = `
+                <div class="equation-title">Exponential Form</div>
+                <div class="equation-result">${n.toLocaleString()} = ${expHtml}</div>
+                <div class="expanded-result">${expandedStr}</div>
+            `;
+        }
+
+        // Build Table
+        tableBody.innerHTML = '';
+        if (steps.length > 0) {
+            steps.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="col-step">#${s.step}</td>
+                    <td>${s.current.toLocaleString()}</td>
+                    <td class="col-div">&divide; ${s.divisor.toLocaleString()}</td>
+                    <td class="col-res">= ${s.result.toLocaleString()}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            tableWrapper.classList.remove('d-none');
+        } else {
+            tableWrapper.classList.add('d-none');
+        }
+    }
+
+    function resetUI() {
+        errorMsg.classList.add('d-none');
+        resetOutputOnly();
+    }
+
+    function resetOutputOnly() {
+        resultArea.innerHTML = `
+            <div class="equation-title">Awaiting Input...</div>
+            <div class="equation-result text-muted opacity-25">N = ?</div>
+        `;
+        tableWrapper.classList.add('d-none');
+        tableBody.innerHTML = '';
+        benchmark.innerText = `Engine execution time: 0.00 ms`;
+    }
+
+    function clearInput() {
+        numInput.value = '';
+        numInput.focus();
+        resetUI();
+    }
+
+    // Auto-focus on load
+    window.onload = () => {
+        numInput.focus();
+    };
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

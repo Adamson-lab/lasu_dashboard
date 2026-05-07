@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Solver | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .mode-selector {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-label {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1.2rem;
+            color: #495057;
+            width: 80px;
+            text-align: center;
+        }
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info-custom {
+            background: rgba(13, 110, 253, 0.05);
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            color: #0d6efd;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: auto;
+            line-height: 1.5;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .stat-card.highlight-area {
+            background: rgba(253, 126, 20, 0.05);
+            border-color: rgba(253, 126, 20, 0.2);
+        }
+        .stat-card.highlight-circ {
+            background: rgba(111, 66, 193, 0.05);
+            border-color: rgba(111, 66, 193, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .highlight-area .stat-label { color: var(--math-orange); }
+        .highlight-circ .stat-label { color: var(--math-purple); }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+        }
+        
+        .stat-sub {
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+            font-size: 1.1rem;
+            color: #adb5bd;
+            margin-top: 5px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
+            min-height: 350px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+            background-image: radial-gradient(#e9ecef 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+        }
+
+        #circleCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-circle-notch"></i> Circle Parameters
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Value must be greater than 0.
+            </div>
+
+            <div class="mode-selector">
+                <label class="mode-label">I want to input the:</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="inputType" id="typeRad" value="r" checked onchange="updateInputMode()">
+                    <label class="form-check-label fw-bold" for="typeRad">Radius (r)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="inputType" id="typeDia" value="d" onchange="updateInputMode()">
+                    <label class="form-check-label fw-bold" for="typeDia">Diameter (d)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="inputType" id="typeCirc" value="c" onchange="updateInputMode()">
+                    <label class="form-check-label fw-bold" for="typeCirc">Circumference (C)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="inputType" id="typeArea" value="a" onchange="updateInputMode()">
+                    <label class="form-check-label fw-bold" for="typeArea">Area (A)</label>
+                </div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-primary" id="mainInputLabel">r</div>
+                <input type="number" class="num-input" id="mainInput" value="5" step="any" oninput="solveCircle()">
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-2" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear
+            </button>
+
+            <div class="alert-info-custom mt-4">
+                <i class="fas fa-calculator mb-2 fa-lg"></i><br>
+                <strong>Reverse Engineering Engine:</strong><br>
+                You don't just have to enter the radius. Select "Area" or "Circumference" above, type your value, and the engine will work backward to calculate the exact radius and diameter.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            
+            <div class="top-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label text-primary">Radius (r)</div>
+                    <div class="stat-val" id="resRad">5.000</div>
+                    <div class="stat-sub" id="formRad">r = D / 2</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label text-danger">Diameter (d)</div>
+                    <div class="stat-val" id="resDia">10.000</div>
+                    <div class="stat-sub" id="formDia">d = 2r</div>
+                </div>
+                <div class="stat-card highlight-circ">
+                    <div class="stat-label">Circumference (C)</div>
+                    <div class="stat-val text-purple" id="resCirc">31.416</div>
+                    <div class="stat-sub" id="formCirc">C = 2&pi;r</div>
+                </div>
+                <div class="stat-card highlight-area">
+                    <div class="stat-label">Area (A)</div>
+                    <div class="stat-val text-orange" id="resArea">78.540</div>
+                    <div class="stat-sub" id="formArea">A = &pi;r&sup2;</div>
+                </div>
+            </div>
+
+            <div class="pane-header text-dark border-0 mt-4 mb-2 pb-0">
+                <i class="fas fa-drafting-compass text-primary"></i> Geometric Visualizer
+            </div>
+
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="circleCanvas"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const mainInput = document.getElementById('mainInput');
+    const mainInputLabel = document.getElementById('mainInputLabel');
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const resRad = document.getElementById('resRad');
+    const resDia = document.getElementById('resDia');
+    const resCirc = document.getElementById('resCirc');
+    const resArea = document.getElementById('resArea');
+
+    const formRad = document.getElementById('formRad');
+    const formDia = document.getElementById('formDia');
+    const formCirc = document.getElementById('formCirc');
+    const formArea = document.getElementById('formArea');
+
+    const canvas = document.getElementById('circleCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    let currentMode = 'r';
+
+    function resizeCanvas() {
+        const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        ctx.scale(dpr, dpr);
+        solveCircle();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function roundSafe(num) {
+        return (Math.round(num * 1000) / 1000).toFixed(3);
+    }
+
+    function updateInputMode() {
+        const radios = document.getElementsByName('inputType');
+        for (let r of radios) {
+            if (r.checked) currentMode = r.value;
+        }
+
+        switch(currentMode) {
+            case 'r': mainInputLabel.innerText = 'r'; break;
+            case 'd': mainInputLabel.innerText = 'd'; break;
+            case 'c': mainInputLabel.innerText = 'C'; break;
+            case 'a': mainInputLabel.innerText = 'A'; break;
+        }
+        
+        mainInput.focus();
+        solveCircle();
+    }
+
+    // --- MATH ENGINE ---
+    function solveCircle() {
+        const val = parseFloat(mainInput.value);
+
+        if (isNaN(val) || val <= 0) {
+            errorBanner.style.display = 'block';
+            resetOutputs();
+            return;
+        }
+        errorBanner.style.display = 'none';
+
+        let r, d, c, a;
+
+        // Reverse Engineering Logic
+        switch(currentMode) {
+            case 'r':
+                r = val;
+                d = 2 * r;
+                c = 2 * Math.PI * r;
+                a = Math.PI * Math.pow(r, 2);
+                
+                formRad.innerHTML = `Input Data`;
+                formDia.innerHTML = `d = 2(${roundSafe(r)})`;
+                formCirc.innerHTML = `C = 2&pi;(${roundSafe(r)})`;
+                formArea.innerHTML = `A = &pi;(${roundSafe(r)})&sup2;`;
+                break;
+            
+            case 'd':
+                d = val;
+                r = d / 2;
+                c = Math.PI * d;
+                a = Math.PI * Math.pow(r, 2);
+
+                formRad.innerHTML = `r = ${roundSafe(d)} / 2`;
+                formDia.innerHTML = `Input Data`;
+                formCirc.innerHTML = `C = &pi;d`;
+                formArea.innerHTML = `A = &pi;r&sup2;`;
+                break;
+            
+            case 'c':
+                c = val;
+                r = c / (2 * Math.PI);
+                d = 2 * r;
+                a = Math.PI * Math.pow(r, 2);
+
+                formRad.innerHTML = `r = ${roundSafe(c)} / 2&pi;`;
+                formDia.innerHTML = `d = 2r`;
+                formCirc.innerHTML = `Input Data`;
+                formArea.innerHTML = `A = &pi;r&sup2;`;
+                break;
+            
+            case 'a':
+                a = val;
+                r = Math.sqrt(a / Math.PI);
+                d = 2 * r;
+                c = 2 * Math.PI * r;
+
+                formRad.innerHTML = `r = &radic;(${roundSafe(a)} / &pi;)`;
+                formDia.innerHTML = `d = 2r`;
+                formCirc.innerHTML = `C = 2&pi;r`;
+                formArea.innerHTML = `Input Data`;
+                break;
+        }
+
+        // Update UI
+        resRad.innerText = roundSafe(r);
+        resDia.innerText = roundSafe(d);
+        resCirc.innerText = roundSafe(c);
+        resArea.innerText = roundSafe(a);
+
+        drawCircle(r);
+    }
+
+    // --- CANVAS GRAPHICS ENGINE ---
+    function drawCircle(radius) {
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+        
+        ctx.clearRect(0, 0, w, h);
+
+        const centerX = w / 2;
+        const centerY = h / 2;
+
+        // Visual Padding
+        const padding = 40;
+        const maxDrawRadius = Math.min(w, h) / 2 - padding;
+
+        // Draw the shape
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, maxDrawRadius, 0, Math.PI * 2);
+        
+        // Styling
+        ctx.fillStyle = 'rgba(13, 110, 253, 0.05)';
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#0d6efd';
+        ctx.stroke();
+
+        // Draw Center Dot
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#212529';
+        ctx.fill();
+
+        // Draw Radius Line
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + maxDrawRadius, centerY);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#dc3545';
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Label Radius
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = '#dc3545';
+        ctx.textAlign = 'center';
+        ctx.fillText(`r = ${roundSafe(radius)}`, centerX + (maxDrawRadius / 2), centerY - 10);
+    }
+
+    function resetOutputs() {
+        resRad.innerText = '--';
+        resDia.innerText = '--';
+        resCirc.innerText = '--';
+        resArea.innerText = '--';
+        formRad.innerHTML = `r = d / 2`;
+        formDia.innerHTML = `d = 2r`;
+        formCirc.innerHTML = `C = 2&pi;r`;
+        formArea.innerHTML = `A = &pi;r&sup2;`;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function clearInputs() {
+        mainInput.value = '';
+        mainInput.focus();
+        errorBanner.style.display = 'block';
+        resetOutputs();
+    }
+
+    // Init
+    setTimeout(() => {
+        resizeCanvas();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

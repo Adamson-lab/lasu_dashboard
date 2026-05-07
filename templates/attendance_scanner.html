@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optical Attendance Array | LASU Matrix</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <style>
+        /* ==========================================
+           V-INFINITY THEME ENGINE (SCANNER MODULE)
+           FULLY EXPANDED AND FORMATTED
+           ========================================== */
+        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700;800;900&display=swap');
+
+        /* LIGHT MODE */
+        [data-theme="light"] {
+            --bg-master: #f8fafc; 
+            --bg-surface: rgba(255, 255, 255, 0.9); 
+            --term-bg: rgba(241, 245, 249, 0.9);
+            --border-core: rgba(148, 163, 184, 0.3); 
+            --border-neon: #10b981; 
+            --text-main: #0f172a; 
+            --text-mute: #64748b; 
+            --text-cyber: #059669; 
+            --shadow-core: 0 10px 30px rgba(16, 185, 129, 0.1);
+            --alert: #ef4444; 
+            --warn: #f59e0b; 
+            --info: #0ea5e9; 
+            --success: #10b981;
+        }
+
+        /* DARK MODE */
+        [data-theme="dark"] {
+            --bg-master: #020617; 
+            --bg-surface: rgba(15, 23, 42, 0.8); 
+            --term-bg: rgba(5, 10, 20, 0.9);
+            --border-core: rgba(51, 65, 85, 0.5); 
+            --border-neon: #10b981; 
+            --text-main: #f8fafc; 
+            --text-mute: #94a3b8; 
+            --text-cyber: #34d399;
+            --shadow-core: 0 10px 30px rgba(16, 185, 129, 0.15);
+            --alert: #ef4444; 
+            --warn: #f59e0b; 
+            --info: #0ea5e9; 
+            --success: #10b981;
+        }
+
+        /* HIGH CONTRAST MODE */
+        [data-theme="god"] {
+            --bg-master: #0a0500; 
+            --bg-surface: rgba(25, 10, 35, 0.85); 
+            --term-bg: rgba(10, 0, 15, 0.9);
+            --border-core: rgba(217, 70, 239, 0.5); 
+            --border-neon: #fbbf24; 
+            --text-main: #fffbeb; 
+            --text-mute: #f472b6; 
+            --text-cyber: #ffd700;
+            --shadow-core: 0 0 40px rgba(217, 70, 239, 0.3);
+            --alert: #ff0000; 
+            --warn: #f59e0b; 
+            --info: #38bdf8; 
+            --success: #34d399;
+        }
+
+        /* DEEP VOID MODE */
+        [data-theme="singularity"] {
+            --bg-master: #000000; 
+            --bg-surface: rgba(0, 5, 15, 0.9); 
+            --term-bg: #000000;
+            --border-core: rgba(0, 255, 204, 0.3); 
+            --border-neon: #00ffcc; 
+            --text-main: #e0ffff; 
+            --text-mute: #8a2be2; 
+            --text-cyber: #00ffcc;
+            --shadow-core: 0 0 50px rgba(0, 255, 204, 0.2), inset 0 0 20px rgba(138, 43, 226, 0.2);
+            --alert: #ff003c; 
+            --warn: #ffea00; 
+            --info: #00f0ff; 
+            --success: #00ffcc;
+        }
+
+        body { 
+            background-color: var(--bg-master); 
+            color: var(--text-main); 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px; 
+            background-attachment: fixed;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Scanlines & Void Noise */
+        [data-theme="dark"] body::before, 
+        [data-theme="god"] body::before, 
+        [data-theme="singularity"] body::before {
+            content: " "; 
+            display: block; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            bottom: 0; 
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%); 
+            z-index: 9999; 
+            background-size: 100% 3px; 
+            pointer-events: none; 
+            opacity: 0.7;
+        }
+
+        [data-theme="singularity"] body::before { 
+            background-size: 100% 2px; 
+            opacity: 0.9; 
+        }
+
+        /* Glassmorphism Panels */
+        .cyber-panel { 
+            background: var(--bg-surface); 
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border-core); 
+            border-radius: 16px; 
+            padding: 25px; 
+            box-shadow: var(--shadow-core); 
+            margin-bottom: 20px; 
+            transition: all 0.4s ease; 
+            position: relative;
+        }
+        
+        .panel-header {
+            border-bottom: 1px solid var(--border-core); 
+            padding-bottom: 12px; 
+            margin-bottom: 20px;
+            font-weight: 900; 
+            letter-spacing: 2px; 
+            color: var(--text-main); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            text-transform: uppercase; 
+            font-size: 0.9rem;
+        }
+
+        /* Inputs & Controls */
+        .form-control-cyber {
+            background: var(--term-bg);
+            border: 2px solid var(--border-core);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            padding: 12px 15px;
+            border-radius: 8px;
+            width: 100%;
+            transition: all 0.3s;
+            font-weight: bold;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .form-control-cyber:focus {
+            outline: none;
+            border-color: var(--border-neon);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+            background: var(--bg-master);
+        }
+
+        /* Buttons & Toggles */
+        .btn-theme {
+            background: var(--bg-surface); 
+            color: var(--text-main); 
+            border: 1px solid var(--border-core);
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 1.2rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: var(--shadow-core);
+        }
+
+        .btn-theme:hover { 
+            border-color: var(--border-neon); 
+            color: var(--border-neon); 
+            transform: rotate(90deg) scale(1.15); 
+            box-shadow: 0 0 25px var(--border-neon); 
+        }
+
+        .btn-cyber { 
+            background: linear-gradient(135deg, var(--border-neon), var(--success)); 
+            border: none; 
+            color: #fff; 
+            padding: 15px 30px; 
+            text-transform: uppercase; 
+            font-weight: 900; 
+            font-size: 1.1rem; 
+            letter-spacing: 2px; 
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            cursor: pointer; 
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3); 
+            width: 100%; 
+            position: relative;
+        }
+
+        [data-theme="god"] .btn-cyber { 
+            background: linear-gradient(135deg, var(--border-neon), var(--warn)); color: #000;
+        }
+
+        [data-theme="singularity"] .btn-cyber { 
+            background: linear-gradient(135deg, #00ffcc, #0ea5e9); color: #000; 
+        }
+
+        .btn-cyber:hover { 
+            transform: translateY(-3px) scale(1.02); 
+            box-shadow: 0 10px 30px var(--border-neon); 
+        }
+
+        .btn-danger-cyber {
+            background: linear-gradient(135deg, var(--alert), #991b1b);
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+        }
+        .btn-danger-cyber:hover {
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.6);
+        }
+
+        .btn-export {
+            background: var(--bg-surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-core);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .btn-export:hover {
+            border-color: var(--info);
+            color: var(--info);
+            box-shadow: inset 0 0 10px rgba(14, 165, 233, 0.1);
+        }
+
+        /* ==========================================
+           🎯 TACTICAL SCANNER HUD
+           ========================================== */
+        .scanner-hud-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            border: 2px solid var(--border-core);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        #reader {
+            width: 100%;
+        }
+
+        /* Tactical Corner Brackets */
+        .scanner-hud-wrapper::before, .scanner-hud-wrapper::after {
+            content: ''; position: absolute; width: 40px; height: 40px; border: 4px solid transparent; pointer-events: none; z-index: 10;
+        }
+        .scanner-hud-wrapper::before { 
+            top: 15px; left: 15px; border-top-color: var(--border-neon); border-left-color: var(--border-neon); 
+        }
+        .scanner-hud-wrapper::after { 
+            bottom: 15px; right: 15px; border-bottom-color: var(--border-neon); border-right-color: var(--border-neon); 
+        }
+
+        /* Internal Crosshairs */
+        .hud-crosshair {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%; height: 60%;
+            border: 1px dashed rgba(255,255,255,0.3);
+            pointer-events: none;
+            z-index: 5;
+            display: none;
+        }
+
+        .scanning-active .hud-crosshair {
+            display: block;
+            animation: pulse-reticle 2s infinite;
+        }
+
+        /* Quantum Laser Overlay */
+        .hud-laser {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: var(--border-neon);
+            box-shadow: 0 0 20px var(--border-neon), 0 0 40px var(--border-neon);
+            z-index: 15;
+            display: none;
+        }
+
+        .scanning-active .hud-laser {
+            display: block;
+            animation: tacticalLaser 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes tacticalLaser { 
+            0% { top: 10%; opacity: 0.5; } 
+            50% { opacity: 1; }
+            100% { top: 90%; opacity: 0.5; } 
+        }
+        @keyframes pulse-reticle {
+            0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.5; border-color: rgba(255,255,255,0.3); }
+            50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; border-color: var(--border-neon); }
+            100% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.5; border-color: rgba(255,255,255,0.3); }
+        }
+
+        /* Status Output Box */
+        .status-matrix {
+            background: var(--term-bg);
+            border: 1px solid var(--border-core);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 900;
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px; height: 12px; border-radius: 50%; background: var(--text-mute); transition: all 0.3s;
+        }
+
+        /* ==========================================
+           🟢 LIVE BIO-METRIC LEDGER (LOGS)
+           ========================================== */
+        .ledger-container {
+            height: 550px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .ledger-container::-webkit-scrollbar { width: 6px; }
+        .ledger-container::-webkit-scrollbar-track { background: transparent; }
+        .ledger-container::-webkit-scrollbar-thumb { background: var(--border-core); border-radius: 3px; }
+
+        .log-entry {
+            display: flex;
+            align-items: center;
+            background: var(--term-bg);
+            border: 1px solid var(--border-core);
+            border-left: 5px solid var(--success);
+            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 8px;
+            animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .log-entry:hover {
+            transform: translateX(5px);
+            border-left-color: var(--border-neon);
+            background: var(--bg-surface);
+        }
+
+        @keyframes slideInRight { 
+            from { opacity: 0; transform: translateX(30px); } 
+            to { opacity: 1; transform: translateX(0); } 
+        }
+
+        /* Hexagonal Bio-Avatar */
+        .log-avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--success);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.1rem;
+            margin-right: 20px;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            flex-shrink: 0;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        [data-theme="god"] .log-avatar { background: var(--warn); color: #000; }
+        [data-theme="singularity"] .log-avatar { background: var(--info); color: #000; }
+
+        .log-details {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .log-name {
+            font-weight: 900;
+            color: var(--text-main);
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+        }
+
+        .log-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            margin-top: 2px;
+        }
+
+        .log-matric { color: var(--success); font-weight: bold; }
+        .log-time { color: var(--text-mute); }
+        .log-date { color: var(--info); font-weight: bold; }
+        .log-course { color: var(--warn); font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 2px 6px; border-radius: 4px;}
+
+        .log-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        /* Utilities */
+        .text-cyber { color: var(--text-cyber) !important; }
+        .text-danger { color: var(--alert) !important; }
+        .text-warning { color: var(--warn) !important; }
+        .text-success { color: var(--success) !important; }
+        .text-info { color: var(--info) !important; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark shadow mb-4" style="background: var(--bg-surface); border-bottom: 1px solid var(--border-core); backdrop-filter: blur(20px);">
+        <div class="container-fluid px-4" style="max-width: 1600px;">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('dashboard') }}" style="color: var(--text-main);">
+                <i class="fas fa-satellite-dish fa-lg me-3 text-cyber" style="animation: pulse 2s infinite;"></i>
+                OPTICAL TARGETING ARRAY
+                <span class="badge ms-3 text-white" style="font-size:0.6rem; background: linear-gradient(90deg, var(--success), var(--info)); letter-spacing: 2px;">V-INFINITY</span>
+            </a>
+            
+            <div class="d-flex gap-3 align-items-center">
+                <button class="btn-theme" onclick="cycleTheme()" title="Shift Environmental Display">
+                    <i class="fas fa-adjust" id="themeIcon"></i>
+                </button>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-danger fw-bold px-4" style="border-radius: 8px;">
+                    <i class="fas fa-times me-2"></i> CLOSE LINK
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid position-relative" style="max-width: 1500px; z-index: 5;">
+        <div class="row g-4">
+            
+            <div class="col-xl-6 d-flex flex-column">
+                <div class="cyber-panel flex-grow-1 m-0">
+                    <div class="panel-header">
+                        <i class="fas fa-camera me-2 text-cyber"></i> CAMERA VIEWPORT
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="fw-bold text-mute small mb-2 d-block" style="letter-spacing: 1px;">ACTIVE COURSE SESSION</label>
+                        <select id="courseSelect" class="form-control-cyber">
+                            <option value="" disabled selected>-- INITIALIZE COURSE TARGET --</option>
+                            {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.code }} - {{ course.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="scanner-hud-wrapper" id="scannerHud">
+                        <div class="hud-laser"></div>
+                        <div class="hud-crosshair"></div>
+                        <div id="reader" style="min-height: 350px;"></div>
+                    </div>
+                    
+                    <div class="status-matrix" id="statusBox">
+                        <div class="d-flex align-items-center justify-content-center gap-3">
+                            <div class="status-dot" id="statusIndicator"></div>
+                            <span id="statusText" style="color: var(--text-mute);">SYSTEM STANDBY</span>
+                        </div>
+                        <div id="subStatusText" style="font-size: 0.8rem; color: var(--text-mute); font-family: 'Inter', sans-serif; font-weight: normal;">
+                            Awaiting camera activation.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-3">
+                        <button id="startScan" class="btn-cyber py-3">
+                            <i class="fas fa-bolt me-2"></i> ENGAGE TURBO SCANNER
+                        </button>
+                        <button id="stopScan" class="btn-cyber btn-danger-cyber py-3 d-none">
+                            <i class="fas fa-stop-circle me-2"></i> DISENGAGE ARRAY
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6 d-flex flex-column">
+                <div class="cyber-panel m-0 flex-grow-1 d-flex flex-column">
+                    <div class="panel-header" style="justify-content: space-between;">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-database me-2 text-info"></i> LIVE BIO-METRIC LEDGER
+                            <span id="scanCount" class="badge ms-3" style="background: var(--text-cyber); color: #fff; font-family: 'JetBrains Mono'; font-size: 0.8rem;">0 CAPTURED</span>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button class="btn-export" onclick="exportAttendanceCSV()" title="Download CSV Roster">
+                                <i class="fas fa-file-csv me-1"></i> EXPORT DATA
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" style="font-size: 0.65rem;" onclick="purgeScanner()" title="Clear visual memory">
+                                CLEAR
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="ledger-container flex-grow-1" id="attendanceLog">
+                        {% if history %}
+                            {% for record, student, course in history %}
+                                <div class="log-entry">
+                                    <div class="log-avatar">{{ student.name[0:2] | upper if student.name else 'ID' }}</div>
+                                    <div class="log-details">
+                                        <div class="log-name">{{ student.name | upper if student.name else 'UNKNOWN STUDENT' }}</div>
+                                        <div class="log-meta">
+                                            <span class="log-matric"><i class="fas fa-id-card me-1"></i> {{ student.matric_no }}</span>
+                                            <span class="log-course"><i class="fas fa-book me-1"></i> {{ course.code }}</span>
+                                            <span class="log-date"><i class="fas fa-calendar-alt me-1"></i> {{ record.date.strftime('%d %b %Y') | upper }}</span>
+                                            <span class="log-time"><i class="fas fa-clock me-1"></i> {{ record.time_logged or 'PAST RECORD' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="log-badge" style="background: rgba(14, 165, 233, 0.1); color: var(--info); border-color: var(--info);">
+                                        <i class="fas fa-history me-1"></i> DB ARCHIVE
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center mt-5" id="emptyState" style="color: var(--text-mute); opacity: 0.5;">
+                                <i class="fas fa-fingerprint fa-4x mb-3"></i>
+                                <h5 class="fw-bold" style="letter-spacing: 2px;">AWAITING BIO-DATA</h5>
+                                <p class="small">Scan student IDs to populate the matrix and update the database.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🌌 THEME ENGINE LOGIC
+        // ==========================================
+        const themes = ['light', 'dark', 'god', 'singularity'];
+        let currentThemeIndex = 0;
+
+        function cycleTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            const newTheme = themes[currentThemeIndex];
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('lisa_scanner_theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'light') { icon.className = 'fas fa-sun text-warning'; } 
+            else if (theme === 'dark') { icon.className = 'fas fa-moon text-info'; } 
+            else if (theme === 'god') { icon.className = 'fas fa-radiation text-danger'; } 
+            else if (theme === 'singularity') { icon.className = 'fas fa-meteor text-cyber'; }
+        }
+
+        // ==========================================
+        // 🧠 STATE MANAGEMENT (DATABASE DRIVEN)
+        // ==========================================
+        
+        let scannedSet = new Set();
+        let exportData = [];
+        let count = 0;
+
+        // Automatically populate JavaScript tracking arrays using Database Data so Duplicates work on Refresh!
+        {% if history %}
+            count = {{ history|length }};
+            {% for record, student, course in history %}
+                // Only track duplicates for the CURRENT DAY to allow scanning them again tomorrow
+                {% if record.date|string == today_str %}
+                    scannedSet.add(`{{ student.matric_no }}_{{ course.id }}`);
+                {% endif %}
+                
+                exportData.push({
+                    course: `{{ course.code }}`,
+                    date: `{{ record.date.strftime('%d %b %Y') | upper }}`,
+                    time: `{{ record.time_logged or 'PAST RECORD' }}`,
+                    matric: `{{ student.matric_no }}`,
+                    name: `{{ student.name | replace('`', '') }}`,
+                    dept: `{{ student.department | replace('`', '') }}`
+                });
+            {% endfor %}
+        {% endif %}
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = localStorage.getItem('lisa_scanner_theme') || 'dark';
+            currentThemeIndex = themes.indexOf(savedTheme) > -1 ? themes.indexOf(savedTheme) : 1;
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+
+            document.getElementById('scanCount').innerText = count + " CAPTURED";
+        });
+
+        // Clear UI Button (Does not delete database)
+        function purgeScanner() {
+            if(confirm("🚨 WARNING: This will clear the visual screen for a new session. (Past data is safely stored in the Database).")) {
+                document.getElementById('attendanceLog').innerHTML = `
+                    <div class="text-center mt-5" id="emptyState" style="color: var(--text-mute); opacity: 0.5;">
+                        <i class="fas fa-fingerprint fa-4x mb-3"></i>
+                        <h5 class="fw-bold" style="letter-spacing: 2px;">AWAITING BIO-DATA</h5>
+                        <p class="small">Scan student IDs to populate the matrix and update the database.</p>
+                    </div>`;
+                scannedSet.clear();
+                exportData = [];
+                count = 0;
+                document.getElementById('scanCount').innerText = "0 CAPTURED";
+                setStatus("SCREEN CLEARED", "Ready for new scans.", "standby");
+            }
+        }
+
+
+        // ==========================================
+        // 🏎️ TURBO SCANNER ENGINE
+        // ==========================================
+        const html5QrCode = new Html5Qrcode("reader");
+        let lastScannedCode = null;
+
+        const scanBtn = document.getElementById('startScan');
+        const stopBtn = document.getElementById('stopScan');
+        const statusBox = document.getElementById('statusBox');
+        const statusText = document.getElementById('statusText');
+        const subStatusText = document.getElementById('subStatusText');
+        const statusDot = document.getElementById('statusIndicator');
+        const scannerHud = document.getElementById('scannerHud');
+
+        function setStatus(mainMsg, subMsg, state) {
+            statusText.innerText = mainMsg;
+            subStatusText.innerText = subMsg;
+            
+            if(state === 'standby') {
+                statusBox.style.borderColor = 'var(--border-core)';
+                statusText.style.color = 'var(--text-mute)';
+                statusDot.style.background = 'var(--text-mute)';
+                statusDot.style.boxShadow = 'none';
+                statusDot.style.animation = 'none';
+            } else if (state === 'scanning') {
+                statusBox.style.borderColor = 'var(--info)';
+                statusText.style.color = 'var(--info)';
+                statusDot.style.background = 'var(--info)';
+                statusDot.style.boxShadow = '0 0 15px var(--info)';
+                statusDot.style.animation = 'pulse 1s infinite alternate';
+            } else if (state === 'success') {
+                statusBox.style.borderColor = 'var(--success)';
+                statusText.style.color = 'var(--success)';
+                statusDot.style.background = 'var(--success)';
+                statusDot.style.boxShadow = '0 0 20px var(--success)';
+                statusDot.style.animation = 'none';
+            } else if (state === 'error') {
+                statusBox.style.borderColor = 'var(--alert)';
+                statusText.style.color = 'var(--alert)';
+                statusDot.style.background = 'var(--alert)';
+                statusDot.style.boxShadow = '0 0 20px var(--alert)';
+                statusDot.style.animation = 'none';
+            } else if (state === 'warning') {
+                statusBox.style.borderColor = 'var(--warn)';
+                statusText.style.color = 'var(--warn)';
+                statusDot.style.background = 'var(--warn)';
+                statusDot.style.boxShadow = '0 0 20px var(--warn)';
+                statusDot.style.animation = 'none';
+            }
+        }
+
+        scanBtn.addEventListener('click', async () => {
+            const courseId = document.getElementById('courseSelect').value;
+            if (!courseId) {
+                alert("⚠️ PROTOCOL ERROR: You must select a Target Course before engaging the optical array.");
+                return;
+            }
+
+            scanBtn.classList.add('d-none');
+            stopBtn.classList.remove('d-none');
+            
+            setStatus("OPTICAL ARRAY ACTIVE", "Align target inside the crosshairs.", "scanning");
+            scannerHud.classList.add('scanning-active');
+
+            const turboConfig = { 
+                fps: 30,
+                qrbox: { width: 280, height: 280 }, 
+                aspectRatio: 1.0,
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+            };
+            
+            try {
+                await html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    turboConfig, 
+                    onScanSuccess
+                );
+            } catch (err) {
+                alert("🚨 CRITICAL HARDWARE ERROR: Camera access denied or unavailable. Ensure HTTPS or Localhost.");
+                scanBtn.classList.remove('d-none');
+                stopBtn.classList.add('d-none');
+                setStatus("SYSTEM STANDBY", "Camera initialization failed.", "standby");
+                scannerHud.classList.remove('scanning-active');
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            html5QrCode.stop().then(() => {
+                scanBtn.classList.remove('d-none');
+                stopBtn.classList.add('d-none');
+                setStatus("SYSTEM STANDBY", "Camera array disengaged.", "standby");
+                scannerHud.classList.remove('scanning-active');
+            });
+        });
+
+        // ==========================================
+        // PAYLOAD INTERCEPT & API ROUTING
+        // ==========================================
+        function onScanSuccess(decodedText) {
+            if (decodedText === lastScannedCode) return;
+            lastScannedCode = decodedText;
+            
+            setTimeout(() => { lastScannedCode = null; }, 1200); 
+
+            let rawPayload = decodedText.trim();
+
+            const beep = new Audio('https://raw.githubusercontent.com/favouradamson/sound-assets/main/beep.mp3');
+            beep.play().catch(()=>{});
+            
+            processAttendance(rawPayload);
+        }
+
+        function processAttendance(rawPayload) {
+            const courseDropdown = document.getElementById('courseSelect');
+            const courseId = courseDropdown.value;
+            const courseTextName = courseDropdown.options[courseDropdown.selectedIndex].text.split(' - ')[0]; 
+            
+            const logContainer = document.getElementById('attendanceLog');
+            
+            setStatus(`VERIFYING TARGET...`, "Syncing to Matrix Database...", "scanning");
+
+            fetch('/api/mark_attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ matric_no: rawPayload, course_id: courseId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    
+                    const cleanMatric = data.matric_no;
+
+                    // 🟢 THE CROSS-COURSE DUPLICATE FIX: Memory tracks Matric + Course
+                    const memoryKey = cleanMatric + "_" + courseId;
+
+                    if (scannedSet.has(memoryKey)) {
+                        setStatus("DUPLICATE DETECTED", `Student ID ${cleanMatric} is already logged for ${courseTextName}.`, "warning");
+                        return;
+                    }
+
+                    setStatus(`BIO-METRIC SECURED`, `Identity Confirmed: ${data.name.toUpperCase()}`, "success");
+                    
+                    // SAVE TO MEMORY
+                    scannedSet.add(memoryKey);
+                    
+                    count++;
+                    document.getElementById('scanCount').innerText = count + " CAPTURED";
+
+                    // 🟢 EXACT DATE AND WAT TIME GENERATION
+                    const dateStr = data.date_str;
+                    const timeStr = data.time_str;
+
+                    exportData.push({ date: dateStr, time: timeStr, matric: cleanMatric, name: data.name, dept: data.department, course: courseTextName });
+
+                    const emptyState = document.getElementById('emptyState');
+                    if(emptyState) emptyState.remove();
+
+                    let initials = "ID";
+                    if(data.name) {
+                        const names = data.name.split(' ');
+                        initials = names[0].charAt(0) + (names.length > 1 ? names[names.length-1].charAt(0) : '');
+                    }
+                    
+                    // 🟢 CONSTRUCT UI ENTRY
+                    const entry = document.createElement('div');
+                    entry.className = 'log-entry';
+                    entry.innerHTML = `
+                        <div class="log-avatar">${initials.toUpperCase()}</div>
+                        <div class="log-details">
+                            <div class="log-name">${data.name ? data.name.toUpperCase() : 'UNKNOWN STUDENT'}</div>
+                            <div class="log-meta">
+                                <span class="log-matric"><i class="fas fa-id-card me-1"></i> ${cleanMatric}</span>
+                                <span class="log-course"><i class="fas fa-book me-1"></i> ${courseTextName}</span>
+                                <span class="log-date"><i class="fas fa-calendar-alt me-1"></i> ${dateStr}</span>
+                                <span class="log-time"><i class="fas fa-clock me-1"></i> ${timeStr}</span>
+                            </div>
+                        </div>
+                        <div class="log-badge"><i class="fas fa-check-circle me-1"></i> DATABASE SYNCED</div>
+                    `;
+                    
+                    logContainer.prepend(entry);
+
+                    setTimeout(() => {
+                        if(!stopBtn.classList.contains('d-none')) {
+                            setStatus("OPTICAL ARRAY ACTIVE", "Align next target inside the crosshairs.", "scanning");
+                        }
+                    }, 2500);
+
+                } else {
+                    setStatus(`DATABASE REJECTED`, data.message.toUpperCase(), "error");
+                    
+                    setTimeout(() => {
+                        if(!stopBtn.classList.contains('d-none')) {
+                            setStatus("OPTICAL ARRAY ACTIVE", "Align next target inside the crosshairs.", "scanning");
+                        }
+                    }, 4000);
+                }
+            })
+            .catch(err => {
+                setStatus("NETWORK FAILURE", "Unable to establish uplink to Matrix Database.", "error");
+            });
+        }
+
+        // ==========================================
+        // EXPORT TO CSV ENGINE
+        // ==========================================
+        function exportAttendanceCSV() {
+            if (exportData.length === 0) {
+                alert("No biometric data captured in this session to export.");
+                return;
+            }
+
+            const courseDropdown = document.getElementById('courseSelect');
+            const courseName = courseDropdown.options[courseDropdown.selectedIndex].text.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const dateStr = new Date().toISOString().split('T')[0];
+            
+            let csvContent = "Course,Date,Time (WAT),Matric Number,Student Name,Department\n";
+            exportData.forEach(row => {
+                csvContent += `${row.course},${row.date},${row.time},${row.matric},"${row.name}","${row.dept}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `LASU_Attendance_${courseName}_${dateStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            setStatus("EXPORT SUCCESSFUL", "Bio-Metric Ledger downloaded to local drive.", "success");
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

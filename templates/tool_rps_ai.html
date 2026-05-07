@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V150000 Cognitive Warfare | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V150000 COGNITIVE WARFARE THEME ENGINE
+           ========================================== */
+        
+        [data-theme="dark"] {
+            --nk-bg: #0b0f19;
+            --nk-surface: #131a2a;
+            --nk-text: #e2e8f0;
+            --nk-text-muted: #475569;
+            --nk-accent: #ec4899; /* Neural Pink */
+            --nk-accent-glow: rgba(236, 72, 153, 0.3);
+            --nk-human: #3b82f6; /* Blue */
+            --nk-ai: #ef4444; /* Red */
+            --nk-draw: #f59e0b; /* Amber */
+            --nk-border: #1e293b;
+        }
+
+        [data-theme="light"] {
+            --nk-bg: #f8fafc;
+            --nk-surface: #ffffff;
+            --nk-text: #0f172a;
+            --nk-text-muted: #94a3b8;
+            --nk-accent: #db2777; 
+            --nk-accent-glow: rgba(219, 39, 119, 0.2);
+            --nk-human: #2563eb;
+            --nk-ai: #dc2626;
+            --nk-draw: #d97706;
+            --nk-border: #cbd5e1;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--nk-bg);
+            color: var(--nk-text);
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .test-container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        /* HUD Header */
+        .nk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--nk-border);
+        }
+
+        .nk-title {
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            color: var(--nk-accent);
+            text-shadow: 0 0 15px var(--nk-accent-glow);
+        }
+
+        .btn-nav {
+            background: transparent;
+            color: var(--nk-text);
+            border: 1px solid var(--nk-border);
+            padding: 10px 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-nav:hover { background: var(--nk-surface); border-color: var(--nk-accent); color: var(--nk-accent); }
+
+        /* Telemetry Dashboard */
+        .telemetry-dash {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .telemetry-node {
+            background: var(--nk-surface);
+            border: 1px solid var(--nk-border);
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .node-val {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--nk-text);
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .node-lbl {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--nk-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-purge {
+            position: absolute;
+            top: 5px; right: 5px;
+            background: transparent; border: none; color: var(--nk-text-muted);
+            font-size: 0.7rem; cursor: pointer;
+        }
+        .btn-purge:hover { color: var(--nk-human); }
+
+        /* The Combat Arena */
+        .combat-arena {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: var(--nk-surface);
+            border: 1px solid var(--nk-border);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            align-items: center;
+        }
+
+        .ai-brain-status {
+            width: 100%;
+            background: var(--nk-bg);
+            border: 1px solid var(--nk-border);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .brain-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--nk-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .brain-data {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--nk-ai);
+            letter-spacing: 1px;
+        }
+
+        /* The Clash Zone */
+        .clash-zone {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            margin: 20px 0;
+            padding: 20px 0;
+        }
+
+        .combatant-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 150px;
+        }
+
+        .combatant-title {
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .human-title { color: var(--nk-human); }
+        .ai-title { color: var(--nk-ai); }
+
+        .weapon-display {
+            font-size: 5rem;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .weapon-human { color: var(--nk-human); text-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+        .weapon-ai { color: var(--nk-ai); text-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+
+        .vs-badge {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--nk-text-muted);
+            background: var(--nk-bg);
+            padding: 15px;
+            border-radius: 50%;
+            border: 2px solid var(--nk-border);
+        }
+
+        .result-banner {
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            height: 40px;
+            margin: 20px 0;
+            text-align: center;
+            transition: color 0.3s;
+        }
+
+        /* Tactical Input Deck */
+        .input-deck {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-weapon {
+            background: var(--nk-bg);
+            color: var(--nk-text);
+            border: 2px solid var(--nk-border);
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-weapon:hover {
+            border-color: var(--nk-human);
+            color: var(--nk-human);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-weapon:active {
+            transform: scale(0.9);
+        }
+
+        /* Animations */
+        @keyframes strikeLeft {
+            0% { transform: translateX(-50px) rotate(-20deg); }
+            50% { transform: translateX(20px) rotate(10deg); }
+            100% { transform: translateX(0) rotate(0); }
+        }
+
+        @keyframes strikeRight {
+            0% { transform: translateX(50px) rotate(20deg); }
+            50% { transform: translateX(-20px) rotate(-10deg); }
+            100% { transform: translateX(0) rotate(0); }
+        }
+
+        .animate-human { animation: strikeLeft 0.4s ease-out forwards; }
+        .animate-ai { animation: strikeRight 0.4s ease-out forwards; }
+
+        @media (max-width: 600px) {
+            .clash-zone { max-width: 100%; }
+            .combatant-box { width: 100px; }
+            .weapon-display { font-size: 3.5rem; }
+            .btn-weapon { width: 75px; height: 75px; font-size: 1.5rem; padding: 15px; }
+            .result-banner { font-size: 1.5rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="test-container">
+        
+        <div class="nk-header">
+            <div>
+                <h1 class="nk-title">Cognitive Warfare</h1>
+                <div style="font-size: 0.8rem; font-weight: bold; color: var(--nk-text-muted); letter-spacing: 3px; margin-top: 5px;">V150000 Predictive Analysis Engine</div>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn-nav" onclick="toggleWarfareTheme()"><i class="fas fa-adjust"></i></button>
+                <a href="{{ url_for('student_tools_dashboard') }}" class="btn-nav"><i class="fas fa-arrow-left me-2"></i> Dashboard</a>
+            </div>
+        </div>
+
+        <div class="telemetry-dash">
+            <div class="telemetry-node">
+                <button class="btn-purge" onclick="purgeLedger()" title="Clear Neural Memory"><i class="fas fa-trash"></i></button>
+                <div class="node-val" id="hudWins" style="color: var(--nk-human);">0</div>
+                <div class="node-lbl">Human Wins</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudDraws" style="color: var(--nk-draw);">0</div>
+                <div class="node-lbl">Stalemates</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudLosses" style="color: var(--nk-ai);">0</div>
+                <div class="node-lbl">AI Victories</div>
+            </div>
+        </div>
+
+        <div class="combat-arena">
+            
+            <div class="ai-brain-status">
+                <div class="brain-title"><i class="fas fa-brain me-2"></i> Neural Telemetry Active</div>
+                <div class="brain-data" id="hudAiState">AWAITING INITIAL DATA STREAM...</div>
+            </div>
+
+            <div class="result-banner" id="combatResult">AWAITING ENGAGEMENT</div>
+
+            <div class="clash-zone">
+                <div class="combatant-box">
+                    <div class="combatant-title human-title">Human</div>
+                    <div class="weapon-display weapon-human" id="displayHuman">
+                        <i class="fas fa-question"></i>
+                    </div>
+                </div>
+
+                <div class="vs-badge">VS</div>
+
+                <div class="combatant-box">
+                    <div class="combatant-title ai-title">System</div>
+                    <div class="weapon-display weapon-ai" id="displayAI">
+                        <i class="fas fa-question"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--nk-border); width: 100%; margin-top: 10px;"></div>
+            
+            <div class="brain-title mt-2">Execute Weapon Selection</div>
+            
+            <div class="input-deck">
+                <button class="btn-weapon" onclick="executeCombatTurn('ROCK')" title="Deploy Rock"><i class="fas fa-hand-rock"></i></button>
+                <button class="btn-weapon" onclick="executeCombatTurn('PAPER')" title="Deploy Paper"><i class="fas fa-hand-paper"></i></button>
+                <button class="btn-weapon" onclick="executeCombatTurn('SCISSORS')" title="Deploy Scissors"><i class="fas fa-hand-scissors"></i></button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V150000 THEME ENGINE
+        // ==========================================
+        function toggleWarfareTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v150000_rps_theme', nextTheme);
+        }
+
+        // ==========================================
+        // GLOBAL NEURAL LEDGER & TELEMETRY
+        // ==========================================
+        let humanHistoryArray = [];
+        let memoryDepthWindow = 3; // N-Gram depth parameter
+        
+        let statWins = 0;
+        let statLosses = 0;
+        let statDraws = 0;
+
+        let isCombatLocked = false;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v150000_rps_theme');
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+            
+            let loadedWins = localStorage.getItem('lisa_v150000_rps_wins');
+            let loadedLosses = localStorage.getItem('lisa_v150000_rps_losses');
+            let loadedDraws = localStorage.getItem('lisa_v150000_rps_draws');
+
+            if (loadedWins !== null) { statWins = parseInt(loadedWins, 10); }
+            if (loadedLosses !== null) { statLosses = parseInt(loadedLosses, 10); }
+            if (loadedDraws !== null) { statDraws = parseInt(loadedDraws, 10); }
+            
+            // Do not persist the humanHistoryArray across reloads to ensure clean experiments, 
+            // but we keep the win/loss score persistent.
+
+            updateTelemetryDOM();
+        });
+
+        function updateTelemetryDOM() {
+            document.getElementById('hudWins').innerText = String(statWins);
+            document.getElementById('hudLosses').innerText = String(statLosses);
+            document.getElementById('hudDraws').innerText = String(statDraws);
+            
+            localStorage.setItem('lisa_v150000_rps_wins', String(statWins));
+            localStorage.setItem('lisa_v150000_rps_losses', String(statLosses));
+            localStorage.setItem('lisa_v150000_rps_draws', String(statDraws));
+        }
+
+        function purgeLedger() {
+            statWins = 0;
+            statLosses = 0;
+            statDraws = 0;
+            humanHistoryArray = [];
+            updateTelemetryDOM();
+            
+            document.getElementById('hudAiState').innerText = "LEDGER PURGED. AWAITING NEW DATA.";
+            document.getElementById('hudAiState').style.color = "var(--nk-text-muted)";
+            
+            document.getElementById('displayHuman').innerHTML = "<i class='fas fa-question'></i>";
+            document.getElementById('displayAI').innerHTML = "<i class='fas fa-question'></i>";
+            document.getElementById('combatResult').innerText = "AWAITING ENGAGEMENT";
+            document.getElementById('combatResult').style.color = "var(--nk-text)";
+        }
+
+        // ==========================================
+        // V150000 MARKOV CHAIN PREDICTIVE ENGINE
+        // ZERO ARROW FUNCTIONS. ZERO TERNARIES.
+        // ==========================================
+
+        function calculateRandomFallback() {
+            let randInt = Math.floor(Math.random() * 3);
+            if (randInt === 0) { return "ROCK"; }
+            if (randInt === 1) { return "PAPER"; }
+            return "SCISSORS";
+        }
+
+        function calculateFrequencyFallback() {
+            let rockCount = 0;
+            let paperCount = 0;
+            let scissorsCount = 0;
+
+            for (let i = 0; i < humanHistoryArray.length; i = i + 1) {
+                if (humanHistoryArray[i] === "ROCK") { rockCount = rockCount + 1; }
+                if (humanHistoryArray[i] === "PAPER") { paperCount = paperCount + 1; }
+                if (humanHistoryArray[i] === "SCISSORS") { scissorsCount = scissorsCount + 1; }
+            }
+
+            // Counter the human's most used move
+            if (rockCount >= paperCount && rockCount >= scissorsCount) { return "PAPER"; }
+            if (paperCount >= rockCount && paperCount >= scissorsCount) { return "SCISSORS"; }
+            return "ROCK";
+        }
+
+        function executeMarkovPrediction() {
+            let historyLength = humanHistoryArray.length;
+
+            if (historyLength <= memoryDepthWindow) {
+                document.getElementById('hudAiState').innerText = "INSUFFICIENT DATA. DEPLOYING RANDOM VECTOR.";
+                document.getElementById('hudAiState').style.color = "var(--nk-text-muted)";
+                return calculateRandomFallback();
+            }
+
+            // Extract the most recent historical window
+            let searchPattern = [];
+            for (let i = historyLength - memoryDepthWindow; i < historyLength; i = i + 1) {
+                searchPattern.push(humanHistoryArray[i]);
+            }
+
+            let nextRockCount = 0;
+            let nextPaperCount = 0;
+            let nextScissorsCount = 0;
+
+            // Search total ledger for matching sequences
+            for (let i = 0; i < historyLength - memoryDepthWindow; i = i + 1) {
+                let sequenceMatch = true;
+
+                for (let j = 0; j < memoryDepthWindow; j = j + 1) {
+                    if (humanHistoryArray[i + j] !== searchPattern[j]) {
+                        sequenceMatch = false;
+                        break;
+                    }
+                }
+
+                if (sequenceMatch === true) {
+                    let moveAfterPattern = humanHistoryArray[i + memoryDepthWindow];
+                    if (moveAfterPattern === "ROCK") { nextRockCount = nextRockCount + 1; }
+                    if (moveAfterPattern === "PAPER") { nextPaperCount = nextPaperCount + 1; }
+                    if (moveAfterPattern === "SCISSORS") { nextScissorsCount = nextScissorsCount + 1; }
+                }
+            }
+
+            let totalMatchesFound = nextRockCount + nextPaperCount + nextScissorsCount;
+
+            if (totalMatchesFound === 0) {
+                document.getElementById('hudAiState').innerText = "NO PATTERN MATCH. FALLBACK: FREQUENCY ANALYSIS.";
+                document.getElementById('hudAiState').style.color = "var(--nk-draw)";
+                return calculateFrequencyFallback();
+            }
+
+            // Calculate confidence percentage
+            let highestCount = nextRockCount;
+            let predictedMove = "ROCK";
+
+            if (nextPaperCount > highestCount) {
+                highestCount = nextPaperCount;
+                predictedMove = "PAPER";
+            }
+            if (nextScissorsCount > highestCount) {
+                highestCount = nextScissorsCount;
+                predictedMove = "SCISSORS";
+            }
+
+            let confidenceFloat = (highestCount / totalMatchesFound) * 100.0;
+            let confidenceInt = Math.round(confidenceFloat);
+
+            document.getElementById('hudAiState').innerText = "PATTERN LOCKED. PREDICTION CONFIDENCE: " + String(confidenceInt) + "%";
+            document.getElementById('hudAiState').style.color = "var(--nk-ai)";
+
+            // Return the absolute counter-move
+            if (predictedMove === "ROCK") { return "PAPER"; }
+            if (predictedMove === "PAPER") { return "SCISSORS"; }
+            return "ROCK";
+        }
+
+        // ==========================================
+        // COMBAT EXECUTION
+        // ==========================================
+        function getIconHTML(weaponString) {
+            if (weaponString === "ROCK") { return "<i class='fas fa-hand-rock'></i>"; }
+            if (weaponString === "PAPER") { return "<i class='fas fa-hand-paper'></i>"; }
+            if (weaponString === "SCISSORS") { return "<i class='fas fa-hand-scissors'></i>"; }
+            return "";
+        }
+
+        function resolveClash(humanWeapon, aiWeapon) {
+            if (humanWeapon === aiWeapon) { return "DRAW"; }
+            
+            if (humanWeapon === "ROCK" && aiWeapon === "SCISSORS") { return "HUMAN"; }
+            if (humanWeapon === "PAPER" && aiWeapon === "ROCK") { return "HUMAN"; }
+            if (humanWeapon === "SCISSORS" && aiWeapon === "PAPER") { return "HUMAN"; }
+            
+            return "AI";
+        }
+
+        function executeCombatTurn(humanSelectionStr) {
+            if (isCombatLocked === true) { return; }
+            isCombatLocked = true;
+
+            // 1. Calculate AI Counter-Move *before* saving human move to prevent cheating
+            let aiSelectionStr = executeMarkovPrediction();
+
+            // 2. Save human move to ledger for future predictions
+            humanHistoryArray.push(humanSelectionStr);
+
+            // 3. Render initial animation states (fists pumping)
+            let displayHuman = document.getElementById('displayHuman');
+            let displayAI = document.getElementById('displayAI');
+            let resultBanner = document.getElementById('combatResult');
+
+            displayHuman.innerHTML = "<i class='fas fa-hand-rock'></i>";
+            displayAI.innerHTML = "<i class='fas fa-hand-rock'></i>";
+            resultBanner.innerText = "EVALUATING...";
+            resultBanner.style.color = "var(--nk-text-muted)";
+
+            displayHuman.classList.remove('animate-human');
+            displayAI.classList.remove('animate-ai');
+            
+            // Force DOM reflow to restart animation
+            void displayHuman.offsetWidth;
+            void displayAI.offsetWidth;
+            
+            displayHuman.classList.add('animate-human');
+            displayAI.classList.add('animate-ai');
+
+            // 4. Resolve Combat after animation
+            setTimeout(function() {
+                
+                displayHuman.innerHTML = getIconHTML(humanSelectionStr);
+                displayAI.innerHTML = getIconHTML(aiSelectionStr);
+
+                let combatWinner = resolveClash(humanSelectionStr, aiSelectionStr);
+
+                if (combatWinner === "DRAW") {
+                    resultBanner.innerText = "STALEMATE";
+                    resultBanner.style.color = "var(--nk-draw)";
+                    statDraws = statDraws + 1;
+                } else if (combatWinner === "HUMAN") {
+                    resultBanner.innerText = "HUMAN VICTORY";
+                    resultBanner.style.color = "var(--nk-human)";
+                    statWins = statWins + 1;
+                } else {
+                    resultBanner.innerText = "SYSTEM FATALITY";
+                    resultBanner.style.color = "var(--nk-ai)";
+                    statLosses = statLosses + 1;
+                }
+
+                updateTelemetryDOM();
+                isCombatLocked = false;
+
+            }, 400); // Wait 400ms for CSS animation
+        }
+
+    </script>
+</body>
+</html>

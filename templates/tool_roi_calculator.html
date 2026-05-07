@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROI Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-profit: #198754; /* Green */
+            --brand-profit-light: rgba(25, 135, 84, 0.1);
+            --brand-loss: #dc3545; /* Red */
+            --brand-loss-light: rgba(220, 53, 69, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-profit);
+            box-shadow: 0 0 0 3px var(--brand-profit-light);
+        }
+        .form-control.is-loss:focus {
+            border-color: var(--brand-loss);
+            box-shadow: 0 0 0 3px var(--brand-loss-light);
+        }
+        
+        /* Dynamic Result Card */
+        .result-card {
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .result-card.profit {
+            background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
+            box-shadow: 0 10px 20px rgba(25, 135, 84, 0.2);
+        }
+        .result-card.loss {
+            background: linear-gradient(135deg, #dc3545 0%, #8b0000 100%);
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.2);
+        }
+        .result-card i.bg-icon {
+            position: absolute;
+            right: -10px;
+            bottom: -20px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+            transition: 0.4s;
+        }
+        
+        .result-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 5px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+        .amount-display {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        .section-divider {
+            margin: 25px 0 15px 0;
+            border-top: 2px solid #e2e8f0;
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-percent me-2" style="color: var(--brand-profit);" id="headerIcon"></i> ROI Calculator</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="input-panel">
+                    
+                    <div class="mb-3 d-flex justify-content-between align-items-end">
+                        <div class="flex-grow-1 me-2">
+                            <label class="form-label">Amount Invested (Cost)</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="currencySymbol1">$</span>
+                                <input type="number" id="investedAmount" class="form-control dynamic-input" value="10000" min="1" oninput="calculateROI()">
+                            </div>
+                        </div>
+                        <div style="width: 90px;">
+                            <label class="form-label">Currency</label>
+                            <select id="currencySelect" class="form-select dynamic-input" onchange="updateCurrency()">
+                                <option value="USD" selected>USD</option>
+                                <option value="NGN">NGN</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Amount Returned (Final Value)</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="currencySymbol2">$</span>
+                            <input type="number" id="returnedAmount" class="form-control dynamic-input" value="12500" min="0" oninput="calculateROI()">
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>TIME HORIZON (OPTIONAL)</span></div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Investment Duration</label>
+                        <div class="input-group">
+                            <input type="number" id="investmentTime" class="form-control dynamic-input" value="1" min="0.1" step="0.1" oninput="calculateROI()">
+                            <select id="timeFormat" class="form-select dynamic-input" style="max-width: 120px;" onchange="calculateROI()">
+                                <option value="years" selected>Years</option>
+                                <option value="months">Months</option>
+                                <option value="days">Days</option>
+                            </select>
+                        </div>
+                        <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">
+                            <i class="fas fa-info-circle"></i> Used to calculate your Annualized Return (CAGR).
+                        </small>
+                    </div>
+
+                    <button class="btn btn-outline-secondary w-100 fw-bold" onclick="resetCalculator()"><i class="fas fa-redo-alt me-2"></i>Reset</button>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="result-card profit" id="mainResultCard">
+                    <i class="fas fa-arrow-trend-up bg-icon" id="cardBgIcon"></i>
+                    <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.9;" id="resultSubtitle">Return on Investment</div>
+                    <div class="result-value" id="roiPercentageDisplay">25.0%</div>
+                    <div style="font-size: 1rem; opacity: 0.9; font-weight: 600;" id="netProfitDisplay">Net Profit: $2,500.00</div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="roiChart"></canvas>
+                </div>
+
+                <div class="mt-4 px-2">
+                    <div class="breakdown-row">
+                        <div class="text-muted">Total Invested</div>
+                        <span class="amount-display" id="totalInvestedDisplay">$10,000.00</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <div class="text-muted">Total Returned</div>
+                        <span class="amount-display" id="totalReturnedDisplay">$12,500.00</span>
+                    </div>
+                    <div class="breakdown-row" style="background: rgba(0,0,0,0.02); padding: 12px 10px; border-radius: 8px;">
+                        <div class="text-dark fw-bold"><i class="fas fa-chart-line me-2 text-primary"></i> Annualized ROI</div>
+                        <span class="fw-bold fs-5 text-primary" id="annualizedRoiDisplay">25.0% / yr</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let roiChartInstance = null;
+        let currentCurrency = 'USD';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateCurrency();
+        });
+
+        function updateCurrency() {
+            currentCurrency = document.getElementById('currencySelect').value;
+            const symbols = { 'USD': '$', 'NGN': '₦', 'EUR': '€', 'GBP': '£' };
+            const sym = symbols[currentCurrency];
+            
+            document.getElementById('currencySymbol1').innerText = sym;
+            document.getElementById('currencySymbol2').innerText = sym;
+            
+            calculateROI();
+        }
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currentCurrency,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        function calculateROI() {
+            // 1. Fetch Inputs
+            const invested = parseFloat(document.getElementById('investedAmount').value) || 0;
+            const returned = parseFloat(document.getElementById('returnedAmount').value) || 0;
+            const timeValue = parseFloat(document.getElementById('investmentTime').value) || 1;
+            const timeFormat = document.getElementById('timeFormat').value;
+
+            if (invested <= 0) {
+                updateUI(0, 0, invested, returned, 0, true);
+                return;
+            }
+
+            // 2. Core ROI Logic
+            const netProfit = returned - invested;
+            const roiPercentage = (netProfit / invested) * 100;
+            const isProfit = netProfit >= 0;
+
+            // 3. Annualized ROI (CAGR) Logic
+            let years = timeValue;
+            if (timeFormat === 'months') years = timeValue / 12;
+            if (timeFormat === 'days') years = timeValue / 365;
+            
+            // Formula: ((Final / Initial) ^ (1 / Years) - 1) * 100
+            let annualizedRoi = 0;
+            if (returned > 0 && years > 0) {
+                annualizedRoi = (Math.pow((returned / invested), (1 / years)) - 1) * 100;
+            } else if (returned === 0) {
+                annualizedRoi = -100; // 100% loss
+            }
+
+            updateUI(roiPercentage, annualizedRoi, invested, returned, netProfit, isProfit);
+        }
+
+        function updateUI(roi, annualizedRoi, invested, returned, netProfit, isProfit) {
+            // Theme Shifting
+            const card = document.getElementById('mainResultCard');
+            const bgIcon = document.getElementById('cardBgIcon');
+            const headerIcon = document.getElementById('headerIcon');
+            const dynamicInputs = document.querySelectorAll('.dynamic-input');
+
+            if (isProfit) {
+                card.className = "result-card profit";
+                bgIcon.className = "fas fa-arrow-trend-up bg-icon";
+                headerIcon.style.color = "var(--brand-profit)";
+                dynamicInputs.forEach(el => el.classList.remove('is-loss'));
+                document.getElementById('netProfitDisplay').innerText = `Net Profit: +${formatMoney(netProfit)}`;
+            } else {
+                card.className = "result-card loss";
+                bgIcon.className = "fas fa-arrow-trend-down bg-icon";
+                headerIcon.style.color = "var(--brand-loss)";
+                dynamicInputs.forEach(el => el.classList.add('is-loss'));
+                document.getElementById('netProfitDisplay').innerText = `Net Loss: ${formatMoney(netProfit)}`; // formatMoney handles the minus sign
+            }
+
+            // Update DOM Text
+            const sign = isProfit && roi > 0 ? '+' : '';
+            document.getElementById('roiPercentageDisplay').innerText = `${sign}${roi.toFixed(2)}%`;
+            document.getElementById('annualizedRoiDisplay').innerText = `${annualizedRoi.toFixed(2)}% / yr`;
+            
+            document.getElementById('totalInvestedDisplay').innerText = formatMoney(invested);
+            document.getElementById('totalReturnedDisplay').innerText = formatMoney(returned);
+
+            renderChart(invested, returned, isProfit);
+        }
+
+        function renderChart(invested, returned, isProfit) {
+            const ctx = document.getElementById('roiChart').getContext('2d');
+            
+            if (roiChartInstance) {
+                roiChartInstance.destroy();
+            }
+
+            if (invested === 0) return;
+
+            const barColor = isProfit ? '#198754' : '#dc3545';
+
+            roiChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Invested (Cost)', 'Returned (Final)'],
+                    datasets: [{
+                        data: [invested, returned],
+                        backgroundColor: ['#64748b', barColor],
+                        borderRadius: 6,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+                                    if (value >= 1000) return '$' + (value / 1000).toFixed(1) + 'k';
+                                    return '$' + value;
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Amount: ${formatMoney(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function resetCalculator() {
+            document.getElementById('investedAmount').value = 10000;
+            document.getElementById('returnedAmount').value = 12500;
+            document.getElementById('investmentTime').value = 1;
+            document.getElementById('timeFormat').value = 'years';
+            calculateROI();
+        }
+    </script>
+</body>
+</html>

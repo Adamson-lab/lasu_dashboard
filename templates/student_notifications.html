@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Summaries | LASU Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .summary-card { border: none; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: 0.2s; overflow: hidden; }
+        .summary-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .summary-content { line-height: 1.8; font-size: 1rem; color: #333; padding: 10px 20px; text-align: justify; }
+        
+        /* 🟢 HEADER STYLING */
+        .summary-header { background: linear-gradient(to right, #f8f9fa, #fff, #f8f9fa); padding: 25px; text-align: center; border-bottom: 2px solid #e9ecef; }
+        .btn-back { background: #004d40; color: white; border-radius: 50px; padding: 8px 25px; text-decoration: none; font-weight: bold; transition: 0.2s; }
+        .btn-back:hover { background: #00695c; color: white; transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark"><i class="fas fa-book-reader text-warning me-2"></i>Lecture Summaries</h2>
+            <p class="text-muted mb-0">AI-generated study notes from your classes.</p>
+        </div>
+        <a href="{{ url_for('student_portal') }}" class="btn-back shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Dashboard
+        </a>
+    </div>
+
+    {% if notifications %}
+        <div class="row">
+            {% for note in notifications %}
+            <div class="col-12 mb-5">
+                <div class="card summary-card">
+                    
+                    <div class="summary-header">
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill mb-2">
+                            <i class="fas fa-robot me-1"></i> AI Generated Summary
+                        </span>
+                        
+                        <h2 class="fw-bold text-primary mb-2 text-uppercase">
+                            {% if note.title %}
+                                {{ note.title }}
+                            {% else %}
+                                {{ note.course_code }} Summary
+                            {% endif %}
+                        </h2>
+
+                        <div class="text-muted small">
+                            <i class="far fa-calendar-alt me-1"></i> {{ note.timestamp.strftime('%d %B, %Y') }} 
+                            <span class="mx-2">•</span> 
+                            <i class="far fa-clock me-1"></i> {{ note.timestamp.strftime('%I:%M %p') }}
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div id="raw-text-{{ note.id }}" style="display: none;">
+                            {{ note.message.replace('[Topic Summary]', '') }}
+                        </div>
+
+                        <div id="rendered-text-{{ note.id }}" class="summary-content"></div>
+
+                        <script>
+                            document.addEventListener("DOMContentLoaded", function() {
+                                // Get the raw AI text
+                                var rawText = document.getElementById("raw-text-{{ note.id }}").innerText.trim();
+                                
+                                // Split text into lines
+                                var lines = rawText.split('\n');
+
+                                // 🛑 LOGIC: If the first line is just the bold Title (e.g. **TOPIC**), delete it.
+                                // This stops the title from showing twice.
+                                if (lines.length > 0 && lines[0].trim().startsWith('**')) {
+                                    lines.shift(); // Remove the first line
+                                }
+
+                                // Rejoin the remaining lines
+                                var cleanText = lines.join('\n');
+
+                                // Convert to HTML (Bold, Lists, etc.)
+                                document.getElementById("rendered-text-{{ note.id }}").innerHTML = marked.parse(cleanText);
+                            });
+                        </script>
+                    </div>
+
+                    <div class="card-footer bg-white border-top-0 pb-4 text-center">
+                        <button class="btn btn-outline-dark rounded-pill px-4" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i> Print / Save as PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-layer-group fa-4x text-muted mb-3 opacity-25"></i>
+            <h4 class="text-muted">No summaries available.</h4>
+            <p class="text-muted">Summaries generated by your lecturers will appear here.</p>
+        </div>
+    {% endif %}
+</div>
+
+</body>
+</html>

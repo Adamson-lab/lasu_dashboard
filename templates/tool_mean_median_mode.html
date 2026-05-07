@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mean, Median, Mode Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-orange: #fd7e14;
+            --math-purple: #6f42c1;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .dataset-input {
+            flex: 1;
+            width: 100%;
+            min-height: 250px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.05rem;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #ced4da;
+            color: #212529;
+            resize: none;
+            outline: none;
+            transition: all 0.3s;
+            line-height: 1.6;
+        }
+
+        .dataset-input:focus {
+            border-color: var(--math-blue);
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+        }
+
+        .alert-info-custom {
+            background: rgba(13, 110, 253, 0.05);
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            color: #0d6efd;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: auto;
+            line-height: 1.5;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* Hero Results */
+        .hero-results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .hero-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px 15px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .hero-box.highlight {
+            background: rgba(25, 135, 84, 0.05);
+            border-color: rgba(25, 135, 84, 0.2);
+        }
+
+        .hero-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .highlight .hero-title { color: var(--lasu-accent); }
+
+        .hero-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-word;
+            line-height: 1.2;
+        }
+        
+        .hero-sub {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #adb5bd;
+            margin-top: 5px;
+        }
+
+        /* Secondary Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #adb5bd;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #495057;
+        }
+
+        /* Nav Tabs */
+        .nav-tabs-custom {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+        .nav-tab {
+            padding: 10px 20px;
+            font-weight: 700;
+            color: #6c757d;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .nav-tab:hover { color: var(--lasu-green); }
+        .nav-tab.active {
+            color: var(--lasu-green);
+            border-bottom-color: var(--lasu-green);
+        }
+
+        /* View Areas */
+        .view-area { display: none; flex-direction: column; }
+        .view-area.active { display: flex; }
+
+        /* Table View */
+        .table-wrapper {
+            max-height: 250px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .table-custom {
+            margin-bottom: 0;
+            background: white;
+            text-align: center;
+        }
+        .table-custom thead th {
+            position: sticky;
+            top: 0;
+            background: #212529;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            padding: 10px;
+            z-index: 1;
+        }
+        .table-custom tbody td {
+            padding: 10px;
+            vertical-align: middle;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        /* Sorted Array View */
+        .raw-textarea {
+            width: 100%;
+            height: 200px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            background: #f8f9fa;
+            resize: none;
+            outline: none;
+            color: var(--math-blue);
+        }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 1200px) {
+            .hero-results-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .dataset-input { min-height: 150px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">STATISTICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-database"></i> Data Input
+            </div>
+            
+            <label class="fw-bold text-dark small text-uppercase mb-2">Raw Data Set</label>
+            <textarea class="dataset-input" id="dataInput" placeholder="Paste data here...&#10;Numbers can be separated by commas, spaces, or newlines.&#10;&#10;Example:&#10;12, 15, 12, 18, 20, 15, 12" oninput="calculateTendency()"></textarea>
+            
+            <div class="text-danger small fw-bold mt-1 d-none" id="errorMsg"></div>
+            
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-outline-danger w-100 fw-bold" onclick="clearData()">
+                    <i class="fas fa-trash me-2"></i> Clear
+                </button>
+            </div>
+
+            <div class="alert-info-custom mt-4">
+                <i class="fas fa-info-circle mb-2 fa-lg"></i><br>
+                <strong>Central Tendency:</strong><br>
+                • <strong>Mean:</strong> The mathematical average.<br>
+                • <strong>Median:</strong> The exact middle value when sorted.<br>
+                • <strong>Mode:</strong> The number(s) that appear most frequently.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="pane-header text-dark border-0 mb-2 pb-0">
+                <i class="fas fa-bullseye text-primary"></i> Central Tendency Results
+            </div>
+            
+            <div class="hero-results-grid">
+                <div class="hero-box highlight">
+                    <div class="hero-title">Arithmetic Mean</div>
+                    <div class="hero-value" id="valMean">--</div>
+                    <div class="hero-sub text-success" id="valSumDiv">Sum / Count</div>
+                </div>
+                
+                <div class="hero-box">
+                    <div class="hero-title">Median</div>
+                    <div class="hero-value" id="valMedian">--</div>
+                    <div class="hero-sub" id="valMedianType">Middle Value</div>
+                </div>
+
+                <div class="hero-box">
+                    <div class="hero-title">Mode</div>
+                    <div class="hero-value" id="valMode" style="font-size: 1.6rem;">--</div>
+                    <div class="hero-sub text-primary" id="valModeFreq">Frequency</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Geometric Mean</div>
+                    <div class="stat-val" id="valGeo">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Harmonic Mean</div>
+                    <div class="stat-val" id="valHarm">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Count (N)</div>
+                    <div class="stat-val text-dark" id="valCount">0</div>
+                </div>
+            </div>
+
+            <div class="nav-tabs-custom">
+                <div class="nav-tab active" id="tabFreq" onclick="switchTab('Freq')">
+                    <i class="fas fa-list-ol me-1"></i> Frequency Table
+                </div>
+                <div class="nav-tab" id="tabSort" onclick="switchTab('Sort')">
+                    <i class="fas fa-sort-numeric-down me-1"></i> Sorted Array
+                </div>
+            </div>
+
+            <div class="view-area active" id="viewFreq">
+                <div class="table-wrapper">
+                    <table class="table table-borderless table-custom">
+                        <thead>
+                            <tr>
+                                <th>Value (x)</th>
+                                <th>Frequency (f)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="freqTableBody">
+                            <tr><td colspan="2" class="text-muted">Awaiting Data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="view-area" id="viewSort">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small fw-bold text-muted text-uppercase">Data sorted in ascending order</span>
+                    <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="copySorted()">
+                        <i class="fas fa-copy"></i> Copy Array
+                    </button>
+                </div>
+                <textarea id="sortedOutput" class="raw-textarea" readonly placeholder="Awaiting Data..."></textarea>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    const dataInput = document.getElementById('dataInput');
+    const errorMsg = document.getElementById('errorMsg');
+    
+    // Core Results
+    const valMean = document.getElementById('valMean');
+    const valSumDiv = document.getElementById('valSumDiv');
+    const valMedian = document.getElementById('valMedian');
+    const valMedianType = document.getElementById('valMedianType');
+    const valMode = document.getElementById('valMode');
+    const valModeFreq = document.getElementById('valModeFreq');
+    
+    // Secondary
+    const valGeo = document.getElementById('valGeo');
+    const valHarm = document.getElementById('valHarm');
+    const valCount = document.getElementById('valCount');
+    
+    // Bottom Views
+    const freqTableBody = document.getElementById('freqTableBody');
+    const sortedOutput = document.getElementById('sortedOutput');
+    const toastBox = document.getElementById('toastBox');
+
+    let debounceTimer;
+
+    // Fast rounding utility to prevent FP errors
+    function roundSafe(num) {
+        if (!isFinite(num)) return num;
+        return Math.round(num * 100000) / 100000;
+    }
+
+    function switchTab(tab) {
+        document.getElementById('tabFreq').classList.remove('active');
+        document.getElementById('tabSort').classList.remove('active');
+        document.getElementById('viewFreq').classList.remove('active');
+        document.getElementById('viewSort').classList.remove('active');
+
+        document.getElementById(`tab${tab}`).classList.add('active');
+        document.getElementById(`view${tab}`).classList.add('active');
+    }
+
+    function calculateTendency() {
+        clearTimeout(debounceTimer);
+        
+        debounceTimer = setTimeout(() => {
+            const rawText = dataInput.value.trim();
+
+            if (!rawText) {
+                resetOutputs();
+                return;
+            }
+
+            // High-performance parser
+            const rawArray = rawText.split(/[\s,]+/);
+            let nums = [];
+            
+            for (let i = 0; i < rawArray.length; i++) {
+                if (rawArray[i] === "") continue;
+                let parsed = parseFloat(rawArray[i]);
+                if (!isNaN(parsed)) {
+                    nums.push(parsed);
+                }
+            }
+
+            const n = nums.length;
+            valCount.innerText = n.toLocaleString();
+
+            if (n === 0) {
+                resetOutputs();
+                errorMsg.classList.remove('d-none');
+                errorMsg.innerText = "No valid numbers detected.";
+                return;
+            }
+
+            errorMsg.classList.add('d-none');
+
+            // --- 1. SORTING ---
+            nums.sort((a, b) => a - b);
+            sortedOutput.value = nums.join(', ');
+
+            // --- 2. MEAN ---
+            let sum = 0;
+            let productForGeo = 1;
+            let sumReciprocal = 0;
+            let validGeo = true;
+            let validHarm = true;
+
+            for (let i = 0; i < n; i++) {
+                let v = nums[i];
+                sum += v;
+                
+                if (v <= 0) validGeo = false;
+                else if (validGeo) productForGeo *= v;
+
+                if (v === 0) validHarm = false;
+                else if (validHarm) sumReciprocal += (1 / v);
+            }
+
+            const mean = sum / n;
+            valMean.innerText = roundSafe(mean).toLocaleString();
+            valSumDiv.innerText = `${roundSafe(sum).toLocaleString()} / ${n}`;
+
+            // Advanced Means
+            if (validGeo) {
+                const geoMean = Math.pow(productForGeo, 1/n);
+                valGeo.innerText = roundSafe(geoMean).toLocaleString();
+            } else {
+                valGeo.innerHTML = '<span class="text-danger small">Req > 0</span>';
+            }
+
+            if (validHarm) {
+                const harmMean = n / sumReciprocal;
+                valHarm.innerText = roundSafe(harmMean).toLocaleString();
+            } else {
+                valHarm.innerHTML = '<span class="text-danger small">Req &ne; 0</span>';
+            }
+
+            // --- 3. MEDIAN ---
+            let median;
+            if (n % 2 === 0) {
+                let m1 = nums[(n / 2) - 1];
+                let m2 = nums[n / 2];
+                median = (m1 + m2) / 2;
+                valMedianType.innerText = `Average of ${roundSafe(m1)} and ${roundSafe(m2)}`;
+            } else {
+                median = nums[Math.floor(n / 2)];
+                valMedianType.innerText = "Exact Middle Value";
+            }
+            valMedian.innerText = roundSafe(median).toLocaleString();
+
+            // --- 4. MODE & FREQUENCY ---
+            let freqMap = {};
+            let maxFreq = 0;
+
+            for (let i = 0; i < n; i++) {
+                let v = nums[i];
+                freqMap[v] = (freqMap[v] || 0) + 1;
+                if (freqMap[v] > maxFreq) {
+                    maxFreq = freqMap[v];
+                }
+            }
+
+            let modes = [];
+            let freqHtml = '';
+
+            // Generate Frequency Table
+            // Sort keys numerically for the table
+            let uniqueVals = Object.keys(freqMap).map(Number).sort((a, b) => a - b);
+            
+            for (let v of uniqueVals) {
+                let count = freqMap[v];
+                if (count === maxFreq) modes.push(v);
+                
+                freqHtml += `
+                    <tr ${count === maxFreq && maxFreq > 1 ? 'style="background:rgba(25,135,84,0.1); font-weight:bold;"' : ''}>
+                        <td class="text-primary">${v}</td>
+                        <td>${count}</td>
+                    </tr>
+                `;
+            }
+
+            freqTableBody.innerHTML = freqHtml;
+
+            // Handle Mode Logic
+            if (maxFreq === 1) {
+                valMode.innerText = "No Mode";
+                valModeFreq.innerText = "All values appear exactly once";
+                valMode.style.fontSize = "1.5rem";
+            } else {
+                // If all values appear the same number of times (e.g. 1,1,2,2) -> No mode technically
+                if (modes.length === uniqueVals.length) {
+                    valMode.innerText = "No Mode";
+                    valModeFreq.innerText = `All values appear ${maxFreq} times`;
+                    valMode.style.fontSize = "1.5rem";
+                } else {
+                    valMode.innerText = modes.map(m => roundSafe(m)).join(', ');
+                    valMode.style.fontSize = modes.length > 2 ? "1.2rem" : "1.6rem";
+                    
+                    if (modes.length === 1) valModeFreq.innerText = `Appears ${maxFreq} times`;
+                    else if (modes.length === 2) valModeFreq.innerText = `Bimodal (${maxFreq} times each)`;
+                    else valModeFreq.innerText = `Multimodal (${maxFreq} times each)`;
+                }
+            }
+
+        }, 150);
+    }
+
+    function resetOutputs() {
+        valMean.innerText = '--';
+        valSumDiv.innerText = 'Sum / Count';
+        valMedian.innerText = '--';
+        valMedianType.innerText = 'Middle Value';
+        valMode.innerText = '--';
+        valModeFreq.innerText = 'Frequency';
+        valGeo.innerText = '--';
+        valHarm.innerText = '--';
+        valCount.innerText = '0';
+        freqTableBody.innerHTML = '<tr><td colspan="2" class="text-muted">Awaiting Data...</td></tr>';
+        sortedOutput.value = '';
+    }
+
+    function clearData() {
+        dataInput.value = '';
+        dataInput.focus();
+        errorMsg.classList.add('d-none');
+        resetOutputs();
+    }
+
+    function copySorted() {
+        const text = sortedOutput.value;
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Sorted Array copied!', 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Init
+    window.onload = () => {
+        if (dataInput.value) calculateTendency();
+    };
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

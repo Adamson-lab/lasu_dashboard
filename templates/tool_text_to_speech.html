@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech Synthesizer | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .text-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            transition: all 0.3s;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 350px;
+        }
+        .text-editor:focus {
+            border-color: var(--math-purple);
+            box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15);
+        }
+        .text-editor.is-speaking {
+            border-color: var(--lasu-accent);
+            background-color: rgba(25, 135, 84, 0.02);
+            box-shadow: 0 0 15px rgba(25, 135, 84, 0.2);
+        }
+
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+            padding: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-clear:hover { background: #5c636a; transform: translateY(-2px); }
+
+        /* --- Right Pane: Output Controls --- */
+        .output-pane {
+            flex: 0 0 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .control-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .form-select-custom {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 2px solid #ced4da;
+            font-size: 1rem;
+            color: #212529;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+        .form-select-custom:focus { border-color: var(--math-blue); }
+
+        .range-slider {
+            width: 100%;
+            cursor: pointer;
+            accent-color: var(--math-purple);
+        }
+
+        .playback-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-play {
+            background: var(--math-blue);
+            color: white;
+            padding: 20px 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-play i { font-size: 1.5rem; }
+        .btn-play:hover { background: #0b5ed7; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3); }
+        .btn-play.active { background: var(--lasu-accent); box-shadow: 0 0 20px rgba(25, 135, 84, 0.4); animation: pulse 1.5s infinite; }
+
+        .btn-secondary-play {
+            background: #6c757d;
+            color: white;
+            padding: 20px 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-secondary-play i { font-size: 1.2rem; }
+        .btn-secondary-play:hover { background: #5c636a; transform: translateY(-2px); }
+        .btn-secondary-play:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .visualizer-box {
+            height: 60px;
+            background: #212529;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--math-purple);
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            letter-spacing: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+        .wave {
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(111, 66, 193, 0.2) 10px, rgba(111, 66, 193, 0.2) 20px);
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .wave.active { opacity: 1; animation: slideBg 1s linear infinite; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        @keyframes slideBg {
+            from { background-position: 0 0; }
+            to { background-position: 40px 0; }
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .output-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-keyboard me-2"></i> Linguistic Input</div>
+            </div>
+
+            <textarea class="text-editor" id="rawInput" placeholder="Paste the text you want the browser to read out loud..."></textarea>
+
+            <button class="btn-clear" onclick="clearText()">
+                <i class="fas fa-trash-alt"></i> Clear Document
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-sliders-h me-2 text-primary"></i> Neural Synthesizer</div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Voice Matrix</div>
+                <select class="form-select-custom" id="voiceSelect">
+                    <option value="">Loading native OS voices...</option>
+                </select>
+            </div>
+
+            <div class="control-group pb-4">
+                <div class="control-label">
+                    <span>Pacing (Speed)</span>
+                    <span id="rateVal" style="color: var(--math-purple);">1.0x</span>
+                </div>
+                <input type="range" class="range-slider" id="rateSlider" min="0.5" max="2" value="1" step="0.1">
+            </div>
+
+            <div class="control-group pb-4">
+                <div class="control-label">
+                    <span>Pitch Modulation</span>
+                    <span id="pitchVal" style="color: var(--math-blue);">1.0</span>
+                </div>
+                <input type="range" class="range-slider" id="pitchSlider" min="0" max="2" value="1" step="0.1">
+            </div>
+
+            <div class="visualizer-box">
+                <div class="wave" id="audioWave"></div>
+                <span id="statusText" style="position: relative; z-index: 2;">STANDBY</span>
+            </div>
+
+            <div class="playback-controls">
+                <button class="btn-play" id="btnPlay" onclick="speakText()">
+                    <i class="fas fa-play"></i>
+                    <span>Read</span>
+                </button>
+                <button class="btn-secondary-play" id="btnPause" onclick="pauseSpeech()" disabled>
+                    <i class="fas fa-pause"></i>
+                    <span>Pause</span>
+                </button>
+                <button class="btn-secondary-play" id="btnStop" onclick="stopSpeech()" disabled>
+                    <i class="fas fa-stop"></i>
+                    <span>Stop</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const rawInput = document.getElementById('rawInput');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const rateSlider = document.getElementById('rateSlider');
+    const pitchSlider = document.getElementById('pitchSlider');
+    const rateVal = document.getElementById('rateVal');
+    const pitchVal = document.getElementById('pitchVal');
+    
+    const btnPlay = document.getElementById('btnPlay');
+    const btnPause = document.getElementById('btnPause');
+    const btnStop = document.getElementById('btnStop');
+    
+    const statusText = document.getElementById('statusText');
+    const audioWave = document.getElementById('audioWave');
+
+    let synth = window.speechSynthesis;
+    let voices = [];
+
+    // Initialize OS Voices
+    function populateVoiceList() {
+        voices = synth.getVoices();
+        voiceSelect.innerHTML = '';
+        
+        voices.forEach((voice) => {
+            const option = document.createElement('option');
+            option.textContent = `${voice.name} (${voice.lang})`;
+            option.setAttribute('data-lang', voice.lang);
+            option.setAttribute('data-name', voice.name);
+            voiceSelect.appendChild(option);
+        });
+
+        if(voices.length === 0) {
+            voiceSelect.innerHTML = '<option>Awaiting browser voice permissions...</option>';
+        }
+    }
+
+    populateVoiceList();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = populateVoiceList;
+    }
+
+    // Sliders UI
+    rateSlider.addEventListener('input', () => rateVal.innerText = `${rateSlider.value}x`);
+    pitchSlider.addEventListener('input', () => pitchVal.innerText = pitchSlider.value);
+
+    // Playback Engine
+    function speakText() {
+        if (synth.speaking && synth.paused) {
+            synth.resume();
+            updateUIPplaying();
+            return;
+        }
+        
+        if (synth.speaking) return;
+
+        const text = rawInput.value.trim();
+        if (text !== '') {
+            const utterThis = new SpeechSynthesisUtterance(text);
+            
+            const selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-name');
+            for (let i = 0; i < voices.length; i++) {
+                if (voices[i].name === selectedOption) {
+                    utterThis.voice = voices[i];
+                    break;
+                }
+            }
+            
+            utterThis.rate = rateSlider.value;
+            utterThis.pitch = pitchSlider.value;
+
+            utterThis.onstart = () => updateUIPplaying();
+            utterThis.onend = () => updateUIStopped();
+            utterThis.onerror = () => updateUIStopped();
+
+            synth.speak(utterThis);
+        }
+    }
+
+    function pauseSpeech() {
+        if (synth.speaking && !synth.paused) {
+            synth.pause();
+            updateUIPaused();
+        }
+    }
+
+    function stopSpeech() {
+        synth.cancel();
+        updateUIStopped();
+    }
+
+    function clearText() {
+        stopSpeech();
+        rawInput.value = '';
+        rawInput.focus();
+    }
+
+    // UI State Managers
+    function updateUIPplaying() {
+        btnPlay.classList.add('active');
+        btnPlay.innerHTML = '<i class="fas fa-volume-up"></i><span>Speaking</span>';
+        btnPause.disabled = false;
+        btnStop.disabled = false;
+        rawInput.classList.add('is-speaking');
+        audioWave.classList.add('active');
+        statusText.innerText = 'TRANSMITTING';
+        statusText.style.color = '#fff';
+    }
+
+    function updateUIPaused() {
+        btnPlay.classList.remove('active');
+        btnPlay.innerHTML = '<i class="fas fa-play"></i><span>Resume</span>';
+        audioWave.classList.remove('active');
+        statusText.innerText = 'PAUSED';
+        statusText.style.color = 'var(--math-orange)';
+    }
+
+    function updateUIStopped() {
+        btnPlay.classList.remove('active');
+        btnPlay.innerHTML = '<i class="fas fa-play"></i><span>Read</span>';
+        btnPause.disabled = true;
+        btnStop.disabled = true;
+        rawInput.classList.remove('is-speaking');
+        audioWave.classList.remove('active');
+        statusText.innerText = 'STANDBY';
+        statusText.style.color = 'var(--math-purple)';
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

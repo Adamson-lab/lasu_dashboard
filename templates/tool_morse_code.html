@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morse Code Translator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Input & Output Panes --- */
+        .input-pane, .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .text-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.2rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            transition: all 0.2s;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Fira Code', monospace;
+            min-height: 250px;
+        }
+        .text-editor:focus {
+            border-color: var(--lasu-accent);
+            box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15);
+        }
+
+        .output-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #e9ecef;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.5rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Fira Code', monospace;
+            min-height: 250px;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+        }
+        .btn-copy { background: var(--math-blue); color: white; }
+        .btn-copy:hover { background: #0b5ed7; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);}
+        
+        .btn-play { background: var(--lasu-accent); color: white; }
+        .btn-play:hover { background: #146c43; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);}
+        .btn-play.playing { background: var(--math-red); box-shadow: 0 0 15px var(--math-red); animation: pulse 1s infinite;}
+
+        .btn-clear { background: #6c757d; color: white; flex: none; width: 100%; padding: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border-radius: 8px; border: none; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-clear:hover { background: #5c636a; transform: translateY(-2px); }
+
+        .editor-controls { display: flex; gap: 10px; margin-top: auto; }
+
+        .telemetry-bar { background: #212529; padding: 15px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; color: white; font-family: 'Fira Code', monospace; font-size: 0.9rem; font-weight: 800; }
+        .telemetry-bar span { color: #0dcaf0; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 992px) { .main-container { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-keyboard me-2"></i> Auto-Detect Input</div>
+            </div>
+
+            <textarea class="text-editor" id="rawInput" placeholder="Type English to get Morse Code...
+OR
+Type Morse Code (.- -...) to get English!" oninput="executeTranslate()"></textarea>
+
+            <button class="btn-clear" onclick="clearText()">
+                <i class="fas fa-trash-alt"></i> Clear Matrix
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div style="color: var(--math-blue);"><i class="fas fa-broadcast-tower me-2"></i> Transmission Output</div>
+            </div>
+
+            <textarea class="output-editor" id="outputRes" readonly placeholder="Output will appear here..."></textarea>
+
+            <div class="telemetry-bar mb-3">
+                <div>Mode: <span id="modeText">Standby</span></div>
+                <div>Characters: <span id="charCount">0</span></div>
+            </div>
+
+            <div class="editor-controls">
+                <button class="btn-action btn-copy" onclick="copyOutput()" id="copyBtn">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+                <button class="btn-action btn-play" onclick="togglePlay()" id="playBtn">
+                    <i class="fas fa-volume-up"></i> Play Audio
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const rawInput = document.getElementById('rawInput');
+    const outputRes = document.getElementById('outputRes');
+    const charCount = document.getElementById('charCount');
+    const modeText = document.getElementById('modeText');
+    const copyBtn = document.getElementById('copyBtn');
+    const playBtn = document.getElementById('playBtn');
+
+    // Dictionary Matrices
+    const morseDict = {
+        'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--', 'Z': '--..',
+        '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+        '.': '.-.-.-', ',': '--..--', '?': '..--..', "'": '.----.', '!': '-.-.--', '/': '-..-.', '(': '-.--.', ')': '-.--.-', '&': '.-...', ':': '---...', ';': '-.-.-.', '=': '-...-', '+': '-...-', '-': '-....-', '_': '..--.-', '"': '.-..-.', '$': '...-..-', '@': '.--.-.'
+    };
+
+    // Reverse Dictionary for Morse -> English
+    const reverseDict = {};
+    for (const key in morseDict) {
+        reverseDict[morseDict[key]] = key;
+    }
+
+    let isPlaying = false;
+    let audioCtx = null;
+    let currentOscillator = null;
+
+    function executeTranslate() {
+        const text = rawInput.value.trim();
+        charCount.innerText = text.length;
+
+        if (!text) {
+            outputRes.value = '';
+            modeText.innerText = "Standby";
+            modeText.style.color = "#adb5bd";
+            return;
+        }
+
+        // Auto-detect if input is mostly Morse (. and - and spaces)
+        const isMorse = /^[.\-\s/]+$/.test(text);
+
+        if (isMorse) {
+            modeText.innerText = "Morse to English";
+            modeText.style.color = "var(--math-purple)";
+            
+            // Words are separated by ' / ' or '   ' (3 spaces) in standard morse, letters by 1 space
+            // Let's normalize word boundaries to ' / '
+            let normalizedMorse = text.replace(/   /g, ' / ');
+            let words = normalizedMorse.split(' / ');
+            
+            let englishRes = words.map(word => {
+                return word.split(' ').map(char => reverseDict[char] || '#').join('');
+            }).join(' ');
+
+            outputRes.value = englishRes;
+        } else {
+            modeText.innerText = "English to Morse";
+            modeText.style.color = "var(--lasu-accent)";
+
+            let upperText = text.toUpperCase();
+            let morseRes = [];
+
+            for (let i = 0; i < upperText.length; i++) {
+                let char = upperText[i];
+                if (char === ' ') {
+                    morseRes.push('/'); // Visual separator for words
+                } else if (morseDict[char]) {
+                    morseRes.push(morseDict[char]);
+                }
+            }
+
+            outputRes.value = morseRes.join(' ');
+        }
+    }
+
+    function copyOutput() {
+        if (!outputRes.value) return;
+        outputRes.select();
+        document.execCommand('copy');
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.style.backgroundColor = '#198754';
+        setTimeout(() => { 
+            copyBtn.innerHTML = originalText; 
+            copyBtn.style.backgroundColor = 'var(--math-blue)';
+        }, 1500);
+    }
+
+    function clearText() {
+        rawInput.value = '';
+        executeTranslate();
+        rawInput.focus();
+        if (isPlaying) stopAudio();
+    }
+
+    // --- OSCILLATOR AUDIO ENGINE ---
+    const dotDuration = 80; // ms
+
+    function beep(duration) {
+        return new Promise(resolve => {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            currentOscillator = audioCtx.createOscillator();
+            let gainNode = audioCtx.createGain();
+
+            currentOscillator.type = 'sine';
+            currentOscillator.frequency.value = 600; // 600 Hz tone
+
+            // Smooth fade in/out to prevent speaker clicking
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.01);
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime + (duration / 1000) - 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + (duration / 1000));
+
+            currentOscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            currentOscillator.start();
+            
+            setTimeout(() => {
+                if(currentOscillator) currentOscillator.stop();
+                resolve();
+            }, duration);
+        });
+    }
+
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function togglePlay() {
+        if (isPlaying) {
+            stopAudio();
+            return;
+        }
+
+        let targetText = outputRes.value;
+        // If output is English, we need to play the INPUT (which is Morse)
+        if (modeText.innerText === "Morse to English") {
+            targetText = rawInput.value.replace(/   /g, ' / ');
+        }
+
+        if (!targetText || !/^[.\-\s/]+$/.test(targetText)) {
+            alert("No valid Morse code to play.");
+            return;
+        }
+
+        isPlaying = true;
+        playBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Audio';
+        playBtn.classList.add('playing');
+
+        const chars = targetText.split('');
+
+        for (let i = 0; i < chars.length; i++) {
+            if (!isPlaying) break; // User stopped it
+
+            if (chars[i] === '.') {
+                await beep(dotDuration);
+                await delay(dotDuration); // intra-character gap
+            } else if (chars[i] === '-') {
+                await beep(dotDuration * 3);
+                await delay(dotDuration); // intra-character gap
+            } else if (chars[i] === ' ') {
+                await delay(dotDuration * 3); // inter-character gap
+            } else if (chars[i] === '/') {
+                await delay(dotDuration * 7); // inter-word gap
+            }
+        }
+
+        stopAudio();
+    }
+
+    function stopAudio() {
+        isPlaying = false;
+        if (currentOscillator) {
+            currentOscillator.stop();
+            currentOscillator.disconnect();
+            currentOscillator = null;
+        }
+        playBtn.innerHTML = '<i class="fas fa-volume-up"></i> Play Audio';
+        playBtn.classList.remove('playing');
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

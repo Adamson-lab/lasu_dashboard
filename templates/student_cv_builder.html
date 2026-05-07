@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CV Builder | LASU Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }</style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="fas fa-file-invoice me-2 text-primary"></i>CV Builder</h2>
+        <div>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary me-2">Dashboard</a>
+            <a href="{{ url_for('cv_preview') }}" target="_blank" class="btn btn-primary fw-bold"><i class="fas fa-print me-2"></i>Generate PDF</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-bold d-flex justify-content-between">
+                    <span><i class="fas fa-briefcase me-2 text-secondary"></i>Work Experience</span>
+                    <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modalWork">+ Add</button>
+                </div>
+                <div class="card-body">
+                    {% for item in work_exp %}
+                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                            <div>
+                                <strong>{{ item.role }}</strong> at {{ item.company }} <br>
+                                <small class="text-muted">{{ item.start_date }} - {{ item.end_date }}</small>
+                            </div>
+                            <a href="{{ url_for('delete_cv_section', section='work', id=item.id) }}" class="text-danger"><i class="fas fa-trash"></i></a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold d-flex justify-content-between">
+                    <span><i class="fas fa-code me-2 text-warning"></i>Projects</span>
+                    <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modalProject">+ Add</button>
+                </div>
+                <div class="card-body">
+                    {% for item in projects %}
+                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                            <div><strong>{{ item.title }}</strong></div>
+                            <a href="{{ url_for('delete_cv_section', section='project', id=item.id) }}" class="text-danger"><i class="fas fa-trash"></i></a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold d-flex justify-content-between">
+                    <span><i class="fas fa-bolt me-2 text-danger"></i>Skills</span>
+                    <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modalSkill">+ Add</button>
+                </div>
+                <div class="card-body">
+                    {% for item in skills %}
+                        <span class="badge bg-light text-dark border me-1 mb-1">{{ item.name }} <a href="{{ url_for('delete_cv_section', section='skill', id=item.id) }}" class="text-danger ms-1 text-decoration-none">&times;</a></span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold d-flex justify-content-between">
+                    <span><i class="fas fa-trophy me-2 text-warning"></i>Awards</span>
+                    <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modalAward">+ Add</button>
+                </div>
+                <div class="card-body">
+                    {% for item in awards %}
+                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                            <div>{{ item.title }}</div>
+                            <a href="{{ url_for('delete_cv_section', section='award', id=item.id) }}" class="text-danger"><i class="fas fa-trash"></i></a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold d-flex justify-content-between">
+                    <span><i class="fas fa-hands-helping me-2 text-success"></i>Volunteering</span>
+                    <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modalVol">+ Add</button>
+                </div>
+                <div class="card-body">
+                    {% for item in volunteers %}
+                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                            <div>{{ item.organization }}</div>
+                            <a href="{{ url_for('delete_cv_section', section='volunteer', id=item.id) }}" class="text-danger"><i class="fas fa-trash"></i></a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalWork"><div class="modal-dialog"><div class="modal-content"><form action="{{ url_for('add_cv_section', section='work') }}" method="POST"><div class="modal-body"><input class="form-control mb-2" name="company" placeholder="Company" required><input class="form-control mb-2" name="role" placeholder="Role" required><div class="row"><div class="col"><input class="form-control mb-2" name="start" placeholder="Start (e.g. Apr 2025)" required></div><div class="col"><input class="form-control mb-2" name="end" placeholder="End (e.g. Present)"></div></div><input class="form-control mb-2" name="location" placeholder="Location"><textarea class="form-control" name="desc" placeholder="Bullet points..."></textarea></div><div class="modal-footer"><button class="btn btn-primary">Save</button></div></form></div></div></div>
+
+<div class="modal fade" id="modalProject"><div class="modal-dialog"><div class="modal-content"><form action="{{ url_for('add_cv_section', section='project') }}" method="POST"><div class="modal-body"><input class="form-control mb-2" name="title" placeholder="Project Title" required><input class="form-control mb-2" name="type" placeholder="Type (e.g. Personal Project)"><input class="form-control mb-2" name="date" placeholder="Date Range"><input class="form-control mb-2" name="tools" placeholder="Tools Used"><textarea class="form-control" name="desc" placeholder="Description..."></textarea></div><div class="modal-footer"><button class="btn btn-primary">Save</button></div></form></div></div></div>
+
+<div class="modal fade" id="modalSkill"><div class="modal-dialog"><div class="modal-content"><form action="{{ url_for('add_cv_section', section='skill') }}" method="POST"><div class="modal-body"><select class="form-control mb-2" name="cat"><option>Hard Skill</option><option>Soft Skill</option></select><textarea class="form-control" name="name" placeholder="List skills (comma separated)" required></textarea></div><div class="modal-footer"><button class="btn btn-primary">Save</button></div></form></div></div></div>
+
+<div class="modal fade" id="modalAward"><div class="modal-dialog"><div class="modal-content"><form action="{{ url_for('add_cv_section', section='award') }}" method="POST"><div class="modal-body"><input class="form-control mb-2" name="title" placeholder="Award Title" required><input class="form-control mb-2" name="issuer" placeholder="Issuer"><input class="form-control mb-2" name="date" placeholder="Date"></div><div class="modal-footer"><button class="btn btn-primary">Save</button></div></form></div></div></div>
+
+<div class="modal fade" id="modalVol"><div class="modal-dialog"><div class="modal-content"><form action="{{ url_for('add_cv_section', section='volunteer') }}" method="POST"><div class="modal-body"><input class="form-control mb-2" name="org" placeholder="Organization" required><input class="form-control mb-2" name="role" placeholder="Role"><input class="form-control mb-2" name="date" placeholder="Date Range"><textarea class="form-control" name="desc" placeholder="Description..."></textarea></div><div class="modal-footer"><button class="btn btn-primary">Save</button></div></form></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.htaccess Generator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --apache-color: #d22128;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        /* Controls Pane */
+        .controls-pane {
+            flex: 0 0 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-header {
+            font-weight: 700;
+            color: var(--apache-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .scenario-box {
+            display: none;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            margin-top: 15px;
+        }
+        .scenario-box.active {
+            display: block;
+        }
+
+        /* Output Pane */
+        .output-pane {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .pane-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-area {
+            flex-grow: 1;
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            position: relative;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .apache-keyword { color: #f92672; }
+        .apache-variable { color: #e6db74; }
+        .apache-flag { color: #66d9ef; }
+        .apache-comment { color: #75715e; }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .controls-pane { flex: none; width: 100%; }
+            .output-pane { min-height: 400px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">SERVER TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-pane">
+        <div class="control-header">
+            <i class="fas fa-server"></i> Configuration
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Select Redirect Type</label>
+            <select class="form-select border-danger text-danger fw-bold" id="redirectType" onchange="toggleScenario()">
+                <option value="basic">Page to Page Redirect (301/302)</option>
+                <option value="https">Force HTTPS</option>
+                <option value="www">Force WWW</option>
+                <option value="nonwww">Force Non-WWW</option>
+                <option value="directory">Rename/Move Directory</option>
+            </select>
+        </div>
+
+        <div id="scen-basic" class="scenario-box active">
+            <div class="mb-3">
+                <label class="form-label">Type</label>
+                <select class="form-select form-select-sm" id="basicCode" onchange="generateHtaccess()">
+                    <option value="301">301 - Permanent</option>
+                    <option value="302">302 - Temporary</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Old Path</label>
+                <input type="text" class="form-control form-control-sm" id="basicOld" placeholder="/old-page.html" value="/old-page.html" oninput="generateHtaccess()">
+                <small class="text-muted" style="font-size: 0.7rem;">Relative to domain root</small>
+            </div>
+            <div class="mb-0">
+                <label class="form-label">New URL</label>
+                <input type="text" class="form-control form-control-sm" id="basicNew" placeholder="https://example.com/new-page.html" value="https://example.com/new-page.html" oninput="generateHtaccess()">
+                <small class="text-muted" style="font-size: 0.7rem;">Absolute URL recommended</small>
+            </div>
+        </div>
+
+        <div id="scen-https" class="scenario-box">
+            <p class="text-muted small mb-0">
+                <i class="fas fa-info-circle me-1"></i> This snippet will rewrite all incoming HTTP traffic to secure HTTPS automatically. No variables needed.
+            </p>
+        </div>
+
+        <div id="scen-domain" class="scenario-box">
+            <div class="mb-0">
+                <label class="form-label">Your Domain</label>
+                <input type="text" class="form-control form-control-sm" id="domainName" placeholder="example.com" value="example.com" oninput="generateHtaccess()">
+                <small class="text-muted" style="font-size: 0.7rem;">Without http:// or www.</small>
+            </div>
+        </div>
+
+        <div id="scen-dir" class="scenario-box">
+            <div class="mb-3">
+                <label class="form-label">Old Directory</label>
+                <input type="text" class="form-control form-control-sm" id="dirOld" placeholder="/old-folder/" value="/old-folder/" oninput="generateHtaccess()">
+            </div>
+            <div class="mb-0">
+                <label class="form-label">New Directory</label>
+                <input type="text" class="form-control form-control-sm" id="dirNew" placeholder="/new-folder/" value="/new-folder/" oninput="generateHtaccess()">
+            </div>
+        </div>
+
+    </div>
+
+    <div class="output-pane">
+        <div class="pane-header">
+            <span class="fw-bold text-dark"><i class="fas fa-file-code me-2 text-secondary"></i> .htaccess Output</span>
+            <button class="btn btn-sm btn-outline-dark" onclick="copyCode()">
+                <i class="fas fa-copy"></i> Copy to Clipboard
+            </button>
+        </div>
+        <div class="code-area" id="codeArea">
+            </div>
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    function toggleScenario() {
+        const type = document.getElementById('redirectType').value;
+        
+        // Hide all
+        document.querySelectorAll('.scenario-box').forEach(box => box.classList.remove('active'));
+
+        // Show specific
+        if (type === 'basic') {
+            document.getElementById('scen-basic').classList.add('active');
+        } else if (type === 'https') {
+            document.getElementById('scen-https').classList.add('active');
+        } else if (type === 'www' || type === 'nonwww') {
+            document.getElementById('scen-domain').classList.add('active');
+        } else if (type === 'directory') {
+            document.getElementById('scen-dir').classList.add('active');
+        }
+
+        generateHtaccess();
+    }
+
+    function hl(type, text) {
+        if(type === 'kw') return `<span class="apache-keyword">${text}</span>`;
+        if(type === 'var') return `<span class="apache-variable">${text}</span>`;
+        if(type === 'flag') return `<span class="apache-flag">${text}</span>`;
+        if(type === 'com') return `<span class="apache-comment">${text}</span>`;
+        return text;
+    }
+
+    function generateHtaccess() {
+        const type = document.getElementById('redirectType').value;
+        let code = "";
+
+        if (type === 'basic') {
+            const codeVal = document.getElementById('basicCode').value;
+            const oldPath = document.getElementById('basicOld').value || "/old";
+            const newPath = document.getElementById('basicNew').value || "/new";
+            
+            code = `${hl('com', '# Redirect single page')}\n`;
+            code += `${hl('kw', 'Redirect')} ${codeVal} ${oldPath} ${newPath}`;
+        } 
+        else if (type === 'https') {
+            code = `${hl('com', '# Force HTTPS')}\n`;
+            code += `${hl('kw', 'RewriteEngine')} On\n`;
+            code += `${hl('kw', 'RewriteCond')} ${hl('var', '%{HTTPS}')} off\n`;
+            code += `${hl('kw', 'RewriteRule')} ^(.*)$ https://${hl('var', '%{HTTP_HOST}')}${hl('var', '%{REQUEST_URI}')} ${hl('flag', '[L,R=301]')}`;
+        }
+        else if (type === 'www') {
+            const domain = document.getElementById('domainName').value.trim() || "example.com";
+            // Escape dots for regex
+            const escDomain = domain.replace(/\./g, '\\.');
+            
+            code = `${hl('com', '# Force WWW')}\n`;
+            code += `${hl('kw', 'RewriteEngine')} On\n`;
+            code += `${hl('kw', 'RewriteCond')} ${hl('var', '%{HTTP_HOST}')} ^${escDomain} ${hl('flag', '[NC]')}\n`;
+            code += `${hl('kw', 'RewriteRule')} ^(.*)$ https://www.${domain}/$1 ${hl('flag', '[L,R=301]')}`;
+        }
+        else if (type === 'nonwww') {
+            const domain = document.getElementById('domainName').value.trim() || "example.com";
+            const escDomain = domain.replace(/\./g, '\\.');
+            
+            code = `${hl('com', '# Force Non-WWW')}\n`;
+            code += `${hl('kw', 'RewriteEngine')} On\n`;
+            code += `${hl('kw', 'RewriteCond')} ${hl('var', '%{HTTP_HOST}')} ^www\\.${escDomain} ${hl('flag', '[NC]')}\n`;
+            code += `${hl('kw', 'RewriteRule')} ^(.*)$ https://${domain}/$1 ${hl('flag', '[L,R=301]')}`;
+        }
+        else if (type === 'directory') {
+            let oldDir = document.getElementById('dirOld').value || "/old/";
+            let newDir = document.getElementById('dirNew').value || "/new/";
+            
+            // Ensure leading slash
+            if(!oldDir.startsWith('/')) oldDir = '/' + oldDir;
+            
+            code = `${hl('com', '# Redirect entire directory')}\n`;
+            code += `${hl('kw', 'RewriteEngine')} On\n`;
+            code += `${hl('kw', 'RewriteRule')} ^${oldDir.substring(1)}(.*)$ ${newDir}$1 ${hl('flag', '[R=301,NC,L]')}`;
+        }
+
+        document.getElementById('codeArea').innerHTML = code;
+    }
+
+    function copyCode() {
+        const text = document.getElementById('codeArea').innerText; // gets raw text without span tags
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Code copied to clipboard!', 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        const toastBox = document.getElementById('toastBox');
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Initialize
+    toggleScenario();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

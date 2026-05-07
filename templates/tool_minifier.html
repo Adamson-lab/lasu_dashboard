@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS/CSS Minifier | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --bg-light: #f4f7f6;
+            --editor-bg: #ffffff;
+            --editor-fg: #2c3e50;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        /* Split Screen Layout */
+        .split-container {
+            flex: 1;
+            display: flex;
+            padding: 1.5rem;
+            gap: 1rem;
+            height: calc(100vh - 70px);
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .editor-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .pane-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        textarea {
+            flex-grow: 1;
+            border: none;
+            resize: none;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            width: 100%;
+            outline: none;
+            background-color: var(--editor-bg);
+            color: var(--editor-fg);
+            white-space: pre;
+            overflow-wrap: normal;
+            overflow-x: auto;
+        }
+        textarea:focus { background-color: #fefefe; }
+        
+        /* Middle Action Bar */
+        .action-bar {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 15px;
+            width: 140px;
+            align-items: center;
+        }
+
+        .btn-action {
+            width: 100%;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary-custom {
+            background-color: var(--lasu-green);
+            border: none;
+            color: white;
+        }
+        .btn-primary-custom:hover { background-color: #00382e; color: white;}
+
+        .stats-bar {
+            background: #212529;
+            color: #a6e22e;
+            padding: 10px;
+            text-align: center;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            border-top: 1px solid #343a40;
+        }
+
+        .savings-badge {
+            background: #dc3545;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.8rem;
+        }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .split-container { flex-direction: column; height: auto; }
+            .editor-pane { height: 45vh; }
+            .action-bar { flex-direction: row; width: 100%; padding: 10px; justify-content: center; flex-wrap: wrap;}
+            .btn-action { width: auto; flex: 1; min-width: 100px; flex-direction: row;}
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">OPTIMIZATION TOOLS</span>
+    </div>
+</nav>
+
+<div class="split-container">
+    
+    <div class="editor-pane">
+        <div class="pane-header">
+            <span><i class="fas fa-code me-2 text-primary"></i>Raw Code (JS/CSS)</span>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-light border" onclick="pasteClip()" title="Paste">
+                    <i class="fas fa-paste"></i>
+                </button>
+                <button class="btn btn-sm btn-light border text-danger" onclick="clearAll()" title="Clear">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <textarea id="rawInput" placeholder="/* Paste your messy JavaScript or CSS here... */&#10;&#10;function helloWorld() {&#10;    console.log( 'Hello Lasu!' );&#10;}" spellcheck="false"></textarea>
+        <div class="stats-bar text-muted bg-light border-top" id="inputStats">Original Size: 0 B</div>
+    </div>
+
+    <div class="action-bar">
+        <div class="w-100 mb-2">
+            <label class="form-label text-muted fw-bold small mb-1">Language</label>
+            <select class="form-select form-select-sm" id="langSelect">
+                <option value="js">JavaScript</option>
+                <option value="css">CSS</option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary-custom btn-action" onclick="minifyCode()">
+            <i class="fas fa-compress-arrows-alt fs-5"></i> 
+            <span>Minify</span>
+        </button>
+    </div>
+
+    <div class="editor-pane">
+        <div class="pane-header">
+            <span><i class="fas fa-file-archive me-2 text-success"></i>Minified Output</span>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-light border" onclick="copyResult()" title="Copy">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="btn btn-sm btn-light border" onclick="downloadResult()" title="Download File">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+        </div>
+        <textarea id="minifiedOutput" readonly placeholder="Compressed code will appear here..." style="background:#fafafa;"></textarea>
+        <div class="stats-bar d-flex justify-content-between align-items-center">
+            <span id="outputStats">New Size: 0 B</span>
+            <span class="savings-badge d-none" id="savingsBadge">Saved 0%</span>
+        </div>
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    const rawInput = document.getElementById('rawInput');
+    const minifiedOutput = document.getElementById('minifiedOutput');
+    const langSelect = document.getElementById('langSelect');
+    
+    const inputStats = document.getElementById('inputStats');
+    const outputStats = document.getElementById('outputStats');
+    const savingsBadge = document.getElementById('savingsBadge');
+    const toastBox = document.getElementById('toastBox');
+
+    // Live Original Size
+    rawInput.addEventListener('input', () => {
+        const size = new Blob([rawInput.value]).size;
+        inputStats.innerText = `Original Size: ${formatBytes(size)}`;
+        savingsBadge.classList.add('d-none');
+    });
+
+    function minifyCode() {
+        let code = rawInput.value;
+        const lang = langSelect.value;
+        const originalSize = new Blob([code]).size;
+
+        if (!code.trim()) {
+            showToast("Please enter some code first.", "warning");
+            return;
+        }
+
+        try {
+            if (lang === 'css') {
+                code = minifyCSS(code);
+            } else if (lang === 'js') {
+                code = minifyJS(code);
+            }
+
+            minifiedOutput.value = code;
+            
+            // Calculate Savings
+            const newSize = new Blob([code]).size;
+            outputStats.innerText = `New Size: ${formatBytes(newSize)}`;
+            
+            if (originalSize > 0) {
+                const savings = ((originalSize - newSize) / originalSize * 100).toFixed(1);
+                savingsBadge.innerText = `Saved ${savings}%`;
+                savingsBadge.classList.remove('d-none');
+                savingsBadge.style.backgroundColor = savings > 0 ? '#198754' : '#6c757d';
+            }
+
+            showToast("Code minified successfully!", "success");
+
+        } catch (err) {
+            showToast("Error parsing code.", "danger");
+        }
+    }
+
+    // --- Core Minification Logic (Regex Based) ---
+    
+    function minifyCSS(css) {
+        return css
+            .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
+            .replace(/\s+/g, ' ')              // Collapse multiple spaces into one
+            .replace(/\s*([{}:;,>+~])\s*/g, '$1') // Remove spaces around syntax chars
+            .replace(/;}/g, '}')               // Remove last trailing semicolon in block
+            .trim();
+    }
+
+    function minifyJS(js) {
+        return js
+            // Remove multi-line comments (/* ... */)
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            // Remove single-line comments (// ... ) but protect URLs (http://)
+            .replace(/(?:^|[^:\\])\/\/[^\n\r]*/g, match => {
+                // If it starts with a character (not start of line), keep that character
+                return match.startsWith('//') ? '' : match[0];
+            })
+            // Collapse multiple spaces/tabs/newlines into a single space
+            .replace(/\s+/g, ' ')
+            // Remove spaces around operators and brackets
+            .replace(/\s*([{}[\]();,=<>!+\-*/&|?^:])\s*/g, '$1')
+            .trim();
+    }
+
+    // --- Utilities ---
+
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    async function pasteClip() {
+        try {
+            const text = await navigator.clipboard.readText();
+            rawInput.value = text;
+            rawInput.dispatchEvent(new Event('input')); // trigger size calc
+        } catch(err) { showToast('Clipboard access denied', 'warning'); }
+    }
+
+    function copyResult() {
+        if(!minifiedOutput.value) return;
+        minifiedOutput.select();
+        document.execCommand('copy');
+        showToast('Minified code copied!', 'success');
+    }
+
+    function downloadResult() {
+        if(!minifiedOutput.value) return;
+        const ext = langSelect.value;
+        const blob = new Blob([minifiedOutput.value], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `minified.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function clearAll() {
+        rawInput.value = '';
+        minifiedOutput.value = '';
+        inputStats.innerText = 'Original Size: 0 B';
+        outputStats.innerText = 'New Size: 0 B';
+        savingsBadge.classList.add('d-none');
+        rawInput.focus();
+    }
+
+    function showToast(msg, type='info') {
+        toastBox.innerText = msg;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

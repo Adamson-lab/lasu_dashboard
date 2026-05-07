@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V510 PRO MAX Stellar Matrix | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V510 PRO MAX SKEUOMORPHIC ENGINE
+           ========================================== */
+        
+        [data-theme="light"] {
+            --lab-bg: #f0f2f5;
+            --lab-surface: #ffffff;
+            --lab-panel: #e4e9f2;
+            --lab-text: #1a202c;
+            --lab-text-muted: #718096;
+            --lab-border: #cbd5e0;
+            --lab-accent: #3182ce;
+            --lab-glow: rgba(49, 130, 206, 0.3);
+            --lens-bg: #f8fafc;
+            --shadow-main: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --lab-bg: #0f172a;
+            --lab-surface: #1e293b;
+            --lab-panel: #0f172a;
+            --lab-text: #f8fafc;
+            --lab-text-muted: #94a3b8;
+            --lab-border: #334155;
+            --lab-accent: #63b3ed;
+            --lab-glow: rgba(99, 179, 237, 0.4);
+            --lens-bg: #020617;
+            --shadow-main: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--lab-bg);
+            color: var(--lab-text);
+            transition: all 0.4s ease;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .tool-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--lab-surface);
+            border-radius: 20px;
+            border: 2px solid var(--lab-border);
+            box-shadow: var(--shadow-main);
+            padding: 40px;
+            position: relative;
+        }
+
+        /* Laboratory Header */
+        .lab-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            border-bottom: 3px solid var(--lab-border);
+            padding-bottom: 20px;
+        }
+
+        .lab-title-group h2 {
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        /* Toggle Control */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--lab-panel);
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 1px solid var(--lab-border);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px; width: 22px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider { background-color: var(--lab-accent); }
+        input:checked + .slider:before { transform: translateX(30px); }
+
+        /* HERO OBSERVATORY LENS */
+        .obs-lens {
+            background-color: var(--lens-bg);
+            border: 8px solid var(--lab-panel);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: inset 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .obs-lens::after {
+            content: "";
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; height: 40%;
+            background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0));
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
+        .lens-label {
+            font-size: 0.8rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--lab-accent);
+            margin-bottom: 10px;
+        }
+
+        .lens-value {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin: 0;
+            color: var(--lab-text);
+            text-shadow: 0 0 20px var(--lab-glow);
+        }
+
+        /* CONVERSION MATRIX GRID */
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .console-panel {
+            background: var(--lab-panel);
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid var(--lab-border);
+        }
+
+        .console-label {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            color: var(--lab-text-muted);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .console-input {
+            width: 100%;
+            background: var(--lab-surface);
+            border: 2px solid var(--lab-border);
+            padding: 15px;
+            border-radius: 8px;
+            color: var(--lab-text);
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .console-input:focus {
+            border-color: var(--lab-accent);
+            box-shadow: 0 0 15px var(--lab-glow);
+        }
+
+        .btn-action {
+            width: 100%;
+            background-color: var(--lab-accent);
+            color: #ffffff;
+            border: none;
+            padding: 18px;
+            border-radius: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-action:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        .output-readout {
+            margin-top: 25px;
+            background: var(--lens-bg);
+            border: 2px solid var(--lab-border);
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--lab-accent);
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-btn {
+            background: var(--lab-panel);
+            color: var(--lab-text);
+            border: 1px solid var(--lab-border);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover { background: var(--lab-accent); color: white; border-color: var(--lab-accent); }
+
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        
+        <div class="lab-header">
+            <div class="lab-title-group">
+                <a href="{{ url_for('student_tools_dashboard') }}" class="back-btn mb-3 d-inline-block">
+                    <i class="fas fa-chevron-left me-2"></i> Dashboard
+                </a>
+                <h2><i class="fas fa-compass me-3" style="color: var(--lab-accent);"></i>V510 Astronomical Matrix</h2>
+                <p class="text-muted fw-bold mb-0">PRO MAX OBSERVTORY TERMINAL</p>
+            </div>
+
+            <div class="toggle-container">
+                <i class="fas fa-sun text-warning"></i>
+                <label class="switch">
+                    <input type="checkbox" id="themeToggleCheckbox" onchange="executeThemeShift()">
+                    <span class="slider"></span>
+                </label>
+                <i class="fas fa-moon text-primary"></i>
+            </div>
+        </div>
+
+        <div class="obs-lens">
+            <div class="lens-label">Live Terrestrial-Julian Sync</div>
+            <div class="lens-value" id="liveJDTicker">0000000.00000</div>
+            <div class="mt-2 fw-bold" style="color: var(--lab-text-muted);" id="liveMJDTicker">MJD: 00000.00000</div>
+        </div>
+
+        <div class="matrix-grid">
+            
+            <div class="console-panel">
+                <span class="console-label">Terrestrial Coordinate Injection</span>
+                <input type="datetime-local" id="inputDate" class="console-input">
+                
+                <button class="btn-action" onclick="convertDateToJulian()">
+                    <i class="fas fa-microchip me-2"></i> Extract Julian Mass
+                </button>
+
+                <div class="output-readout" id="dateToJulianOutput">
+                    AWAITING VECTOR
+                </div>
+            </div>
+
+            <div class="console-panel">
+                <span class="console-label">Julian Mass Injection</span>
+                <input type="number" id="inputJulian" class="console-input" step="0.00001" placeholder="e.g. 2460000.5">
+                
+                <button class="btn-action" style="background-color: #805ad5;" onclick="convertJulianToDate()">
+                    <i class="fas fa-atom me-2"></i> Reverse Trajectory
+                </button>
+
+                <div class="output-readout" id="julianToDateOutput" style="color: #805ad5;">
+                    AWAITING DATA
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V510 PRO MAX THEME ENGINE
+        // ==========================================
+        function executeThemeShift() {
+            let checkbox = document.getElementById('themeToggleCheckbox');
+            let htmlElement = document.documentElement;
+            
+            if (checkbox.checked === true) {
+                htmlElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('lisa_v510_theme', 'dark');
+            } else {
+                htmlElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('lisa_v510_theme', 'light');
+            }
+        }
+
+        function restoreThemeState() {
+            let savedTheme = localStorage.getItem('lisa_v510_theme');
+            let checkbox = document.getElementById('themeToggleCheckbox');
+            let htmlElement = document.documentElement;
+
+            if (savedTheme === 'dark') {
+                htmlElement.setAttribute('data-theme', 'dark');
+                checkbox.checked = true;
+            } else {
+                htmlElement.setAttribute('data-theme', 'light');
+                checkbox.checked = false;
+            }
+        }
+
+        // ==========================================
+        // V510 EXPLICIT MATHEMATICAL ENGINES
+        // ==========================================
+        
+        function calculateJulianFromDate(dateObject) {
+            let year = dateObject.getUTCFullYear();
+            let month = dateObject.getUTCMonth() + 1;
+            let day = dateObject.getUTCDate();
+            let hour = dateObject.getUTCHours();
+            let minute = dateObject.getUTCMinutes();
+            let second = dateObject.getUTCSeconds();
+            let millisecond = dateObject.getUTCMilliseconds();
+
+            // Fractional day math
+            let hourFrac = hour / 24;
+            let minFrac = minute / 1440;
+            let secFrac = (second + (millisecond / 1000)) / 86400;
+            let dayTotal = day + hourFrac + minFrac + secFrac;
+
+            if (month <= 2) {
+                year = year - 1;
+                month = month + 12;
+            }
+
+            let a_const = Math.floor(year / 100);
+            let b_const = 2 - a_const + Math.floor(a_const / 4);
+
+            let term1 = Math.floor(365.25 * (year + 4716));
+            let term2 = Math.floor(30.6001 * (month + 1));
+            
+            let finalJulian = term1 + term2 + dayTotal + b_const - 1524.5;
+            return finalJulian;
+        }
+
+        function calculateDateFromJulian(julianValue) {
+            let z_val = Math.floor(julianValue + 0.5);
+            let f_val = (julianValue + 0.5) - z_val;
+            let a_val = z_val;
+
+            if (z_val >= 2299161) {
+                let alpha = Math.floor((z_val - 1867216.25) / 36524.25);
+                a_val = z_val + 1 + alpha - Math.floor(alpha / 4);
+            }
+
+            let b_val = a_val + 1524;
+            let c_val = Math.floor((b_val - 122.1) / 365.25);
+            let d_val = Math.floor(365.25 * c_val);
+            let e_val = Math.floor((b_val - d_val) / 30.6001);
+
+            let dayFinal = b_val - d_val - Math.floor(30.6001 * e_val) + f_val;
+            let dayInteger = Math.floor(dayFinal);
+
+            let monthFinal;
+            if (e_val < 14) {
+                monthFinal = e_val - 1;
+            } else {
+                monthFinal = e_val - 13;
+            }
+
+            let yearFinal;
+            if (monthFinal > 2) {
+                yearFinal = c_val - 4716;
+            } else {
+                yearFinal = c_val - 4715;
+            }
+
+            // Time math
+            let timePart = dayFinal - dayInteger;
+            let totalSeconds = Math.round(timePart * 86400);
+            
+            let hour = Math.floor(totalSeconds / 3600);
+            let minute = Math.floor((totalSeconds % 3600) / 60);
+            let second = totalSeconds % 60;
+
+            return {
+                y: yearFinal,
+                m: monthFinal,
+                d: dayInteger,
+                hh: hour,
+                mm: minute,
+                ss: second
+            };
+        }
+
+        // ==========================================
+        // V510 INTERFACE CONTROLLERS
+        // ==========================================
+        
+        function updateLiveTicker() {
+            let now = new Date();
+            let jd = calculateJulianFromDate(now);
+            let mjd = jd - 2400000.5;
+
+            document.getElementById('liveJDTicker').innerText = jd.toFixed(5);
+            document.getElementById('liveMJDTicker').innerText = "MJD: " + mjd.toFixed(5);
+
+            requestAnimationFrame(updateLiveTicker);
+        }
+
+        function convertDateToJulian() {
+            let inputString = document.getElementById('inputDate').value;
+            if (inputString === "") {
+                alert("Input Required: Define terrestrial coordinates.");
+                return;
+            }
+
+            let dateObj = new Date(inputString);
+            let result = calculateJulianFromDate(dateObj);
+            
+            document.getElementById('dateToJulianOutput').innerText = "JD: " + result.toFixed(6);
+        }
+
+        function convertJulianToDate() {
+            let inputVal = document.getElementById('inputJulian').value;
+            if (inputVal === "") {
+                alert("Input Required: Define Julian mass.");
+                return;
+            }
+
+            let jdNum = parseFloat(inputVal);
+            let data = calculateDateFromJulian(jdNum);
+
+            let pad = function(n) {
+                let s = String(n);
+                if (s.length === 1) {
+                    return "0" + s;
+                }
+                return s;
+            };
+
+            let dateStr = String(data.y) + "-" + pad(data.m) + "-" + pad(data.d);
+            let timeStr = pad(data.hh) + ":" + pad(data.mm) + ":" + pad(data.ss);
+
+            document.getElementById('julianToDateOutput').innerHTML = dateStr + "<br><small>" + timeStr + " UTC</small>";
+        }
+
+        // Initialization
+        document.addEventListener("DOMContentLoaded", function() {
+            restoreThemeState();
+            
+            // Set input default to current time
+            let now = new Date();
+            let offset = now.getTimezoneOffset() * 60000;
+            let localDate = new Date(now.getTime() - offset);
+            document.getElementById('inputDate').value = localDate.toISOString().slice(0, 16);
+
+            updateLiveTicker();
+        });
+
+    </script>
+</body>
+</html>

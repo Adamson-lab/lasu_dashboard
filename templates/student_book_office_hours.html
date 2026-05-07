@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Office Hours</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <a href="{{ url_for('student_portal') }}" class="btn btn-secondary mb-3">← Back to Portal</a>
+
+    <h2 class="mb-4">📅 Book Office Hours</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-md-8">
+            <h4>Available Slots</h4>
+            <div class="row">
+                {% for slot in slots %}
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm border-start border-success border-4">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ slot.lecturer.title }} {{ slot.lecturer.name }}</h5>
+                            <p class="mb-1 text-muted">{{ slot.lecturer.department }}</p>
+                            <hr>
+                            <p class="mb-1"><strong>Date:</strong> {{ slot.start_time.strftime('%A, %d %b') }}</p>
+                            <p class="mb-3"><strong>Time:</strong> {{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}</p>
+                            
+                            <form action="{{ url_for('book_slot', slot_id=slot.id) }}" method="POST">
+                                <input type="text" name="topic" class="form-control mb-2" placeholder="Reason (e.g. Project Help)" required>
+                                <button type="submit" class="btn btn-success w-100">Book Slot</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">No office hours available from your lecturers at the moment.</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <h4>My Upcoming Appointments</h4>
+            <div class="list-group">
+                {% for appt in my_appts %}
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ appt.lecturer.title }} {{ appt.lecturer.name }}</h6>
+                        <small>{{ appt.start_time.strftime('%d %b') }}</small>
+                    </div>
+                    <p class="mb-1">{{ appt.start_time.strftime('%I:%M %p') }}</p>
+                    <small>Link: <a href="{{ appt.meeting_link }}" target="_blank">Join Meeting</a></small>
+                </div>
+                {% else %}
+                <p class="text-muted">You haven't booked any sessions yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

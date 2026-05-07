@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinetic Sticky Notes | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Kalam:wght@400;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --gideon-dark: #0a0e17;
+            --grid-color: #ced4da;
+            
+            /* Note Colors */
+            --note-yellow: #fff740;
+            --note-green: #a2faaf;
+            --note-blue: #9ee7ff;
+            --note-pink: #ff9eeb;
+            --note-purple: #d5a6ff;
+        }
+
+        body { 
+            background-color: #f4f7f6; 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; /* Prevent scrolling, canvas handles it */
+        }
+        
+        .navbar-custom { background-color: var(--lasu-green); box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding-top: 12px; padding-bottom: 12px; z-index: 1000;}
+        .back-btn { color: white; text-decoration: none; font-weight: 600; display: flex; align-items: center; transition: opacity 0.2s; }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        /* Toolbar */
+        .toolbar {
+            background: white;
+            padding: 12px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e9ecef;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 500;
+        }
+        
+        .btn-action {
+            background: var(--lasu-accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-action:hover { background: #146c43; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);}
+        
+        .btn-danger-custom { background: var(--math-red); }
+        .btn-danger-custom:hover { background: #b02a37; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);}
+
+        .telemetry { font-family: 'Fira Code', monospace; font-size: 0.9rem; color: #6c757d; font-weight: 800; display: flex; gap: 20px;}
+        .telemetry span { color: var(--math-blue); }
+
+        /* The Infinite Canvas */
+        .canvas-area {
+            flex: 1;
+            position: relative;
+            background-color: #f8f9fa;
+            background-image: radial-gradient(var(--grid-color) 1.5px, transparent 1.5px);
+            background-size: 30px 30px;
+            overflow: hidden; /* We keep notes inside */
+        }
+
+        /* The Sticky Note */
+        .note {
+            position: absolute;
+            width: 280px;
+            min-height: 280px;
+            background: var(--note-yellow);
+            border-radius: 2px 2px 12px 2px;
+            box-shadow: 3px 6px 15px rgba(0,0,0,0.1), inset 0 0 40px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        
+        .note.dragging {
+            transform: scale(1.02) rotate(1deg);
+            box-shadow: 8px 12px 25px rgba(0,0,0,0.15);
+            opacity: 0.95;
+        }
+
+        /* Folding corner effect */
+        .note::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 30px;
+            height: 30px;
+            background: rgba(0,0,0,0.05);
+            border-top-left-radius: 12px;
+            box-shadow: -2px -2px 5px rgba(0,0,0,0.05);
+            pointer-events: none;
+        }
+
+        .note-header {
+            height: 35px;
+            background: rgba(0,0,0,0.05);
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .note-header:active { cursor: grabbing; }
+
+        .note-controls { display: flex; gap: 5px; align-items: center;}
+        
+        .color-dot { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); transition: 0.2s;}
+        .color-dot:hover { transform: scale(1.2); }
+        .color-dot.yellow { background: var(--note-yellow); }
+        .color-dot.green { background: var(--note-green); }
+        .color-dot.blue { background: var(--note-blue); }
+        .color-dot.pink { background: var(--note-pink); }
+        .color-dot.purple { background: var(--note-purple); }
+
+        .btn-delete { background: transparent; border: none; color: rgba(0,0,0,0.4); cursor: pointer; padding: 2px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+        .btn-delete:hover { color: var(--math-red); transform: scale(1.1);}
+
+        .note-body {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background: transparent;
+            resize: none;
+            outline: none;
+            font-family: 'Kalam', cursive; /* Handwritten look */
+            font-size: 1.3rem;
+            line-height: 1.5;
+            color: #212529;
+            overflow-y: auto;
+        }
+        
+        .note-body::-webkit-scrollbar { width: 6px; }
+        .note-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
+
+        .timestamp {
+            font-size: 0.7rem;
+            color: rgba(0,0,0,0.4);
+            text-align: right;
+            padding: 5px 15px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+        }
+
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="toolbar">
+    <div class="telemetry">
+        <div>Active Notes: <span id="noteCount">0</span></div>
+        <div>Status: <span id="saveStatus" style="color: var(--lasu-accent);">Synced</span></div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-action btn-danger-custom" onclick="clearAllNotes()">
+            <i class="fas fa-trash-alt"></i> Nuke Board
+        </button>
+        <button class="btn-action" onclick="createNewNote()">
+            <i class="fas fa-plus"></i> Spawn Note
+        </button>
+    </div>
+</div>
+
+<div class="canvas-area" id="canvasArea">
+    </div>
+
+<script>
+    const canvasArea = document.getElementById('canvasArea');
+    const noteCountUI = document.getElementById('noteCount');
+    const saveStatus = document.getElementById('saveStatus');
+    
+    const STORAGE_KEY = 'gideon_kinetic_notes';
+    
+    // Matrix State
+    let notes = [];
+    let topZIndex = 10; // Start z-index to always overlay properly
+
+    // --- INITIALIZATION ---
+    function loadNotes() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            notes = JSON.parse(saved);
+            // Find highest Z-Index to continue layering properly
+            notes.forEach(n => { if (n.zIndex > topZIndex) topZIndex = n.zIndex; });
+        } else {
+            // Spawn a welcome note if empty
+            notes = [{
+                id: generateID(),
+                text: "Welcome to the Kinetic Notes Matrix.\n\n- Drag me around by the top bar.\n- Change my color with the dots.\n- Spawn new notes from the top right.",
+                x: 100, y: 100,
+                color: 'yellow',
+                zIndex: topZIndex,
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            }];
+        }
+        renderBoard();
+    }
+
+    function generateID() {
+        return 'note_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // --- AUTO SAVE ENGINE ---
+    let saveTimeout;
+    function autoSave() {
+        saveStatus.innerText = "Saving...";
+        saveStatus.style.color = "var(--math-orange)";
+        
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+            saveStatus.innerText = "Synced";
+            saveStatus.style.color = "var(--lasu-accent)";
+            noteCountUI.innerText = notes.length;
+        }, 500);
+    }
+
+    // --- RENDERING ENGINE ---
+    function renderBoard() {
+        canvasArea.innerHTML = '';
+        noteCountUI.innerText = notes.length;
+
+        notes.forEach(note => {
+            const noteEl = document.createElement('div');
+            noteEl.className = 'note';
+            noteEl.id = note.id;
+            noteEl.style.left = `${note.x}px`;
+            noteEl.style.top = `${note.y}px`;
+            noteEl.style.zIndex = note.zIndex;
+            
+            // Set Color
+            let bgColor = `var(--note-${note.color})`;
+            noteEl.style.backgroundColor = bgColor;
+
+            noteEl.innerHTML = `
+                <div class="note-header" onmousedown="bringToFront('${note.id}')">
+                    <div class="note-controls">
+                        <div class="color-dot yellow" onclick="changeColor('${note.id}', 'yellow')"></div>
+                        <div class="color-dot green" onclick="changeColor('${note.id}', 'green')"></div>
+                        <div class="color-dot blue" onclick="changeColor('${note.id}', 'blue')"></div>
+                        <div class="color-dot pink" onclick="changeColor('${note.id}', 'pink')"></div>
+                        <div class="color-dot purple" onclick="changeColor('${note.id}', 'purple')"></div>
+                    </div>
+                    <button class="btn-delete" onclick="deleteNote('${note.id}')"><i class="fas fa-times"></i></button>
+                </div>
+                <textarea class="note-body" onmousedown="bringToFront('${note.id}')" oninput="updateText('${note.id}', this.value)" spellcheck="false">${note.text}</textarea>
+                <div class="timestamp">${note.time}</div>
+            `;
+
+            // Attach drag events to the header
+            const header = noteEl.querySelector('.note-header');
+            dragElement(noteEl, header, note);
+
+            canvasArea.appendChild(noteEl);
+        });
+    }
+
+    // --- NOTE MANIPULATION ---
+    function createNewNote() {
+        topZIndex++;
+        // Add slight random offset so they don't spawn exactly on top of each other
+        const offset = Math.floor(Math.random() * 50);
+        
+        const newNote = {
+            id: generateID(),
+            text: "",
+            x: 100 + offset, 
+            y: 100 + offset,
+            color: 'yellow',
+            zIndex: topZIndex,
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        };
+        
+        notes.push(newNote);
+        autoSave();
+        renderBoard();
+    }
+
+    function deleteNote(id) {
+        notes = notes.filter(n => n.id !== id);
+        autoSave();
+        renderBoard();
+    }
+
+    function clearAllNotes() {
+        if(confirm("Are you sure you want to nuke the entire board? This cannot be undone.")) {
+            notes = [];
+            autoSave();
+            renderBoard();
+        }
+    }
+
+    function updateText(id, newText) {
+        const note = notes.find(n => n.id === id);
+        if (note) {
+            note.text = newText;
+            note.time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            autoSave();
+            // Update timestamp UI without full re-render
+            document.querySelector(`#${id} .timestamp`).innerText = note.time;
+        }
+    }
+
+    function changeColor(id, newColor) {
+        const note = notes.find(n => n.id === id);
+        if (note) {
+            note.color = newColor;
+            autoSave();
+            document.getElementById(id).style.backgroundColor = `var(--note-${newColor})`;
+        }
+    }
+
+    function bringToFront(id) {
+        topZIndex++;
+        const note = notes.find(n => n.id === id);
+        if (note) {
+            note.zIndex = topZIndex;
+            document.getElementById(id).style.zIndex = topZIndex;
+            autoSave();
+        }
+    }
+
+    // --- KINETIC DRAG ENGINE ---
+    function dragElement(elmnt, header, noteObj) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        
+        header.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e.preventDefault();
+            bringToFront(noteObj.id);
+            elmnt.classList.add('dragging');
+            
+            // Get initial cursor position
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            e.preventDefault();
+            // Calculate new cursor position
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            
+            // Set new position
+            let newY = elmnt.offsetTop - pos2;
+            let newX = elmnt.offsetLeft - pos1;
+            
+            // Bounds checking (Keep inside canvas)
+            const canvasRect = canvasArea.getBoundingClientRect();
+            if (newX < 0) newX = 0;
+            if (newY < 0) newY = 0;
+            if (newX + elmnt.offsetWidth > canvasRect.width) newX = canvasRect.width - elmnt.offsetWidth;
+            if (newY + elmnt.offsetHeight > canvasRect.height) newY = canvasRect.height - elmnt.offsetHeight;
+
+            elmnt.style.top = newY + "px";
+            elmnt.style.left = newX + "px";
+        }
+
+        function closeDragElement() {
+            // Stop dragging
+            document.onmouseup = null;
+            document.onmousemove = null;
+            elmnt.classList.remove('dragging');
+            
+            // Save new coordinates
+            noteObj.x = parseInt(elmnt.style.left);
+            noteObj.y = parseInt(elmnt.style.top);
+            autoSave();
+        }
+    }
+
+    // Boot
+    loadNotes();
+    
+    // Re-render if window resizes to ensure notes stay in bounds
+    window.addEventListener('resize', () => {
+        let needsSave = false;
+        const canvasRect = canvasArea.getBoundingClientRect();
+        
+        notes.forEach(n => {
+            const el = document.getElementById(n.id);
+            if (el) {
+                if (n.x + el.offsetWidth > canvasRect.width) { n.x = Math.max(0, canvasRect.width - el.offsetWidth); needsSave = true; }
+                if (n.y + el.offsetHeight > canvasRect.height) { n.y = Math.max(0, canvasRect.height - el.offsetHeight); needsSave = true; }
+            }
+        });
+        
+        if (needsSave) {
+            autoSave();
+            renderBoard();
+        }
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

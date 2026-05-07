@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Live Editor | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-orange: #fd7e14;
+            --math-red: #dc3545;
+        }
+
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        .navbar-custom { background-color: var(--lasu-green); box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding-top: 12px; padding-bottom: 12px; }
+        .back-btn { color: white; text-decoration: none; font-weight: 600; display: flex; align-items: center; transition: opacity 0.2s; }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container { flex: 1; display: flex; padding: 2rem; max-width: 1600px; margin: 0 auto; width: 100%; gap: 20px; }
+
+        /* Left and Right Panes */
+        .editor-pane, .preview-pane { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
+        
+        .card-box { background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; flex: 1; overflow: hidden;}
+        
+        .pane-header { background: #f8f9fa; padding: 15px 20px; font-weight: 800; color: var(--lasu-green); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Toolbar Styling */
+        .toolbar { padding: 10px 20px; background: white; border-bottom: 1px solid #e9ecef; display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-tool { background: #f8f9fa; border: 1px solid #ced4da; color: #495057; width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .btn-tool:hover { background: var(--math-blue); color: white; border-color: var(--math-blue); transform: translateY(-2px); }
+        .toolbar-divider { width: 1px; background: #dee2e6; margin: 0 5px; }
+
+        /* Text Areas */
+        .md-input { flex: 1; width: 100%; border: none; padding: 20px; font-family: 'Fira Code', monospace; font-size: 1.05rem; color: #212529; outline: none; resize: none; line-height: 1.6; background: #ffffff; }
+        
+        .md-preview { flex: 1; width: 100%; padding: 20px 30px; overflow-y: auto; background: #ffffff; color: #212529; line-height: 1.7; font-size: 1.1rem; border-left: 1px solid #e9ecef;}
+
+        /* Beautiful Preview Styling */
+        .md-preview h1, .md-preview h2, .md-preview h3 { color: var(--lasu-green); font-weight: 800; margin-top: 1.5rem; margin-bottom: 1rem; }
+        .md-preview h1 { border-bottom: 2px solid #e9ecef; padding-bottom: 10px; }
+        .md-preview p { margin-bottom: 1.2rem; }
+        .md-preview a { color: var(--math-blue); font-weight: 600; text-decoration: none; }
+        .md-preview a:hover { text-decoration: underline; }
+        .md-preview blockquote { border-left: 5px solid var(--math-orange); background: #fff8f1; padding: 15px; border-radius: 0 8px 8px 0; color: #495057; font-style: italic; margin-bottom: 1.5rem;}
+        .md-preview code { font-family: 'Fira Code', monospace; background: #f1f3f5; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; color: var(--math-red); }
+        .md-preview pre { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; overflow-x: auto; margin-bottom: 1.5rem; }
+        .md-preview pre code { background: transparent; padding: 0; color: #212529; }
+        .md-preview table { width: 100%; margin-bottom: 1.5rem; border-collapse: collapse; }
+        .md-preview th, .md-preview td { border: 1px solid #dee2e6; padding: 10px; }
+        .md-preview th { background: #f8f9fa; font-weight: 700; }
+        .md-preview img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        /* Bottom Action Bar */
+        .action-bar { padding: 15px 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
+        .btn-download { background: var(--lasu-accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; font-size: 0.9rem; }
+        .btn-download:hover { background: #146c43; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(25, 135, 84, 0.2); }
+        .btn-download-html { background: var(--math-blue); }
+        .btn-download-html:hover { background: #0b5ed7; box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2); }
+
+        .status-badge { font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #6c757d; font-weight: 700; }
+
+        @media (max-width: 992px) { .main-container { flex-direction: column; } .editor-pane, .preview-pane { height: 50vh; } }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="editor-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fab fa-markdown me-2"></i> Raw Markdown</div>
+                <div class="status-badge"><span id="wordCount">0</span> Words</div>
+            </div>
+            
+            <div class="toolbar">
+                <button class="btn-tool" onclick="insertText('**', '**')" title="Bold"><i class="fas fa-bold"></i></button>
+                <button class="btn-tool" onclick="insertText('_', '_')" title="Italic"><i class="fas fa-italic"></i></button>
+                <button class="btn-tool" onclick="insertText('~~', '~~')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                <div class="toolbar-divider"></div>
+                <button class="btn-tool" onclick="insertText('### ', '')" title="Heading"><i class="fas fa-heading"></i></button>
+                <button class="btn-tool" onclick="insertText('> ', '')" title="Quote"><i class="fas fa-quote-right"></i></button>
+                <button class="btn-tool" onclick="insertText('- ', '')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                <button class="btn-tool" onclick="insertText('1. ', '')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                <div class="toolbar-divider"></div>
+                <button class="btn-tool" onclick="insertText('[Link Text](', ')')" title="Link"><i class="fas fa-link"></i></button>
+                <button class="btn-tool" onclick="insertText('![Alt Text](', ')')" title="Image"><i class="fas fa-image"></i></button>
+                <button class="btn-tool" onclick="insertText('```\n', '\n```')" title="Code Block"><i class="fas fa-code"></i></button>
+            </div>
+
+            <textarea class="md-input" id="mdInput" spellcheck="false" placeholder="Start typing your document here...
+
+Use the toolbar above to easily format your text.
+
+# Welcome to the Matrix
+This editor translates what you write into beautiful HTML on the right side.
+
+- **Fast**
+- **Clean**
+- **Synchronized**"></textarea>
+            
+            <div class="action-bar">
+                <button class="btn-download btn-download-html" onclick="downloadHTML()">
+                    <i class="fas fa-file-code me-2"></i> Export HTML
+                </button>
+                <button class="btn-download" onclick="downloadMD()">
+                    <i class="fas fa-download me-2"></i> Save .MD
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="preview-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-eye me-2 text-primary"></i> Live Preview</div>
+                <div class="status-badge text-success"><i class="fas fa-sync-alt fa-spin me-1"></i> Synced</div>
+            </div>
+            
+            <div class="md-preview" id="mdOutput"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const mdInput = document.getElementById('mdInput');
+    const mdOutput = document.getElementById('mdOutput');
+    const wordCount = document.getElementById('wordCount');
+
+    // Configure the Marked.js Engine to use Highlight.js for code blocks
+    marked.setOptions({
+        highlight: function(code, lang) {
+            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+            return hljs.highlight(code, { language }).value;
+        },
+        langPrefix: 'hljs language-', 
+        breaks: true, // Converts standard line breaks to <br>
+        gfm: true     // Enables GitHub Flavored Markdown (tables, checklists, etc.)
+    });
+
+    // Main render function
+    function renderPreview() {
+        const text = mdInput.value;
+        
+        // Update Word Count
+        const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        wordCount.innerText = words.toLocaleString();
+
+        // Convert and output HTML
+        mdOutput.innerHTML = marked.parse(text);
+    }
+
+    // Trigger render immediately and every time the user types
+    renderPreview();
+    mdInput.addEventListener('input', renderPreview);
+
+    // --- SCROLL SYNCHRONIZATION ---
+    // When you scroll the left box, the right box scrolls automatically to match
+    let isSyncingLeft = false;
+    let isSyncingRight = false;
+
+    mdInput.addEventListener('scroll', function() {
+        if (!isSyncingLeft) {
+            isSyncingRight = true;
+            // Calculate how far down we are as a percentage (0.0 to 1.0)
+            const percentage = this.scrollTop / (this.scrollHeight - this.clientHeight);
+            // Apply that percentage to the right box
+            mdOutput.scrollTop = percentage * (mdOutput.scrollHeight - mdOutput.clientHeight);
+        }
+        isSyncingLeft = false;
+    });
+
+    mdOutput.addEventListener('scroll', function() {
+        if (!isSyncingRight) {
+            isSyncingLeft = true;
+            const percentage = this.scrollTop / (this.scrollHeight - this.clientHeight);
+            mdInput.scrollTop = percentage * (mdInput.scrollHeight - mdInput.clientHeight);
+        }
+        isSyncingRight = false;
+    });
+
+    // --- TOOLBAR BUTTON LOGIC ---
+    function insertText(prefix, suffix) {
+        const start = mdInput.selectionStart;
+        const end = mdInput.selectionEnd;
+        const text = mdInput.value;
+        const selectedText = text.substring(start, end);
+
+        // Wrap the selected text in the markdown syntax
+        const replacement = prefix + selectedText + suffix;
+        mdInput.value = text.substring(0, start) + replacement + text.substring(end);
+        
+        // Put the user's cursor back in the right spot
+        mdInput.focus();
+        if (selectedText.length === 0) {
+            mdInput.selectionStart = start + prefix.length;
+            mdInput.selectionEnd = start + prefix.length;
+        } else {
+            mdInput.selectionStart = start;
+            mdInput.selectionEnd = start + replacement.length;
+        }
+        
+        renderPreview();
+    }
+
+    // --- EXPORT/DOWNLOAD LOGIC ---
+    function downloadMD() {
+        const blob = new Blob([mdInput.value], { type: 'text/markdown' });
+        triggerDownload(blob, 'lasu_document.md');
+    }
+
+    function downloadHTML() {
+        // Create a clean HTML wrapper so the exported file looks nice on its own
+        const cleanHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Markdown Export</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 40px; }
+        h1, h2, h3 { color: #004d40; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+        img { max-width: 100%; border-radius: 8px; }
+        blockquote { border-left: 4px solid #fd7e14; padding-left: 15px; color: #666; background: #f9f9f9; padding: 10px; border-radius: 4px;}
+        code { background: #f4f4f4; padding: 2px 5px; border-radius: 4px; color: #dc3545;}
+        pre { background: #f4f4f4; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        pre code { background: none; color: inherit; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+${mdOutput.innerHTML}
+</body>
+</html>`;
+        
+        const blob = new Blob([cleanHTML], { type: 'text/html' });
+        triggerDownload(blob, 'lasu_document.html');
+    }
+
+    function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCD & LCM Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1300px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .input-text {
+            resize: none;
+            font-family: 'Fira Code', monospace;
+            border-radius: 8px;
+            border: 2px solid #ced4da;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #212529;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .input-text:focus {
+            border-color: var(--math-blue);
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+        }
+
+        .alert-info-custom {
+            background: rgba(13, 110, 253, 0.05);
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            color: #0d6efd;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: auto;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .result-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--math-blue);
+            word-break: break-all;
+            line-height: 1.2;
+        }
+        
+        .result-value.lcm-val {
+            color: var(--lasu-accent);
+        }
+
+        /* Euclidean Table */
+        .proof-section {
+            display: none;
+            flex-direction: column;
+        }
+
+        .table-wrapper {
+            max-height: 350px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .table-custom {
+            margin-bottom: 0;
+            font-family: 'Fira Code', monospace;
+            text-align: center;
+            background: white;
+        }
+        
+        .table-custom thead th {
+            position: sticky;
+            top: 0;
+            background: #212529;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            padding: 12px;
+            z-index: 1;
+        }
+
+        .table-custom tbody td {
+            padding: 12px;
+            vertical-align: middle;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .col-a { color: var(--math-blue); font-weight: 800 !important; }
+        .col-b { color: #6c757d; }
+        .col-q { color: #212529; }
+        .col-r { color: var(--math-orange); font-weight: 800 !important; }
+
+        .benchmark {
+            text-align: right;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: #adb5bd;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .results-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-list-ol"></i> Data Input
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold text-muted small text-uppercase d-block mb-2">Target Numbers</label>
+                <textarea class="input-text w-100" id="numInput" rows="4" placeholder="Enter positive numbers separated by commas (e.g., 12, 18, 24)" oninput="calculate()"></textarea>
+                <div class="small text-danger mt-2 fw-bold d-none text-center" id="errorMsg">
+                    <i class="fas fa-exclamation-triangle"></i> Please enter valid positive integers.
+                </div>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mb-4" onclick="clearInput()">
+                <i class="fas fa-eraser me-2"></i> Clear Input
+            </button>
+
+            <div class="alert-info-custom mt-auto">
+                <i class="fas fa-microchip mb-2 fa-lg"></i><br>
+                <strong>Infinite Precision Engine:</strong> This calculator utilizes the native <code class="bg-light px-1 rounded border">BigInt</code> API, guaranteeing mathematical perfection without floating-point corruption, regardless of how massive the resulting LCM becomes.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="pane-header text-dark border-0 mb-0 pb-0">
+                <i class="fas fa-check-double text-success"></i> Calculation Results
+            </div>
+            
+            <div class="results-grid mt-3">
+                <div class="result-box">
+                    <div class="result-title">Greatest Common Divisor (GCD)</div>
+                    <div class="result-value" id="gcdOutput">--</div>
+                </div>
+                <div class="result-box">
+                    <div class="result-title">Least Common Multiple (LCM)</div>
+                    <div class="result-value lcm-val" id="lcmOutput">--</div>
+                </div>
+            </div>
+
+            <div class="proof-section" id="proofSection">
+                <h6 class="fw-bold text-muted text-uppercase small mb-2"><i class="fas fa-superscript me-1"></i> Euclidean Algorithm Proof</h6>
+                <div class="table-wrapper">
+                    <table class="table table-borderless table-custom">
+                        <thead>
+                            <tr>
+                                <th>A</th>
+                                <th>=</th>
+                                <th>B</th>
+                                <th>&times;</th>
+                                <th>Q (Quotient)</th>
+                                <th>+</th>
+                                <th>R (Remainder)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="text-center mt-4 d-none" id="multiNote">
+                <span class="badge bg-light text-dark border p-2">
+                    <i class="fas fa-info-circle text-primary me-1"></i> Euclidean proof table is only available when exactly two numbers are provided.
+                </span>
+            </div>
+
+            <div class="benchmark mt-auto" id="benchmark">
+                Engine execution time: 0.00 ms
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const numInput = document.getElementById('numInput');
+    const gcdOutput = document.getElementById('gcdOutput');
+    const lcmOutput = document.getElementById('lcmOutput');
+    const errorMsg = document.getElementById('errorMsg');
+    const proofSection = document.getElementById('proofSection');
+    const tableBody = document.getElementById('tableBody');
+    const multiNote = document.getElementById('multiNote');
+    const benchmark = document.getElementById('benchmark');
+
+    let debounceTimer;
+
+    // --- INFINITE PRECISION MATHEMATICS (BigInt) ---
+    
+    // Core Euclidean Algorithm for BigInt
+    function gcdCore(a, b) {
+        while (b !== 0n) {
+            let temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    }
+
+    // LCM Algorithm for BigInt: (|a * b|) / gcd(a,b)
+    function lcmCore(a, b) {
+        if (a === 0n || b === 0n) return 0n;
+        return (a * b) / gcdCore(a, b);
+    }
+
+    // Euclidean Algorithm with Step Tracking (Only triggered for exactly 2 numbers)
+    function euclideanSteps(a, b) {
+        let steps = [];
+        let currentA = a > b ? a : b;
+        let currentB = a > b ? b : a;
+
+        while (currentB !== 0n) {
+            let quotient = currentA / currentB; // BigInt division automatically floors
+            let remainder = currentA % currentB;
+            
+            steps.push({
+                a: currentA,
+                b: currentB,
+                q: quotient,
+                r: remainder
+            });
+
+            currentA = currentB;
+            currentB = remainder;
+        }
+        return steps;
+    }
+
+    // --- CONTROLLER ---
+    function calculate() {
+        clearTimeout(debounceTimer);
+        
+        debounceTimer = setTimeout(() => {
+            const rawVal = numInput.value.trim();
+            if (!rawVal) {
+                resetOutput();
+                return;
+            }
+
+            // Parse Input: Split by commas, trim, filter empty, convert to BigInt, remove negatives/zeros
+            let nums = [];
+            try {
+                const strArr = rawVal.split(',');
+                for (let str of strArr) {
+                    let cleanStr = str.trim();
+                    if (cleanStr.length > 0) {
+                        // Regex to ensure it's a valid integer (prevent floating points breaking BigInt)
+                        if (!/^-?\d+$/.test(cleanStr)) throw new Error("Invalid Format");
+                        
+                        let bigNum = BigInt(cleanStr);
+                        // Convert negative to positive mathematically for GCD/LCM
+                        if (bigNum < 0n) bigNum = -bigNum; 
+                        if (bigNum > 0n) nums.push(bigNum);
+                    }
+                }
+            } catch (e) {
+                showError();
+                return;
+            }
+
+            if (nums.length === 0) {
+                resetOutput();
+                return;
+            }
+            if (nums.length === 1) {
+                errorMsg.classList.remove('d-none');
+                errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please enter at least two valid numbers.';
+                resetOutput();
+                return;
+            }
+
+            errorMsg.classList.add('d-none');
+
+            const t0 = performance.now();
+
+            // Calculate Generalized GCD & LCM for Array using Reduce
+            const finalGcd = nums.reduce((acc, val) => gcdCore(acc, val));
+            const finalLcm = nums.reduce((acc, val) => lcmCore(acc, val));
+
+            const t1 = performance.now();
+
+            // Display Results
+            gcdOutput.innerText = finalGcd.toString();
+            lcmOutput.innerText = finalLcm.toString();
+
+            // Display Euclidean Proof if exactly 2 numbers
+            if (nums.length === 2) {
+                multiNote.classList.add('d-none');
+                const steps = euclideanSteps(nums[0], nums[1]);
+                renderTable(steps);
+            } else {
+                proofSection.style.display = 'none';
+                multiNote.classList.remove('d-none');
+            }
+
+            benchmark.innerText = `Engine execution time: ${(t1 - t0).toFixed(2)} ms`;
+
+        }, 150);
+    }
+
+    function renderTable(steps) {
+        tableBody.innerHTML = '';
+        steps.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="col-a">${s.a.toString()}</td>
+                <td>=</td>
+                <td class="col-b">${s.b.toString()}</td>
+                <td>&times;</td>
+                <td class="col-q">${s.q.toString()}</td>
+                <td>+</td>
+                <td class="col-r">${s.r.toString()}</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+        proofSection.style.display = 'flex';
+    }
+
+    function showError() {
+        errorMsg.classList.remove('d-none');
+        errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Invalid format. Please enter numbers separated by commas.';
+        resetOutput();
+    }
+
+    function resetOutput() {
+        gcdOutput.innerText = '--';
+        lcmOutput.innerText = '--';
+        proofSection.style.display = 'none';
+        multiNote.classList.add('d-none');
+        benchmark.innerText = `Engine execution time: 0.00 ms`;
+    }
+
+    function clearInput() {
+        numInput.value = '';
+        errorMsg.classList.add('d-none');
+        numInput.focus();
+        resetOutput();
+    }
+
+    // Auto-focus on load
+    window.onload = () => {
+        numInput.focus();
+    };
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find and Replace Engine | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .text-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            transition: all 0.2s;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Fira Code', monospace;
+            min-height: 200px;
+        }
+        .text-editor:focus {
+            border-color: var(--math-purple);
+            box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15);
+        }
+
+        .find-replace-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            width: 110px;
+            display: flex;
+            align-items: center;
+        }
+
+        .data-input {
+            flex: 1;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.1rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            color: #212529;
+            outline: none;
+            width: 100%;
+        }
+
+        .engine-toggles {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .form-switch {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding-left: 0;
+            margin: 0;
+        }
+        
+        .form-switch .form-check-input {
+            width: 2.5em;
+            height: 1.25em;
+            cursor: pointer;
+            margin: 0;
+            flex-shrink: 0;
+        }
+        .form-switch .form-check-input:checked {
+            background-color: var(--math-blue);
+            border-color: var(--math-blue);
+        }
+        
+        .form-check-label {
+            font-weight: 700;
+            color: #495057;
+            cursor: pointer;
+            margin: 0;
+            line-height: 1.1;
+        }
+        .form-check-label small {
+            display: block;
+            font-size: 0.7rem;
+            color: #adb5bd;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .output-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #e9ecef;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Fira Code', monospace;
+            min-height: 250px;
+        }
+
+        .telemetry-bar {
+            background: #212529;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+        .telemetry-bar span { color: var(--math-blue); transition: color 0.3s; }
+
+        .editor-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+        }
+        .btn-copy { background: var(--math-purple); color: white; flex: 2;}
+        .btn-copy:hover { background: #5a32a3; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(111, 66, 193, 0.2);}
+        
+        .btn-clear { background: #6c757d; color: white; flex: 1;}
+        .btn-clear:hover { background: #5c636a; transform: translateY(-2px); }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .engine-toggles { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-keyboard me-2"></i> Raw Source Text</div>
+            </div>
+
+            <textarea class="text-editor" id="rawInput" placeholder="Paste your target document here..." oninput="executeReplace()"></textarea>
+
+            <div class="pane-header border-0 mb-2 pb-0 mt-0" style="font-size: 0.85rem; color: #495057;">
+                Replacement Matrices
+            </div>
+
+            <div class="find-replace-grid">
+                <div class="input-group-custom">
+                    <div class="input-label text-danger"><i class="fas fa-search me-2"></i> Find</div>
+                    <input type="text" class="data-input" id="valFind" placeholder="Text to find..." oninput="executeReplace()">
+                </div>
+                <div class="input-group-custom">
+                    <div class="input-label text-success"><i class="fas fa-pen me-2"></i> Replace</div>
+                    <input type="text" class="data-input" id="valReplace" placeholder="Replace with..." oninput="executeReplace()">
+                </div>
+            </div>
+
+            <div class="engine-toggles">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="optCase" onchange="executeReplace()">
+                    <div>
+                        <label class="form-check-label" for="optCase">Match Case</label>
+                        <label class="form-check-label" for="optCase"><small>Apple ≠ apple</small></label>
+                    </div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="optWord" onchange="executeReplace()">
+                    <div>
+                        <label class="form-check-label" for="optWord">Whole Word</label>
+                        <label class="form-check-label" for="optWord"><small>Avoids matching 'cat' in 'category'</small></label>
+                    </div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="optRegex" onchange="executeReplace()">
+                    <div>
+                        <label class="form-check-label" for="optRegex" style="color: var(--math-purple);">Use Regex</label>
+                        <label class="form-check-label" for="optRegex"><small>Enable advanced pattern parsing</small></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-file-code me-2"></i> Processed Output</div>
+            </div>
+
+            <textarea class="output-editor" id="outputRes" readonly placeholder="Live preview of replacements will appear here..."></textarea>
+
+            <div class="telemetry-bar">
+                <div>Target Matches Found: <span id="matchCount" style="font-size: 1.2rem;">0</span></div>
+                <div id="statusBadge" style="color: #6c757d;"><i class="fas fa-satellite-dish me-1"></i> Scanning</div>
+            </div>
+
+            <div class="editor-controls">
+                <button class="btn-action btn-copy" onclick="copyOutput()" id="copyBtn">
+                    <i class="fas fa-copy"></i> Copy Output
+                </button>
+                <button class="btn-action btn-clear" onclick="clearAll()">
+                    <i class="fas fa-trash-alt"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const rawInput = document.getElementById('rawInput');
+    const valFind = document.getElementById('valFind');
+    const valReplace = document.getElementById('valReplace');
+    const outputRes = document.getElementById('outputRes');
+    
+    const optCase = document.getElementById('optCase');
+    const optWord = document.getElementById('optWord');
+    const optRegex = document.getElementById('optRegex');
+
+    const matchCount = document.getElementById('matchCount');
+    const statusBadge = document.getElementById('statusBadge');
+    const copyBtn = document.getElementById('copyBtn');
+
+    // Escape regex characters if user just wants a normal text search
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function executeReplace() {
+        let text = rawInput.value;
+        let findStr = valFind.value;
+        let replaceStr = valReplace.value;
+
+        if (!text) {
+            outputRes.value = '';
+            matchCount.innerText = '0';
+            matchCount.style.color = '#6c757d';
+            statusBadge.innerHTML = '<i class="fas fa-satellite-dish me-1"></i> Scanning';
+            statusBadge.style.color = '#6c757d';
+            return;
+        }
+
+        if (!findStr) {
+            outputRes.value = text; // Just show original if nothing to find
+            matchCount.innerText = '0';
+            matchCount.style.color = '#6c757d';
+            statusBadge.innerHTML = '<i class="fas fa-satellite-dish me-1"></i> Scanning';
+            statusBadge.style.color = '#6c757d';
+            return;
+        }
+
+        let flags = 'g'; // Global replace
+        if (!optCase.checked) flags += 'i'; // Case-insensitive
+
+        let searchPattern = findStr;
+
+        if (!optRegex.checked) {
+            searchPattern = escapeRegExp(findStr);
+        }
+
+        if (optWord.checked) {
+            // Word boundary wrapper
+            searchPattern = `\\b${searchPattern}\\b`;
+        }
+
+        try {
+            const regex = new RegExp(searchPattern, flags);
+            
+            // Count matches
+            const matches = text.match(regex);
+            const numMatches = matches ? matches.length : 0;
+
+            // Execute Replace
+            const result = text.replace(regex, replaceStr);
+
+            outputRes.value = result;
+            matchCount.innerText = numMatches.toLocaleString();
+
+            if (numMatches > 0) {
+                matchCount.style.color = 'var(--lasu-accent)';
+                statusBadge.innerHTML = '<i class="fas fa-check-circle me-1"></i> Targets Replaced';
+                statusBadge.style.color = 'var(--lasu-accent)';
+            } else {
+                matchCount.style.color = 'var(--math-red)';
+                statusBadge.innerHTML = '<i class="fas fa-times-circle me-1"></i> No Matches';
+                statusBadge.style.color = 'var(--math-red)';
+            }
+
+        } catch (e) {
+            // Handle invalid Regex syntax typed by user
+            outputRes.value = text;
+            matchCount.innerText = 'ERROR';
+            matchCount.style.color = 'var(--math-red)';
+            statusBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Invalid Regex';
+            statusBadge.style.color = 'var(--math-red)';
+        }
+    }
+
+    function copyOutput() {
+        if (!outputRes.value) return;
+        
+        outputRes.select();
+        document.execCommand('copy');
+        
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.style.backgroundColor = '#198754';
+        
+        setTimeout(() => { 
+            copyBtn.innerHTML = originalText; 
+            copyBtn.style.backgroundColor = 'var(--math-purple)';
+        }, 1500);
+    }
+
+    function clearAll() {
+        rawInput.value = '';
+        valFind.value = '';
+        valReplace.value = '';
+        executeReplace();
+        rawInput.focus();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

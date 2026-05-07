@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manual Course Registration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <span class="navbar-brand">Manual Student Registration</span>
+        <a href="{{ url_for('manage_courses') }}" class="btn btn-outline-light btn-sm">Back to Courses</a>
+    </div>
+</nav>
+
+<div class="container" style="max-width: 600px;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Register Student for {{ course.code }}</h5>
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="alert alert-info">{{ messages[0] }}</div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Student Matric Number</label>
+                    <input type="text" name="matric_no" class="form-control form-control-lg" placeholder="e.g. 2105910..." required autofocus>
+                </div>
+                <button type="submit" class="btn btn-success w-100 fw-bold">Register Student</button>
+            </form>
+        </div>
+        <div class="card-footer bg-light text-muted small">
+            This will manually force-add a student to this course list.
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

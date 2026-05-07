@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Course Registration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* SCROLL BUTTON STYLES */
+        .scroll-btn { position: fixed; right: 20px; width: 50px; height: 50px; border-radius: 50%; background-color: #198754; color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 1000; display: none; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.2s; }
+        .scroll-btn:hover { background-color: #145c32; transform: scale(1.1); color: white; }
+        #scrollToTop { bottom: 80px; }
+        #scrollToBottom { bottom: 20px; }
+        
+        /* Hover effect for course items */
+        .list-group-item:hover { background-color: #f8f9fa; }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-success px-3 mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">LASU Student Portal</a>
+        <a href="{{ url_for('student_portal') }}" class="btn btn-sm btn-outline-light">Back to Dashboard</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <div class="card shadow-sm border-0 border-top border-5 border-success">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0 fw-bold">📝 Course Registration</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Select the courses you are taking this semester.</p>
+                    
+                    <div class="mb-3">
+                        <input type="text" id="courseSearch" class="form-control form-control-lg" placeholder="🔍 Search course code (e.g., CSC) or title..." autocomplete="off">
+                    </div>
+
+                    <form action="{{ url_for('student_course_reg') }}" method="POST">
+                        <div class="list-group mb-4" id="courseList">
+                            {% for course in courses %}
+                            <div class="list-group-item d-flex gap-3 align-items-center js-course-item">
+                                <input class="form-check-input flex-shrink-0" type="checkbox" id="course_{{ course.id }}" name="courses" value="{{ course.id }}" style="font-size: 1.3em;"
+                                {% if course in student.registered_courses %}checked disabled{% endif %}>
+                                
+                                <label class="pt-1 form-checked-content flex-grow-1 mb-0" for="course_{{ course.id }}" style="cursor: pointer;">
+                                    <strong class="d-block text-dark">{{ course.code }}</strong>
+                                    <span class="d-block text-muted small">{{ course.title }}</span>
+                                </label>
+                                
+                                <span class="badge bg-secondary">{{ course.units }} Units</span>
+                                
+                                {% if course in student.registered_courses %}
+                                <span class="badge bg-success ms-2">Registered</span>
+                                {% endif %}
+
+                                {% if course.materials and course.materials|length > 0 %}
+                                <div class="dropdown ms-2">
+                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="dropdown_course_{{ course.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        📄 Materials ({{ course.materials|length }})
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown_course_{{ course.id }}">
+                                        {% for mat in course.materials %}
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('download_material_direct', material_id=mat.id) }}" target="_blank">
+                                                {{ mat.title }}
+                                            </a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                            
+                            <div id="noResults" class="alert alert-warning text-center mt-3" style="display: none;">
+                                No courses found matching your search.
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg fw-bold">Register Selected Courses</button>
+                            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<a href="#" id="scrollToTop" class="scroll-btn" title="Go to Top">⬆</a>
+<a href="#" id="scrollToBottom" class="scroll-btn" title="Go to Bottom">⬇</a>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // SCROLL BUTTON LOGIC
+    const btnTop = document.getElementById("scrollToTop");
+    const btnBottom = document.getElementById("scrollToBottom");
+    window.onscroll = function() {
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) { btnTop.style.display = "flex"; } else { btnTop.style.display = "none"; }
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) { btnBottom.style.display = "none"; } else { btnBottom.style.display = "flex"; }
+    };
+    btnTop.addEventListener("click", function(e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    btnBottom.addEventListener("click", function(e) { e.preventDefault(); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); });
+
+    // INSTANT SEARCH FILTER LOGIC
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById('courseSearch');
+        const items = document.querySelectorAll('.js-course-item');
+        const noResultsMsg = document.getElementById('noResults');
+
+        searchInput.addEventListener('input', function() {
+            const filter = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            items.forEach(function(item) {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    // Force display flex (removes inline display:none)
+                    item.style.removeProperty('display');
+                    visibleCount++;
+                } else {
+                    // Force hide with !important to override Bootstrap d-flex
+                    item.style.setProperty('display', 'none', 'important');
+                }
+            });
+
+            // Show/Hide "No Results" message
+            if (visibleCount === 0) {
+                noResultsMsg.style.display = "block";
+            } else {
+                noResultsMsg.style.display = "none";
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

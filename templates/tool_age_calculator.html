@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V210 Quantum Biometric Array | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V210 QUANTUM THEME ENGINE
+           ========================================== */
+        [data-theme="dark"] {
+            --bg-master: #020617;
+            --bg-surface: #0f172a;
+            --border-core: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --grid-line: rgba(255, 255, 255, 0.02);
+            --panel-bg: #050b14;
+            --input-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] {
+            --bg-master: #f8fafc;
+            --bg-surface: #ffffff;
+            --border-core: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --grid-line: rgba(0, 0, 0, 0.04);
+            --panel-bg: #f1f5f9;
+            --input-bg: #ffffff;
+        }
+
+        :root {
+            --neon-blue: #0ea5e9;
+            --neon-green: #10b981;
+            --neon-red: #f43f5e;
+            --neon-amber: #f59e0b;
+            --neon-pink: #ec4899; 
+            --neon-cyan: #06b6d4;
+            --neon-purple: #8b5cf6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-master);
+            color: var(--text-main);
+            padding: 40px 20px;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .tool-container {
+            max-width: 1500px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8);
+            border: 1px solid var(--border-core);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Scanline Overlay Effect */
+        .tool-container::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0.15;
+        }
+
+        .btn-theme {
+            background: var(--bg-surface); 
+            color: var(--text-main);
+            border: 1px solid var(--border-core); 
+            padding: 8px 15px;
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            font-size: 1.2rem;
+            z-index: 100; 
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-theme:hover { 
+            border-color: var(--neon-cyan); 
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); 
+        }
+
+        /* ==========================================
+           VECTOR INPUT (LEFT PANEL)
+           ========================================== */
+        .vector-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 10px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+            z-index: 100; 
+            position: relative;
+        }
+
+        .vector-node {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-core);
+            border-radius: 8px;
+            padding: 25px 20px;
+            position: relative;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .vector-node:focus-within {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+        }
+
+        .node-badge {
+            position: absolute; 
+            top: -12px; 
+            left: 15px;
+            background: var(--neon-cyan); 
+            color: #000;
+            font-size: 0.75rem; 
+            font-weight: 900; 
+            padding: 4px 12px;
+            border-radius: 4px; 
+            letter-spacing: 1px; 
+            text-transform: uppercase;
+        }
+
+        .datetime-input {
+            width: 100%; 
+            background: var(--input-bg); 
+            border: 1px solid var(--border-core);
+            color: var(--text-main); 
+            padding: 15px; 
+            font-size: 1.2rem;
+            font-family: 'Courier New', monospace; 
+            font-weight: 700;
+            border-radius: 6px; 
+            outline: none; 
+            transition: border-color 0.3s;
+        }
+        ::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
+        [data-theme="light"] ::-webkit-calendar-picker-indicator { filter: invert(0); }
+
+        .btn-execute {
+            background: transparent; 
+            color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan); 
+            padding: 15px;
+            border-radius: 6px; 
+            font-size: 1.1rem; 
+            font-weight: 900;
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            cursor: pointer;
+            transition: all 0.2s; 
+            margin-top: auto;
+        }
+        .btn-execute:hover { 
+            background: var(--neon-cyan); 
+            color: #000; 
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.5); 
+        }
+
+        /* Interplanetary Matrix */
+        .cosmic-grid {
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 10px; 
+            margin-top: 10px;
+        }
+        .cosmic-box {
+            background: rgba(139, 92, 246, 0.05); 
+            border: 1px dashed var(--neon-purple);
+            padding: 15px; 
+            border-radius: 6px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .cosmic-lbl { 
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+        .cosmic-val { 
+            font-family: 'Courier New', monospace; 
+            font-size: 1.1rem; 
+            font-weight: 900; 
+            color: var(--neon-purple); 
+        }
+
+        /* Relativistic Dilation */
+        .dilation-box {
+            background: rgba(244, 63, 94, 0.05); 
+            border: 1px dashed var(--neon-red);
+            padding: 15px; 
+            border-radius: 6px; 
+            text-align: center;
+        }
+        .dilation-val { 
+            font-family: 'Courier New', monospace; 
+            font-size: 1.5rem; 
+            font-weight: 900; 
+            color: var(--neon-red); 
+            margin: 5px 0; 
+        }
+
+        /* ==========================================
+           MATRIX OUTPUT (RIGHT PANEL)
+           ========================================== */
+        .output-panel {
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            height: 100%;
+            z-index: 100; 
+            position: relative;
+        }
+
+        /* Actuarial Trajectory (Lifespan Bar) */
+        .actuarial-box {
+            background: var(--panel-bg); 
+            border: 1px solid var(--border-core);
+            border-radius: 8px; 
+            padding: 25px;
+        }
+        .act-header {
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            color: var(--text-muted);
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            margin-bottom: 15px;
+        }
+        .act-track {
+            width: 100%; 
+            height: 12px; 
+            background: var(--border-core);
+            border-radius: 50px; 
+            position: relative; 
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .act-fill {
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+            border-radius: 50px; 
+            width: 0%; 
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
+        }
+        .act-stats {
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: 10px;
+            font-family: 'Courier New', monospace; 
+            font-size: 0.85rem; 
+            color: var(--text-main); 
+            font-weight: 700;
+        }
+
+        /* Main Live Ticker Hero */
+        .live-hero {
+            background: linear-gradient(135deg, var(--panel-bg) 0%, #081020 100%);
+            border: 1px solid var(--border-core); 
+            border-radius: 12px; 
+            padding: 30px;
+            text-align: center; 
+            border-bottom: 4px solid var(--neon-cyan); 
+            position: relative;
+        }
+        
+        .live-hero-title {
+            font-size: 0.85rem; 
+            font-weight: 900; 
+            color: var(--text-muted);
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin-bottom: 20px;
+        }
+
+        /* Ticking Grid */
+        .ticker-grid { 
+            display: flex; 
+            justify-content: center; 
+            gap: 15px; 
+            flex-wrap: wrap; 
+        }
+        .ticker-block { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        .ticker-val {
+            font-family: 'Courier New', monospace; 
+            font-size: 3.8rem; 
+            font-weight: 900;
+            color: var(--text-main); 
+            line-height: 1; 
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            font-variant-numeric: tabular-nums;
+        }
+        .ticker-lbl { 
+            font-size: 0.75rem; 
+            color: var(--neon-cyan); 
+            text-transform: uppercase; 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+            margin-top: 5px; 
+        }
+        .ticker-colon { 
+            font-size: 3rem; 
+            font-weight: 900; 
+            color: var(--text-muted); 
+            margin-top: -5px; 
+        }
+
+        /* Absolute Days Nanosecond Engine */
+        .absolute-card {
+            background: rgba(16, 185, 129, 0.05); 
+            border: 1px solid var(--neon-green);
+            border-radius: 8px; 
+            padding: 25px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .abs-lbl { 
+            font-size: 0.85rem; 
+            font-weight: 800; 
+            color: var(--neon-green); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+        .abs-val { 
+            font-family: 'Courier New', monospace; 
+            font-size: 3rem; 
+            font-weight: 900; 
+            color: var(--text-main); 
+            line-height: 1; 
+            text-shadow: 0 0 15px rgba(16,185,129,0.3);
+        }
+
+        /* Kinetic Biological Telemetry Grid */
+        .bio-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px; 
+        }
+        .bio-box {
+            background: var(--panel-bg); 
+            border: 1px solid var(--border-core);
+            border-radius: 8px; 
+            padding: 20px 15px; 
+            text-align: center; 
+            position: relative; 
+            overflow: hidden;
+        }
+        .bio-box i { 
+            position: absolute; 
+            right: -10px; 
+            bottom: -10px; 
+            font-size: 5rem; 
+            opacity: 0.05; 
+            transition: all 0.1s; 
+        }
+        
+        /* Kinetic Heartbeat controlled via JS class toggling */
+        .bio-box.heart.beat i { 
+            color: var(--neon-pink); 
+            opacity: 0.2; 
+            transform: scale(1.2); 
+        }
+        .bio-box.breath.inhale i { 
+            color: var(--neon-blue); 
+            opacity: 0.2; 
+            transform: scale(1.1); 
+        }
+
+        .bio-lbl { 
+            font-size: 0.7rem; 
+            font-weight: 800; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            margin-bottom: 5px; 
+        }
+        .bio-val { 
+            font-family: 'Courier New', monospace; 
+            font-size: 1.4rem; 
+            font-weight: 900; 
+            color: var(--text-main); 
+        }
+
+        .insights-panel {
+            background: var(--panel-bg); 
+            border-left: 4px solid var(--neon-amber);
+            padding: 15px 20px; 
+            border-radius: 0 4px 4px 0; 
+            font-size: 0.85rem; 
+            font-weight: 600;
+            color: var(--text-main); 
+            border-top: 1px solid var(--border-core);
+            border-right: 1px solid var(--border-core); 
+            border-bottom: 1px solid var(--border-core);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--border-core); position: relative; z-index: 100;">
+            <h2 class="fw-bold m-0" style="color: var(--text-main);">
+                <i class="fas fa-dna me-2" style="color: var(--neon-cyan);"></i> QUANTUM BIOMETRIC ARRAY
+                <span class="badge ms-2" style="background: var(--neon-cyan); color: #000; font-size: 0.75rem; vertical-align: middle; letter-spacing: 1px;">V210 PROTOCOL</span>
+            </h2>
+            <div class="d-flex gap-2">
+                <button class="btn-theme" id="themeToggleBtn" onclick="toggleMasterTheme()" title="Toggle Environment">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary fw-bold border-0" style="color: var(--text-main); background: var(--panel-bg);">
+                    <i class="fas fa-arrow-left me-1"></i> Terminate
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                <div class="vector-panel">
+                    
+                    <div class="vector-node">
+                        <div class="node-badge">Biological Origin Coordinates</div>
+                        <input type="datetime-local" id="dobInput" class="datetime-input">
+                        <div class="mt-3 text-end" style="font-size: 0.85rem; font-weight: 700; color: var(--neon-cyan);" id="bornDayOutput">
+                            Awaiting Extraction...
+                        </div>
+                    </div>
+
+                    <button class="btn-execute" onclick="initiateQuantumTelemetry()">Lock Vector & Ignite Array</button>
+
+                    <div class="cosmic-grid mt-2">
+                        <div class="cosmic-box">
+                            <div class="cosmic-lbl"><i class="fas fa-rocket me-2"></i>Martian Years</div>
+                            <div class="cosmic-val" id="valMars">0.00 Sols</div>
+                        </div>
+                        <div class="cosmic-box">
+                            <div class="cosmic-lbl"><i class="fas fa-moon me-2"></i>Lunar Cycles</div>
+                            <div class="cosmic-val" id="valMoon">0.00 Phases</div>
+                        </div>
+                    </div>
+
+                    <div class="dilation-box mt-2">
+                        <div class="cosmic-lbl" style="color: var(--neon-red);"><i class="fas fa-atom me-2"></i>Relativistic Time Dilation</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">Time gained due to Earth's orbital velocity (30km/s) relative to a stationary observer.</div>
+                        <div class="dilation-val" id="valDilation">+0.000 μs</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="output-panel">
+                    
+                    <div class="actuarial-box">
+                        <div class="act-header">
+                            <span><i class="fas fa-hourglass-half me-2"></i>Actuarial Trajectory (Est. 80-Year Lifespan)</span>
+                            <span id="actPct" style="color: var(--neon-cyan);">0.00% Saturation</span>
+                        </div>
+                        <div class="act-track">
+                            <div class="act-fill" id="actFill"></div>
+                        </div>
+                        <div class="act-stats">
+                            <span id="actDaysLived">0 Days Extracted</span>
+                            <span id="actDaysLeft" style="color: var(--text-muted);">29,220 Days Remaining</span>
+                        </div>
+                    </div>
+
+                    <div class="live-hero">
+                        <div class="live-hero-title">Continuous Biological Vector</div>
+                        
+                        <div class="ticker-grid">
+                            <div class="ticker-block"><div class="ticker-val" id="t-years">00</div><div class="ticker-lbl">Years</div></div>
+                            <div class="ticker-colon">:</div>
+                            <div class="ticker-block"><div class="ticker-val" id="t-months">00</div><div class="ticker-lbl">Months</div></div>
+                            <div class="ticker-colon">:</div>
+                            <div class="ticker-block"><div class="ticker-val" id="t-days">00</div><div class="ticker-lbl">Days</div></div>
+                        </div>
+                        
+                        <div class="ticker-grid mt-3" style="transform: scale(0.85);">
+                            <div class="ticker-block"><div class="ticker-val" id="t-hours">00</div><div class="ticker-lbl" style="color: var(--text-muted);">Hours</div></div>
+                            <div class="ticker-colon" style="color: var(--border-core);">:</div>
+                            <div class="ticker-block"><div class="ticker-val" id="t-mins">00</div><div class="ticker-lbl" style="color: var(--text-muted);">Minutes</div></div>
+                            <div class="ticker-colon" style="color: var(--border-core);">:</div>
+                            <div class="ticker-block"><div class="ticker-val" id="t-secs" style="color: var(--neon-cyan);">00</div><div class="ticker-lbl" style="color: var(--neon-cyan);">Seconds</div></div>
+                        </div>
+                    </div>
+
+                    <div class="absolute-card">
+                        <div class="abs-lbl"><i class="fas fa-infinity me-2"></i>Absolute Orbital Days</div>
+                        <div class="abs-val" id="absDays">0.0000000</div>
+                    </div>
+
+                    <div class="bio-grid">
+                        <div class="bio-box heart" id="boxHeart">
+                            <i class="fas fa-heartbeat"></i>
+                            <div class="bio-lbl">Myocardial Contractions</div>
+                            <div class="bio-val" id="bioHeart">0</div>
+                        </div>
+                        <div class="bio-box breath" id="boxBreath">
+                            <i class="fas fa-lungs"></i>
+                            <div class="bio-lbl">Pulmonary Cycles</div>
+                            <div class="bio-val" id="bioBreath">0</div>
+                        </div>
+                        <div class="bio-box">
+                            <i class="fas fa-bed"></i>
+                            <div class="bio-lbl">Regeneration (Hours)</div>
+                            <div class="bio-val" id="bioSleep">0</div>
+                        </div>
+                    </div>
+
+                    <div class="insights-panel" id="aiInsightsBox">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        <span id="aiInsightsText">Awaiting origin coordinates to map temporal trajectory.</span>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // THEME ENGINE
+        // ==========================================
+        function toggleMasterTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let newTheme;
+            
+            if (currentTheme === 'dark') {
+                newTheme = 'light';
+            } else {
+                newTheme = 'dark';
+            }
+
+            htmlElement.setAttribute('data-theme', newTheme);
+            
+            let themeIconElement = document.getElementById('themeIcon');
+            if (newTheme === 'light') {
+                themeIconElement.className = 'fas fa-moon';
+            } else {
+                themeIconElement.className = 'fas fa-sun';
+            }
+
+            localStorage.setItem('lisa_v210_theme', newTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v210_theme');
+            
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                let themeIconElement = document.getElementById('themeIcon');
+                
+                if (savedTheme === 'light') {
+                    themeIconElement.className = 'fas fa-moon';
+                } else {
+                    themeIconElement.className = 'fas fa-sun';
+                }
+            }
+        });
+
+        // ==========================================
+        // V210 STATE ARCHITECTURE
+        // ==========================================
+        let dateOfBirthObject = null;
+        let animationFrameRequestID = null;
+        
+        // Kinetic Timers
+        let lastHeartBeatTimestamp = 0;
+        let lastBreathTimestamp = 0;
+        
+        let heartRateMilliseconds = 60000 / 80; // 80 Beats Per Minute
+        let breathRateMilliseconds = 60000 / 16; // 16 Breaths Per Minute
+
+        function initiateQuantumTelemetry() {
+            let inputElement = document.getElementById('dobInput');
+            let inputValue = inputElement.value;
+            
+            if (inputValue === "") {
+                alert("Critical Error: System requires valid Biological Origin Coordinates.");
+                return;
+            }
+
+            dateOfBirthObject = new Date(inputValue);
+            let currentDateObject = new Date();
+
+            if (dateOfBirthObject.getTime() > currentDateObject.getTime()) {
+                alert("Critical Error: Origin Coordinate cannot exist in the future.");
+                return;
+            }
+
+            // 1. Orbital Extraction
+            let daysOfTheWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            let dayIndexNumber = dateOfBirthObject.getDay();
+            let dayNameString = daysOfTheWeek[dayIndexNumber];
+            
+            let bornDayOutputElement = document.getElementById('bornDayOutput');
+            bornDayOutputElement.innerHTML = "SPAWNED ON A <span style=\"text-transform: uppercase;\">" + dayNameString + "</span>";
+
+            // 2. Initiate Hardware Loop
+            if (animationFrameRequestID !== null) {
+                cancelAnimationFrame(animationFrameRequestID);
+            }
+            
+            runQuantumTicker();
+        }
+
+        // ==========================================
+        // V210 QUANTUM MATHEMATICS
+        // ==========================================
+        function padNumberWithZero(numberValue) {
+            let maximumNumber = Math.max(0, numberValue);
+            let stringNumber = String(maximumNumber);
+            return stringNumber.padStart(2, '0');
+        }
+
+        function formatLargeNumber(numberValue) {
+            let formatter = new Intl.NumberFormat('en-US');
+            let flooredNumber = Math.floor(numberValue);
+            return formatter.format(flooredNumber);
+        }
+
+        function formatDecimalNumber(numberValue, decimalPlaces) {
+            let formatter = new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: decimalPlaces,
+                maximumFractionDigits: decimalPlaces
+            });
+            return formatter.format(numberValue);
+        }
+
+        function removeHeartbeatClass() {
+            let boxHeartElement = document.getElementById('boxHeart');
+            boxHeartElement.classList.remove('beat');
+        }
+
+        function removeBreathClass() {
+            let boxBreathElement = document.getElementById('boxBreath');
+            boxBreathElement.classList.remove('inhale');
+        }
+
+        function runQuantumTicker() {
+            if (dateOfBirthObject === null) {
+                return;
+            }
+
+            let currentDateObject = new Date();
+            let performanceTimestamp = performance.now();
+
+            let differenceInMilliseconds = currentDateObject.getTime() - dateOfBirthObject.getTime();
+            let totalSeconds = differenceInMilliseconds / 1000;
+            let totalMinutes = totalSeconds / 60;
+            let totalHours = totalMinutes / 60;
+            let totalDays = totalHours / 24;
+
+            // --- A. Absolute Time Math (Nanosecond Simulation) ---
+            let absoluteDaysElement = document.getElementById('absDays');
+            absoluteDaysElement.innerText = formatDecimalNumber(totalDays, 7);
+
+            // --- B. Complex Year/Month/Day Math ---
+            let currentYear = currentDateObject.getFullYear();
+            let birthYear = dateOfBirthObject.getFullYear();
+            let yearsDifference = currentYear - birthYear;
+
+            let currentMonth = currentDateObject.getMonth();
+            let birthMonth = dateOfBirthObject.getMonth();
+            let monthsDifference = currentMonth - birthMonth;
+
+            let currentDay = currentDateObject.getDate();
+            let birthDay = dateOfBirthObject.getDate();
+            let daysDifference = currentDay - birthDay;
+            
+            if (daysDifference < 0) { 
+                monthsDifference = monthsDifference - 1; 
+                
+                // Calculate how many days were in the previous month
+                let previousMonthDateObject = new Date(currentYear, currentMonth, 0);
+                let daysInPreviousMonth = previousMonthDateObject.getDate();
+                
+                daysDifference = daysDifference + daysInPreviousMonth; 
+            }
+            
+            if (monthsDifference < 0) { 
+                yearsDifference = yearsDifference - 1; 
+                monthsDifference = monthsDifference + 12; 
+            }
+
+            let currentHour = currentDateObject.getHours();
+            let birthHour = dateOfBirthObject.getHours();
+            let hoursDifference = currentHour - birthHour;
+            
+            if (hoursDifference < 0) { 
+                daysDifference = daysDifference - 1; 
+                hoursDifference = hoursDifference + 24; 
+            }
+
+            let currentMinute = currentDateObject.getMinutes();
+            let birthMinute = dateOfBirthObject.getMinutes();
+            let minutesDifference = currentMinute - birthMinute;
+            
+            if (minutesDifference < 0) { 
+                hoursDifference = hoursDifference - 1; 
+                minutesDifference = minutesDifference + 60; 
+            }
+
+            let currentSecond = currentDateObject.getSeconds();
+            let birthSecond = dateOfBirthObject.getSeconds();
+            let secondsDifference = currentSecond - birthSecond;
+            
+            if (secondsDifference < 0) { 
+                minutesDifference = minutesDifference - 1; 
+                secondsDifference = secondsDifference + 60; 
+            }
+
+            // Push values to the UI Ticker Grid
+            document.getElementById('t-years').innerText = padNumberWithZero(yearsDifference);
+            document.getElementById('t-months').innerText = padNumberWithZero(monthsDifference);
+            document.getElementById('t-days').innerText = padNumberWithZero(daysDifference);
+            document.getElementById('t-hours').innerText = padNumberWithZero(hoursDifference);
+            document.getElementById('t-mins').innerText = padNumberWithZero(minutesDifference);
+            document.getElementById('t-secs').innerText = padNumberWithZero(secondsDifference);
+
+            // --- C. Actuarial Trajectory (80 Years) ---
+            let daysInEightyYears = 80 * 365.25; 
+            let actuarialPercentage = (totalDays / daysInEightyYears) * 100;
+            
+            if (actuarialPercentage > 100) {
+                actuarialPercentage = 100;
+            }
+
+            let daysRemaining = daysInEightyYears - totalDays;
+            if (daysRemaining < 0) {
+                daysRemaining = 0;
+            }
+
+            document.getElementById('actPct').innerText = formatDecimalNumber(actuarialPercentage, 4) + "% Saturation";
+            document.getElementById('actFill').style.width = String(actuarialPercentage) + "%";
+            document.getElementById('actDaysLived').innerText = formatLargeNumber(totalDays) + " Days Logged";
+            document.getElementById('actDaysLeft').innerText = formatLargeNumber(daysRemaining) + " Days Remaining";
+
+            // --- D. Interplanetary Physics ---
+            let martianYears = totalDays / 687; 
+            let lunarPhases = totalDays / 29.53; 
+            
+            document.getElementById('valMars').innerText = formatDecimalNumber(martianYears, 2) + " Sols";
+            document.getElementById('valMoon').innerText = formatDecimalNumber(lunarPhases, 2) + " Phases";
+
+            // --- E. Relativistic Time Dilation ---
+            let dilationFactorConstant = 0.000000005;
+            let microSecondsGainedNumber = (totalSeconds * dilationFactorConstant) * 1000000;
+            document.getElementById('valDilation').innerText = "+" + formatDecimalNumber(microSecondsGainedNumber, 3) + " μs";
+
+            // --- F. Kinetic Biometric Telemetry ---
+            let totalHeartbeats = totalMinutes * 80;
+            let totalBreaths = totalMinutes * 16;
+            let totalHoursSlept = totalDays * 8;
+
+            document.getElementById('bioHeart').innerText = formatLargeNumber(totalHeartbeats);
+            document.getElementById('bioBreath').innerText = formatLargeNumber(totalBreaths);
+            document.getElementById('bioSleep').innerText = formatLargeNumber(totalHoursSlept);
+
+            // Execute Kinetic UI Pulses
+            let boxHeartElement = document.getElementById('boxHeart');
+            let timeSinceLastHeartbeat = performanceTimestamp - lastHeartBeatTimestamp;
+            
+            if (timeSinceLastHeartbeat > heartRateMilliseconds) {
+                lastHeartBeatTimestamp = performanceTimestamp;
+                boxHeartElement.classList.add('beat');
+                setTimeout(removeHeartbeatClass, 150);
+            }
+
+            let boxBreathElement = document.getElementById('boxBreath');
+            let timeSinceLastBreath = performanceTimestamp - lastBreathTimestamp;
+            
+            if (timeSinceLastBreath > breathRateMilliseconds) {
+                lastBreathTimestamp = performanceTimestamp;
+                boxBreathElement.classList.add('inhale');
+                setTimeout(removeBreathClass, 1000);
+            }
+
+            // --- G. AI Insights ---
+            let aiTextElement = document.getElementById('aiInsightsText');
+            
+            let nextBirthdayDateObject = new Date(currentYear, birthMonth, birthDay);
+            
+            if (currentDateObject.getTime() > nextBirthdayDateObject.getTime()) {
+                nextBirthdayDateObject.setFullYear(currentYear + 1);
+            }
+            
+            let timeUntilBirthdayMilliseconds = nextBirthdayDateObject.getTime() - currentDateObject.getTime();
+            let millisecondsInFullDay = 1000 * 60 * 60 * 24;
+            let daysUntilBirthday = Math.ceil(timeUntilBirthdayMilliseconds / millisecondsInFullDay);
+
+            let insightString = "Trajectory Stable. Next Solar Return occurs in exactly <strong>" + String(daysUntilBirthday) + " days</strong>. Continue metabolic functions.";
+            aiTextElement.innerHTML = insightString;
+
+            // Trigger the next frame
+            animationFrameRequestID = requestAnimationFrame(runQuantumTicker);
+        }
+    </script>
+</body>
+</html>

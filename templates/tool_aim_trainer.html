@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V8500 Kinetic Aim Trainer | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V8500 KINETIC AIM THEME ENGINE
+           ========================================== */
+        
+        [data-theme="dark"] {
+            --nk-bg: #0b0f19;
+            --nk-surface: #131a2a;
+            --nk-text: #e2e8f0;
+            --nk-text-muted: #475569;
+            --nk-accent: #10b981; /* Precision Green */
+            --nk-error: #ef4444; 
+            --nk-border: #1e293b;
+        }
+
+        [data-theme="light"] {
+            --nk-bg: #f8fafc;
+            --nk-surface: #ffffff;
+            --nk-text: #0f172a;
+            --nk-text-muted: #94a3b8;
+            --nk-accent: #059669; 
+            --nk-border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--nk-bg);
+            color: var(--nk-text);
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none; /* Prevents text selection on rapid clicking */
+        }
+
+        .test-container {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        /* HUD Header */
+        .nk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--nk-border);
+        }
+
+        .nk-title {
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            color: var(--nk-accent);
+        }
+
+        .btn-nav {
+            background: transparent;
+            color: var(--nk-text);
+            border: 1px solid var(--nk-border);
+            padding: 10px 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-nav:hover { background: var(--nk-surface); border-color: var(--nk-accent); color: var(--nk-accent); }
+
+        /* Telemetry Dashboard */
+        .telemetry-dash {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .telemetry-node {
+            background: var(--nk-surface);
+            border: 1px solid var(--nk-border);
+            padding: 15px;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .node-val {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--nk-accent);
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .node-lbl {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--nk-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* The Aim Arena */
+        .arena-box {
+            flex-grow: 1;
+            min-height: 500px;
+            background: var(--nk-surface);
+            border: 2px solid var(--nk-border);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+            cursor: crosshair;
+        }
+
+        /* The Target */
+        .kinetic-target {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-color: var(--nk-accent);
+            border-radius: 50%;
+            display: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px var(--nk-accent), inset 0 0 15px rgba(0,0,0,0.5);
+            border: 4px solid var(--nk-bg);
+            transition: transform 0.05s;
+        }
+        .kinetic-target:active {
+            transform: translate(-50%, -50%) scale(0.85);
+        }
+
+        /* Overlay */
+        .overlay-blocker {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .btn-action {
+            background: var(--nk-accent);
+            color: #ffffff;
+            border: none;
+            padding: 15px 40px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .btn-action:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="test-container">
+        
+        <div class="nk-header">
+            <div>
+                <h1 class="nk-title">Aim Trainer</h1>
+                <div style="font-size: 0.8rem; font-weight: bold; color: var(--nk-text-muted); letter-spacing: 3px; margin-top: 5px;">V8500 Kinetic Precision Engine</div>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn-nav" onclick="toggleAimTheme()"><i class="fas fa-adjust"></i></button>
+                <a href="{{ url_for('student_tools_dashboard') }}" class="btn-nav"><i class="fas fa-arrow-left me-2"></i> Dashboard</a>
+            </div>
+        </div>
+
+        <div class="telemetry-dash">
+            <div class="telemetry-node">
+                <div class="node-val" id="hudHits">0 / 30</div>
+                <div class="node-lbl">Targets Hit</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudTime">0.00</div>
+                <div class="node-lbl">Time (Sec)</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudAvg">---</div>
+                <div class="node-lbl">Avg Response (ms)</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudAccuracy">100%</div>
+                <div class="node-lbl">Accuracy</div>
+            </div>
+        </div>
+
+        <div class="arena-box" id="aimArena">
+            
+            <div class="overlay-blocker" id="overlayBox">
+                <div style="font-size: 3rem; font-weight: 900; color: var(--nk-accent);" id="overlayTitle">TARGET ACQUISITION</div>
+                <div style="font-size: 1.2rem; color: var(--nk-text); margin-top: 10px;" id="overlaySub">Destroy 30 targets as fast as possible.</div>
+                <button class="btn-action" onclick="initiateTargetSequence()">Initiate Protocol</button>
+            </div>
+
+            <div class="kinetic-target" id="aimTarget"></div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V8500 THEME ENGINE
+        // ==========================================
+        function toggleAimTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v8500_aim', nextTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v8500_aim');
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        });
+
+        // ==========================================
+        // V8500 KINETIC AIM LOGIC
+        // ZERO ARROW FUNCTIONS. ZERO TERNARIES.
+        // ==========================================
+
+        let targetCountLimit = 30;
+        let currentHitCount = 0;
+        let totalClickCount = 0;
+        
+        let startTimestamp = 0;
+        let isEngineActive = false;
+        let timerIntervalObject = null;
+
+        let arenaElement = document.getElementById('aimArena');
+        let targetElement = document.getElementById('aimTarget');
+
+        function initiateTargetSequence() {
+            // Reset state
+            isEngineActive = true;
+            currentHitCount = 0;
+            totalClickCount = 0;
+            
+            document.getElementById('hudHits').innerText = "0 / " + String(targetCountLimit);
+            document.getElementById('hudTime').innerText = "0.00";
+            document.getElementById('hudAvg').innerText = "---";
+            document.getElementById('hudAccuracy').innerText = "100%";
+            
+            document.getElementById('overlayBox').style.display = "none";
+            targetElement.style.display = "block";
+
+            // High-res timeline start
+            startTimestamp = performance.now();
+            timerIntervalObject = setInterval(executeTimeTelemetry, 50);
+
+            renderNextTarget();
+        }
+
+        function executeTimeTelemetry() {
+            if (isEngineActive === true) {
+                let currentTimestamp = performance.now();
+                let timeDifferenceMs = currentTimestamp - startTimestamp;
+                let secondsPassed = timeDifferenceMs / 1000.0;
+                
+                document.getElementById('hudTime').innerText = secondsPassed.toFixed(2);
+            }
+        }
+
+        function renderNextTarget() {
+            // Calculate absolute boundaries to prevent target clipping outside arena
+            let arenaWidth = arenaElement.clientWidth;
+            let arenaHeight = arenaElement.clientHeight;
+            
+            // Target is 60px wide/tall. We offset by 30px padding so it doesn't touch the edge.
+            let safePadding = 40;
+            
+            let maximumX = arenaWidth - (safePadding * 2);
+            let maximumY = arenaHeight - (safePadding * 2);
+
+            let randomCoordinateX = Math.floor(Math.random() * maximumX) + safePadding;
+            let randomCoordinateY = Math.floor(Math.random() * maximumY) + safePadding;
+
+            targetElement.style.left = String(randomCoordinateX) + "px";
+            targetElement.style.top = String(randomCoordinateY) + "px";
+        }
+
+        function executeAccuracyCalculation() {
+            let accuracyPercentage = 100;
+            
+            if (totalClickCount > 0) {
+                accuracyPercentage = (currentHitCount / totalClickCount) * 100.0;
+            }
+            
+            let roundedAccuracy = Math.round(accuracyPercentage);
+            document.getElementById('hudAccuracy').innerText = String(roundedAccuracy) + "%";
+        }
+
+        function haltTargetSequence() {
+            isEngineActive = false;
+            clearInterval(timerIntervalObject);
+            targetElement.style.display = "none";
+
+            // Final calculations
+            let finalTimestamp = performance.now();
+            let totalTimeMs = finalTimestamp - startTimestamp;
+            let averageResponseMs = totalTimeMs / targetCountLimit;
+            let roundedAverage = Math.round(averageResponseMs);
+
+            document.getElementById('hudAvg').innerText = String(roundedAverage) + " ms";
+
+            // Present overlay results
+            document.getElementById('overlayBox').style.display = "flex";
+            document.getElementById('overlayTitle').innerText = "PROTOCOL COMPLETE";
+            
+            let accuracyString = document.getElementById('hudAccuracy').innerText;
+            let subTextString = "Average Response: " + String(roundedAverage) + " ms | Accuracy: " + accuracyString;
+            document.getElementById('overlaySub').innerText = subTextString;
+        }
+
+        // ==========================================
+        // TACTILE ENGAGEMENT LISTENERS
+        // ==========================================
+
+        // Listener for clicks directly on the target (Hits)
+        targetElement.addEventListener('mousedown', function(eventObject) {
+            
+            // Stop the click from bleeding through to the arena
+            eventObject.stopPropagation();
+
+            if (isEngineActive === true) {
+                currentHitCount = currentHitCount + 1;
+                totalClickCount = totalClickCount + 1;
+                
+                document.getElementById('hudHits').innerText = String(currentHitCount) + " / " + String(targetCountLimit);
+                executeAccuracyCalculation();
+
+                if (currentHitCount >= targetCountLimit) {
+                    haltTargetSequence();
+                } else {
+                    renderNextTarget();
+                }
+            }
+        });
+
+        // Listener for clicks on the arena background (Misses)
+        arenaElement.addEventListener('mousedown', function(eventObject) {
+            
+            if (isEngineActive === true) {
+                totalClickCount = totalClickCount + 1;
+                executeAccuracyCalculation();
+                
+                // Visual penalty flash
+                arenaElement.style.backgroundColor = "rgba(239, 68, 68, 0.1)"; // Red flash
+                setTimeout(function() {
+                    arenaElement.style.backgroundColor = "transparent";
+                }, 100);
+            }
+        });
+
+    </script>
+</body>
+</html>

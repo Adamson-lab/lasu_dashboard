@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT Exam: {{ quiz.course.code }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* 🛡️ SECURITY CSS: Disables selection and interaction */
+        body { 
+            background-color: #f0f2f5; 
+            user-select: none; /* Chrome/Safari */
+            -webkit-user-select: none;
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+ */
+            overflow-x: hidden; 
+            font-family: 'Segoe UI', sans-serif; 
+        }
+        
+        .cbt-header {
+            background: #004d40; color: white; padding: 10px 20px;
+            border-bottom: 4px solid #ffc107; position: sticky; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .timer-box {
+            font-family: 'Courier New', monospace; font-size: 1.5rem; font-weight: bold;
+            background: #000; color: #0f0; padding: 5px 15px; border-radius: 5px; border: 2px solid #333;
+        }
+        .timer-danger { color: #ff0000; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+
+        .question-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 450px; }
+        .question-text { font-size: 1.3rem; font-weight: 600; color: #2c3e50; margin-bottom: 30px; line-height: 1.6; }
+        .option-label {
+            display: flex; align-items: center; padding: 15px; margin-bottom: 15px;
+            border: 2px solid #e9ecef; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 1.1rem;
+        }
+        .option-label:hover { background-color: #f8f9fa; border-color: #adb5bd; }
+        .option-label.selected { border-color: #004d40; background-color: #e0f2f1; font-weight: bold; }
+        .option-label input { display: none; }
+        .option-key { 
+            width: 30px; height: 30px; background: #ddd; color: #333; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;
+        }
+        .option-label.selected .option-key { background: #004d40; color: white; }
+
+        .palette-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 350px; overflow-y: auto; padding: 5px; }
+        .palette-btn {
+            width: 100%; aspect-ratio: 1; border: 1px solid #ccc; background: #fff;
+            font-weight: bold; cursor: pointer; transition: 0.2s; border-radius: 5px;
+        }
+        .palette-btn.active { border: 2px solid #000; transform: scale(1.1); }
+        .palette-btn.answered { background-color: #198754; color: white; border-color: #198754; }
+
+        .student-info { text-align: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 10px; }
+        .student-img { width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 3px solid #004d40; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div class="cbt-header">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-desktop fa-2x me-3 text-warning"></i>
+        <div>
+            <h5 class="mb-0 fw-bold">{{ quiz.course.code }}</h5>
+            <small class="opacity-75">{{ quiz.title }}</small>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <span class="d-none d-md-block fw-bold small text-uppercase">Time Remaining:</span>
+        <div class="timer-box" id="timer">00:00:00</div>
+        <button type="button" class="btn btn-danger fw-bold" onclick="submitExam()">FINISH EXAM</button>
+    </div>
+</div>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-9">
+            <form id="examForm" action="{{ url_for('submit_quiz', quiz_id=quiz.id) }}" method="POST">
+                
+                <input type="hidden" name="violation_count" id="violationCountInput" value="0">
+
+                {% for q in questions %}
+                {% set q_index = loop.index %}
+                
+                <div class="question-slide {% if not loop.first %}d-none{% endif %}" id="q-slide-{{ q_index }}" data-idx="{{ q_index }}">
+                    <div class="question-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-primary fs-6">Question {{ q_index }} of {{ questions|length }}</span>
+                        </div>
+                        
+                        <p class="question-text">{{ q.text }}</p>
+                        
+                        <div class="options-container">
+                            {% for opt_key, opt_val in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+                            <label class="option-label" onclick="selectOption({{ q_index }}, this)">
+                                <div class="option-key">{{ opt_key }}</div>
+                                <input type="radio" name="q_{{ q.id }}" value="{{ opt_key }}">
+                                <span>{{ opt_val }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </form>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-secondary px-4 py-2" id="prevBtn" onclick="nav(-1)" disabled>Previous</button>
+                <button class="btn btn-success px-4 py-2" id="nextBtn" onclick="nav(1)">Next</button>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="student-info">
+                <img src="{{ url_for('static', filename='profile_pics/' + student.image_file) }}" 
+                     class="student-img shadow-sm" 
+                     alt="{{ student.name }}"
+                     onerror="this.src='https://ui-avatars.com/api/?name={{ student.name }}&background=004d40&color=fff'">
+                
+                <h6 class="fw-bold mt-2 mb-0">{{ student.name }}</h6>
+                <small class="text-muted">Matric No: {{ student.matric_no }}</small>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white small fw-bold"><i class="fas fa-th me-2"></i>Question Palette</div>
+                <div class="card-body bg-light">
+                    <div class="palette-grid">
+                        {% for q in questions %}
+                        <button class="palette-btn {% if loop.first %}active{% endif %}" id="pal-{{ loop.index }}" onclick="jumpTo({{ loop.index }})">
+                            {{ loop.index }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-2 small text-center text-muted">
+                        <span class="badge bg-success me-1"> </span> Answered &nbsp; 
+                        <span class="badge bg-white border border-dark text-dark"> </span> Pending
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    let current = 1;
+    const total = {{ questions|length }};
+    let timeLeft = 20 * 60; 
+    let violationCount = 0; // 🟢 Tracker Variable
+
+    // ⏰ TIMER
+    const timer = setInterval(() => {
+        if(timeLeft <= 0) { clearInterval(timer); submitExam(); }
+        const m = Math.floor(timeLeft / 60).toString().padStart(2,'0');
+        const s = (timeLeft % 60).toString().padStart(2,'0');
+        document.getElementById('timer').innerText = `${m}:${s}`;
+        if(timeLeft < 300) document.getElementById('timer').classList.add('timer-danger');
+        timeLeft--;
+    }, 1000);
+
+    // 🧭 NAVIGATION
+    function nav(dir) {
+        document.getElementById(`q-slide-${current}`).classList.add('d-none');
+        document.getElementById(`pal-${current}`).classList.remove('active');
+        current += dir;
+        document.getElementById(`q-slide-${current}`).classList.remove('d-none');
+        document.getElementById(`pal-${current}`).classList.add('active');
+        updateButtons();
+    }
+
+    function jumpTo(idx) {
+        document.getElementById(`q-slide-${current}`).classList.add('d-none');
+        document.getElementById(`pal-${current}`).classList.remove('active');
+        current = idx;
+        document.getElementById(`q-slide-${current}`).classList.remove('d-none');
+        document.getElementById(`pal-${current}`).classList.add('active');
+        updateButtons();
+    }
+
+    function updateButtons() {
+        document.getElementById('prevBtn').disabled = (current === 1);
+        document.getElementById('nextBtn').innerText = (current === total) ? "Submit" : "Next";
+        document.getElementById('nextBtn').onclick = (current === total) ? submitExam : function(){nav(1)};
+    }
+
+    function selectOption(qIdx, element) {
+        const container = element.parentElement;
+        container.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        element.querySelector('input').checked = true;
+        document.getElementById(`pal-${qIdx}`).classList.add('answered');
+    }
+
+    function submitExam() {
+        Swal.fire({
+            title: 'Submit Assessment?',
+            text: "You won't be able to change answers.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, Submit!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('examForm').submit();
+            }
+        });
+    }
+
+    // 🛡️ ANTI-CHEAT: VIOLATION TRACKING
+    document.addEventListener("visibilitychange", () => {
+        if(document.hidden) {
+            violationCount++;
+            // Update the hidden input field immediately
+            document.getElementById('violationCountInput').value = violationCount;
+            
+            Swal.fire({
+                title: '⚠️ WARNING!',
+                text: `Leaving the exam screen is monitored. You have ${violationCount} violation(s).`,
+                icon: 'error',
+                confirmButtonColor: '#d33'
+            });
+        }
+    });
+
+    // 🛡️ ANTI-CHEAT: DISABLE COPY/PASTE/CUT/CONTEXT MENU
+    const events = ['copy', 'paste', 'cut', 'contextmenu', 'selectstart'];
+    
+    events.forEach(e => {
+        document.addEventListener(e, function(event) {
+            event.preventDefault();
+            return false;
+        });
+    });
+
+    // 🛡️ ANTI-CHEAT: BLOCK KEYBOARD SHORTCUTS (Ctrl+C, Ctrl+V, etc)
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'p' || e.key === 'u')) {
+            e.preventDefault();
+            Swal.fire('Restricted', 'Keyboard shortcuts are disabled.', 'error');
+        }
+    });
+
+</script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V900 Executive Work Day Matrix | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V900 EXECUTIVE FINTECH THEME ENGINE
+           ========================================== */
+        
+        [data-theme="light"] {
+            --exec-bg: #f5f6f8; /* Platinum Gray */
+            --exec-surface: #ffffff;
+            --exec-text: #1a1a1a;
+            --exec-text-muted: #6b7280;
+            --exec-accent: #d4af37; /* Metallic Gold */
+            --exec-border: #e5e7eb;
+            --exec-input-bg: #f9fafb;
+            --shadow-lux: 0 10px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --exec-bg: #0a0a0a; /* Obsidian Black */
+            --exec-surface: #141414;
+            --exec-text: #f3f4f6;
+            --exec-text-muted: #9ca3af;
+            --exec-accent: #d4af37; /* Metallic Gold */
+            --exec-border: #262626;
+            --exec-input-bg: #000000;
+            --shadow-lux: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--exec-bg);
+            color: var(--exec-text);
+            transition: all 0.4s ease;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .tool-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: var(--exec-surface);
+            border: 1px solid var(--exec-border);
+            border-radius: 4px;
+            padding: 50px;
+            box-shadow: var(--shadow-lux);
+        }
+
+        /* HEADER */
+        .exec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--exec-accent);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        .exec-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .exec-subtitle {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--exec-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .btn-theme {
+            background: transparent;
+            color: var(--exec-text);
+            border: 1px solid var(--exec-border);
+            padding: 10px 15px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+        }
+        .btn-theme:hover {
+            border-color: var(--exec-accent);
+            color: var(--exec-accent);
+        }
+
+        .btn-retreat {
+            background: var(--exec-surface);
+            color: var(--exec-text);
+            border: 1px solid var(--exec-border);
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            margin-bottom: 30px;
+        }
+        .btn-retreat:hover {
+            border-color: var(--exec-accent);
+            color: var(--exec-accent);
+        }
+
+        /* INPUT LEDGER */
+        .ledger-form {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .exec-label {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--exec-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .exec-input, .exec-select {
+            background-color: var(--exec-input-bg);
+            border: 1px solid var(--exec-border);
+            color: var(--exec-text);
+            padding: 18px 20px;
+            font-size: 1.2rem;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 600;
+            border-radius: 2px;
+            outline: none;
+            transition: border-color 0.3s;
+            width: 100%;
+        }
+
+        .exec-input:focus, .exec-select:focus {
+            border-color: var(--exec-accent);
+        }
+
+        ::-webkit-calendar-picker-indicator { cursor: pointer; }
+        [data-theme="dark"] ::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+        .flex-row-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn-calculate {
+            background-color: var(--exec-accent);
+            color: #ffffff;
+            border: none;
+            padding: 20px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .btn-calculate:hover {
+            background-color: #b5952f; /* Darker Gold */
+        }
+        [data-theme="dark"] .btn-calculate { color: #000000; }
+
+        /* OUTPUT LEDGER */
+        .output-ledger {
+            margin-top: 50px;
+            border-top: 1px solid var(--exec-border);
+            padding-top: 40px;
+            display: none; /* Hidden by default */
+        }
+
+        .result-hero {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .result-date {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--exec-accent);
+            line-height: 1.2;
+            margin-top: 10px;
+        }
+
+        .audit-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .audit-box {
+            background-color: var(--exec-input-bg);
+            border: 1px solid var(--exec-border);
+            padding: 25px 20px;
+            text-align: center;
+            border-radius: 2px;
+        }
+
+        .audit-val {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--exec-text);
+            margin-bottom: 5px;
+        }
+
+        .audit-lbl {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--exec-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        
+        <a href="{{ url_for('student_tools_dashboard') }}" class="btn-retreat">
+            <i class="fas fa-arrow-left me-2"></i> Dashboard
+        </a>
+
+        <div class="exec-header">
+            <div>
+                <h1 class="exec-title">Corporate Work Ledger</h1>
+                <div class="exec-subtitle">V900 Business Day Architecture</div>
+            </div>
+            <button class="btn-theme" onclick="executeThemeToggle()">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+        </div>
+
+        <div class="ledger-form">
+            
+            <div class="input-group">
+                <label class="exec-label">Base Origin Date</label>
+                <input type="date" id="startDateInput" class="exec-input">
+            </div>
+
+            <div class="flex-row-inputs">
+                <div class="input-group">
+                    <label class="exec-label">Temporal Operation</label>
+                    <select id="operationSelect" class="exec-select">
+                        <option value="add">Add Business Days (Future)</option>
+                        <option value="subtract">Subtract Business Days (Past)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="exec-label">Quantity of Days</label>
+                    <input type="number" id="daysCountInput" class="exec-input" min="1" value="10" placeholder="e.g. 15">
+                </div>
+            </div>
+
+            <button class="btn-calculate" onclick="executeLedgerAudit()">Audit Timeline</button>
+
+        </div>
+
+        <div class="output-ledger" id="outputSection">
+            
+            <div class="result-hero">
+                <div class="exec-label">Final Target Deadline</div>
+                <div class="result-date" id="finalDateOutput">Thursday, March 26, 2026</div>
+            </div>
+
+            <div class="audit-grid">
+                <div class="audit-box">
+                    <div class="audit-val" id="auditBusinessDays">0</div>
+                    <div class="audit-lbl">Net Business Days</div>
+                </div>
+                <div class="audit-box" style="border-bottom: 3px solid var(--exec-accent);">
+                    <div class="audit-val" id="auditWeekends">0</div>
+                    <div class="audit-lbl">Weekends Bypassed</div>
+                </div>
+                <div class="audit-box">
+                    <div class="audit-val" id="auditTotalDays">0</div>
+                    <div class="audit-lbl">Gross Calendar Days</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V900 THEME ENGINE
+        // ==========================================
+        function executeThemeToggle() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v900_corporate', nextTheme);
+            
+            let themeIconElement = document.getElementById('themeIcon');
+            if (nextTheme === "dark") {
+                themeIconElement.className = "fas fa-sun";
+            } else {
+                themeIconElement.className = "fas fa-moon";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v900_corporate');
+            
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                let themeIconElement = document.getElementById('themeIcon');
+                if (savedTheme === "dark") {
+                    themeIconElement.className = "fas fa-sun";
+                } else {
+                    themeIconElement.className = "fas fa-moon";
+                }
+            }
+
+            // Set default date to today
+            let currentDateObject = new Date();
+            let yearString = String(currentDateObject.getFullYear());
+            let monthString = String(currentDateObject.getMonth() + 1);
+            let dayString = String(currentDateObject.getDate());
+
+            if (monthString.length === 1) { monthString = "0" + monthString; }
+            if (dayString.length === 1) { dayString = "0" + dayString; }
+
+            document.getElementById('startDateInput').value = yearString + "-" + monthString + "-" + dayString;
+        });
+
+        // ==========================================
+        // V900 STRICT MATHEMATICS ENGINE
+        // ==========================================
+        
+        function executeLedgerAudit() {
+            let dateInputValue = document.getElementById('startDateInput').value;
+            let daysInputValue = document.getElementById('daysCountInput').value;
+            let operationValue = document.getElementById('operationSelect').value;
+
+            if (dateInputValue === "") {
+                alert("CRITICAL ERROR: A base origin date is required for the ledger.");
+                return;
+            }
+
+            if (daysInputValue === "" || parseInt(daysInputValue) < 0) {
+                alert("CRITICAL ERROR: A valid positive quantity of days is required.");
+                return;
+            }
+
+            // Explicitly parse the YYYY-MM-DD string into a Noon local object 
+            // to strictly avoid Midnight Timezone boundary shifting.
+            let datePartsArray = dateInputValue.split("-");
+            let parsedYear = parseInt(datePartsArray[0], 10);
+            let parsedMonth = parseInt(datePartsArray[1], 10) - 1; // JS Months 0-11
+            let parsedDay = parseInt(datePartsArray[2], 10);
+
+            let trackingDateObject = new Date(parsedYear, parsedMonth, parsedDay, 12, 0, 0);
+            
+            let targetBusinessDays = parseInt(daysInputValue, 10);
+            let businessDaysProcessed = 0;
+            let weekendsBypassed = 0;
+            let totalGrossDays = 0;
+
+            // Physical While Loop to iterate exactly one day at a time
+            while (businessDaysProcessed < targetBusinessDays) {
+                
+                // Step the timeline forward or backward
+                if (operationValue === "add") {
+                    trackingDateObject.setDate(trackingDateObject.getDate() + 1);
+                } else {
+                    trackingDateObject.setDate(trackingDateObject.getDate() - 1);
+                }
+
+                totalGrossDays = totalGrossDays + 1;
+
+                let currentDayOfWeek = trackingDateObject.getDay();
+
+                // Check if Sunday (0) or Saturday (6)
+                if (currentDayOfWeek === 0 || currentDayOfWeek === 6) {
+                    weekendsBypassed = weekendsBypassed + 1;
+                } else {
+                    businessDaysProcessed = businessDaysProcessed + 1;
+                }
+            }
+
+            // Update Output DOM
+            let outputSectionElement = document.getElementById('outputSection');
+            outputSectionElement.style.display = "block";
+
+            let displayOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            let finalFormattedString = trackingDateObject.toLocaleDateString('en-US', displayOptions);
+
+            document.getElementById('finalDateOutput').innerText = finalFormattedString;
+            document.getElementById('auditBusinessDays').innerText = String(businessDaysProcessed);
+            document.getElementById('auditWeekends').innerText = String(weekendsBypassed);
+            document.getElementById('auditTotalDays').innerText = String(totalGrossDays);
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Editor | Tool</title>
+    <style>
+        :root {
+            --primary: #e83e8c;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --text: #0f172a;
+            --border: #e2e8f0;
+            --toolbar-bg: #1e293b;
+            --toolbar-text: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            padding: 1rem 2rem;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            width: 250px;
+            background: var(--toolbar-bg);
+            color: var(--toolbar-text);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
+        }
+
+        input[type="range"] { width: 100%; cursor: pointer; }
+
+        .btn {
+            background: #334155;
+            color: white;
+            border: 1px solid #475569;
+            padding: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .btn:hover { background: #475569; }
+        .btn-primary { background: var(--primary); border-color: var(--primary); }
+        .btn-primary:hover { background: #d63384; }
+        .btn-danger { background: #ef4444; border-color: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+
+        .canvas-container {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #e2e8f0;
+            overflow: auto;
+        }
+
+        svg {
+            background: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            cursor: crosshair;
+            touch-action: none; /* Prevent scrolling on touch devices while drawing */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <a href="{{ url_for('student_portal') }}" class="back-link">← Back To Dashboard</a>
+        <h2 style="font-size: 1.2rem;">SVG Vector Editor</h2>
+        <div style="width: 150px;"></div> </div>
+
+    <div class="workspace">
+        <div class="toolbar">
+            <div class="control-group">
+                <label>Stroke Color</label>
+                <input type="color" id="strokeColor" value="#0f172a">
+            </div>
+
+            <div class="control-group">
+                <label>Stroke Width: <span id="widthValue">3px</span></label>
+                <input type="range" id="strokeWidth" min="1" max="50" value="3">
+            </div>
+
+            <hr style="border-color: #334155; margin: 1rem 0;">
+
+            <button class="btn" id="undoBtn">Undo Last Path</button>
+            <button class="btn btn-danger" id="clearBtn">Clear Canvas</button>
+            <button class="btn btn-primary" id="exportBtn">Export as .SVG</button>
+        </div>
+
+        <div class="canvas-container" id="canvasContainer">
+            <svg id="drawingArea" width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+                </svg>
+        </div>
+    </div>
+
+<script>
+    /**
+     * VectorEditor Architecture
+     * Handles dynamic SVG path generation and exporting.
+     */
+    class VectorEditor {
+        constructor() {
+            this.svg = document.getElementById('drawingArea');
+            this.colorPicker = document.getElementById('strokeColor');
+            this.widthPicker = document.getElementById('strokeWidth');
+            this.widthLabel = document.getElementById('widthValue');
+            
+            this.isDrawing = false;
+            this.currentPath = null;
+            this.pathData = "";
+            this.paths = []; // History stack for Undo functionality
+
+            this.initEvents();
+        }
+
+        initEvents() {
+            // Mouse Events
+            this.svg.addEventListener('mousedown', this.startDrawing.bind(this));
+            this.svg.addEventListener('mousemove', this.draw.bind(this));
+            window.addEventListener('mouseup', this.stopDrawing.bind(this));
+            
+            // Touch Events (for mobile/tablet support)
+            this.svg.addEventListener('touchstart', (e) => this.startDrawing(e.touches[0]));
+            this.svg.addEventListener('touchmove', (e) => { e.preventDefault(); this.draw(e.touches[0]); }, { passive: false });
+            window.addEventListener('touchend', this.stopDrawing.bind(this));
+
+            // UI Controls
+            this.widthPicker.addEventListener('input', (e) => {
+                this.widthLabel.textContent = e.target.value + 'px';
+            });
+
+            document.getElementById('undoBtn').addEventListener('click', this.undo.bind(this));
+            document.getElementById('clearBtn').addEventListener('click', this.clear.bind(this));
+            document.getElementById('exportBtn').addEventListener('click', this.exportSVG.bind(this));
+        }
+
+        getMousePos(evt) {
+            const CTM = this.svg.getScreenCTM();
+            return {
+                x: (evt.clientX - CTM.e) / CTM.a,
+                y: (evt.clientY - CTM.f) / CTM.d
+            };
+        }
+
+        startDrawing(evt) {
+            this.isDrawing = true;
+            const pos = this.getMousePos(evt);
+            
+            // Create a new SVG Path element
+            this.currentPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            this.currentPath.setAttribute('stroke', this.colorPicker.value);
+            this.currentPath.setAttribute('stroke-width', this.widthPicker.value);
+            this.currentPath.setAttribute('fill', 'none');
+            this.currentPath.setAttribute('stroke-linecap', 'round');
+            this.currentPath.setAttribute('stroke-linejoin', 'round');
+            
+            // Initialize path data string
+            this.pathData = `M ${pos.x} ${pos.y}`;
+            this.currentPath.setAttribute('d', this.pathData);
+            
+            this.svg.appendChild(this.currentPath);
+            this.paths.push(this.currentPath); // Add to history
+        }
+
+        draw(evt) {
+            if (!this.isDrawing || !this.currentPath) return;
+            const pos = this.getMousePos(evt);
+            
+            // Append line-to command to path string
+            this.pathData += ` L ${pos.x} ${pos.y}`;
+            this.currentPath.setAttribute('d', this.pathData);
+        }
+
+        stopDrawing() {
+            if (this.isDrawing) {
+                this.isDrawing = false;
+                this.currentPath = null;
+            }
+        }
+
+        undo() {
+            if (this.paths.length > 0) {
+                const lastPath = this.paths.pop();
+                this.svg.removeChild(lastPath);
+            }
+        }
+
+        clear() {
+            if(confirm('Are you sure you want to clear the canvas?')) {
+                this.svg.innerHTML = '';
+                this.paths = [];
+            }
+        }
+
+        exportSVG() {
+            // Get the raw XML string of the SVG
+            const serializer = new XMLSerializer();
+            let source = serializer.serializeToString(this.svg);
+
+            // Add namespaces if missing
+            if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+                source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+            if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+                source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+            }
+
+            // Create download link
+            const preface = '<?xml version="1.0" standalone="no"?>\r\n';
+            const svgBlob = new Blob([preface, source], {type:"image/svg+xml;charset=utf-8"});
+            const svgUrl = URL.createObjectURL(svgBlob);
+            
+            const downloadLink = document.createElement("a");
+            downloadLink.href = svgUrl;
+            downloadLink.download = `vector_graphic_${Date.now()}.svg`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    }
+
+    // Initialize module
+    document.addEventListener('DOMContentLoaded', () => {
+        new VectorEditor();
+    });
+</script>
+
+</body>
+</html>

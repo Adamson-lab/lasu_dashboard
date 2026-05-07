@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doppler Effect Simulator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .btn-preset {
+            font-weight: 700;
+            font-size: 0.8rem;
+            padding: 10px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+        }
+        .btn-preset i { font-size: 1.2rem; }
+        .btn-preset:hover { background: #f8f9fa; border-color: #ced4da; }
+        .btn-preset.active { background: rgba(13, 110, 253, 0.1); color: var(--math-blue); border-color: var(--math-blue); }
+
+        .slider-group { margin-bottom: 20px; }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #495057;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .slider-label span { font-family: 'Fira Code', monospace; color: var(--math-blue); font-size: 1.1rem; }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px; width: 20px;
+            border-radius: 50%;
+            background: var(--math-blue);
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 0 10px rgba(13, 110, 253, 0.4);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 6px;
+            cursor: pointer;
+            background: #dee2e6;
+            border-radius: 3px;
+        }
+
+        .alert-info-custom {
+            background: rgba(13, 110, 253, 0.05);
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            color: var(--math-blue);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: auto;
+            line-height: 1.5;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .stat-card.approach { background: rgba(220, 53, 69, 0.05); border-color: rgba(220, 53, 69, 0.3); }
+        .stat-card.recede { background: rgba(13, 110, 253, 0.05); border-color: rgba(13, 110, 253, 0.3); }
+        .stat-card.mach { background: rgba(253, 126, 20, 0.05); border-color: rgba(253, 126, 20, 0.3); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+        }
+        
+        .approach .stat-val { color: var(--math-red); }
+        .recede .stat-val { color: var(--math-blue); }
+        .mach .stat-val { color: var(--math-orange); }
+
+        .res-unit { font-size: 1rem; color: #adb5bd; }
+
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        #dopplerCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #212529;
+            padding: 15px 25px;
+            border-top: 1px solid #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #00ff00;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .control-btn {
+            background: var(--lasu-accent);
+            color: white;
+            border: none;
+            font-weight: 800;
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .control-btn:hover { background: #146c43; transform: scale(1.05); }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-broadcast-tower"></i> Acoustic Source
+            </div>
+
+            <div class="preset-grid">
+                <button class="btn-preset active" id="btnAmbulance" onclick="setPreset('ambulance')">
+                    <i class="fas fa-ambulance text-danger"></i> Ambulance
+                </button>
+                <button class="btn-preset" id="btnRacecar" onclick="setPreset('racecar')">
+                    <i class="fas fa-car text-primary"></i> Racecar
+                </button>
+                <button class="btn-preset" id="btnJet" onclick="setPreset('jet')">
+                    <i class="fas fa-fighter-jet text-warning"></i> Fighter Jet
+                </button>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">Source Frequency (f<sub>s</sub>) <span id="lblFreq">400 Hz</span></div>
+                <input type="range" id="valFreq" min="100" max="1000" step="10" value="400" oninput="updatePhysics()">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">Source Velocity (v<sub>s</sub>) <span id="lblVel">30 m/s</span></div>
+                <input type="range" id="valVel" min="0" max="500" step="5" value="30" oninput="updatePhysics()">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">Speed of Sound (v) <span id="lblSound">343 m/s</span></div>
+                <input type="range" id="valSound" min="300" max="400" step="1" value="343" oninput="updatePhysics()">
+            </div>
+
+            <div class="alert-info-custom mt-auto">
+                <i class="fas fa-info-circle mb-2 fa-lg"></i><br>
+                <strong>The Sonic Boom:</strong><br>
+                If you push the Source Velocity (v<sub>s</sub>) strictly higher than the Speed of Sound (v), the wavefronts physically overlap to create a Mach Cone, forcing the frequency to approach infinity (Shockwave).
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="top-stats-grid">
+            <div class="stat-card approach">
+                <div class="stat-label">Observed Approach (f')</div>
+                <div class="stat-val" id="resApproach">438.3 <span class="res-unit">Hz</span></div>
+            </div>
+            <div class="stat-card recede">
+                <div class="stat-label">Observed Receding (f')</div>
+                <div class="stat-val" id="resRecede">367.8 <span class="res-unit">Hz</span></div>
+            </div>
+            <div class="stat-card mach" id="machCard">
+                <div class="stat-label">Mach Number (M)</div>
+                <div class="stat-val" id="resMach">0.09 <span class="res-unit">M</span></div>
+            </div>
+        </div>
+
+        <div class="simulation-box">
+            
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="dopplerCanvas"></canvas>
+            </div>
+
+            <div class="telemetry-bar">
+                <div class="formula-bar" id="formulaBar">
+                    f' = f<sub>s</sub> [ v / (v - v<sub>s</sub>) ]
+                </div>
+                <button class="control-btn" onclick="triggerPing()">
+                    <i class="fas fa-bullseye"></i> Pulse
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valFreq = document.getElementById('valFreq'); const lblFreq = document.getElementById('lblFreq');
+    const valVel = document.getElementById('valVel'); const lblVel = document.getElementById('lblVel');
+    const valSound = document.getElementById('valSound'); const lblSound = document.getElementById('lblSound');
+
+    const resApproach = document.getElementById('resApproach');
+    const resRecede = document.getElementById('resRecede');
+    const resMach = document.getElementById('resMach');
+    const machCard = document.getElementById('machCard');
+    const formulaBar = document.getElementById('formulaBar');
+
+    const canvas = document.getElementById('dopplerCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // Engine State
+    let P = { fs: 400, vs: 30, v: 343 };
+    let sourceX = 0;
+    let wavefronts = [];
+    let lastPulseTime = 0;
+    let animationFrameId = null;
+
+    function setPreset(type) {
+        document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+        
+        if (type === 'ambulance') {
+            document.getElementById('btnAmbulance').classList.add('active');
+            valFreq.value = 700; valVel.value = 35; valSound.value = 343;
+        } else if (type === 'racecar') {
+            document.getElementById('btnRacecar').classList.add('active');
+            valFreq.value = 250; valVel.value = 90; valSound.value = 343;
+        } else if (type === 'jet') {
+            document.getElementById('btnJet').classList.add('active');
+            valFreq.value = 500; valVel.value = 450; valSound.value = 343;
+        }
+        
+        // Reset Simulation
+        wavefronts = [];
+        sourceX = canvas.clientWidth * 0.1;
+        updatePhysics();
+    }
+
+    function resizeCanvas() {
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        if(cw === 0 || ch === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = cw * dpr;
+        canvas.height = ch * dpr;
+        canvas.style.width = `${cw}px`;
+        canvas.style.height = `${ch}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        // Set initial source position if first load
+        if (sourceX === 0) sourceX = cw * 0.1;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // --- MATH ENGINE ---
+    function updatePhysics() {
+        P.fs = parseFloat(valFreq.value);
+        P.vs = parseFloat(valVel.value);
+        P.v = parseFloat(valSound.value);
+
+        lblFreq.innerText = `${P.fs} Hz`;
+        lblVel.innerText = `${P.vs} m/s`;
+        lblSound.innerText = `${P.v} m/s`;
+
+        // Mach Number
+        const mach = P.vs / P.v;
+        resMach.innerHTML = `${mach.toFixed(2)} <span class="res-unit">M</span>`;
+        
+        if (mach >= 1) {
+            machCard.style.backgroundColor = 'rgba(220, 53, 69, 0.2)';
+            machCard.style.borderColor = '#dc3545';
+        } else {
+            machCard.style.backgroundColor = 'rgba(253, 126, 20, 0.05)';
+            machCard.style.borderColor = 'rgba(253, 126, 20, 0.3)';
+        }
+
+        // Approach (Source moving towards stationary observer)
+        // f' = f * (v / (v - vs))
+        if (P.vs >= P.v) {
+            resApproach.innerHTML = `BOOM <span class="res-unit">(Mach Cone)</span>`;
+            resApproach.style.color = '#dc3545';
+        } else {
+            const fApp = P.fs * (P.v / (P.v - P.vs));
+            resApproach.innerHTML = `${fApp.toFixed(1)} <span class="res-unit">Hz</span>`;
+            resApproach.style.color = 'var(--math-red)';
+        }
+
+        // Recede (Source moving away from stationary observer)
+        // f' = f * (v / (v + vs))
+        const fRec = P.fs * (P.v / (P.v + P.vs));
+        resRecede.innerHTML = `${fRec.toFixed(1)} <span class="res-unit">Hz</span>`;
+
+        formulaBar.innerHTML = `f'<sub>approach</sub> = ${P.fs} &times; [ ${P.v} / (${P.v} - ${P.vs}) ]`;
+    }
+
+    function triggerPing() {
+        // Manually drop a wavefront for visualization
+        wavefronts.push({ x: sourceX, r: 0 });
+    }
+
+    // --- KINEMATIC WAVEFRONT ENGINE ---
+    function animate() {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        const cy = ch / 2;
+
+        ctx.clearRect(0, 0, cw, ch);
+
+        // Visual scaling factors
+        // Map 343 m/s to a sensible pixel speed. E.g., 343 m/s = 3.43 px/frame
+        const scaleSpeed = 0.015; 
+        const pxVs = P.vs * scaleSpeed;
+        const pxV = P.v * scaleSpeed;
+
+        // Move Source
+        sourceX += pxVs;
+        
+        // Wrap around screen
+        if (sourceX > cw + 100) {
+            sourceX = -50;
+            wavefronts = []; // Clear old waves to prevent massive array
+        }
+
+        // Auto-drop wavefronts based on frequency
+        // P.fs is 100-1000. For visuals, we cap the drop rate.
+        const visualFreq = (P.fs / 1000) * 15; // drops per 60 frames
+        lastPulseTime += visualFreq;
+        
+        if (lastPulseTime >= 60) {
+            wavefronts.push({ x: sourceX, r: 0 });
+            lastPulseTime = 0;
+        }
+
+        // Draw and expand wavefronts
+        ctx.lineWidth = 2;
+        
+        // We only keep the last 30 wavefronts to maintain high FPS
+        if (wavefronts.length > 30) wavefronts.shift();
+
+        for (let i = 0; i < wavefronts.length; i++) {
+            let wf = wavefronts[i];
+            wf.r += pxV; // Expand at speed of sound
+
+            // Fade out as they get larger
+            let alpha = Math.max(1 - (wf.r / (cw * 0.8)), 0);
+            
+            // If supersonic, color the overlapping waves red to show shockwave
+            if (P.vs >= P.v) {
+                ctx.strokeStyle = `rgba(220, 53, 69, ${alpha})`;
+            } else {
+                ctx.strokeStyle = `rgba(13, 110, 253, ${alpha})`;
+            }
+
+            ctx.beginPath();
+            ctx.arc(wf.x, cy, wf.r, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Draw Source Object
+        ctx.beginPath();
+        ctx.arc(sourceX, cy, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffc107'; // Yellow dot
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+        
+        // Draw velocity vector arrow on source
+        if (P.vs > 0) {
+            ctx.beginPath();
+            ctx.moveTo(sourceX + 10, cy);
+            ctx.lineTo(sourceX + 30, cy);
+            ctx.lineTo(sourceX + 25, cy - 5);
+            ctx.moveTo(sourceX + 30, cy);
+            ctx.lineTo(sourceX + 25, cy + 5);
+            ctx.strokeStyle = '#ffc107';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        // Draw stationary observers (Left and Right)
+        const drawObserver = (x, label) => {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x - 5, cy + 30, 10, 20);
+            ctx.beginPath(); ctx.arc(x, cy + 20, 8, 0, Math.PI*2); ctx.fill();
+            
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#adb5bd';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, cy + 65);
+        };
+        drawObserver(50, 'Receding');
+        drawObserver(cw - 50, 'Approach');
+
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // SAFE INIT
+    setTimeout(() => {
+        resizeCanvas();
+        updatePhysics();
+        animate();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

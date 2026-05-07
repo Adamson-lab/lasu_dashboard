@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Transfer Requests{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-end mb-5">
+        <div>
+            <h6 class="text-uppercase text-muted fw-bold small mb-1">Academic Affairs</h6>
+            <h2 class="fw-bold text-dark display-6">Transfer Requests</h2>
+        </div>
+        <div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-dark rounded-pill px-4">
+                <i class="fas fa-arrow-left me-2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="border-collapse: separate; border-spacing: 0;">
+                    <thead class="bg-light">
+                        <tr style="height: 60px;">
+                            <th class="ps-5 text-uppercase text-secondary small fw-bold" style="letter-spacing: 1px;">Candidate</th>
+                            <th class="text-uppercase text-secondary small fw-bold" style="letter-spacing: 1px;">Academic Standing</th>
+                            <th class="text-uppercase text-secondary small fw-bold" style="letter-spacing: 1px;">Migration Path</th>
+                            <th class="text-uppercase text-secondary small fw-bold" style="letter-spacing: 1px;">Justification</th>
+                            <th class="text-end pe-5 text-uppercase text-secondary small fw-bold" style="letter-spacing: 1px;">Verdict</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if requests %}
+                            {% for req in requests %}
+                            <tr id="req-{{ req.id }}" style="transition: all 0.2s;">
+                                <td class="ps-5 py-4">
+                                    <div class="d-flex align-items-center">
+                                        
+                                        {% if req.student.image_file == 'default.jpg' %}
+                                            <div class="rounded-circle text-white d-flex align-items-center justify-content-center shadow-sm me-3" 
+                                                 style="width: 45px; height: 45px; background-color: #198754; font-weight: bold; border: 2px solid #fff;">
+                                                {% set names = req.student.name.split() %}
+                                                {{ names[0][0] }}{{ names[-1][0] if names|length > 1 else '' }}
+                                            </div>
+                                        {% else %}
+                                            <img src="{{ url_for('static', filename='profile_pics/' + req.student.image_file) }}" 
+                                                 class="rounded-circle shadow-sm me-3" 
+                                                 style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #fff;"
+                                                 onerror="this.src='https://ui-avatars.com/api/?name={{ req.student.name }}&background=198754&color=fff&size=128'">
+                                        {% endif %}
+
+                                        <div class="ms-2">
+                                            <h6 class="mb-0 fw-bold text-dark">{{ req.student.name }}</h6>
+                                            <small class="text-muted font-monospace" style="font-size: 0.8rem;">{{ req.student.matric_no }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress" style="height: 6px; width: 60px; margin-right: 10px;">
+                                            <div class="progress-bar {{ 'bg-success' if req.cgpa_snapshot >= 3.5 else 'bg-warning' }}" 
+                                                 role="progressbar" style="width: {{ (req.cgpa_snapshot / 5.0) * 100 }}%"></div>
+                                        </div>
+                                        <span class="fw-bold {{ 'text-success' if req.cgpa_snapshot >= 3.5 else 'text-warning' }}">
+                                            {{ "%.2f"|format(req.cgpa_snapshot) }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="bg-light rounded-pill px-3 py-2 d-inline-flex align-items-center border">
+                                        <span class="small fw-bold text-muted">{{ req.current_dept }}</span>
+                                        <i class="fas fa-long-arrow-alt-right mx-2 text-primary"></i>
+                                        <span class="small fw-bold text-primary">{{ req.new_dept }}</span>
+                                    </div>
+                                </td>
+                                
+                                <td style="max-width: 300px;">
+                                    <div class="d-flex align-items-center cursor-pointer text-muted justify-content-between p-2 rounded hover-bg-light"
+                                         style="cursor: pointer; transition: 0.2s;"
+                                         onclick="openJustificationModal('{{ req.student.name }}', '{{ req.reason|replace('\n', ' ')|replace("'", "&#39;")|escape }}')">
+                                        <p class="mb-0 text-truncate fst-italic me-2" style="max-width: 220px;">"{{ req.reason }}"</p>
+                                        <i class="fas fa-expand-alt text-primary small opacity-50"></i>
+                                    </div>
+                                </td>
+
+                                <td class="text-end pe-5">
+                                    <div class="btn-group shadow-sm" role="group">
+                                        <button class="btn btn-outline-success btn-sm px-3 fw-bold" onclick="processTransfer('{{ req.id }}', 'approve')">
+                                            Approve
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm px-3" onclick="processTransfer('{{ req.id }}', 'reject')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="py-5 opacity-50">
+                                        <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                                        <h5 class="text-muted fw-bold">All Caught Up</h5>
+                                        <p class="small">No pending transfer requests at this time.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="justificationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-light border-0">
+                <div>
+                    <h6 class="modal-title fw-bold text-uppercase text-muted small">Statement of Purpose</h6>
+                    <h5 class="fw-bold text-dark mb-0" id="modalStudentName">Student Name</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="p-3 bg-white border rounded shadow-sm">
+                    <i class="fas fa-quote-left text-primary opacity-25 fa-2x mb-2"></i>
+                    <p class="fs-6 lh-lg mb-0 text-dark" id="modalReasonText">...</p>
+                    <div class="text-end mt-2">
+                        <i class="fas fa-quote-right text-primary opacity-25 fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-dark px-4 rounded-pill" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// 🟢 Function to Open the Text Modal
+function openJustificationModal(name, text) {
+    document.getElementById('modalStudentName').innerText = name;
+    document.getElementById('modalReasonText').innerText = text;
+    new bootstrap.Modal(document.getElementById('justificationModal')).show();
+}
+
+function processTransfer(id, action) {
+    const isApprove = action === 'approve';
+    
+    Swal.fire({
+        title: isApprove ? 'Grant Transfer?' : 'Decline Request?',
+        text: isApprove 
+            ? "This will immediately update the student's department record." 
+            : "The student will be notified of the rejection.",
+        icon: isApprove ? 'question' : 'warning',
+        showCancelButton: true,
+        confirmButtonColor: isApprove ? '#198754' : '#dc3545',
+        confirmButtonText: isApprove ? 'Yes, Grant Access' : 'Yes, Decline',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Optimistic UI Removal
+            const row = document.getElementById(`req-${id}`);
+            row.style.opacity = '0';
+            
+            fetch(`/lecturer/transfer/${id}/${action}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    setTimeout(() => row.remove(), 300);
+                    const toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                    toast.fire({
+                        icon: 'success',
+                        title: isApprove ? 'Transfer Approved' : 'Request Declined'
+                    });
+                }
+            });
+        }
+    });
+}
+</script>
+
+<style>
+.hover-bg-light:hover {
+    background-color: #f8f9fa;
+    color: #000 !important;
+}
+</style>
+{% endblock %}

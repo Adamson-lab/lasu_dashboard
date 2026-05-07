@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V105 Orbital Chronometer | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* ==========================================
+           V105 MASTER THEME ENGINE
+           ========================================== */
+        [data-theme="dark"] {
+            --bg-master: #0b0f19;
+            --bg-surface: #111827;
+            --border-core: #1f2937;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --grid-line: rgba(255, 255, 255, 0.03);
+            --panel-bg: #000000;
+            --lap-hover: #1e293b;
+        }
+
+        [data-theme="light"] {
+            --bg-master: #f1f5f9;
+            --bg-surface: #ffffff;
+            --border-core: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --grid-line: rgba(0, 0, 0, 0.04);
+            --panel-bg: #f8fafc;
+            --lap-hover: #e2e8f0;
+        }
+
+        :root {
+            --neon-blue: #0ea5e9;
+            --neon-green: #10b981;
+            --neon-red: #f43f5e;
+            --neon-amber: #f59e0b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-master);
+            color: var(--text-main);
+            padding: 40px 20px;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+            transition: all 0.4s ease;
+        }
+
+        .tool-container {
+            max-width: 1450px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-core);
+            transition: all 0.4s ease;
+        }
+
+        .btn-theme {
+            background: var(--bg-surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-core);
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-theme:hover { border-color: var(--neon-blue); }
+
+        /* ==========================================
+           CHRONOMETER DISPLAY (LEFT PANEL)
+           ========================================== */
+        .chronos-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 12px;
+            padding: 40px 20px;
+            /* V105 FIX: Strict Flex Column with Gaps to prevent any overlap */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 25px; 
+            height: 100%;
+            min-height: 650px;
+            position: relative;
+        }
+
+        /* Live Pace Status Badge */
+        .live-pace-badge {
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            height: 30px;
+            display: flex;
+            align-items: center;
+        }
+        .live-pace-badge.warning {
+            background: rgba(244, 63, 94, 0.1);
+            color: var(--neon-red);
+            border-color: var(--neon-red);
+        }
+
+        /* SVG Sweeper Ring */
+        .ring-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ring-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: var(--border-core);
+            stroke-width: 6;
+        }
+
+        .ring-fill {
+            fill: none;
+            stroke: var(--neon-blue);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 945; /* Circumference for r=150 is ~942.5 */
+            stroke-dashoffset: 945;
+        }
+
+        /* Massive Digital Readout */
+        .time-display {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--text-main);
+            letter-spacing: -2px;
+            font-variant-numeric: tabular-nums;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(14, 165, 233, 0.2);
+            line-height: 1;
+        }
+
+        .ms-display {
+            font-size: 1.8rem;
+            color: var(--neon-blue);
+        }
+
+        /* Current Lap (Standard Document Flow, No Absolute Positioning) */
+        .current-lap-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.4rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            background: var(--bg-surface);
+            padding: 8px 25px;
+            border-radius: 8px;
+            border: 1px solid var(--border-core);
+        }
+
+        /* Hardware Control Buttons */
+        .control-deck {
+            display: flex;
+            gap: 25px;
+            margin-top: 10px;
+        }
+
+        .btn-hardware {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            background: var(--bg-surface);
+            color: var(--text-main);
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn-hardware:hover { transform: scale(1.08); }
+        .btn-hardware:active { transform: scale(0.92); }
+        .btn-hardware:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; animation: none; }
+
+        .btn-start { border-color: var(--neon-green); color: var(--neon-green); }
+        .btn-start:hover:not(:disabled) { background: var(--neon-green); color: #000; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+
+        .btn-stop { border-color: var(--neon-red); color: var(--neon-red); }
+        .btn-stop:hover:not(:disabled) { background: var(--neon-red); color: #fff; box-shadow: 0 0 20px rgba(244, 63, 94, 0.4); }
+
+        .btn-lap { border-color: var(--neon-amber); color: var(--neon-amber); }
+        .btn-lap:hover:not(:disabled) { background: var(--neon-amber); color: #000; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+
+        /* Pulsar Animation for Lap Button */
+        @keyframes pulseLap {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+        .btn-lap.active-pulsar { animation: pulseLap 1.5s infinite; border-color: var(--neon-amber); }
+
+        .btn-reset { border-color: var(--text-muted); color: var(--text-muted); }
+        .btn-reset:hover:not(:disabled) { background: var(--text-muted); color: #fff; }
+
+        .hotkey-legend {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 800;
+            background: rgba(0,0,0,0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px dashed var(--border-core);
+        }
+        .hotkey-badge {
+            background: var(--border-core);
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: var(--text-main);
+            margin: 0 5px;
+        }
+
+        /* ==========================================
+           TELEMETRY & CHART (RIGHT PANEL)
+           ========================================== */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--text-main);
+        }
+
+        .stat-value.fast { color: var(--neon-green); }
+        .stat-value.slow { color: var(--neon-red); }
+        .stat-value.avg { color: var(--neon-blue); }
+
+        /* Chart Canvas */
+        .chart-container {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 8px;
+            padding: 15px;
+            height: 200px;
+            width: 100%;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        /* The Ledger */
+        .ledger-container {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            height: 250px;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+
+        /* V105 Haptic Flash */
+        .ledger-container.flash {
+            box-shadow: inset 0 0 30px rgba(14, 165, 233, 0.3);
+            border-color: var(--neon-blue);
+        }
+
+        .ledger-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-core);
+            font-weight: 800;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            background: var(--bg-surface);
+        }
+
+        .ledger-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 5px 10px;
+        }
+        .ledger-list::-webkit-scrollbar { width: 6px; }
+        .ledger-list::-webkit-scrollbar-thumb { background-color: var(--border-core); border-radius: 10px; }
+
+        .lap-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-main);
+            border-bottom: 1px dashed var(--border-core);
+        }
+
+        .lap-row.fastest-lap { border-left: 4px solid var(--neon-green); background: rgba(16, 185, 129, 0.05); }
+        .lap-row.slowest-lap { border-left: 4px solid var(--neon-red); background: rgba(244, 63, 94, 0.05); }
+
+        .col-id { width: 15%; color: var(--text-muted); }
+        .col-split { width: 30%; text-align: right; color: var(--text-main); }
+        .col-delta { width: 25%; text-align: right; font-size: 0.85rem; }
+        .col-total { width: 30%; text-align: right; color: var(--neon-blue); }
+
+        .delta-pos { color: var(--neon-red); } 
+        .delta-neg { color: var(--neon-green); }
+
+        .export-btn {
+            background: var(--border-core);
+            color: var(--text-main);
+            border: 1px solid var(--border-core);
+            font-weight: 800;
+            padding: 12px 24px;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 15px;
+            transition: 0.2s;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+        .export-btn:hover { background: var(--text-main); color: var(--bg-master); }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--border-core);">
+            <h2 class="fw-bold m-0" style="color: var(--text-main);">
+                <i class="fas fa-meteor me-2" style="color: var(--neon-blue);"></i> ORBITAL CHRONOMETER 
+                <span class="badge ms-2" style="background: var(--border-core); color: var(--text-main); font-size: 0.75rem; vertical-align: middle;">V105</span>
+            </h2>
+            <div class="d-flex gap-2">
+                <button class="btn-theme" id="themeToggleBtn" onclick="toggleMasterTheme()" title="Toggle Interface Engine">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary fw-bold border-0" style="color: var(--text-main); background: var(--panel-bg);">
+                    <i class="fas fa-arrow-left me-1"></i> Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-5">
+                <div class="chronos-panel">
+                    
+                    <div class="live-pace-badge" id="livePaceStatus">
+                        <i class="fas fa-satellite-dish me-2"></i> System Ready
+                    </div>
+
+                    <div class="ring-container">
+                        <svg class="ring-svg" viewBox="0 0 320 320">
+                            <circle class="ring-bg" cx="160" cy="160" r="150"></circle>
+                            <circle class="ring-fill" id="sweepRing" cx="160" cy="160" r="150"></circle>
+                        </svg>
+
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%;">
+                            <div class="time-display" id="mainTime">
+                                00:00<span class="ms-display">.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="current-lap-display" id="currentLapTime">Sector Time: 00:00.00</div>
+
+                    <div class="control-deck">
+                        <button class="btn-hardware btn-lap" id="btnLap" onclick="recordLapMatrix()" title="Record Sector" disabled>
+                            <i class="fas fa-flag"></i>
+                        </button>
+                        <button class="btn-hardware btn-start" id="btnStartStop" onclick="toggleEngineState()" title="Engage Engine">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="btn-hardware btn-reset" id="btnReset" onclick="resetTelemetry()" title="Wipe Telemetry" disabled>
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+
+                    <div class="hotkey-legend">
+                        <span class="hotkey-badge">SPACE</span> Toggle &nbsp;|&nbsp; 
+                        <span class="hotkey-badge">L</span> Strike Sector &nbsp;|&nbsp; 
+                        <span class="hotkey-badge">R</span> Hard Reset
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                
+                <div class="analytics-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Peak Sector</div>
+                        <div class="stat-value fast" id="statFastest">--:--.--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Average Pace</div>
+                        <div class="stat-value avg" id="statAverage">--:--.--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Slowest Sector</div>
+                        <div class="stat-value slow" id="statSlowest">--:--.--</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="telemetryChart"></canvas>
+                </div>
+
+                <div class="ledger-container" id="ledgerBox">
+                    <div class="ledger-header">
+                        <span style="width: 15%;">Sector</span>
+                        <span style="width: 30%; text-align: right;">Split Time</span>
+                        <span style="width: 25%; text-align: right;">Pace Delta</span>
+                        <span style="width: 30%; text-align: right;">Cumulative</span>
+                    </div>
+                    <div class="ledger-list" id="ledgerList">
+                        <div id="emptyLedger" style="text-align: center; color: var(--text-muted); font-weight: 600; padding-top: 40px;">
+                            <i class="fas fa-radar fs-3 mb-3 d-block" style="opacity: 0.5;"></i>
+                            Awaiting Telemetry Strike.<br>
+                            <span style="font-size: 0.8rem; font-weight: 400;">Press the Flag icon or "L" while running.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="export-btn" onclick="exportTelemetryCSV()">
+                    <i class="fas fa-file-csv me-2"></i> Export Sector Telemetry (CSV)
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // THEME ENGINE
+        // ==========================================
+        function toggleMasterTheme() {
+            const htmlTag = document.documentElement;
+            const currentTheme = htmlTag.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            htmlTag.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('lisa_v105_theme', newTheme);
+            
+            if (telemetryChartInstance) updateChartDOM();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = localStorage.getItem('lisa_v105_theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                document.getElementById('themeIcon').className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            }
+            initChart();
+        });
+
+        // ==========================================
+        // KEYBOARD TERMINAL CONTROLS
+        // ==========================================
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.code === 'Space') { e.preventDefault(); toggleEngineState(); }
+            if (e.code === 'KeyL' || e.key === 'l') { if (isRunning) recordLapMatrix(); }
+            if (e.code === 'KeyR' || e.key === 'r') { if (!isRunning && globalElapsedTime > 0) resetTelemetry(); }
+        });
+
+        // ==========================================
+        // V105 STATE ARCHITECTURE
+        // ==========================================
+        let isRunning = false;
+        let engineRAF;
+        let globalStartTime = 0;
+        let globalElapsedTime = 0;
+        
+        let currentLapStartTime = 0;
+        let currentLapElapsedTime = 0;
+        
+        let lapMatrix = []; 
+        let averagePaceMs = 0; // Stored to check live ghost pace
+        let telemetryChartInstance = null;
+
+        const displayMain = document.getElementById('mainTime');
+        const displayLap = document.getElementById('currentLapTime');
+        const ringFill = document.getElementById('sweepRing');
+        const livePaceBadge = document.getElementById('livePaceStatus');
+        const ledgerBox = document.getElementById('ledgerBox');
+        
+        const btnStart = document.getElementById('btnStartStop');
+        const btnLap = document.getElementById('btnLap');
+        const btnReset = document.getElementById('btnReset');
+        
+        const ledgerList = document.getElementById('ledgerList');
+        const emptyLedger = document.getElementById('emptyLedger');
+
+        // ==========================================
+        // FORMATTING ENGINE
+        // ==========================================
+        function formatChrono(ms) {
+            let totalSeconds = ms / 1000;
+            let hours = Math.floor(totalSeconds / 3600);
+            let minutes = Math.floor((totalSeconds % 3600) / 60);
+            let seconds = Math.floor(totalSeconds % 60);
+            let centiseconds = Math.floor((ms % 1000) / 10);
+
+            let mStr = String(minutes).padStart(2, '0');
+            let sStr = String(seconds).padStart(2, '0');
+            let csStr = String(centiseconds).padStart(2, '0');
+
+            if (hours > 0) {
+                let hStr = String(hours).padStart(2, '0');
+                return { main: `${hStr}:${mStr}:${sStr}`, ms: csStr, full: `${hStr}:${mStr}:${sStr}.${csStr}`, totalSec: totalSeconds };
+            } else {
+                return { main: `${mStr}:${sStr}`, ms: csStr, full: `${mStr}:${sStr}.${csStr}`, totalSec: totalSeconds };
+            }
+        }
+
+        // ==========================================
+        // HARDWARE TIMING LOOP & LIVE GHOST PACE
+        // ==========================================
+        function tickEngine() {
+            const now = performance.now();
+            globalElapsedTime = now - globalStartTime;
+            currentLapElapsedTime = now - currentLapStartTime;
+
+            const globalFmt = formatChrono(globalElapsedTime);
+            displayMain.innerHTML = `${globalFmt.main}<span class="ms-display">.${globalFmt.ms}</span>`;
+
+            const lapFmt = formatChrono(currentLapElapsedTime);
+            displayLap.innerText = `Sector Time: ${lapFmt.full}`;
+
+            const msFraction = (globalElapsedTime % 1000) / 1000;
+            // Circumference for r=150 is ~945
+            const offset = 945 - (945 * msFraction);
+            ringFill.style.strokeDashoffset = offset;
+
+            // V105 Ghost Pacer Logic
+            if (averagePaceMs > 0) {
+                if (currentLapElapsedTime > averagePaceMs) {
+                    livePaceBadge.className = 'live-pace-badge warning';
+                    livePaceBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> Pace Degrading';
+                } else {
+                    livePaceBadge.className = 'live-pace-badge';
+                    livePaceBadge.innerHTML = '<i class="fas fa-tachometer-alt me-2"></i> Optimal Velocity';
+                }
+            }
+
+            if (isRunning) {
+                engineRAF = requestAnimationFrame(tickEngine);
+            }
+        }
+
+        function toggleEngineState() {
+            if (!isRunning) {
+                isRunning = true;
+                const now = performance.now();
+                globalStartTime = now - globalElapsedTime;
+                currentLapStartTime = now - currentLapElapsedTime;
+                
+                btnStart.innerHTML = '<i class="fas fa-pause"></i>';
+                btnStart.className = "btn-hardware btn-stop";
+                
+                btnLap.disabled = false;
+                btnLap.classList.add('active-pulsar');
+                btnReset.disabled = true;
+
+                if (averagePaceMs === 0) {
+                    livePaceBadge.innerHTML = '<i class="fas fa-satellite-dish me-2"></i> Tracking Baseline...';
+                }
+
+                ringFill.style.stroke = "var(--neon-blue)";
+                engineRAF = requestAnimationFrame(tickEngine);
+
+            } else {
+                isRunning = false;
+                cancelAnimationFrame(engineRAF);
+                
+                if (currentLapElapsedTime > 0) {
+                    recordLapMatrix(true);
+                }
+
+                btnStart.innerHTML = '<i class="fas fa-play"></i>';
+                btnStart.className = "btn-hardware btn-start";
+                
+                btnLap.disabled = true;
+                btnLap.classList.remove('active-pulsar');
+                btnReset.disabled = false;
+                
+                ringFill.style.stroke = "var(--text-muted)";
+                livePaceBadge.innerHTML = '<i class="fas fa-pause-circle me-2"></i> System Paused';
+                livePaceBadge.className = 'live-pace-badge';
+            }
+        }
+
+        // ==========================================
+        // LAP MATRIX & ANALYTICS
+        // ==========================================
+        function recordLapMatrix(isAutoLog = false) {
+            const capturedSplit = currentLapElapsedTime;
+            const capturedTotal = globalElapsedTime;
+            const newId = lapMatrix.length + 1;
+
+            lapMatrix.push({
+                id: newId,
+                splitMs: capturedSplit,
+                totalMs: capturedTotal
+            });
+
+            currentLapStartTime = globalStartTime + capturedTotal;
+            currentLapElapsedTime = 0;
+
+            // Haptic Visual Flash
+            if (!isAutoLog) {
+                ledgerBox.classList.add('flash');
+                setTimeout(() => ledgerBox.classList.remove('flash'), 200);
+            }
+
+            if (emptyLedger) emptyLedger.style.display = 'none';
+            renderLedgerDOM();
+            calculateAnalytics();
+            updateChartDOM();
+        }
+
+        function renderLedgerDOM() {
+            const totalSplitTime = lapMatrix.reduce((sum, lap) => sum + lap.splitMs, 0);
+            averagePaceMs = totalSplitTime / lapMatrix.length; // Update Ghost Pacer
+            
+            const fastestSplit = Math.min(...lapMatrix.map(l => l.splitMs));
+            const slowestSplit = Math.max(...lapMatrix.map(l => l.splitMs));
+
+            ledgerList.innerHTML = '';
+
+            for (let i = lapMatrix.length - 1; i >= 0; i--) {
+                const lap = lapMatrix[i];
+                const row = document.createElement('div');
+                row.className = 'lap-row';
+                
+                if (lapMatrix.length > 1) {
+                    if (lap.splitMs === fastestSplit) row.classList.add('fastest-lap');
+                    if (lap.splitMs === slowestSplit) row.classList.add('slowest-lap');
+                }
+
+                let deltaHTML = '<span style="color: var(--text-muted);">---</span>';
+                if (lapMatrix.length > 1) {
+                    const deltaMs = lap.splitMs - averagePaceMs;
+                    const isSlower = deltaMs > 0;
+                    const sign = isSlower ? '+' : '-';
+                    const colorClass = isSlower ? 'delta-pos' : 'delta-neg';
+                    deltaHTML = `<span class="${colorClass}">${sign}${formatChrono(Math.abs(deltaMs)).full}</span>`;
+                }
+
+                row.innerHTML = `
+                    <span class="col-id">S${String(lap.id).padStart(2, '0')}</span>
+                    <span class="col-split">${formatChrono(lap.splitMs).full}</span>
+                    <span class="col-delta">${deltaHTML}</span>
+                    <span class="col-total">${formatChrono(lap.totalMs).full}</span>
+                `;
+                ledgerList.appendChild(row);
+            }
+        }
+
+        function calculateAnalytics() {
+            if (lapMatrix.length === 0) return;
+            const fastest = Math.min(...lapMatrix.map(l => l.splitMs));
+            const slowest = Math.max(...lapMatrix.map(l => l.splitMs));
+
+            document.getElementById('statFastest').innerText = formatChrono(fastest).full;
+            document.getElementById('statSlowest').innerText = formatChrono(slowest).full;
+            document.getElementById('statAverage').innerText = formatChrono(averagePaceMs).full;
+        }
+
+        // ==========================================
+        // V105 LIVE CHART.JS INTEGRATION
+        // ==========================================
+        function initChart() {
+            const ctx = document.getElementById('telemetryChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(14, 165, 233, 0.4)');
+            gradient.addColorStop(1, 'rgba(14, 165, 233, 0.0)');
+
+            telemetryChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sector Time (s)',
+                        data: [],
+                        borderColor: '#0ea5e9',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#0ea5e9',
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: false, grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false, drawBorder: false }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        function updateChartDOM() {
+            if (!telemetryChartInstance) return;
+            const labels = lapMatrix.map(lap => `S${lap.id}`);
+            const dataPoints = lapMatrix.map(lap => formatChrono(lap.splitMs).totalSec);
+            telemetryChartInstance.data.labels = labels;
+            telemetryChartInstance.data.datasets[0].data = dataPoints;
+            telemetryChartInstance.update();
+        }
+
+        // ==========================================
+        // DATA EXPORT & RESET
+        // ==========================================
+        function exportTelemetryCSV() {
+            if (lapMatrix.length === 0) {
+                alert("No telemetry data to export.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Sector ID,Split Time (HH:MM:SS.ms),Delta From Average (ms),Cumulative Time (HH:MM:SS.ms)\r\n";
+            lapMatrix.forEach(lap => {
+                const delta = lap.splitMs - averagePaceMs;
+                csvContent += `S${lap.id},${formatChrono(lap.splitMs).full},${delta.toFixed(0)},${formatChrono(lap.totalMs).full}\r\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "LISA_V105_Telemetry.csv");
+            document.body.appendChild(link); 
+            link.click(); 
+            document.body.removeChild(link);
+        }
+
+        function resetTelemetry() {
+            isRunning = false;
+            cancelAnimationFrame(engineRAF);
+            
+            globalStartTime = 0;
+            globalElapsedTime = 0;
+            currentLapStartTime = 0;
+            currentLapElapsedTime = 0;
+            lapMatrix = [];
+            averagePaceMs = 0;
+
+            displayMain.innerHTML = `00:00<span class="ms-display">.00</span>`;
+            displayLap.innerText = `Sector Time: 00:00.00`;
+            ringFill.style.strokeDashoffset = 945;
+            ringFill.style.stroke = "var(--neon-blue)";
+            
+            livePaceBadge.className = 'live-pace-badge';
+            livePaceBadge.innerHTML = '<i class="fas fa-satellite-dish me-2"></i> System Ready';
+
+            document.getElementById('statFastest').innerText = "--:--.--";
+            document.getElementById('statSlowest').innerText = "--:--.--";
+            document.getElementById('statAverage').innerText = "--:--.--";
+
+            ledgerList.innerHTML = `<div id="emptyLedger" style="text-align: center; color: var(--text-muted); font-weight: 600; padding-top: 40px;">
+                <i class="fas fa-radar fs-3 mb-3 d-block" style="opacity: 0.5;"></i>
+                Awaiting Telemetry Strike.<br>
+                <span style="font-size: 0.8rem; font-weight: 400;">Press the Flag icon or "L" while running.</span>
+            </div>`;
+
+            if (telemetryChartInstance) {
+                telemetryChartInstance.data.labels = [];
+                telemetryChartInstance.data.datasets[0].data = [];
+                telemetryChartInstance.update();
+            }
+
+            btnStart.innerHTML = '<i class="fas fa-play"></i>';
+            btnStart.className = "btn-hardware btn-start";
+            btnLap.disabled = true;
+            btnLap.classList.remove('active-pulsar');
+            btnReset.disabled = true;
+        }
+    </script>
+</body>
+</html>

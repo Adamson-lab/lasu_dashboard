@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Generator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand-orange: #fd7e14;
+            --brand-orange-light: rgba(253, 126, 20, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragover {
+            border-color: var(--brand-orange);
+            background: var(--brand-orange-light);
+        }
+        .workspace-panel {
+            display: none;
+            margin-top: 20px;
+        }
+        .canvas-container {
+            background: #e2e8f0;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            min-height: 300px;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .controls-panel {
+            background: var(--bg-main);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .form-control, .form-control-color {
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            transition: 0.3s;
+        }
+        .form-control:focus {
+            border-color: var(--brand-orange);
+            box-shadow: 0 0 0 3px var(--brand-orange-light);
+        }
+        .btn-action {
+            background: var(--brand-orange);
+            color: white;
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+            transition: 0.2s;
+        }
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(253, 126, 20, 0.3);
+        }
+        .btn-reset {
+            background: transparent;
+            border: 1px solid var(--brand-orange);
+            color: var(--brand-orange);
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+        .btn-reset:hover {
+            background: var(--brand-orange-light);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-laugh-squint me-2" style="color: var(--brand-orange);"></i> Meme Generator</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('imageInput').click()">
+            <i class="fas fa-image fa-3x mb-3 text-secondary" id="dropIcon"></i>
+            <h5 class="fw-bold">Click to browse or drop an Image here</h5>
+            <p class="text-muted small m-0">Supports JPG, PNG, WebP (Max 10MB)</p>
+            <input type="file" id="imageInput" accept="image/png, image/jpeg, image/webp" style="display: none;" onchange="handleFile(this.files[0])">
+        </div>
+
+        <div id="workspacePanel" class="workspace-panel row g-4">
+            <div class="col-lg-7">
+                <div class="canvas-container">
+                    <canvas id="memeCanvas"></canvas>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="controls-panel">
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-align-top me-1"></i> Top Text</label>
+                        <input type="text" id="topText" class="form-control" placeholder="ENTER TOP TEXT" oninput="renderMeme()">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label"><i class="fas fa-align-bottom me-1"></i> Bottom Text</label>
+                        <input type="text" id="bottomText" class="form-control" placeholder="ENTER BOTTOM TEXT" oninput="renderMeme()">
+                    </div>
+
+                    <hr class="mb-4">
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Text Color</label>
+                            <input type="color" id="fillColor" class="form-control form-control-color w-100" value="#ffffff" oninput="renderMeme()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Outline Color</label>
+                            <input type="color" id="strokeColor" class="form-control form-control-color w-100" value="#000000" oninput="renderMeme()">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label d-flex justify-content-between">
+                            <span>Font Size Multiplier</span>
+                            <span id="fontSizeDisplay" class="text-muted">40</span>
+                        </label>
+                        <input type="range" class="form-range" id="fontSize" min="20" max="120" value="40" oninput="updateFontSize(this.value)">
+                    </div>
+
+                    <button class="btn-action" onclick="downloadMeme()">
+                        <i class="fas fa-download me-2"></i> Download Image
+                    </button>
+                    <button class="btn-reset" onclick="resetTool()">
+                        <i class="fas fa-trash-alt me-2"></i> Clear Workspace
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="statusText" class="text-center mt-3 small fw-bold text-danger" style="display: none;"></div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const workspacePanel = document.getElementById('workspacePanel');
+        const canvas = document.getElementById('memeCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusText = document.getElementById('statusText');
+
+        const topTextInput = document.getElementById('topText');
+        const bottomTextInput = document.getElementById('bottomText');
+        const fontSizeInput = document.getElementById('fontSize');
+        const fillColorInput = document.getElementById('fillColor');
+        const strokeColorInput = document.getElementById('strokeColor');
+
+        let baseImage = new Image();
+
+        // Drag and Drop Logic
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+            document.getElementById('dropIcon').classList.replace('text-secondary', 'text-warning');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+            document.getElementById('dropIcon').classList.replace('text-warning', 'text-secondary');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            document.getElementById('dropIcon').classList.replace('text-warning', 'text-secondary');
+            if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+        });
+
+        // Image Processing
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError("Invalid file type. Please upload an image.");
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) { 
+                showError("File too large. Please upload an image under 10MB.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                baseImage.src = event.target.result;
+                baseImage.onload = () => {
+                    canvas.width = baseImage.width;
+                    canvas.height = baseImage.height;
+                    
+                    dropZone.style.display = 'none';
+                    workspacePanel.style.display = 'flex';
+                    statusText.style.display = 'none';
+                    
+                    renderMeme(); 
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateFontSize(val) {
+            document.getElementById('fontSizeDisplay').innerText = val;
+            renderMeme();
+        }
+
+        // Core Canvas Rendering
+        function renderMeme() {
+            if (!baseImage.src) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+
+            const textTop = topTextInput.value.toUpperCase();
+            const textBottom = bottomTextInput.value.toUpperCase();
+            const fontSize = fontSizeInput.value;
+            
+            const scaleFactor = canvas.width / 800; 
+            const actualFontSize = Math.max(20, Math.floor(fontSize * scaleFactor));
+
+            ctx.font = `${actualFontSize}px 'Anton', Impact, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = fillColorInput.value;
+            ctx.strokeStyle = strokeColorInput.value;
+            ctx.lineWidth = Math.max(2, Math.floor(actualFontSize / 12));
+            ctx.lineJoin = 'round'; 
+
+            if (textTop) {
+                ctx.textBaseline = 'top';
+                const margin = actualFontSize * 0.2;
+                wrapText(ctx, textTop, canvas.width / 2, margin, canvas.width - (margin * 2), actualFontSize);
+            }
+
+            if (textBottom) {
+                ctx.textBaseline = 'bottom';
+                const margin = actualFontSize * 0.2;
+                wrapText(ctx, textBottom, canvas.width / 2, canvas.height - margin, canvas.width - (margin * 2), actualFontSize, true);
+            }
+        }
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight, isBottom = false) {
+            const words = text.split(' ');
+            let line = '';
+            const lines = [];
+
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = context.measureText(testLine);
+                const testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+
+            let currentY = y;
+            if (isBottom) {
+                currentY = y - ((lines.length - 1) * lineHeight);
+            }
+
+            for (let i = 0; i < lines.length; i++) {
+                context.strokeText(lines[i], x, currentY);
+                context.fillText(lines[i], x, currentY);
+                currentY += lineHeight;
+            }
+        }
+
+        function downloadMeme() {
+            try {
+                const dataURL = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = dataURL;
+                a.download = `LISA_Meme_${Date.now()}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (err) {
+                showError("Download failed. Security policies may block canvas export.");
+            }
+        }
+
+        function resetTool() {
+            baseImage = new Image();
+            topTextInput.value = '';
+            bottomTextInput.value = '';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            workspacePanel.style.display = 'none';
+            dropZone.style.display = 'block';
+            statusText.style.display = 'none';
+        }
+
+        function showError(msg) {
+            statusText.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> ${msg}`;
+            statusText.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

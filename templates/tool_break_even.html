@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Break-Even Analysis | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-orange: #fd7e14; /* Business Orange */
+            --brand-orange-light: rgba(253, 126, 20, 0.1);
+            --brand-danger: #dc3545;
+            --brand-success: #198754;
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-orange);
+            box-shadow: 0 0 0 3px var(--brand-orange-light);
+        }
+        .form-control.is-invalid:focus {
+            border-color: var(--brand-danger);
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+        }
+
+        /* Result Card State Management */
+        .result-card {
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(253, 126, 20, 0.2);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .result-card.healthy {
+            background: linear-gradient(135deg, #fd7e14 0%, #c35a00 100%);
+        }
+        .result-card.flawed {
+            background: linear-gradient(135deg, #dc3545 0%, #8b0000 100%);
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.2);
+        }
+        .result-card::after {
+            content: '\f542'; /* FA Project Diagram */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -10px;
+            bottom: -20px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+            transition: 0.4s;
+        }
+        .result-card.flawed::after {
+            content: '\f071'; /* FA Exclamation Triangle */
+        }
+        .result-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 5px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            background: #ffffff;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 10px;
+        }
+        .section-divider {
+            margin: 25px 0 15px 0;
+            border-top: 2px solid #e2e8f0;
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+        .alert-box {
+            display: none;
+            background: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid var(--brand-danger);
+            color: var(--brand-danger);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-project-diagram me-2" style="color: var(--brand-orange);" id="headerIcon"></i> Break-Even Analysis</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="input-panel">
+                    
+                    <div class="d-flex justify-content-between align-items-end mb-4">
+                        <div class="flex-grow-1 me-2">
+                            <label class="form-label">Fixed Costs (Overhead)</label>
+                            <div class="input-group">
+                                <span class="input-group-text dynamic-currency">$</span>
+                                <input type="number" id="fixedCosts" class="form-control" value="10000" min="0" step="100" oninput="calculateBreakEven()">
+                            </div>
+                            <small class="text-muted" style="font-size: 0.7rem;">Rent, salaries, insurance</small>
+                        </div>
+                        <div style="width: 90px;">
+                            <label class="form-label">Currency</label>
+                            <select id="currencySelect" class="form-select" onchange="updateCurrency()">
+                                <option value="USD" selected>USD</option>
+                                <option value="NGN">NGN</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>UNIT ECONOMICS</span></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Selling Price (Per Unit)</label>
+                        <div class="input-group">
+                            <span class="input-group-text dynamic-currency">$</span>
+                            <input type="number" id="sellingPrice" class="form-control" value="50" min="0" step="0.1" oninput="calculateBreakEven()">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Variable Cost (Per Unit)</label>
+                        <div class="input-group">
+                            <span class="input-group-text dynamic-currency">$</span>
+                            <input type="number" id="variableCost" class="form-control" value="20" min="0" step="0.1" oninput="calculateBreakEven()">
+                        </div>
+                        <small class="text-muted" style="font-size: 0.7rem;">Materials, labor, shipping</small>
+                    </div>
+
+                    <div class="section-divider"><span>SCALING (OPTIONAL)</span></div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-success">Target Net Profit</label>
+                        <div class="input-group">
+                            <span class="input-group-text dynamic-currency">$</span>
+                            <input type="number" id="targetProfit" class="form-control" value="5000" min="0" step="100" oninput="calculateBreakEven()">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline-secondary w-100 fw-bold mt-2" onclick="resetCalculator()"><i class="fas fa-redo-alt me-2"></i>Reset Model</button>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                
+                <div class="alert-box" id="flawAlert">
+                    <i class="fas fa-exclamation-circle me-2"></i> Flawed Business Model: Your Variable Cost per unit is higher than your Selling Price. You lose money on every sale. Break-even is mathematically impossible.
+                </div>
+
+                <div class="result-card healthy" id="mainResultCard">
+                    <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.9;" id="resultSubtitle">Units to Break-Even</div>
+                    <div class="result-value" id="breakEvenUnitsDisplay">334</div>
+                    <div style="font-size: 1rem; opacity: 0.9; font-weight: 600;" id="breakEvenRevenueDisplay">Break-Even Revenue: $16,666.67</div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); height: 100%;">
+                            <div class="text-muted text-uppercase fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Contribution Margin</div>
+                            <div class="fs-4 fw-bold text-dark" id="marginDisplay">$30.00 <span class="fs-6 text-muted fw-normal">/ unit</span></div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div style="background: rgba(25, 135, 84, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(25, 135, 84, 0.2); height: 100%;">
+                            <div class="text-success text-uppercase fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Units For Target Profit</div>
+                            <div class="fs-4 fw-bold text-success" id="targetUnitsDisplay">500 <span class="fs-6 text-muted fw-normal">units</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="breakEvenChart"></canvas>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let beChartInstance = null;
+        let currentCurrency = 'USD';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateCurrency();
+        });
+
+        function updateCurrency() {
+            currentCurrency = document.getElementById('currencySelect').value;
+            const symbols = { 'USD': '$', 'NGN': '₦', 'EUR': '€', 'GBP': '£' };
+            const sym = symbols[currentCurrency];
+            
+            document.querySelectorAll('.dynamic-currency').forEach(el => {
+                el.innerText = sym;
+            });
+            
+            calculateBreakEven();
+        }
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currentCurrency,
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        function formatUnits(amount) {
+            return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.ceil(amount)); // Always round up units, can't sell 0.4 of a unit
+        }
+
+        function calculateBreakEven() {
+            // Fetch Inputs
+            const fixedCosts = parseFloat(document.getElementById('fixedCosts').value) || 0;
+            const sellingPrice = parseFloat(document.getElementById('sellingPrice').value) || 0;
+            const variableCost = parseFloat(document.getElementById('variableCost').value) || 0;
+            const targetProfit = parseFloat(document.getElementById('targetProfit').value) || 0;
+
+            // DOM Elements for dynamic UI
+            const card = document.getElementById('mainResultCard');
+            const alertBox = document.getElementById('flawAlert');
+            const icon = document.getElementById('headerIcon');
+            const inputs = [document.getElementById('sellingPrice'), document.getElementById('variableCost')];
+
+            // 1. Calculate Contribution Margin
+            const contributionMargin = sellingPrice - variableCost;
+
+            // 2. Structural Flaw Detection
+            if (contributionMargin <= 0 && sellingPrice > 0) {
+                // FLAWED MODEL
+                card.className = "result-card flawed";
+                alertBox.style.display = "block";
+                icon.style.color = "var(--brand-danger)";
+                inputs.forEach(el => el.classList.add('is-invalid'));
+
+                document.getElementById('breakEvenUnitsDisplay').innerText = "Infinite";
+                document.getElementById('breakEvenRevenueDisplay').innerText = "Model Mathematically Unviable";
+                document.getElementById('marginDisplay').innerText = `${formatMoney(contributionMargin)} / unit`;
+                document.getElementById('marginDisplay').classList.replace('text-dark', 'text-danger');
+                document.getElementById('targetUnitsDisplay').innerText = "Impossible";
+                
+                renderChart(0, 0, fixedCosts, sellingPrice, variableCost, false);
+                return;
+            }
+
+            // HEALTHY MODEL RESTORE
+            card.className = "result-card healthy";
+            alertBox.style.display = "none";
+            icon.style.color = "var(--brand-orange)";
+            inputs.forEach(el => el.classList.remove('is-invalid'));
+            document.getElementById('marginDisplay').classList.replace('text-danger', 'text-dark');
+
+            if (sellingPrice === 0 || fixedCosts === 0) {
+                // Prevent division by zero on blank form
+                updateUI(0, 0, 0, 0, fixedCosts, sellingPrice, variableCost, true);
+                return;
+            }
+
+            // 3. Execute Break-Even Core Math
+            const breakEvenUnits = fixedCosts / contributionMargin;
+            const breakEvenRevenue = breakEvenUnits * sellingPrice;
+            const unitsForTarget = (fixedCosts + targetProfit) / contributionMargin;
+
+            updateUI(breakEvenUnits, breakEvenRevenue, contributionMargin, unitsForTarget, fixedCosts, sellingPrice, variableCost, true);
+        }
+
+        function updateUI(beUnits, beRevenue, margin, targetUnits, fixedCosts, sellingPrice, variableCost, isViable) {
+            document.getElementById('breakEvenUnitsDisplay').innerText = formatUnits(beUnits);
+            document.getElementById('breakEvenRevenueDisplay').innerText = `Break-Even Revenue: ${formatMoney(beRevenue)}`;
+            
+            document.getElementById('marginDisplay').innerHTML = `${formatMoney(margin)} <span class="fs-6 text-muted fw-normal">/ unit</span>`;
+            document.getElementById('targetUnitsDisplay').innerHTML = `${formatUnits(targetUnits)} <span class="fs-6 text-muted fw-normal">units</span>`;
+
+            if (isViable) {
+                renderChart(beUnits, targetUnits, fixedCosts, sellingPrice, variableCost, true);
+            }
+        }
+
+        function renderChart(beUnits, targetUnits, fixedCosts, sellingPrice, variableCost, isViable) {
+            const ctx = document.getElementById('breakEvenChart').getContext('2d');
+            
+            if (beChartInstance) {
+                beChartInstance.destroy();
+            }
+
+            if (!isViable || beUnits === 0) return;
+
+            // Generate X-Axis Data Points
+            // We want to graph from 0 up to either 2x the break-even point, or 1.2x the target profit point, whichever is bigger, so the chart looks scaled properly.
+            const maxGraphUnits = Math.max(beUnits * 2, targetUnits * 1.2);
+            const step = maxGraphUnits / 10;
+            
+            let labels = [];
+            let revenueData = [];
+            let totalCostData = [];
+
+            for (let i = 0; i <= 10; i++) {
+                let currentUnits = Math.round(i * step);
+                labels.push(`${currentUnits} Units`);
+                
+                // Y1: Revenue = Price * Units
+                revenueData.push(currentUnits * sellingPrice);
+                
+                // Y2: Total Costs = Fixed + (Variable * Units)
+                totalCostData.push(fixedCosts + (currentUnits * variableCost));
+            }
+
+            beChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Revenue',
+                            data: revenueData,
+                            borderColor: '#198754', // Green
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Total Costs',
+                            data: totalCostData,
+                            borderColor: '#dc3545', // Red
+                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            fill: false,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                                    if (value >= 1000) return (value / 1000).toFixed(0) + 'k';
+                                    return value;
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${formatMoney(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                }
+            });
+        }
+
+        function resetCalculator() {
+            document.getElementById('fixedCosts').value = 10000;
+            document.getElementById('sellingPrice').value = 50;
+            document.getElementById('variableCost').value = 20;
+            document.getElementById('targetProfit').value = 5000;
+            calculateBreakEven();
+        }
+    </script>
+</body>
+</html>

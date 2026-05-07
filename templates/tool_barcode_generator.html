@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Generator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        /* Controls Pane */
+        .controls-pane {
+            flex: 0 0 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .control-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 700;
+            color: var(--lasu-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-area {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .input-text {
+            resize: none;
+            font-family: 'Fira Code', monospace;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 12px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .input-text:focus {
+            border-color: var(--lasu-green);
+            box-shadow: 0 0 0 3px rgba(0, 77, 64, 0.1);
+            outline: none;
+        }
+
+        /* Value Error Styling */
+        .input-error {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+            background-color: #fff8f8;
+        }
+
+        /* Color Pickers & Sliders */
+        .color-group, .slider-group {
+            display: flex;
+            gap: 15px;
+        }
+        .color-box, .slider-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 100%;
+            height: 45px;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 2px solid #ced4da; border-radius: 8px; }
+
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            outline: none;
+            accent-color: var(--lasu-green);
+        }
+
+        /* Output Pane */
+        .output-pane {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 40px;
+            background-image: radial-gradient(#e9ecef 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .barcode-wrapper {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 1px solid #dee2e6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 350px;
+            min-height: 200px;
+            transition: transform 0.3s;
+        }
+        .barcode-wrapper:hover {
+            transform: scale(1.02);
+        }
+
+        #barcodeCanvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .action-bar {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .btn-download {
+            flex: 1;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 12px;
+        }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .controls-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">DEV TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-pane">
+        <div class="control-header">
+            <i class="fas fa-barcode"></i> Generator Settings
+        </div>
+
+        <div class="form-area">
+            <div>
+                <label class="form-label text-primary"><i class="fas fa-keyboard me-1"></i> Barcode Value</label>
+                <input type="text" class="input-text w-100" id="textInput" placeholder="Enter product code or text..." value="LASU2026" oninput="generateBarcode()">
+                <div id="errorMsg" class="small text-danger mt-1 fw-bold d-none">
+                    <i class="fas fa-exclamation-circle"></i> <span id="errorText">Invalid format.</span>
+                </div>
+            </div>
+
+            <div>
+                <label class="form-label">Barcode Format</label>
+                <select class="form-select border-secondary fw-bold" id="formatSelect" onchange="generateBarcode()">
+                    <option value="CODE128">CODE128 (Universal/Standard)</option>
+                    <option value="EAN13">EAN-13 (International Retail)</option>
+                    <option value="UPC">UPC (US Retail)</option>
+                    <option value="CODE39">CODE39 (Industrial/Legacy)</option>
+                    <option value="ITF14">ITF-14 (Shipping/Logistics)</option>
+                </select>
+                <div class="small text-muted mt-1" style="font-size: 0.75rem;">Note: Retail barcodes (EAN/UPC) strictly require numerical digits.</div>
+            </div>
+
+            <div class="color-group">
+                <div class="color-box">
+                    <label class="form-label">Bar Color</label>
+                    <input type="color" id="lineColor" value="#000000" oninput="generateBarcode()">
+                </div>
+                <div class="color-box">
+                    <label class="form-label">Background</label>
+                    <input type="color" id="bgColor" value="#ffffff" oninput="generateBarcode()">
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-box">
+                    <label class="form-label">Bar Width (<span id="widthVal">2</span>)</label>
+                    <input type="range" id="barWidth" min="1" max="4" step="1" value="2" oninput="updateSliderVal('widthVal', this.value); generateBarcode()">
+                </div>
+                <div class="slider-box">
+                    <label class="form-label">Bar Height (<span id="heightVal">100</span>)</label>
+                    <input type="range" id="barHeight" min="40" max="200" step="10" value="100" oninput="updateSliderVal('heightVal', this.value); generateBarcode()">
+                </div>
+            </div>
+
+            <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" id="showText" checked onchange="generateBarcode()">
+                <label class="form-check-label fw-bold text-dark" for="showText">Display Value Below Barcode</label>
+            </div>
+
+            <hr class="my-0">
+            
+            <div class="alert alert-success py-2 mb-0 small border-0 shadow-sm text-center">
+                <i class="fas fa-microchip me-1"></i> High-Fidelity Rendering Engine Active
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner-border text-success mb-3" role="status"></div>
+            <h5 class="fw-bold text-dark">Initializing Engine...</h5>
+            <div class="small text-muted" id="loadingStatus">Testing Secure CDN Tunnels...</div>
+        </div>
+
+        <div class="barcode-wrapper" id="barcodeWrapper">
+            <canvas id="barcodeCanvas"></canvas>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn btn-primary btn-download" onclick="downloadBarcode('png')">
+                <i class="fas fa-file-image"></i> Save PNG
+            </button>
+            <button class="btn btn-dark btn-download" onclick="downloadBarcode('jpeg')">
+                <i class="fas fa-file-image"></i> Save JPG
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    const textInput = document.getElementById('textInput');
+    const formatSelect = document.getElementById('formatSelect');
+    const lineColor = document.getElementById('lineColor');
+    const bgColor = document.getElementById('bgColor');
+    const barWidth = document.getElementById('barWidth');
+    const barHeight = document.getElementById('barHeight');
+    const showText = document.getElementById('showText');
+    
+    const errorMsg = document.getElementById('errorMsg');
+    const errorText = document.getElementById('errorText');
+    const barcodeCanvas = document.getElementById('barcodeCanvas');
+    const toastBox = document.getElementById('toastBox');
+    
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingStatus = document.getElementById('loadingStatus');
+
+    let typingTimer;
+    let engineReady = false;
+
+    // UI Helper
+    function updateSliderVal(spanId, val) {
+        document.getElementById(spanId).innerText = val;
+    }
+
+    // --- MULTI-CDN ANTI-FIREWALL SCRIPT INJECTOR ---
+    function loadBarcodeLibrary() {
+        const cdns = [
+            "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js",
+            "https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js",
+            "https://unpkg.com/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"
+        ];
+        
+        let cdnIndex = 0;
+
+        function tryNextCDN() {
+            if (cdnIndex >= cdns.length) {
+                loadingStatus.innerHTML = "<span class='text-danger'>Critical Error: Network firewall blocked all JS resources.</span>";
+                return;
+            }
+
+            loadingStatus.innerText = `Connecting to Node ${cdnIndex + 1}...`;
+            
+            const script = document.createElement('script');
+            script.src = cdns[cdnIndex];
+            script.async = true;
+            
+            script.onload = () => {
+                loadingOverlay.style.display = 'none';
+                engineReady = true;
+                generateBarcode(); // Trigger initial render
+            };
+            
+            script.onerror = () => {
+                console.warn(`CDN ${cdnIndex + 1} blocked. Falling back...`);
+                cdnIndex++;
+                tryNextCDN();
+            };
+
+            document.head.appendChild(script);
+        }
+
+        tryNextCDN();
+    }
+
+    // --- GENERATION LOGIC ---
+    function generateBarcode() {
+        if (!engineReady) return;
+
+        const val = textInput.value.trim();
+        
+        if (!val) {
+            // Clear canvas if empty
+            const ctx = barcodeCanvas.getContext('2d');
+            ctx.clearRect(0, 0, barcodeCanvas.width, barcodeCanvas.height);
+            textInput.classList.remove('input-error');
+            errorMsg.classList.add('d-none');
+            return;
+        }
+
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            
+            try {
+                // The JsBarcode core API call
+                JsBarcode(barcodeCanvas, val, {
+                    format: formatSelect.value,
+                    lineColor: lineColor.value,
+                    background: bgColor.value,
+                    width: parseInt(barWidth.value),
+                    height: parseInt(barHeight.value),
+                    displayValue: showText.checked,
+                    font: "monospace",
+                    fontSize: 20,
+                    margin: 10
+                });
+
+                // Clear any previous error states
+                textInput.classList.remove('input-error');
+                errorMsg.classList.add('d-none');
+
+            } catch (err) {
+                // Retail barcodes (EAN/UPC) will throw errors if you give them letters or the wrong amount of numbers.
+                // We catch it gracefully here.
+                textInput.classList.add('input-error');
+                errorMsg.classList.remove('d-none');
+                
+                if (err.message) {
+                    errorText.innerText = err.message;
+                } else {
+                    errorText.innerText = `The value "${val}" is not valid for ${formatSelect.value} format.`;
+                }
+            }
+
+        }, 150); // Small debounce for smooth typing
+    }
+
+    // --- DOWNLOAD LOGIC ---
+    function downloadBarcode(format) {
+        if (!engineReady || !textInput.value.trim() || !errorMsg.classList.contains('d-none')) {
+            showToast("Invalid or empty barcode cannot be downloaded.", "danger");
+            return;
+        }
+
+        const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+        
+        // Note: For JPEG to look correct, the canvas background must be solid (no transparency).
+        // JsBarcode handles the background color perfectly via the `background` option.
+        const dataUrl = barcodeCanvas.toDataURL(mimeType, 1.0); 
+
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `LASU_Barcode_${Date.now()}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        showToast(`Barcode saved as ${format.toUpperCase()}`, "success");
+    }
+
+    // --- UI HELPERS ---
+    function showToast(message, type) {
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Boot sequence
+    window.onload = () => {
+        loadBarcodeLibrary();
+    };
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

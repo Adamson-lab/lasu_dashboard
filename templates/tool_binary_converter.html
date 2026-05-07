@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Converter | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        
+        .back-btn:hover { 
+            opacity: 0.8; color: white; 
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        /* Controls / Header */
+        .controls-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .tool-title {
+            font-weight: 700;
+            color: var(--lasu-green);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Split Converter Area */
+        .converter-wrapper {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .pane {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .pane-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pane-title {
+            font-weight: 700;
+            color: #495057;
+            margin: 0;
+        }
+
+        .pane-textarea {
+            flex-grow: 1;
+            border: none;
+            resize: none;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            width: 100%;
+            outline: none;
+            background-color: #fff;
+            color: #212529;
+            min-height: 300px;
+        }
+
+        .pane-textarea:focus {
+            box-shadow: inset 0 0 0 2px var(--lasu-accent);
+        }
+
+        /* Binary Specific Styling */
+        #binaryInput {
+            color: #198754;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .invalid-binary {
+            box-shadow: inset 0 0 0 2px #dc3545 !important;
+            background-color: #fff8f8 !important;
+        }
+
+        /* Middle Swap Button */
+        .swap-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-swap {
+            background: var(--lasu-green);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 77, 64, 0.2);
+            transition: all 0.2s;
+        }
+
+        .btn-swap:hover {
+            transform: scale(1.1) rotate(180deg);
+            background: var(--lasu-accent);
+        }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            z-index: 1050;
+            display: none; 
+            min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .converter-wrapper { flex-direction: column; }
+            .btn-swap { transform: rotate(90deg); }
+            .btn-swap:hover { transform: scale(1.1) rotate(270deg); }
+            .pane-textarea { min-height: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">DEV TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-card">
+        <h1 class="tool-title"><i class="fas fa-microchip"></i> Binary Converter</h1>
+        
+        <div class="d-flex align-items-center gap-3">
+            <div>
+                <label class="form-label small text-muted mb-0 fw-bold">Binary Formatting:</label>
+                <select class="form-select form-select-sm" id="formatSelect" onchange="convertTextToBinary()">
+                    <option value="space">Space Separated (0101 0011)</option>
+                    <option value="none">Continuous Block (01010011)</option>
+                </select>
+            </div>
+            <button class="btn btn-outline-danger btn-sm mt-3" onclick="clearBoth()">
+                <i class="fas fa-trash me-1"></i> Clear
+            </button>
+        </div>
+    </div>
+
+    <div class="converter-wrapper">
+        
+        <div class="pane">
+            <div class="pane-header">
+                <h5 class="pane-title"><i class="fas fa-font text-primary me-2"></i>Text String</h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="copyContent('textInput')">
+                    <i class="fas fa-copy"></i> Copy Text
+                </button>
+            </div>
+            <textarea id="textInput" class="pane-textarea" placeholder="Type or paste standard text here..." oninput="convertTextToBinary()"></textarea>
+            <div class="bg-light p-2 border-top text-muted small fw-bold text-end" id="textStats">
+                0 Characters
+            </div>
+        </div>
+
+        <div class="swap-container">
+            <button class="btn-swap" title="Two-way conversion happens automatically!">
+                <i class="fas fa-exchange-alt"></i>
+            </button>
+        </div>
+
+        <div class="pane">
+            <div class="pane-header">
+                <h5 class="pane-title"><i class="fas fa-code text-success me-2"></i>Binary Code</h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="copyContent('binaryInput')">
+                    <i class="fas fa-copy"></i> Copy Binary
+                </button>
+            </div>
+            <textarea id="binaryInput" class="pane-textarea" placeholder="Type or paste binary (0s and 1s) here..." oninput="convertBinaryToText()"></textarea>
+            <div class="bg-light p-2 border-top text-muted small fw-bold d-flex justify-content-between" id="binaryStats">
+                <span id="binaryError" class="text-danger d-none"><i class="fas fa-exclamation-triangle"></i> Invalid characters detected.</span>
+                <span id="binaryCount" class="ms-auto">0 Bytes</span>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    const textInput = document.getElementById('textInput');
+    const binaryInput = document.getElementById('binaryInput');
+    const formatSelect = document.getElementById('formatSelect');
+    
+    const textStats = document.getElementById('textStats');
+    const binaryCount = document.getElementById('binaryCount');
+    const binaryError = document.getElementById('binaryError');
+    const toastBox = document.getElementById('toastBox');
+
+    // Convert Text to Binary
+    function convertTextToBinary() {
+        const text = textInput.value;
+        const useSpaces = formatSelect.value === 'space';
+
+        // Update Text Stats
+        textStats.innerText = `${text.length} Characters`;
+
+        if (!text) {
+            binaryInput.value = '';
+            binaryInput.classList.remove('invalid-binary');
+            binaryError.classList.add('d-none');
+            binaryCount.innerText = "0 Bytes";
+            return;
+        }
+
+        let binaryResult = '';
+        
+        for (let i = 0; i < text.length; i++) {
+            // Get UTF-16 code unit and convert to base 2
+            let bin = text.charCodeAt(i).toString(2);
+            // Pad with leading zeros to ensure it's at least 8 bits (a standard byte)
+            bin = bin.padStart(8, '0');
+            
+            binaryResult += bin;
+            if (useSpaces && i < text.length - 1) {
+                binaryResult += ' ';
+            }
+        }
+
+        binaryInput.value = binaryResult;
+        binaryInput.classList.remove('invalid-binary');
+        binaryError.classList.add('d-none');
+        
+        // Calculate bytes (approximate based on characters)
+        binaryCount.innerText = `${text.length} Bytes`;
+    }
+
+    // Convert Binary to Text
+    function convertBinaryToText() {
+        let binary = binaryInput.value;
+
+        if (!binary.trim()) {
+            textInput.value = '';
+            binaryInput.classList.remove('invalid-binary');
+            binaryError.classList.add('d-none');
+            textStats.innerText = "0 Characters";
+            binaryCount.innerText = "0 Bytes";
+            return;
+        }
+
+        // Clean the input: remove all spaces, tabs, and newlines
+        let cleanBinary = binary.replace(/\s+/g, '');
+
+        // Validate: Ensure it only contains 0s and 1s
+        if (!/^[01]+$/.test(cleanBinary)) {
+            binaryInput.classList.add('invalid-binary');
+            binaryError.classList.remove('d-none');
+            // We don't update the text output if it's currently invalid garbage
+            return; 
+        } else {
+            binaryInput.classList.remove('invalid-binary');
+            binaryError.classList.add('d-none');
+        }
+
+        // Calculate Bytes
+        const byteLength = Math.ceil(cleanBinary.length / 8);
+        binaryCount.innerText = `${byteLength} Bytes`;
+
+        // Conversion
+        let textResult = '';
+        
+        // Process 8 bits at a time
+        for (let i = 0; i < cleanBinary.length; i += 8) {
+            const byte = cleanBinary.substring(i, i + 8);
+            // Only convert if we have a full byte (or the remainder at the end)
+            if (byte.length > 0) {
+                const charCode = parseInt(byte, 2);
+                textResult += String.fromCharCode(charCode);
+            }
+        }
+
+        textInput.value = textResult;
+        textStats.innerText = `${textResult.length} Characters`;
+    }
+
+    function clearBoth() {
+        textInput.value = '';
+        binaryInput.value = '';
+        textInput.focus();
+        convertTextToBinary(); // resets stats
+    }
+
+    function copyContent(elementId) {
+        const el = document.getElementById(elementId);
+        if (!el.value) return;
+        el.select();
+        document.execCommand('copy');
+        
+        const type = elementId === 'textInput' ? 'Text' : 'Binary';
+        showToast(`${type} copied to clipboard!`, 'success');
+        window.getSelection().removeAllRanges();
+    }
+
+    function showToast(message, type) {
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

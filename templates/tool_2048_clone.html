@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V14000 Quantum Combinator | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V14000 QUANTUM COMBINATOR THEME ENGINE
+           ========================================== */
+        
+        [data-theme="dark"] {
+            --nk-bg: #0b0f19;
+            --nk-surface: #131a2a;
+            --nk-text: #e2e8f0;
+            --nk-text-muted: #475569;
+            --nk-accent: #f59e0b; /* Quantum Amber */
+            --nk-accent-glow: rgba(245, 158, 11, 0.3);
+            --nk-error: #ef4444;
+            --nk-border: #1e293b;
+            --grid-bg: #070a10;
+            --cell-empty: #131a2a;
+        }
+
+        [data-theme="light"] {
+            --nk-bg: #f8fafc;
+            --nk-surface: #ffffff;
+            --nk-text: #0f172a;
+            --nk-text-muted: #94a3b8;
+            --nk-accent: #d97706; 
+            --nk-accent-glow: rgba(217, 119, 6, 0.3);
+            --nk-error: #dc2626;
+            --nk-border: #cbd5e1;
+            --grid-bg: #94a3b8;
+            --cell-empty: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--nk-bg);
+            color: var(--nk-text);
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .test-container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        /* HUD Header */
+        .nk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--nk-border);
+        }
+
+        .nk-title {
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            color: var(--nk-accent);
+            text-shadow: 0 0 15px var(--nk-accent-glow);
+        }
+
+        .btn-nav {
+            background: transparent;
+            color: var(--nk-text);
+            border: 1px solid var(--nk-border);
+            padding: 10px 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-nav:hover { background: var(--nk-surface); border-color: var(--nk-accent); color: var(--nk-accent); }
+
+        /* Telemetry Dashboard */
+        .telemetry-dash {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .telemetry-node {
+            background: var(--nk-surface);
+            border: 1px solid var(--nk-border);
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .node-val {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--nk-text);
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .node-lbl {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--nk-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Layout Structure */
+        .main-layout {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout { flex-direction: column; align-items: center; }
+            .control-panel { width: 100%; max-width: 500px; }
+        }
+
+        /* Control Panel */
+        .control-panel {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: var(--nk-surface);
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid var(--nk-border);
+            min-width: 280px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .panel-label {
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: var(--nk-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .form-select {
+            background-color: var(--nk-bg);
+            color: var(--nk-text);
+            border: 2px solid var(--nk-border);
+            padding: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 4px;
+            outline: none;
+            width: 100%;
+        }
+        .form-select:focus { border-color: var(--nk-accent); }
+
+        .btn-action {
+            background: var(--nk-accent);
+            color: #ffffff;
+            border: none;
+            padding: 15px 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .btn-action:hover { opacity: 0.8; transform: translateY(-2px); box-shadow: 0 5px 15px var(--nk-accent-glow); }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--nk-border);
+            color: var(--nk-text);
+        }
+        .btn-secondary:hover { border-color: var(--nk-text); box-shadow: none; }
+        
+        .btn-undo {
+            background: transparent;
+            border: 2px solid var(--nk-accent);
+            color: var(--nk-accent);
+        }
+        .btn-undo:hover { background: var(--nk-accent); color: #ffffff; }
+        .btn-undo:disabled { opacity: 0.3; cursor: not-allowed; border-color: var(--nk-border); color: var(--nk-text-muted); background: transparent; transform: none; }
+
+        /* The 2048 Grid */
+        .arena-box {
+            background-color: var(--grid-bg);
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 4px solid var(--nk-border);
+        }
+
+        .grid-container {
+            display: grid;
+            gap: 12px;
+            /* Grid Template Columns handled via JS based on size */
+        }
+
+        .grid-cell {
+            background-color: var(--cell-empty);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #ffffff;
+            transition: background-color 0.15s ease, transform 0.1s ease;
+            aspect-ratio: 1 / 1;
+        }
+
+        .tile-pop {
+            transform: scale(1.15);
+            z-index: 5;
+        }
+
+        /* Color Mapping */
+        .tile-2 { background-color: #3b82f6; color: #ffffff; }
+        .tile-4 { background-color: #2563eb; color: #ffffff; }
+        .tile-8 { background-color: #1d4ed8; color: #ffffff; }
+        .tile-16 { background-color: #1e40af; color: #ffffff; }
+        .tile-32 { background-color: #f59e0b; color: #ffffff; }
+        .tile-64 { background-color: #d97706; color: #ffffff; }
+        .tile-128 { background-color: #b45309; color: #ffffff; }
+        .tile-256 { background-color: #ef4444; color: #ffffff; }
+        .tile-512 { background-color: #dc2626; color: #ffffff; }
+        .tile-1024 { background-color: #b91c1c; color: #ffffff; }
+        .tile-2048 { background-color: #ec4899; color: #ffffff; box-shadow: 0 0 15px rgba(236, 72, 153, 0.5); }
+        .tile-4096 { background-color: #db2777; color: #ffffff; box-shadow: 0 0 20px rgba(219, 39, 119, 0.6); }
+        .tile-8192 { background-color: #be185d; color: #ffffff; box-shadow: 0 0 25px rgba(190, 24, 93, 0.8); }
+        .tile-super { background-color: #9d174d; color: #ffffff; box-shadow: 0 0 30px rgba(157, 23, 77, 1); }
+
+        /* Overlays */
+        .status-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            display: none;
+        }
+
+        .overlay-text {
+            font-size: 3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--nk-text-muted);
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="test-container">
+        
+        <div class="nk-header">
+            <div>
+                <h1 class="nk-title">Quantum Combinator</h1>
+                <div style="font-size: 0.8rem; font-weight: bold; color: var(--nk-text-muted); letter-spacing: 3px; margin-top: 5px;">V14000 Dynamic Matrix Engine</div>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn-nav" onclick="toggleQuantumTheme()"><i class="fas fa-adjust"></i></button>
+                <a href="{{ url_for('student_tools_dashboard') }}" class="btn-nav"><i class="fas fa-arrow-left me-2"></i> Dashboard</a>
+            </div>
+        </div>
+
+        <div class="telemetry-dash">
+            <div class="telemetry-node">
+                <div class="node-val" id="hudScore">0</div>
+                <div class="node-lbl">Current Mass</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudHighScore" style="color: var(--nk-accent);">0</div>
+                <div class="node-lbl">Peak Mass Limit</div>
+            </div>
+            <div class="telemetry-node">
+                <div class="node-val" id="hudUndos">0</div>
+                <div class="node-lbl">Temporal Shifts</div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            
+            <div class="control-panel">
+                
+                <div>
+                    <div class="panel-label">Matrix Dimensions</div>
+                    <select id="gridSizeSelect" class="form-select" onchange="executeSystemReboot()">
+                        <option value="3">3 x 3 (Lethal)</option>
+                        <option value="4" selected>4 x 4 (Standard)</option>
+                        <option value="5">5 x 5 (Expanded)</option>
+                        <option value="6">6 x 6 (Massive)</option>
+                        <option value="8">8 x 8 (Endurance)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="panel-label">Target Victory Condition</div>
+                    <select id="winConditionSelect" class="form-select">
+                        <option value="1024">1024</option>
+                        <option value="2048" selected>2048</option>
+                        <option value="4096">4096</option>
+                        <option value="8192">8192</option>
+                    </select>
+                </div>
+
+                <div style="border-top: 1px solid var(--nk-border); margin: 5px 0;"></div>
+
+                <button class="btn-action btn-undo" id="btnUndo" onclick="executeTemporalUndo()" disabled>
+                    <i class="fas fa-history me-2"></i> Undo Last Move
+                </button>
+                
+                <button class="btn-action" onclick="executeSystemReboot()">
+                    <i class="fas fa-sync-alt me-2"></i> Force Reboot
+                </button>
+
+                <div class="instructions">
+                    W A S D • ARROWS • SWIPE
+                </div>
+
+            </div>
+
+            <div class="arena-box" id="playArena">
+                
+                <div class="status-overlay" id="statusOverlay">
+                    <div class="overlay-text" id="overlayText">System Halted</div>
+                    <button class="btn-action" style="width: auto;" onclick="executeSystemReboot()">Re-engage Protocol</button>
+                    <button class="btn-action btn-secondary mt-3" style="width: auto; border-color: var(--nk-accent); color: var(--nk-accent);" id="btnContinue" onclick="continueEndlessMode()">Continue Endless</button>
+                </div>
+
+                <div class="grid-container" id="gridContainer">
+                    </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // V14000 THEME ENGINE
+        // ==========================================
+        function toggleQuantumTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let nextTheme;
+
+            if (currentTheme === "light") {
+                nextTheme = "dark";
+            } else {
+                nextTheme = "light";
+            }
+
+            htmlElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('lisa_v14000_2048', nextTheme);
+        }
+
+        // ==========================================
+        // GLOBAL GAME MEMORY & TEMPORAL STACK
+        // ==========================================
+        let gameBoardArray = [];
+        let temporalHistoryStack = []; // Array of previous states
+        
+        let currentGridSize = 4;
+        let currentScore = 0;
+        let peakHighScore = 0;
+        let totalUndosUsed = 0;
+        
+        let isGameHalted = false;
+        let isVictoryAchieved = false;
+        let isEndlessMode = false;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v14000_2048');
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+            
+            let savedScore = localStorage.getItem('lisa_v14000_highscore');
+            if (savedScore !== null) {
+                peakHighScore = parseInt(savedScore, 10);
+                document.getElementById('hudHighScore').innerText = String(peakHighScore);
+            }
+
+            executeSystemReboot();
+            attachSwipeListeners();
+        });
+
+        // ==========================================
+        // MATRIX INITIALIZATION
+        // ==========================================
+        function getCellWidth(sizeInteger) {
+            if (sizeInteger === 3) { return "100px"; }
+            if (sizeInteger === 4) { return "90px"; }
+            if (sizeInteger === 5) { return "75px"; }
+            if (sizeInteger === 6) { return "60px"; }
+            if (sizeInteger === 8) { return "45px"; }
+            return "90px";
+        }
+
+        function getCellFontSize(sizeInteger, valueInteger) {
+            let baseSize = 2.5;
+            if (sizeInteger === 5) { baseSize = 2.0; }
+            if (sizeInteger === 6) { baseSize = 1.6; }
+            if (sizeInteger === 8) { baseSize = 1.2; }
+
+            // Shrink font if number gets huge
+            if (valueInteger >= 1000) { baseSize = baseSize * 0.75; }
+            if (valueInteger >= 10000) { baseSize = baseSize * 0.6; }
+
+            return String(baseSize) + "rem";
+        }
+
+        function executeSystemReboot() {
+            let sizeSelectString = document.getElementById('gridSizeSelect').value;
+            currentGridSize = parseInt(sizeSelectString, 10);
+            
+            gameBoardArray = [];
+            for (let r = 0; r < currentGridSize; r = r + 1) {
+                let rowArray = [];
+                for (let c = 0; c < currentGridSize; c = c + 1) {
+                    rowArray.push(0);
+                }
+                gameBoardArray.push(rowArray);
+            }
+            
+            currentScore = 0;
+            temporalHistoryStack = [];
+            totalUndosUsed = 0;
+            isGameHalted = false;
+            isVictoryAchieved = false;
+            isEndlessMode = false;
+            
+            document.getElementById('hudScore').innerText = "0";
+            document.getElementById('hudUndos').innerText = "0";
+            document.getElementById('btnUndo').disabled = true;
+            document.getElementById('statusOverlay').style.display = "none";
+            document.getElementById('btnContinue').style.display = "none";
+
+            // Physically build grid
+            let containerElement = document.getElementById('gridContainer');
+            containerElement.innerHTML = "";
+            containerElement.style.gridTemplateColumns = "repeat(" + String(currentGridSize) + ", 1fr)";
+
+            let targetWidth = getCellWidth(currentGridSize);
+
+            for (let r = 0; r < currentGridSize; r = r + 1) {
+                for (let c = 0; c < currentGridSize; c = c + 1) {
+                    let cellElement = document.createElement("div");
+                    cellElement.className = "grid-cell";
+                    cellElement.id = "c_" + String(r) + "_" + String(c);
+                    cellElement.style.width = targetWidth;
+                    containerElement.appendChild(cellElement);
+                }
+            }
+
+            spawnRandomTile();
+            spawnRandomTile();
+            renderPhysicalGrid();
+        }
+
+        function spawnRandomTile() {
+            let emptyCoordinates = [];
+            for (let r = 0; r < currentGridSize; r = r + 1) {
+                for (let c = 0; c < currentGridSize; c = c + 1) {
+                    if (gameBoardArray[r][c] === 0) {
+                        emptyCoordinates.push({ row: r, col: c });
+                    }
+                }
+            }
+
+            if (emptyCoordinates.length > 0) {
+                let randomIndex = Math.floor(Math.random() * emptyCoordinates.length);
+                let targetCoord = emptyCoordinates[randomIndex];
+                
+                let newTileValue = 2;
+                if (Math.random() > 0.9) { newTileValue = 4; }
+                
+                gameBoardArray[targetCoord.row][targetCoord.col] = newTileValue;
+            }
+        }
+
+        function renderPhysicalGrid() {
+            let winConditionValue = parseInt(document.getElementById('winConditionSelect').value, 10);
+
+            for (let r = 0; r < currentGridSize; r = r + 1) {
+                for (let c = 0; c < currentGridSize; c = c + 1) {
+                    let cellValue = gameBoardArray[r][c];
+                    let cellElement = document.getElementById("c_" + String(r) + "_" + String(c));
+                    
+                    cellElement.className = "grid-cell";
+                    
+                    if (cellValue === 0) {
+                        cellElement.innerText = "";
+                        cellElement.style.fontSize = getCellFontSize(currentGridSize, 0);
+                    } else {
+                        cellElement.innerText = String(cellValue);
+                        cellElement.style.fontSize = getCellFontSize(currentGridSize, cellValue);
+                        
+                        if (cellValue <= 8192) {
+                            cellElement.classList.add("tile-" + String(cellValue));
+                        } else {
+                            cellElement.classList.add("tile-super");
+                        }
+
+                        // Victory Check
+                        if (cellValue >= winConditionValue && isVictoryAchieved === false && isEndlessMode === false) {
+                            triggerVictoryProtocol();
+                        }
+                    }
+                }
+            }
+
+            document.getElementById('hudScore').innerText = String(currentScore);
+            if (currentScore > peakHighScore) {
+                peakHighScore = currentScore;
+                document.getElementById('hudHighScore').innerText = String(peakHighScore);
+                localStorage.setItem('lisa_v14000_highscore', String(peakHighScore));
+            }
+            
+            if (temporalHistoryStack.length > 0) {
+                document.getElementById('btnUndo').disabled = false;
+            } else {
+                document.getElementById('btnUndo').disabled = true;
+            }
+        }
+
+        function triggerPopAnimation(rowInt, colInt) {
+            let cellElement = document.getElementById("c_" + String(rowInt) + "_" + String(colInt));
+            if (cellElement !== null) {
+                cellElement.classList.add("tile-pop");
+                setTimeout(function() {
+                    cellElement.classList.remove("tile-pop");
+                }, 150);
+            }
+        }
+
+        // ==========================================
+        // TEMPORAL UNDO ENGINE
+        // ==========================================
+        function cloneMatrix(sourceArray) {
+            let clone = [];
+            for (let r = 0; r < currentGridSize; r = r + 1) {
+                let rowArray = [];
+                for (let c = 0; c < currentGridSize; c = c + 1) {
+                    rowArray.push(sourceArray[r][c]);
+                }
+                clone.push(rowArray);
+            }
+            return clone;
+        }
+
+        function captureTemporalState() {
+            // Save current board and score before making a move
+            let stateObject = {
+                board: cloneMatrix(gameBoardArray),
+                score: currentScore
+            };
+            
+            temporalHistoryStack.push(stateObject);
+            
+            // Limit memory depth to 20 moves to prevent infinite RAM buildup
+            if (temporalHistoryStack.length > 20) {
+                temporalHistoryStack.shift();
+            }
+        }
+
+        function executeTemporalUndo() {
+            if (temporalHistoryStack.length === 0) { return; }
+
+            let previousState = temporalHistoryStack.pop();
+            gameBoardArray = cloneMatrix(previousState.board);
+            currentScore = previousState.score;
+            
+            totalUndosUsed = totalUndosUsed + 1;
+            document.getElementById('hudUndos').innerText = String(totalUndosUsed);
+            
+            // If game was over, un-halt it
+            isGameHalted = false;
+            document.getElementById('statusOverlay').style.display = "none";
+            
+            renderPhysicalGrid();
+        }
+
+        // ==========================================
+        // EXPLICIT MOVEMENT VECTORS
+        // ==========================================
+
+        function processShiftLeft() {
+            let matrixHasChanged = false;
+            for (let r = 0; r < currentGridSize; r = r + 1) {
+                let currentRow = gameBoardArray[r];
+                let extractedNodes = [];
+                for (let c = 0; c < currentGridSize; c = c + 1) {
+                    if (currentRow[c] !== 0) { extractedNodes.push(currentRow[c]); }
+                }
+
+                for (let i = 0; i < extractedNodes.length - 1; i = i + 1) {
+                    if (extractedNodes[i] === extractedNodes[i+1]) {
+                        extractedNodes[i] = extractedNodes[i] * 2;
+                        currentScore = currentScore + extractedNodes[i];
+                        extractedNodes[i+1] = 0;
+                        triggerPopAnimation(r, i); 
+                    }
+                }
+
+                let finalRowData = [];
+                for (let i = 0; i < extractedNodes.length; i = i + 1) {
+                    if (extractedNodes[i] !== 0) { finalRowData.push(extractedNodes[i]); }
+                }
+                while (finalRowData.length < currentGridSize) { finalRowData.push(0); }
+
+                for (let c = 0; c < currentGridSize; c = c + 1) {
+                    if (gameBoardArray[r][c] !== finalRowData[c]) { matrixHasChanged = true; }
+                    gameBoardArray[r][c] = finalRowData[c];
+                }
+            }
+            return matrixHasChanged;
+        }
+
+        function processShiftRight() {
+            let matrixHasChanged = false;
+            for (let r = 0; r < currentGridSize; r = r + 1) {
+                let currentRow = gameBoardArray[r];
+                let extractedNodes = [];
+                for (let c = currentGridSize - 1; c >= 0; c = c - 1) {
+                    if (currentRow[c] !== 0) { extractedNodes.push(currentRow[c]); }
+                }
+
+                for (let i = 0; i < extractedNodes.length - 1; i = i + 1) {
+                    if (extractedNodes[i] === extractedNodes[i+1]) {
+                        extractedNodes[i] = extractedNodes[i] * 2;
+                        currentScore = currentScore + extractedNodes[i];
+                        extractedNodes[i+1] = 0;
+                        triggerPopAnimation(r, (currentGridSize - 1) - i); 
+                    }
+                }
+
+                let finalRowData = [];
+                for (let i = 0; i < extractedNodes.length; i = i + 1) {
+                    if (extractedNodes[i] !== 0) { finalRowData.push(extractedNodes[i]); }
+                }
+                while (finalRowData.length < currentGridSize) { finalRowData.push(0); }
+
+                for (let c = 0; c < currentGridSize; c = c + 1) {
+                    let mappedIndex = finalRowData[(currentGridSize - 1) - c];
+                    if (gameBoardArray[r][c] !== mappedIndex) { matrixHasChanged = true; }
+                    gameBoardArray[r][c] = mappedIndex;
+                }
+            }
+            return matrixHasChanged;
+        }
+
+        function processShiftUp() {
+            let matrixHasChanged = false;
+            for (let c = 0; c < currentGridSize; c = c + 1) {
+                let extractedNodes = [];
+                for (let r = 0; r < currentGridSize; r = r + 1) {
+                    if (gameBoardArray[r][c] !== 0) { extractedNodes.push(gameBoardArray[r][c]); }
+                }
+
+                for (let i = 0; i < extractedNodes.length - 1; i = i + 1) {
+                    if (extractedNodes[i] === extractedNodes[i+1]) {
+                        extractedNodes[i] = extractedNodes[i] * 2;
+                        currentScore = currentScore + extractedNodes[i];
+                        extractedNodes[i+1] = 0;
+                        triggerPopAnimation(i, c);
+                    }
+                }
+
+                let finalColData = [];
+                for (let i = 0; i < extractedNodes.length; i = i + 1) {
+                    if (extractedNodes[i] !== 0) { finalColData.push(extractedNodes[i]); }
+                }
+                while (finalColData.length < currentGridSize) { finalColData.push(0); }
+
+                for (let r = 0; r < currentGridSize; r = r + 1) {
+                    if (gameBoardArray[r][c] !== finalColData[r]) { matrixHasChanged = true; }
+                    gameBoardArray[r][c] = finalColData[r];
+                }
+            }
+            return matrixHasChanged;
+        }
+
+        function processShiftDown() {
+            let matrixHasChanged = false;
+            for (let c = 0; c < currentGridSize; c = c + 1) {
+                let extractedNodes = [];
+                for (let r = currentGridSize - 1; r >= 0; r = r - 1) {
+                    if (gameBoardArray[r][c] !== 0) { extractedNodes.push(gameBoardArray[r][c]); }
+                }
+
+                for (let i = 0; i < extractedNodes.length - 1; i = i + 1) {
+                    if (extractedNodes[i] === extractedNodes[i+1]) {
+                        extractedNodes[i] = extractedNodes[i] * 2;
+                        currentScore = currentScore + extractedNodes[i];
+                        extractedNodes[i+1] = 0;
+                        triggerPopAnimation((currentGridSize - 1) - i, c);
+                    }
+                }
+
+                let finalColData = [];
+                for (let i = 0; i < extractedNodes.length; i = i + 1) {
+                    if (extractedNodes[i] !== 0) { finalColData.push(extractedNodes[i]); }
+                }
+                while (finalColData.length < currentGridSize) { finalColData.push(0); }
+
+                for (let r = 0; r < currentGridSize; r = r + 1) {
+                    let mappedIndex = finalColData[(currentGridSize - 1) - r];
+                    if (gameBoardArray[r][c] !== mappedIndex) { matrixHasChanged = true; }
+                    gameBoardArray[r][c] = mappedIndex;
+                }
+            }
+            return matrixHasChanged;
+        }
+
+        // ==========================================
+        // SYSTEM VALIDATION & END STATES
+        // ==========================================
+        function verifyGridStatus() {
+            // Check for empty cells
+            for (let r = 0; r < currentGridSize; r = r + 1) {
+                for (let c = 0; c < currentGridSize; c = c + 1) {
+                    if (gameBoardArray[r][c] === 0) { return true; } 
+                }
+            }
+
+            // Check horizontal merges
+            for (let r = 0; r < currentGridSize; r = r + 1) {
+                for (let c = 0; c < currentGridSize - 1; c = c + 1) {
+                    if (gameBoardArray[r][c] === gameBoardArray[r][c+1]) { return true; }
+                }
+            }
+
+            // Check vertical merges
+            for (let c = 0; c < currentGridSize; c = c + 1) {
+                for (let r = 0; r < currentGridSize - 1; r = r + 1) {
+                    if (gameBoardArray[r][c] === gameBoardArray[r+1][c]) { return true; }
+                }
+            }
+
+            // Failure State
+            isGameHalted = true;
+            document.getElementById('overlayText').innerText = "SYSTEM HALTED";
+            document.getElementById('overlayText').style.color = "var(--nk-error)";
+            document.getElementById('btnContinue').style.display = "none";
+            document.getElementById('statusOverlay').style.display = "flex";
+            return false;
+        }
+
+        function triggerVictoryProtocol() {
+            isVictoryAchieved = true;
+            isGameHalted = true;
+            document.getElementById('overlayText').innerText = "PROTOCOL COMPLETE";
+            document.getElementById('overlayText').style.color = "var(--nk-accent)";
+            document.getElementById('btnContinue').style.display = "block";
+            document.getElementById('statusOverlay').style.display = "flex";
+        }
+
+        function continueEndlessMode() {
+            isEndlessMode = true;
+            isGameHalted = false;
+            document.getElementById('statusOverlay').style.display = "none";
+        }
+
+        function executePlayerMove(directionString) {
+            if (isGameHalted === true) { return; }
+
+            captureTemporalState(); // Save state before moving
+
+            let boardAltered = false;
+
+            if (directionString === "LEFT") { boardAltered = processShiftLeft(); }
+            if (directionString === "RIGHT") { boardAltered = processShiftRight(); }
+            if (directionString === "UP") { boardAltered = processShiftUp(); }
+            if (directionString === "DOWN") { boardAltered = processShiftDown(); }
+
+            if (boardAltered === true) {
+                spawnRandomTile();
+                renderPhysicalGrid();
+                verifyGridStatus();
+            } else {
+                // If move did nothing, drop the saved state to prevent empty undos
+                temporalHistoryStack.pop(); 
+            }
+        }
+
+        // ==========================================
+        // KEYBOARD EVENT LISTENERS
+        // ==========================================
+        document.addEventListener('keydown', function(eventObject) {
+            if (isGameHalted === true) { return; }
+
+            let keyName = eventObject.key;
+            let didMove = false;
+
+            if (keyName === "ArrowLeft" || keyName === "a" || keyName === "A") { executePlayerMove("LEFT"); didMove = true; }
+            if (keyName === "ArrowRight" || keyName === "d" || keyName === "D") { executePlayerMove("RIGHT"); didMove = true; }
+            if (keyName === "ArrowUp" || keyName === "w" || keyName === "W") { executePlayerMove("UP"); didMove = true; }
+            if (keyName === "ArrowDown" || keyName === "s" || keyName === "S") { executePlayerMove("DOWN"); didMove = true; }
+
+            if (didMove === true) {
+                eventObject.preventDefault(); // Prevent scrolling on arrow press
+            }
+        });
+
+        // ==========================================
+        // MOBILE SWIPE KINETICS
+        // ==========================================
+        let swipeStartX = 0;
+        let swipeStartY = 0;
+
+        function attachSwipeListeners() {
+            let containerTarget = document.getElementById('playArena');
+
+            containerTarget.addEventListener('touchstart', function(eventObject) {
+                swipeStartX = eventObject.touches[0].clientX;
+                swipeStartY = eventObject.touches[0].clientY;
+            }, {passive: false});
+
+            containerTarget.addEventListener('touchmove', function(eventObject) {
+                eventObject.preventDefault(); 
+            }, {passive: false});
+
+            containerTarget.addEventListener('touchend', function(eventObject) {
+                if (isGameHalted === true) { return; }
+
+                let swipeEndX = eventObject.changedTouches[0].clientX;
+                let swipeEndY = eventObject.changedTouches[0].clientY;
+
+                let deltaX = swipeEndX - swipeStartX;
+                let deltaY = swipeEndY - swipeStartY;
+
+                let threshold = 30; 
+
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    if (deltaX > threshold) { executePlayerMove("RIGHT"); }
+                    else if (deltaX < -threshold) { executePlayerMove("LEFT"); }
+                } else {
+                    if (deltaY > threshold) { executePlayerMove("DOWN"); }
+                    else if (deltaY < -threshold) { executePlayerMove("UP"); }
+                }
+            }, {passive: false});
+        }
+
+    </script>
+</body>
+</html>

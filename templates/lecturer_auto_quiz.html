@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Quiz Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        .control-panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        .upload-zone {
+            border: 2px dashed #0d6efd;
+            background: #f1f8ff;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        .upload-zone:hover { background: #e2efff; border-color: #0043a8; }
+        
+        .text-input-zone {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .compress-toggle-box {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .step-badge {
+            background: #0d6efd;
+            color: white;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="fas fa-arrow-left me-2"></i> Back to Dashboard</a>
+        <span class="text-white-50">Quiz Bot Pro <span class="badge bg-warning text-dark ms-2">Integrated</span></span>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <form action="{{ url_for('auto_quiz_generator') }}" method="POST" enctype="multipart/form-data" onsubmit="return startProcess()">
+                
+                <div class="control-panel">
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold"><i class="fas fa-magic text-primary me-2"></i>AI to CBT Converter</h3>
+                        <p class="text-muted">Upload a PDF or Paste Text -> We Compress & Create -> You Edit.</p>
+                    </div>
+
+                    <div class="row g-4">
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-bold"><span class="step-badge">1</span>Select Target Course</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fas fa-book"></i></span>
+                                <select name="course_id" class="form-select form-select-lg" required>
+                                    <option value="" selected disabled>-- Choose Course --</option>
+                                    {% for c in courses %}
+                                        <option value="{{ c.id }}">{{ c.code }} - {{ c.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold"><span class="step-badge">2</span>Upload Material (PDF)</label>
+                            <div class="upload-zone">
+                                <input type="file" name="pdf_file" class="position-absolute top-0 start-0 w-100 h-100 opacity-0" accept=".pdf" onchange="showFileName(this)">
+                                <div id="upload-text">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-2"></i>
+                                    <h6 class="fw-bold">Drop Lecture Note PDF Here</h6>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold d-flex align-items-center justify-content-between">
+                                <span><span class="step-badge">3</span>Or Paste Content Directly</span>
+                                <span class="badge bg-secondary">TEXT MODE</span>
+                            </label>
+                            <div class="text-input-zone">
+                                <textarea name="lecture_text" class="form-control border-0 bg-transparent" rows="6" 
+                                          placeholder="If you don't have a PDF, copy and paste your lecture notes, definitions, or paragraphs here..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold"><span class="step-badge">4</span>Optimization</label>
+                            <div class="compress-toggle-box d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="fw-bold mb-1"><i class="fas fa-compress-arrows-alt me-2"></i>Smart Compression</h6>
+                                    <p class="mb-0 small text-muted">Shrink file text to allow for more questions.</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="compress_toggle" checked style="width: 3em; height: 1.5em; cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">DIFFICULTY</label>
+                            <select name="mode" class="form-select">
+                                <option value="Standard">Standard (Recall)</option>
+                                <option value="Hard">Hard (Analysis)</option>
+                                <option value="Expert">Expert (Complex)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">QUESTIONS (Max 50/Run)</label>
+                            <input type="number" name="question_count" class="form-control" value="20" min="1" max="50">
+                        </div>
+
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-sm" id="genBtn">
+                                <i class="fas fa-bolt me-2"></i> COMPRESS & GENERATE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<div id="loader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
+    <div class="spinner-border text-primary mb-3" style="width: 4rem; height: 4rem;"></div>
+    <h3 class="fw-bold text-dark" id="loaderText">Compressing File...</h3>
+    <p class="text-muted">Optimizing tokens for maximum output.</p>
+</div>
+
+<script>
+    function showFileName(input) {
+        if(input.files && input.files[0]) {
+            document.getElementById('upload-text').innerHTML = 
+                '<i class="fas fa-file-pdf fa-2x text-success mb-2"></i><h6 class="fw-bold text-success">' + input.files[0].name + '</h6>';
+        }
+    }
+
+    function startProcess() {
+        document.getElementById('loader').style.display = 'flex';
+        // Simulate "Compressing" text change
+        setTimeout(() => {
+            document.getElementById('loaderText').innerText = "Generating Quiz...";
+        }, 2000);
+        return true;
+    }
+</script>
+
+</body>
+</html>

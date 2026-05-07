@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Reverser | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .text-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            transition: all 0.2s;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 250px;
+        }
+        .text-editor:focus {
+            border-color: var(--math-purple);
+            box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15);
+        }
+
+        .engine-toggles {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-btn {
+            background: #ffffff;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px 10px;
+            font-weight: 700;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+        }
+        .mode-btn i { font-size: 1.4rem; color: var(--math-purple); transition: transform 0.3s; }
+        .mode-btn:hover { background: #f8f9fa; border-color: #ced4da; }
+        .mode-btn.active {
+            background: rgba(111, 66, 193, 0.05);
+            border-color: var(--math-purple);
+            color: var(--math-purple);
+            box-shadow: 0 4px 10px rgba(111, 66, 193, 0.1);
+        }
+        .mode-btn.active i { transform: scale(1.1) rotate(180deg); }
+        .mode-btn small { display: block; font-size: 0.75rem; color: #adb5bd; font-weight: 600; margin-top: 2px; line-height: 1.2;}
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .output-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #e9ecef;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Fira Code', monospace;
+            min-height: 250px;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        /* Mirror animation effect */
+        .output-editor.flip-anim {
+            transform: scaleX(-1);
+            color: transparent;
+        }
+
+        .editor-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+        }
+        .btn-copy { background: var(--math-purple); color: white; flex: 2;}
+        .btn-copy:hover { background: #5a32a3; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(111, 66, 193, 0.2);}
+        
+        .btn-clear { background: #6c757d; color: white; flex: 1;}
+        .btn-clear:hover { background: #5c636a; transform: translateY(-2px); }
+
+        .telemetry-bar {
+            background: #212529;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+        .telemetry-bar span { color: var(--math-purple); }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .engine-toggles { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-keyboard me-2"></i> Normal Text Input</div>
+            </div>
+
+            <textarea class="text-editor" id="rawInput" placeholder="Type or paste your text here to reverse it..." oninput="executeReverse()"></textarea>
+
+            <div class="pane-header border-0 mb-2 pb-0 mt-0" style="font-size: 0.85rem; color: #495057;">
+                Topological Matrix
+            </div>
+
+            <div class="engine-toggles">
+                <button class="mode-btn active" id="btnAbsolute" onclick="setMode('absolute')">
+                    <i class="fas fa-backward"></i>
+                    <div>Absolute Reverse<small>esreveR etulosbA</small></div>
+                </button>
+                <button class="mode-btn" id="btnWordOrder" onclick="setMode('wordOrder')">
+                    <i class="fas fa-exchange-alt"></i>
+                    <div>Word Order<small>Reverse Order Word</small></div>
+                </button>
+                <button class="mode-btn" id="btnInPlace" onclick="setMode('inPlace')">
+                    <i class="fas fa-text-width"></i>
+                    <div>In-Place Mirror<small>nI-ecalp rorriM</small></div>
+                </button>
+            </div>
+            
+            <div class="alert alert-info border-0 mb-0" style="background: rgba(111, 66, 193, 0.05); color: var(--math-purple); font-size: 0.85rem;">
+                <i class="fas fa-shield-alt me-1"></i> <strong>Unicode Safe Engine:</strong> Preserves complex emojis 👨‍💻 and surrogate pairs mathematically.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-mirror me-2"></i> Mirrored Output</div>
+            </div>
+
+            <textarea class="output-editor" id="outputRes" readonly placeholder="...ti esrever ot ereh txet ruoy etsap ro epyT"></textarea>
+
+            <div class="telemetry-bar mb-3">
+                <div>Characters: <span id="charCount">0</span></div>
+                <div>Status: <span id="statusText">Awaiting Input</span></div>
+            </div>
+
+            <div class="editor-controls">
+                <button class="btn-action btn-copy" onclick="copyOutput()" id="copyBtn">
+                    <i class="fas fa-copy"></i> Copy Output
+                </button>
+                <button class="btn-action btn-clear" onclick="clearAll()">
+                    <i class="fas fa-trash-alt"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const rawInput = document.getElementById('rawInput');
+    const outputRes = document.getElementById('outputRes');
+    const charCount = document.getElementById('charCount');
+    const statusText = document.getElementById('statusText');
+    const copyBtn = document.getElementById('copyBtn');
+
+    let currentMode = 'absolute';
+
+    function setMode(mode) {
+        currentMode = mode;
+        
+        // Update UI Tabs
+        ['Absolute', 'WordOrder', 'InPlace'].forEach(m => {
+            document.getElementById(`btn${m}`).classList.remove('active');
+        });
+        document.getElementById(`btn${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
+        
+        // Add visual flip animation to output
+        outputRes.classList.add('flip-anim');
+        setTimeout(() => {
+            executeReverse();
+            outputRes.classList.remove('flip-anim');
+        }, 150);
+    }
+
+    // Advanced Unicode-safe string reverse
+    // Standard text.split('').reverse() breaks emojis. Array.from() handles surrogate pairs correctly.
+    function reverseString(str) {
+        return Array.from(str).reverse().join('');
+    }
+
+    function executeReverse() {
+        const text = rawInput.value;
+        charCount.innerText = text.length;
+
+        if (!text) {
+            outputRes.value = '';
+            statusText.innerText = "Awaiting Input";
+            statusText.style.color = "var(--math-purple)";
+            return;
+        }
+
+        let result = '';
+
+        if (currentMode === 'absolute') {
+            // Reverses the entire string completely
+            result = reverseString(text);
+            statusText.innerText = "Absolute Reversal Active";
+        } 
+        else if (currentMode === 'wordOrder') {
+            // Splits by spaces and newlines, reverses the array, then joins.
+            // Preserves multi-line structures where possible.
+            result = text.split(/(\s+)/).reverse().join('');
+            statusText.innerText = "Word Sequence Flipped";
+        } 
+        else if (currentMode === 'inPlace') {
+            // Reverses letters inside each word, but keeps word order normal
+            result = text.split(/(\s+)/).map(word => {
+                // If it's just whitespace, return it. Otherwise reverse it.
+                return word.trim() === '' ? word : reverseString(word);
+            }).join('');
+            statusText.innerText = "In-Place Mirror Active";
+        }
+
+        outputRes.value = result;
+        statusText.style.color = "#00ff00"; // Neon green confirmation
+    }
+
+    function copyOutput() {
+        if (!outputRes.value) return;
+        
+        outputRes.select();
+        document.execCommand('copy');
+        
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.style.backgroundColor = '#198754';
+        
+        setTimeout(() => { 
+            copyBtn.innerHTML = originalText; 
+            copyBtn.style.backgroundColor = 'var(--math-purple)';
+        }, 1500);
+    }
+
+    function clearAll() {
+        rawInput.value = '';
+        outputRes.value = '';
+        charCount.innerText = '0';
+        statusText.innerText = 'System Reset';
+        statusText.style.color = '#adb5bd';
+        rawInput.focus();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

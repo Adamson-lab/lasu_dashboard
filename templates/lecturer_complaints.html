@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecturer Portal | Student Complaints</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-dark: #0f172a;
+            --primary-accent: #10b981;
+            --bg-light: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Navbar */
+        .navbar-custom { 
+            background: linear-gradient(135deg, var(--primary-dark), #1e293b); 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+            padding: 15px 0;
+        }
+        .navbar-brand { font-weight: 700; color: white !important; letter-spacing: -0.5px; }
+
+        /* Dashboard Card */
+        .dashboard-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+            margin-top: 40px;
+            padding: 35px;
+            border: 1px solid rgba(255,255,255,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        .dashboard-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: var(--primary-accent);
+        }
+
+        /* Table Styling */
+        .table { margin-bottom: 0; }
+        .table thead th {
+            background-color: transparent;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            padding-bottom: 15px;
+        }
+        .table tbody tr {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .table tbody tr:hover { background-color: #f1f5f9; transform: scale(1.005); }
+        .table td { padding: 18px 10px; vertical-align: middle; }
+
+        /* Avatar */
+        .avatar-circle {
+            width: 45px; height: 45px;
+            background: linear-gradient(135deg, #e2e8f0, #f1f5f9);
+            border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary-dark); font-weight: 800; font-size: 1.1rem;
+            margin-right: 15px; border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        /* Badges */
+        .badge { font-weight: 600; padding: 0.5em 0.8em; border-radius: 8px; letter-spacing: 0.3px; }
+        .badge.bg-warning { background-color: #fffbeb !important; color: #b45309 !important; border: 1px solid #fde68a; }
+        .badge.bg-info { background-color: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe; }
+        .badge.bg-success { background-color: #f0fdf4 !important; color: #15803d !important; border: 1px solid #bbf7d0; }
+        .badge.bg-primary { background-color: var(--primary-dark) !important; color: white !important; }
+        .badge.bg-light { background-color: #f8fafc !important; color: #475569 !important; border-color: #e2e8f0 !important; }
+
+        /* Buttons */
+        .btn { font-weight: 600; padding: 0.5rem 1.2rem; transition: all 0.2s; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-success { background-color: var(--primary-accent); border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-success:hover { background-color: #059669; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3); }
+
+        /* Modal Chat Styles */
+        .modal-content { border-radius: 20px; overflow: hidden; }
+        .modal-header { background: var(--card-bg) !important; border-bottom: 1px solid var(--border-color); color: var(--primary-dark) !important; }
+        .modal-header .btn-link { color: var(--text-muted) !important; }
+        .modal-header .btn-link:hover { color: var(--primary-dark) !important; }
+        
+        #msg-container { background: var(--bg-light) !important; background-image: none !important; padding: 20px !important; }
+        
+        /* Message Bubbles */
+        .msg-bubble { border-radius: 18px; padding: 12px 18px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important; font-size: 0.95rem; line-height: 1.5; }
+        .msg-me { background: var(--primary-dark) !important; color: white !important; border-bottom-right-radius: 4px !important; }
+        .msg-them { background: white !important; color: var(--text-main) !important; border-bottom-left-radius: 4px !important; border: 1px solid var(--border-color); }
+        .msg-time { font-size: 0.7rem; margin-top: 6px; opacity: 0.8; }
+        .msg-time i { font-size: 0.6rem; }
+
+        /* Footer & Input UI */
+        .whatsapp-footer { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+            background-color: white; 
+            border-top: 1px solid var(--border-color); 
+            padding: 15px 20px; 
+        }
+        .input-capsule { 
+            display: flex; 
+            align-items: center; 
+            flex-grow: 1;
+            background: var(--bg-light); 
+            border: 1px solid var(--border-color); 
+            border-radius: 30px; 
+            padding: 8px 15px; 
+        }
+        .input-capsule input { 
+            flex-grow: 1;
+            border: none; 
+            outline: none; 
+            background: transparent; 
+            font-family: inherit; 
+            font-size: 0.95rem; 
+            margin-left: 10px;
+        }
+        .capsule-icon { 
+            background: transparent; 
+            border: none; 
+            padding: 4px 6px;
+            color: var(--text-muted); 
+            font-size: 1.2rem; 
+            cursor: pointer; 
+            transition: 0.2s; 
+        }
+        .capsule-icon:hover { color: var(--primary-dark); }
+        
+        .send-btn-circle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 48px; height: 48px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-accent), #059669);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            transition: 0.2s;
+        }
+        .send-btn-circle:hover { transform: scale(1.05); }
+
+        /* Drawers */
+        .drawer-menu { position: absolute; bottom: 80px; left: 0; width: 100%; display: none; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 10px; background: white; border-top: 1px solid var(--border-color); padding: 15px; max-height: 250px; overflow-y: auto; z-index: 1055; box-shadow: 0 -10px 25px rgba(0,0,0,0.05); border-radius: 15px 15px 0 0; }
+        #sticker-menu { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+        .emoji-btn { font-size: 1.5rem; border: none; background: transparent; cursor: pointer; border-radius: 5px; transition: 0.2s; }
+        .emoji-btn:hover { background-color: #f1f5f9; transform: scale(1.1); }
+        .sticker-btn { width: 100%; cursor: pointer; transition: 0.2s; }
+        .sticker-btn:hover { transform: scale(1.1); }
+
+        /* Media Preview */
+        .media-preview { position: absolute; bottom: 80px; left: 0; width: 100%; display: none; background: rgba(255, 255, 255, 0.98); padding: 10px 20px; z-index: 1060; border-top: 2px solid var(--primary-accent); }
+
+        /* Resolve Button */
+        #resolveBtn { border: 1px solid var(--border-color) !important; color: var(--text-main) !important; background: var(--bg-light) !important; font-weight: 600; }
+        #resolveBtn:hover { background: #e2e8f0 !important; color: var(--primary-dark) !important; }
+        .btn-transition { transition: all 0.3s ease; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" href="#"><i class="fas fa-layer-group me-2" style="color: var(--primary-accent);"></i>Lecturer Portal</a>
+        <div class="d-flex">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm rounded-pill px-4" style="border-color: rgba(255,255,255,0.2);">Back to Dashboard</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    <div class="dashboard-card animate__animated animate__fadeInUp">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--border-color);">
+            <div>
+                <h3 class="fw-bold mb-1" style="color: var(--primary-dark);">Student Complaints</h3>
+                <p class="text-muted mb-0" style="font-size: 0.95rem;">Manage and resolve portal support tickets.</p>
+            </div>
+            <span class="badge bg-primary rounded-pill px-4 py-2 fs-6 shadow-sm">{{ complaints|length }} Total Tickets</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th width="10%">Date</th>
+                        <th width="35%">Student Details</th>
+                        <th width="25%">Category</th>
+                        <th width="15%">Status</th>
+                        <th width="15%" class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in complaints %}
+                    <tr class="animate__animated animate__fadeIn">
+                        <td class="text-muted small fw-medium">{{ c.date_lodged.strftime('%d %b') }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle">
+                                    {{ c.student_name[:1] }}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold" style="color: var(--primary-dark);">{{ c.student_name }}</h6>
+                                    <small class="text-muted fw-medium">{{ c.matric_no }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-light">{{ c.category }}</span></td>
+                        <td>
+                            {% if c.status == 'Pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% elif c.status == 'Active' %}
+                                <span class="badge bg-info">Active</span>
+                            {% else %}
+                                <span class="badge bg-success">Resolved</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-success btn-sm rounded-pill px-4" onclick="openChat('{{ c.id }}', '{{ c.student_name }}', '{{ c.category }}')">
+                                <i class="far fa-comment-dots me-1"></i> Review
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Modal -->
+<div class="modal fade" id="chatModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"> 
+        <div class="modal-content border-0 shadow-lg" style="height: 85vh;">
+            <div class="modal-header p-3 ps-4">
+                <div class="d-flex align-items-center w-100">
+                    <button type="button" class="btn btn-link p-0 me-3 fs-5" data-bs-dismiss="modal"><i class="fas fa-chevron-left"></i></button>
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 42px; height: 42px;">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0 fw-bold" id="chat-student-name" style="color: var(--primary-dark);">Student Name</h6>
+                        <small class="text-muted fw-medium" id="chat-category">Issue Category</small>
+                    </div>
+                    <button id="resolveBtn" class="btn btn-sm rounded-pill px-3 py-2 btn-transition" onclick="markResolved()">
+                        <i class="fas fa-check-circle me-1 text-success"></i> Mark Resolved
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-body d-flex flex-column" id="msg-container">
+                <div class="text-center mt-5"><div class="spinner-border text-success" role="status"></div></div>
+            </div>
+
+            <div id="media-preview" class="media-preview">
+                <div class="d-flex align-items-center">
+                    <div id="preview-box" class="me-3 position-relative"></div>
+                    <div>
+                        <small class="text-muted fw-bold">Ready to send</small><br>
+                        <span id="preview-name" class="small fw-medium text-truncate d-block" style="max-width: 200px; color: var(--primary-dark);"></span>
+                    </div>
+                    <button class="btn btn-sm btn-light ms-auto rounded-circle border shadow-sm" onclick="clearFileSelection()">
+                        <i class="fas fa-times text-danger"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="emoji-menu" class="drawer-menu"></div>
+            <div id="sticker-menu" class="drawer-menu"></div> 
+            
+            <div class="whatsapp-footer position-relative">
+                <div class="input-capsule">
+                    <button class="capsule-icon" onclick="toggleDrawer('emoji-menu')">
+                        <i class="far fa-smile"></i>
+                    </button>
+                    <button class="capsule-icon" onclick="toggleDrawer('sticker-menu')">
+                        <i class="far fa-sticky-note"></i> 
+                    </button>
+                    <button class="capsule-icon" onclick="triggerFileSelect()">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    
+                    <input type="file" id="chat-file-input" hidden onchange="handleFileSelect(this)" accept="image/*,video/*">
+                    <input type="text" id="chat-input" placeholder="Type your response..." autocomplete="off">
+                </div>
+                
+                <button class="send-btn-circle" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane" style="transform: translateX(-1px); margin-top: 1px;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let activeTicketId = null;
+    let pollInterval = null;
+    let selectedFile = null;
+    let lastMessageCount = 0; // 🚀 Tracks total number of messages to prevent vibration
+
+    // 1. ASSETS
+    const emojis = ["😀","😃","😄","😁","😆","😅","😂","🤣","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","👋","🤚","🖐","✋","🖖","👌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🫀","🫁","🦷","🦴","👀","👁","👅","👄"];
+    
+    const stickers = [
+        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDdtZ2dzYXF6Y2Z4YmZ1Y2Z4YmZ1Y2Z4YmZ1Y2Z4YmZ1cCZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/l0HlCqV35hdEg2PB6/giphy.gif",
+        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXp1ZnF4YmZ1Y2Z4YmZ1Y2Z4YmZ1Y2Z4YmZ1Y2Z4cCZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/l41lFj8af0O4Z4qIw/giphy.gif",
+        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmZ1Y2Z4YmZ1Y2Z4YmZ1Y2Z4YmZ1Y2Z4YmZ1Y2Z4cCZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/3o7TKSjRrfIPjeiSEQ/giphy.gif",
+        "https://cdn-icons-png.flaticon.com/512/9408/9408173.png",
+        "https://cdn-icons-png.flaticon.com/512/9408/9408201.png",
+        "https://cdn-icons-png.flaticon.com/512/4710/4710922.png",
+        "https://cdn-icons-png.flaticon.com/512/12304/12304620.png"
+    ];
+
+    const emojiContainer = document.getElementById('emoji-menu');
+    emojis.forEach(em => {
+        const span = document.createElement('button');
+        span.className = 'emoji-btn'; span.innerText = em;
+        span.onclick = function() { addEmoji(em); };
+        emojiContainer.appendChild(span);
+    });
+
+    const stickerContainer = document.getElementById('sticker-menu');
+    stickers.forEach(url => {
+        const img = document.createElement('img');
+        img.src = url; img.className = 'sticker-btn';
+        img.onclick = function() { sendSticker(url); };
+        stickerContainer.appendChild(img);
+    });
+
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.drawer-menu') && !event.target.closest('.capsule-icon')) {
+            document.querySelectorAll('.drawer-menu').forEach(d => d.style.display = 'none');
+        }
+    });
+
+    function toggleDrawer(id) {
+        event.stopPropagation();
+        document.querySelectorAll('.drawer-menu').forEach(d => { if (d.id !== id) d.style.display = 'none'; });
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === 'grid' ? 'none' : 'grid';
+    }
+
+    function addEmoji(emoji) {
+        const input = document.getElementById('chat-input');
+        input.value += emoji; input.focus();
+    }
+
+    function triggerFileSelect() { document.getElementById('chat-file-input').click(); }
+
+    function handleFileSelect(input) {
+        if (input.files && input.files[0]) {
+            selectedFile = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewBox = document.getElementById('preview-box');
+                document.getElementById('preview-name').innerText = selectedFile.name;
+                document.getElementById('media-preview').style.display = 'block';
+
+                if (selectedFile.type.startsWith('image/')) {
+                    previewBox.innerHTML = `<img src="${e.target.result}" style="height: 60px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">`;
+                } else if (selectedFile.type.startsWith('video/')) {
+                    previewBox.innerHTML = `<i class="fas fa-file-video fa-2x text-danger"></i>`;
+                } else {
+                    previewBox.innerHTML = `<i class="fas fa-file-alt fa-2x" style="color: var(--text-muted);"></i>`;
+                }
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+    }
+
+    function clearFileSelection() {
+        selectedFile = null;
+        document.getElementById('chat-file-input').value = '';
+        document.getElementById('media-preview').style.display = 'none';
+    }
+
+    document.getElementById('chat-input').addEventListener("keypress", function(event) {
+        if (event.key === "Enter") { event.preventDefault(); sendMessage(); }
+    });
+
+    function openChat(id, name, category) {
+        activeTicketId = id;
+        document.getElementById('chat-student-name').innerText = name;
+        document.getElementById('chat-category').innerText = category;
+        lastMessageCount = 0; // Reset tracker for new chat
+        
+        const modal = new bootstrap.Modal(document.getElementById('chatModal'));
+        modal.show();
+        
+        loadMessages();
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(loadMessages, 3000);
+    }
+
+    function loadMessages() {
+        if (!activeTicketId) return;
+
+        fetch(`/api/ticket/${activeTicketId}/get_messages`)
+            .then(res => res.json())
+            .then(data => {
+                // 🚀 FIXED: Only repaint the DOM if the total number of messages has actually increased
+                if (data.messages.length === lastMessageCount) return;
+                lastMessageCount = data.messages.length;
+
+                const container = document.getElementById('msg-container');
+                container.innerHTML = ''; 
+
+                data.messages.forEach(msg => {
+                    const alignment = msg.is_me ? 'align-self-end' : 'align-self-start';
+                    const bubbleStyleClass = msg.is_me ? 'msg-me' : 'msg-them';
+                    
+                    let content = msg.text;
+                    let wrapperClass = `msg-bubble ${bubbleStyleClass}`;
+
+                    if (msg.text.startsWith('STICKER:')) {
+                        const url = msg.text.replace('STICKER:', '');
+                        content = `<img src="${url}">`;
+                        wrapperClass = "msg-sticker"; 
+                    } else if (msg.text.startsWith('/static/chat_uploads/')) {
+                        if (msg.text.match(/\.(jpeg|jpg|gif|png)$/i)) {
+                            content = `<img src="${msg.text}" class="img-fluid rounded mb-1 shadow-sm" style="max-width: 250px; cursor: pointer;" onclick="window.open(this.src)">`;
+                        } else if (msg.text.match(/\.(mp4|webm)$/i)) {
+                            content = `<video src="${msg.text}" controls class="img-fluid rounded mb-1 shadow-sm" style="max-width: 250px;"></video>`;
+                        } else {
+                            const textColor = msg.is_me ? 'text-white' : 'text-primary';
+                            content = `<a href="${msg.text}" target="_blank" class="text-decoration-none ${textColor} fw-bold"><i class="fas fa-file-download me-2"></i>Download File</a>`;
+                        }
+                    }
+
+                    const timeColorClass = msg.is_me ? 'text-white-50' : 'text-muted';
+                    const checkIcon = msg.is_me ? `<i class="fas fa-check-double text-white ms-1"></i>` : '';
+
+                    const html = `
+                        <div class="d-flex flex-column ${alignment} animate__animated animate__fadeInUp animate__faster" style="max-width: 80%; min-width: 100px; margin-bottom: 15px;">
+                            <div class="${wrapperClass}">
+                                ${content}
+                                <div class="text-end msg-time ${timeColorClass}">
+                                    ${msg.time} ${checkIcon}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+                container.scrollTop = container.scrollHeight;
+            });
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text && !selectedFile) return;
+
+        const formData = new FormData();
+        formData.append('message', text || (selectedFile ? "📁 Sent a file" : "")); 
+        if (selectedFile) formData.append('file', selectedFile);
+
+        document.querySelectorAll('.drawer-menu').forEach(d => d.style.display = 'none');
+        clearFileSelection();
+
+        fetch(`/api/ticket/${activeTicketId}/send_message`, { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                input.value = '';
+                loadMessages();
+            }
+        });
+    }
+
+    function sendSticker(url) {
+        const formData = new FormData();
+        formData.append('message', 'STICKER:' + url); 
+        document.querySelectorAll('.drawer-menu').forEach(d => d.style.display = 'none');
+        fetch(`/api/ticket/${activeTicketId}/send_message`, { method: 'POST', body: formData })
+        .then(() => loadMessages());
+    }
+
+    function markResolved() {
+        const btn = document.getElementById('resolveBtn');
+        const originalHtml = btn.innerHTML;
+        const originalClasses = btn.className;
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Resolving...';
+        btn.disabled = true;
+
+        // 🚀 FIXED: Pointing strictly to your existing app.py endpoint
+        fetch(`/api/ticket/${activeTicketId}/close`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Resolved';
+            btn.className = 'btn btn-sm rounded-pill px-3 py-2 btn-transition bg-success text-white fw-bold shadow-sm';
+
+            setTimeout(() => { location.reload(); }, 1000);
+        })
+        .catch(err => {
+            console.error(err);
+            btn.innerHTML = originalHtml;
+            btn.className = originalClasses;
+            btn.disabled = false;
+            alert("Failed to mark as resolved. Please ensure your backend is set up to accept POST requests at this endpoint.");
+        });
+    }
+
+    document.getElementById('chatModal').addEventListener('hidden.bs.modal', function () {
+        if (pollInterval) clearInterval(pollInterval);
+    });
+</script>
+</body>
+</html>

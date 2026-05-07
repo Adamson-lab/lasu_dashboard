@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Merger | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <style>
+        :root {
+            --brand-primary: #10b981;
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #f1f5f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragover {
+            border-color: var(--brand-primary);
+            background: rgba(16, 185, 129, 0.05);
+        }
+        .file-list {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-main);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .btn-merge {
+            background: var(--brand-primary);
+            color: white;
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+            transition: 0.2s;
+        }
+        .btn-merge:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .btn-merge:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(16, 185, 129, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-object-group text-success me-2"></i> PDF Merger</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <p class="text-muted mb-4">Select or drag and drop multiple PDF files here. They will be merged in the order they appear below.</p>
+
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('pdfInput').click()">
+            <i class="fas fa-file-pdf fa-3x mb-3 text-secondary" id="dropIcon"></i>
+            <h5 class="fw-bold">Click to browse or drop PDFs here</h5>
+            <p class="text-muted small m-0">Supports .pdf files only</p>
+            <input type="file" id="pdfInput" multiple accept=".pdf" style="display: none;" onchange="handleFiles(this.files)">
+        </div>
+
+        <div class="file-list" id="fileList"></div>
+
+        <button class="btn-merge" id="mergeBtn" disabled onclick="mergePDFs()">
+            <i class="fas fa-layer-group me-2"></i> Merge PDFs
+        </button>
+
+        <div id="statusText" class="text-center mt-3 small fw-bold text-success" style="display: none;"></div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        const dropZone = document.getElementById('dropZone');
+        const fileListContainer = document.getElementById('fileList');
+        const mergeBtn = document.getElementById('mergeBtn');
+        const statusText = document.getElementById('statusText');
+
+        // --- Drag and Drop Architecture ---
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+            document.getElementById('dropIcon').classList.add('text-success');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+            document.getElementById('dropIcon').classList.remove('text-success');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            document.getElementById('dropIcon').classList.remove('text-success');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // --- Memory-Safe File Ingestion ---
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type === 'application/pdf') {
+                    selectedFiles.push(file);
+                } else {
+                    showInlineError(`Security Reject: "${file.name}" is not a valid PDF payload.`);
+                }
+            });
+            renderFileList();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+        }
+
+        function renderFileList() {
+            fileListContainer.innerHTML = '';
+            
+            selectedFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                // Calculate file size for enterprise UI feel
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                
+                item.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-file-pdf text-danger me-3 fs-5"></i> 
+                        <div>
+                            <div class="fw-bold">${file.name}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">${sizeMB} MB</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-link text-danger p-0" onclick="event.stopPropagation(); removeFile(${index})">
+                        <i class="fas fa-times fs-5"></i>
+                    </button>
+                `;
+                fileListContainer.appendChild(item);
+            });
+
+            mergeBtn.disabled = selectedFiles.length < 2;
+            if(selectedFiles.length >= 2) {
+                statusText.style.display = 'none'; // Clear previous errors if they fix the queue
+            }
+        }
+
+        // --- Custom UI Error Handler (No more ugly alerts) ---
+        function showInlineError(message) {
+            statusText.className = "text-center mt-3 small fw-bold text-danger";
+            statusText.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> ${message}`;
+            statusText.style.display = 'block';
+        }
+
+        // --- CORE LOGIC: Fault-Tolerant Asynchronous Compiler ---
+        async function mergePDFs() {
+            try {
+                // 1. Lock UI & Initialize Telemetry
+                mergeBtn.disabled = true;
+                statusText.className = "text-center mt-3 small fw-bold text-primary";
+                statusText.style.display = 'block';
+                
+                // 2. Create Master Document Buffer
+                statusText.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Initializing Master Document...';
+                mergeBtn.innerHTML = '<i class="fas fa-cog fa-spin me-2"></i> Processing Matrix...';
+                
+                const mergedPdf = await PDFLib.PDFDocument.create();
+
+                // 3. Granular Iteration (Isolate failures per file)
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    statusText.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> Compiling [${i + 1}/${selectedFiles.length}]: <b>${file.name}</b>...`;
+                    
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        
+                        // ENTERPRISE FIX: ignoreEncryption bypasses read-only locks on academic PDFs
+                        const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+                        
+                        const pageIndices = pdfDoc.getPageIndices();
+                        const copiedPages = await mergedPdf.copyPages(pdfDoc, pageIndices);
+                        
+                        copiedPages.forEach((page) => mergedPdf.addPage(page));
+                        
+                    } catch (fileError) {
+                        // Capture the EXACT file that broke the engine and throw it to the master catch block
+                        console.error(`[L.I.S.A Core] Buffer failure on ${file.name}:`, fileError);
+                        throw new Error(`<b>${file.name}</b> is locked, corrupted, or contains unsupported encrypted metadata. Please remove it from the queue.`);
+                    }
+                }
+
+                // 4. Final Encoding & Serialization
+                statusText.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Encoding Final Output...';
+                const mergedPdfFile = await mergedPdf.save();
+
+                // 5. Secure Local Download Trigger
+                const blob = new Blob([mergedPdfFile], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `LISA_Compiled_Document_${Date.now()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Memory Cleanup
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // 6. Success Telemetry
+                mergeBtn.style.background = '#198754'; // Force success green
+                mergeBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Compilation Successful!';
+                statusText.className = "text-center mt-3 small fw-bold text-success";
+                statusText.innerHTML = "Secure compilation complete. File downloaded to your system.";
+
+                // 7. Reset State
+                setTimeout(() => {
+                    mergeBtn.style.background = 'var(--brand-primary)';
+                    mergeBtn.innerHTML = '<i class="fas fa-layer-group me-2"></i> Merge PDFs';
+                    selectedFiles = [];
+                    renderFileList();
+                }, 4000);
+
+            } catch (error) {
+                // The Enterprise Catch Block
+                console.error("[L.I.S.A Core] Compilation Aborted:", error);
+                mergeBtn.style.background = '#dc3545'; // Force error red
+                mergeBtn.innerHTML = '<i class="fas fa-times-circle me-2"></i> Merge Failed';
+                showInlineError(`COMPILATION ABORTED: ${error.message}`);
+                
+                setTimeout(() => {
+                    mergeBtn.style.background = 'var(--brand-primary)';
+                    mergeBtn.innerHTML = '<i class="fas fa-layer-group me-2"></i> Retry Queue';
+                    mergeBtn.disabled = false;
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>

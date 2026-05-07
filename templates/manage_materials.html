@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Course Materials</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark px-4 py-3">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#">LASU Analytics</a>
+        <div class="d-flex align-items-center gap-3 text-white">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm">← Back to Dashboard</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white fw-bold">Upload New Material</div>
+                <div class="card-body">
+                    <form action="{{ url_for('manage_materials') }}" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Select Course</label>
+                            <select name="course_id" class="form-select" required>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.code }} - {{ course.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Material Title</label>
+                            <input type="text" name="title" class="form-control" placeholder="e.g. Week 1 Lecture Slides" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">File (PDF/DOC/PPT)</label>
+                            <input type="file" name="file" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Upload File</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold">Uploaded Materials</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Course</th>
+                                <th>Title</th>
+                                <th>Filename</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mat in materials %}
+                            <tr>
+                                <td><span class="badge bg-secondary">{{ mat.course.code }}</span></td>
+                                <td class="fw-bold">{{ mat.title }}</td>
+                                <td class="text-muted small">{{ mat.filename }}</td>
+                                <td>
+                                    <form action="{{ url_for('delete_material', id=mat.id) }}" method="POST" onsubmit="return confirm('Delete this file?');">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">🗑️</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center py-4 text-muted">No materials uploaded yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

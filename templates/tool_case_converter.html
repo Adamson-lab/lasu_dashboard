@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Converter | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .text-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            transition: all 0.2s;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 250px;
+        }
+        .text-editor:focus {
+            border-color: var(--math-blue);
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+        }
+
+        .transform-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-transform {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 12px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-transform i { font-size: 1.2rem; color: var(--math-blue); }
+        .btn-transform:hover, .btn-transform.active { 
+            background: rgba(13, 110, 253, 0.05); 
+            border-color: var(--math-blue); 
+            color: var(--math-blue); 
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .output-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #e9ecef;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Fira Code', monospace;
+            min-height: 250px;
+        }
+
+        .editor-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-copy { background: var(--lasu-accent); color: white; }
+        .btn-copy:hover { background: #146c43; transform: translateY(-2px); }
+        
+        .btn-clear { background: #6c757d; color: white; }
+        .btn-clear:hover { background: #5c636a; transform: translateY(-2px); }
+
+        .telemetry-bar {
+            background: #212529;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+        .telemetry-bar span { color: #0dcaf0; }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .transform-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-keyboard me-2"></i> Raw Input</div>
+            </div>
+
+            <textarea class="text-editor" id="rawInput" placeholder="Paste your text here..."></textarea>
+
+            <div class="pane-header border-0 mb-2 pb-0 mt-0" style="font-size: 0.85rem; color: #495057;">
+                Transformation Algorithms
+            </div>
+
+            <div class="transform-grid">
+                <button class="btn-transform" onclick="applyCase('upper', this)">
+                    <i class="fas fa-font"></i> UPPERCASE
+                </button>
+                <button class="btn-transform" onclick="applyCase('lower', this)">
+                    <i class="fas fa-font" style="font-size: 0.9rem;"></i> lowercase
+                </button>
+                <button class="btn-transform" onclick="applyCase('title', this)">
+                    <i class="fas fa-heading"></i> Title Case
+                </button>
+                <button class="btn-transform" onclick="applyCase('sentence', this)">
+                    <i class="fas fa-paragraph"></i> Sentence case
+                </button>
+                <button class="btn-transform" onclick="applyCase('camel', this)">
+                    <i class="fas fa-camel"></i> camelCase
+                </button>
+                <button class="btn-transform" onclick="applyCase('snake', this)">
+                    <i class="fas fa-minus"></i> snake_case
+                </button>
+                <button class="btn-transform" onclick="applyCase('alt', this)">
+                    <i class="fas fa-random"></i> aLtErNaTiNg
+                </button>
+                <button class="btn-transform" onclick="applyCase('inverse', this)">
+                    <i class="fas fa-exchange-alt"></i> iNVERSE
+                </button>
+            </div>
+
+            <button class="btn-action btn-clear" onclick="clearText()" style="flex: none;">
+                <i class="fas fa-trash-alt"></i> Clear All
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-file-code me-2"></i> Mutated Output</div>
+            </div>
+
+            <textarea class="output-editor" id="outputRes" readonly placeholder="Awaiting transformation..."></textarea>
+
+            <div class="editor-controls mb-3">
+                <button class="btn-action btn-copy" onclick="copyOutput()" id="copyBtn">
+                    <i class="fas fa-copy"></i> Copy Output
+                </button>
+            </div>
+
+            <div class="telemetry-bar mt-auto">
+                <div>Length: <span id="charCount">0</span></div>
+                <div>Status: <span id="statusText" style="color: var(--lasu-accent);">Awaiting</span></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const rawInput = document.getElementById('rawInput');
+    const outputRes = document.getElementById('outputRes');
+    const charCount = document.getElementById('charCount');
+    const statusText = document.getElementById('statusText');
+    const copyBtn = document.getElementById('copyBtn');
+
+    // Live character count
+    rawInput.addEventListener('input', () => {
+        charCount.innerText = outputRes.value.length || rawInput.value.length;
+    });
+
+    function applyCase(type, btnElement) {
+        let text = rawInput.value;
+        if (!text) {
+            statusText.innerText = "Empty String";
+            statusText.style.color = "var(--math-red)";
+            return;
+        }
+
+        // Visual active state reset
+        document.querySelectorAll('.btn-transform').forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
+
+        let result = '';
+
+        switch(type) {
+            case 'upper':
+                result = text.toUpperCase();
+                break;
+            case 'lower':
+                result = text.toLowerCase();
+                break;
+            case 'title':
+                result = text.replace(
+                    /\w\S*/g,
+                    function(txt) {
+                        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                    }
+                );
+                break;
+            case 'sentence':
+                result = text.toLowerCase().replace(/(^\s*\w|[.?!]\s*\w)/g, function(c) {
+                    return c.toUpperCase();
+                });
+                break;
+            case 'camel':
+                result = text.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
+                    return index === 0 ? word.toLowerCase() : word.toUpperCase();
+                }).replace(/\s+/g, '');
+                break;
+            case 'snake':
+                result = text.replace(/\W+/g, " ")
+                  .split(/ |\B(?=[A-Z])/)
+                  .map(word => word.toLowerCase())
+                  .join('_');
+                // Trim leading/trailing underscores if they occur
+                result = result.replace(/^_|_$/g, '');
+                break;
+            case 'alt':
+                result = text.toLowerCase().split('').map((c, i) => i % 2 !== 0 ? c.toUpperCase() : c).join('');
+                break;
+            case 'inverse':
+                result = text.split('').map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join('');
+                break;
+        }
+
+        outputRes.value = result;
+        charCount.innerText = result.length;
+        statusText.innerText = `Converted to ${type}`;
+        statusText.style.color = "var(--math-blue)";
+    }
+
+    function copyOutput() {
+        if (!outputRes.value) return;
+        
+        outputRes.select();
+        document.execCommand('copy');
+        
+        // Visual feedback
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.style.backgroundColor = '#198754';
+        
+        setTimeout(() => { 
+            copyBtn.innerHTML = originalText; 
+            copyBtn.style.backgroundColor = 'var(--lasu-accent)';
+        }, 1500);
+    }
+
+    function clearText() {
+        rawInput.value = '';
+        outputRes.value = '';
+        charCount.innerText = '0';
+        statusText.innerText = 'Cleared';
+        statusText.style.color = '#adb5bd';
+        document.querySelectorAll('.btn-transform').forEach(btn => btn.classList.remove('active'));
+        rawInput.focus();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logic Gate Simulator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --wire-off: #495057;
+            --wire-on: #00ff00;
+            --gate-color: #0d6efd;
+            --bulb-off: #343a40;
+            --bulb-on: #ffc107;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .gate-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .btn-gate {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            padding: 12px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .btn-gate:hover { background: #f8f9fa; border-color: #ced4da; }
+        .btn-gate.active {
+            background: rgba(13, 110, 253, 0.1);
+            color: var(--gate-color);
+            border-color: var(--gate-color);
+        }
+
+        .switch-container {
+            background: #212529;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border: 4px solid #343a40;
+        }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1a1d20;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid #343a40;
+        }
+
+        .toggle-label {
+            color: white;
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-val {
+            color: var(--wire-off);
+            font-weight: 800;
+            font-size: 1.2rem;
+            transition: 0.3s;
+        }
+        .toggle-val.on { color: var(--wire-on); text-shadow: 0 0 10px rgba(0,255,0,0.5); }
+
+        /* Custom Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #495057; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 26px; width: 26px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--wire-on); box-shadow: 0 0 15px rgba(0,255,0,0.4); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            min-height: 300px;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            overflow: hidden;
+        }
+
+        #circuitCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .truth-table-box {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+        }
+
+        .table-custom {
+            margin-bottom: 0;
+            font-family: 'Fira Code', monospace;
+            text-align: center;
+        }
+        
+        .table-custom thead th {
+            background: #f8f9fa;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table-custom tbody td {
+            vertical-align: middle;
+            font-weight: 700;
+        }
+
+        .table-custom tr.active-row td {
+            background-color: rgba(13, 110, 253, 0.1) !important;
+            color: var(--math-blue);
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-microchip"></i> Gate Selection
+            </div>
+
+            <div class="gate-selector">
+                <button class="btn-gate active" id="btnAND" onclick="setGate('AND')">AND</button>
+                <button class="btn-gate" id="btnOR" onclick="setGate('OR')">OR</button>
+                <button class="btn-gate" id="btnNOT" onclick="setGate('NOT')">NOT</button>
+                <button class="btn-gate" id="btnNAND" onclick="setGate('NAND')">NAND</button>
+                <button class="btn-gate" id="btnNOR" onclick="setGate('NOR')">NOR</button>
+                <button class="btn-gate" id="btnXOR" onclick="setGate('XOR')">XOR</button>
+                <button class="btn-gate" id="btnXNOR" onclick="setGate('XNOR')" style="grid-column: span 3;">XNOR</button>
+            </div>
+
+            <div class="pane-header border-0 mb-3 pb-0 mt-2">
+                <i class="fas fa-toggle-on"></i> Input Switches
+            </div>
+
+            <div class="switch-container">
+                <div class="toggle-row">
+                    <div class="toggle-label">
+                        Input A <span class="toggle-val" id="valA">0</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="switchA" onchange="simulate()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row" id="rowB">
+                    <div class="toggle-label">
+                        Input B <span class="toggle-val" id="valB">0</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="switchB" onchange="simulate()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="canvas-container" id="graphContainer">
+            <canvas id="circuitCanvas"></canvas>
+        </div>
+
+        <div class="truth-table-box">
+            <div class="pane-header text-dark border-0 mb-2 pb-0">
+                <i class="fas fa-table text-primary"></i> Live Truth Table
+            </div>
+            <table class="table table-bordered table-custom">
+                <thead>
+                    <tr>
+                        <th>Input A</th>
+                        <th id="thB">Input B</th>
+                        <th class="text-primary">Output Y</th>
+                    </tr>
+                </thead>
+                <tbody id="truthTableBody">
+                    </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    let currentGate = 'AND';
+    let inputA = 0;
+    let inputB = 0;
+    let outputY = 0;
+
+    const switchA = document.getElementById('switchA');
+    const switchB = document.getElementById('switchB');
+    const valA = document.getElementById('valA');
+    const valB = document.getElementById('valB');
+    const rowB = document.getElementById('rowB');
+    const thB = document.getElementById('thB');
+    const truthTableBody = document.getElementById('truthTableBody');
+
+    const canvas = document.getElementById('circuitCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    function resizeCanvas() {
+        const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        ctx.scale(dpr, dpr);
+        simulate();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function setGate(gate) {
+        document.querySelectorAll('.btn-gate').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn${gate}`).classList.add('active');
+        currentGate = gate;
+
+        if (gate === 'NOT') {
+            rowB.style.display = 'none';
+            thB.style.display = 'none';
+            inputB = 0; 
+            switchB.checked = false;
+        } else {
+            rowB.style.display = 'flex';
+            thB.style.display = 'table-cell';
+        }
+
+        simulate();
+    }
+
+    function computeLogic(gate, a, b) {
+        switch(gate) {
+            case 'AND': return (a === 1 && b === 1) ? 1 : 0;
+            case 'OR': return (a === 1 || b === 1) ? 1 : 0;
+            case 'NOT': return (a === 1) ? 0 : 1;
+            case 'NAND': return !(a === 1 && b === 1) ? 1 : 0;
+            case 'NOR': return !(a === 1 || b === 1) ? 1 : 0;
+            case 'XOR': return (a !== b) ? 1 : 0;
+            case 'XNOR': return (a === b) ? 1 : 0;
+        }
+        return 0;
+    }
+
+    function updateTruthTable() {
+        let html = '';
+        
+        if (currentGate === 'NOT') {
+            const rows = [[0], [1]];
+            rows.forEach((row, i) => {
+                let a = row[0];
+                let y = computeLogic(currentGate, a, 0);
+                let isActive = (a === inputA) ? 'active-row' : '';
+                html += `<tr class="${isActive}">
+                            <td>${a}</td>
+                            <td class="text-primary">${y}</td>
+                         </tr>`;
+            });
+        } else {
+            const rows = [[0,0], [0,1], [1,0], [1,1]];
+            rows.forEach((row) => {
+                let a = row[0];
+                let b = row[1];
+                let y = computeLogic(currentGate, a, b);
+                let isActive = (a === inputA && b === inputB) ? 'active-row' : '';
+                html += `<tr class="${isActive}">
+                            <td>${a}</td>
+                            <td>${b}</td>
+                            <td class="text-primary">${y}</td>
+                         </tr>`;
+            });
+        }
+        truthTableBody.innerHTML = html;
+    }
+
+    function simulate() {
+        inputA = switchA.checked ? 1 : 0;
+        inputB = switchB.checked ? 1 : 0;
+        
+        valA.innerText = inputA;
+        valA.className = inputA ? 'toggle-val on' : 'toggle-val';
+        
+        valB.innerText = inputB;
+        valB.className = inputB ? 'toggle-val on' : 'toggle-val';
+
+        outputY = computeLogic(currentGate, inputA, inputB);
+
+        updateTruthTable();
+        drawCircuit();
+    }
+
+    // --- CANVAS GRAPHICS ENGINE ---
+    function drawCircuit() {
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+        
+        ctx.clearRect(0, 0, w, h);
+
+        const colorOn = '#00ff00';
+        const colorOff = '#495057';
+        const gateColor = '#0d6efd';
+
+        const cx = w / 2;
+        const cy = h / 2;
+        const scale = 1.5; // Enlarge drawing
+
+        // Wiring coordinates
+        const wireStartX = 50;
+        const gateInX = cx - (40 * scale);
+        const gateOutX = cx + (40 * scale);
+        const wireEndX = w - 80;
+
+        const yA = cy - (20 * scale);
+        const yB = cy + (20 * scale);
+
+        // Draw Wires
+        ctx.lineWidth = 4;
+        
+        // Wire A
+        ctx.strokeStyle = inputA ? colorOn : colorOff;
+        ctx.beginPath();
+        if (currentGate === 'NOT') {
+            ctx.moveTo(wireStartX, cy);
+            ctx.lineTo(gateInX, cy);
+        } else {
+            ctx.moveTo(wireStartX, yA);
+            ctx.lineTo(gateInX, yA);
+        }
+        ctx.stroke();
+
+        // Wire B
+        if (currentGate !== 'NOT') {
+            ctx.strokeStyle = inputB ? colorOn : colorOff;
+            ctx.beginPath();
+            ctx.moveTo(wireStartX, yB);
+            ctx.lineTo(gateInX, yB);
+            ctx.stroke();
+        }
+
+        // Wire Output
+        let actGateOutX = gateOutX;
+        // Adjust output start if bubble is present
+        if (['NOT', 'NAND', 'NOR', 'XNOR'].includes(currentGate)) {
+            actGateOutX += (10 * scale);
+        }
+
+        ctx.strokeStyle = outputY ? colorOn : colorOff;
+        ctx.beginPath();
+        ctx.moveTo(actGateOutX, cy);
+        ctx.lineTo(wireEndX, cy);
+        ctx.stroke();
+
+        // Draw Labels for Wires
+        ctx.font = 'bold 20px "Fira Code", monospace';
+        ctx.fillStyle = '#adb5bd';
+        if (currentGate === 'NOT') {
+            ctx.fillText('A', wireStartX - 20, cy + 6);
+        } else {
+            ctx.fillText('A', wireStartX - 20, yA + 6);
+            ctx.fillText('B', wireStartX - 20, yB + 6);
+        }
+        ctx.fillText('Y', wireEndX + 45, cy + 6);
+
+        // Draw Output Bulb
+        ctx.beginPath();
+        ctx.arc(wireEndX + 20, cy, 15, 0, Math.PI * 2);
+        if (outputY) {
+            ctx.fillStyle = '#ffc107';
+            ctx.shadowColor = '#ffc107';
+            ctx.shadowBlur = 20;
+        } else {
+            ctx.fillStyle = '#343a40';
+            ctx.shadowBlur = 0;
+        }
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#6c757d';
+        ctx.stroke();
+        ctx.shadowBlur = 0; // reset shadow
+
+        // Draw Gate
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = gateColor;
+        ctx.fillStyle = '#1e1e1e';
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(scale, scale);
+
+        drawGateSymbol(currentGate);
+
+        ctx.restore();
+    }
+
+    function drawGateSymbol(gate) {
+        ctx.beginPath();
+        
+        if (gate === 'AND' || gate === 'NAND') {
+            ctx.moveTo(-30, -30);
+            ctx.lineTo(10, -30);
+            ctx.arc(10, 0, 30, -Math.PI/2, Math.PI/2);
+            ctx.lineTo(-30, 30);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            if (gate === 'NAND') drawBubble(40, 0);
+        } 
+        else if (gate === 'OR' || gate === 'NOR') {
+            ctx.moveTo(-30, -30);
+            ctx.quadraticCurveTo(-10, 0, -30, 30);
+            ctx.quadraticCurveTo(20, 30, 40, 0);
+            ctx.quadraticCurveTo(20, -30, -30, -30);
+            ctx.fill();
+            ctx.stroke();
+            if (gate === 'NOR') drawBubble(44, 0);
+        }
+        else if (gate === 'XOR' || gate === 'XNOR') {
+            // Back shield
+            ctx.beginPath();
+            ctx.moveTo(-38, -30);
+            ctx.quadraticCurveTo(-18, 0, -38, 30);
+            ctx.stroke();
+
+            // Main OR body
+            ctx.beginPath();
+            ctx.moveTo(-30, -30);
+            ctx.quadraticCurveTo(-10, 0, -30, 30);
+            ctx.quadraticCurveTo(20, 30, 40, 0);
+            ctx.quadraticCurveTo(20, -30, -30, -30);
+            ctx.fill();
+            ctx.stroke();
+            if (gate === 'XNOR') drawBubble(44, 0);
+        }
+        else if (gate === 'NOT') {
+            ctx.moveTo(-20, -25);
+            ctx.lineTo(30, 0);
+            ctx.lineTo(-20, 25);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            drawBubble(35, 0);
+        }
+
+        // Add Text Label inside gate
+        ctx.fillStyle = '#0d6efd';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        let txtOffset = gate.includes('X') || gate.includes('OR') ? 5 : 0;
+        ctx.fillText(gate, txtOffset, 0);
+    }
+
+    function drawBubble(x, y) {
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    // Init
+    setTimeout(() => {
+        resizeCanvas();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

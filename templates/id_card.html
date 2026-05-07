@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Exam Pass - {{ student.matric_no }}</title>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        /* Standard ID Card Size: 3.375 x 2.125 inches */
+        .id-card {
+            width: 400px;
+            height: 250px;
+            background: linear-gradient(135deg, #0066b3 0%, #003366 100%);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            color: white;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            padding: 15px;
+        }
+        /* Watermark */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 80px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+        }
+        .photo-area {
+            width: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid rgba(255,255,255,0.2);
+            padding-right: 15px;
+        }
+        .photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid white;
+            object-fit: cover;
+            background: white;
+            margin-bottom: 10px;
+        }
+        .details-area {
+            flex: 1;
+            padding-left: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        h2 { margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+        h3 { margin: 5px 0 0 0; font-size: 14px; font-weight: normal; color: #ddd; }
+        .matric { background: white; color: #0066b3; padding: 3px 8px; border-radius: 4px; font-weight: bold; display: inline-block; margin-top: 5px; font-size: 12px; }
+        .footer {
+            position: absolute; bottom: 10px; right: 15px; text-align: right;
+        }
+        .qr-code {
+            background: white;
+            padding: 2px;
+            width: 70px;
+            height: 70px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .print-btn {
+            position: fixed; bottom: 20px; padding: 10px 20px; background: #333; color: white; border: none; cursor: pointer; border-radius: 5px;
+        }
+        @media print { .print-btn { display: none; } body { background: white; } }
+    </style>
+    
+    <!-- Enterprise Client-Side QR Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <div class="id-card">
+        <div class="watermark">LASU</div>
+        
+        <div class="photo-area">
+            <img src="{{ image_file }}" 
+                 onerror="this.src='https://ui-avatars.com/api/?name={{ student.name | urlencode }}&background=fff&color=0066b3'"
+                 class="photo" alt="Student Photo">
+            <div style="font-size: 9px; opacity: 0.8;">EXAM PASS</div>
+        </div>
+
+        <div class="details-area">
+            <h2>{{ student.name }}</h2>
+            <h3>{{ student.department }}</h3>
+            <div class="matric" id="matric_payload">{{ student.matric_no }}</div>
+            
+            <div style="margin-top: 15px; font-size: 10px; color: #ccc;">
+                2024/2025 SESSION<br>
+                FACULTY OF SCIENCE
+            </div>
+        </div>
+
+        <div class="footer">
+            <!-- Dynamically generated via Matrix JS to ensure network-agnostic scanning -->
+            <div id="dynamic-qr" class="qr-code"></div>
+            <div style="font-size: 8px; margin-top: 2px; opacity: 0.8; color: white;">SCAN TO VERIFY</div>
+        </div>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">🖨️ Print ID Card</button>
+
+    <script>
+        // ==========================================
+        // ZERO-TRUST DYNAMIC QR GENERATOR MATRIX
+        // ==========================================
+        document.addEventListener("DOMContentLoaded", function() {
+            // Fetch the raw matriculation number from the Jinja context
+            const matricNo = "{{ student.matric_no }}";
+            
+            // Encode the Matric Number directly into the DOM.
+            // When a hardware scanner reads this, it will seamlessly type the matric number 
+            // into your dashboard's Global Search or Class Scanner modules.
+            new QRCode(document.getElementById("dynamic-qr"), {
+                text: matricNo,
+                width: 66,  /* Calibrated to fit perfectly inside your 70px container */
+                height: 66,
+                colorDark : "#003366", /* Brand consistency matching the LASU gradient */
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        });
+    </script>
+</body>
+</html>

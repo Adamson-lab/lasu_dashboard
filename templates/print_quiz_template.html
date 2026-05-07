@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Print Quiz: {{ quiz.title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: white; font-family: 'Times New Roman', serif; color: black; }
+        .quiz-header { border-bottom: 3px double #000; margin-bottom: 30px; padding-bottom: 10px; }
+        .question-block { margin-bottom: 20px; page-break-inside: avoid; }
+        
+        /* Regular Option Style */
+        .option-item { margin-left: 25px; margin-bottom: 5px; padding: 2px 8px; border-radius: 4px; }
+        
+        /* 🟢 HIGHLIGHT STYLE (For Answer Key Mode) */
+        .correct-answer {
+            background-color: #212529 !important; /* Dark Black */
+            color: #fff !important;               /* White Text */
+            font-weight: bold;
+            border: 1px solid #000;
+            -webkit-print-color-adjust: exact;    /* Forces Chrome/Edge to print background colors */
+            print-color-adjust: exact;
+        }
+
+        .school-logo { width: 100px; height: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; margin: 15mm; }
+            .container { width: 100%; max-width: 100%; padding: 0; margin: 0; }
+            a { text-decoration: none; color: black; }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+    <div class="container mt-4">
+        <div class="no-print d-flex gap-2 mb-4 justify-content-center">
+            <button onclick="window.print()" class="btn btn-primary fw-bold shadow-sm">🖨️ Print Paper</button>
+            <button onclick="window.close()" class="btn btn-secondary shadow-sm">Close Window</button>
+        </div>
+
+        <div class="quiz-header text-center">
+            <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" alt="LASU Logo" class="school-logo">
+            
+            <h2 class="fw-bold mb-1">LAGOS STATE UNIVERSITY</h2>
+            <h5 class="mb-1">{{ quiz.course.code }}: {{ quiz.course.title }}</h5>
+            <h6 class="text-uppercase text-decoration-underline">
+                {{ quiz.title }} 
+                {% if mode == 'lecturer' %}(MARKING GUIDE){% endif %}
+            </h6>
+            
+            <div class="d-flex justify-content-between mt-4 small border-top pt-2" style="border-top: 1px dashed #000 !important;">
+                <span><strong>Date:</strong> {{ date.strftime('%d %B, %Y') }}</span>
+                <span><strong>Time Allowed:</strong> ___________</span>
+                <span><strong>Matric No:</strong> _______________________</span>
+            </div>
+        </div>
+
+        <div class="quiz-content">
+            {% for q in questions %}
+            <div class="question-block">
+                <p class="mb-2"><strong>{{ loop.index }}.</strong> {{ q.text }}</p>
+                
+                <div class="option-item {% if mode == 'lecturer' and q.correct_option == 'A' %}correct-answer{% endif %}">
+                    A. {{ q.option_a }} {% if mode == 'lecturer' and q.correct_option == 'A' %} ✓{% endif %}
+                </div>
+
+                <div class="option-item {% if mode == 'lecturer' and q.correct_option == 'B' %}correct-answer{% endif %}">
+                    B. {{ q.option_b }} {% if mode == 'lecturer' and q.correct_option == 'B' %} ✓{% endif %}
+                </div>
+
+                <div class="option-item {% if mode == 'lecturer' and q.correct_option == 'C' %}correct-answer{% endif %}">
+                    C. {{ q.option_c }} {% if mode == 'lecturer' and q.correct_option == 'C' %} ✓{% endif %}
+                </div>
+
+                <div class="option-item {% if mode == 'lecturer' and q.correct_option == 'D' %}correct-answer{% endif %}">
+                    D. {{ q.option_d }} {% if mode == 'lecturer' and q.correct_option == 'D' %} ✓{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

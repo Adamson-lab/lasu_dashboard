@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volume Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .shape-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .btn-shape {
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            padding: 12px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-shape i { font-size: 1.2rem; }
+        .btn-shape:hover { background: #f8f9fa; border-color: #ced4da; }
+        .btn-shape.active {
+            background: rgba(13, 110, 253, 0.1);
+            color: var(--math-blue);
+            border-color: var(--math-blue);
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--lasu-accent); box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1.2rem;
+            color: #495057;
+            width: 130px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        .input-label small { font-size: 0.7rem; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; margin-top: 4px; color: #adb5bd; }
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .formula-display {
+            background: #212529;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.4rem;
+            text-align: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 110px;
+        }
+        .formula-display span { color: var(--math-orange); font-weight: 800; }
+        .formula-sub { font-size: 0.9rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .result-box.highlight {
+            background: rgba(13, 110, 253, 0.05);
+            border-color: rgba(13, 110, 253, 0.2);
+            grid-column: span 2;
+        }
+
+        .res-label {
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .res-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+        }
+        .highlight .res-val { color: var(--math-blue); font-size: 2.5rem; }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
+            min-height: 350px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+            background-image: radial-gradient(#e9ecef 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+        }
+
+        #volumeCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-cube"></i> Geometry Selector
+            </div>
+
+            <div class="shape-selector">
+                <button class="btn-shape active" id="btnSphere" onclick="setShape('sphere')">
+                    <i class="fas fa-globe"></i> Sphere
+                </button>
+                <button class="btn-shape" id="btnCylinder" onclick="setShape('cylinder')">
+                    <i class="fas fa-database"></i> Cylinder
+                </button>
+                <button class="btn-shape" id="btnCone" onclick="setShape('cone')">
+                    <i class="fas fa-caret-up"></i> Cone
+                </button>
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Values must be greater than 0.
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-primary">Radius <small>(r)</small></div>
+                <input type="number" class="num-input" id="valRadius" value="5" step="any" oninput="calculateVolume()">
+            </div>
+
+            <div class="input-group-custom" id="heightGroup" style="display: none;">
+                <div class="input-label text-danger">Height <small>(h)</small></div>
+                <input type="number" class="num-input" id="valHeight" value="10" step="any" oninput="calculateVolume()">
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-auto" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Values
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            
+            <div class="formula-display" id="formulaScreen">
+                V = <span>4/3</span> &pi; r³
+                <div class="formula-sub">Sphere Volume Formula</div>
+            </div>
+
+            <div class="result-grid">
+                <div class="result-box highlight">
+                    <div class="res-label">Total Volume (V)</div>
+                    <div class="res-val" id="resVol">523.599</div>
+                </div>
+                <div class="result-box">
+                    <div class="res-label">Base Area (&pi;r&sup2;)</div>
+                    <div class="res-val text-success" id="resBaseArea">78.540</div>
+                </div>
+                <div class="result-box">
+                    <div class="res-label">Exact Pi Form</div>
+                    <div class="res-val text-orange" id="resPiForm" style="font-size: 1.5rem;">166.667&pi;</div>
+                </div>
+            </div>
+
+            <div class="pane-header text-dark border-0 mt-4 mb-2 pb-0">
+                <i class="fas fa-drafting-compass text-primary"></i> 3D Isometric View
+            </div>
+
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="volumeCanvas"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valRadius = document.getElementById('valRadius');
+    const valHeight = document.getElementById('valHeight');
+    const heightGroup = document.getElementById('heightGroup');
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const resVol = document.getElementById('resVol');
+    const resBaseArea = document.getElementById('resBaseArea');
+    const resPiForm = document.getElementById('resPiForm');
+    const formulaScreen = document.getElementById('formulaScreen');
+
+    const canvas = document.getElementById('volumeCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    let currentShape = 'sphere';
+
+    function resizeCanvas() {
+        const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        ctx.scale(dpr, dpr);
+        calculateVolume();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function roundSafe(num) {
+        return (Math.round(num * 1000) / 1000).toFixed(3);
+    }
+
+    function setShape(shape) {
+        document.querySelectorAll('.btn-shape').forEach(btn => btn.classList.remove('active'));
+        
+        if (shape === 'sphere') {
+            document.getElementById('btnSphere').classList.add('active');
+            heightGroup.style.display = 'none';
+            formulaScreen.innerHTML = `V = <span>4/3</span> &pi; r³<div class="formula-sub">Sphere Volume Formula</div>`;
+        } else if (shape === 'cylinder') {
+            document.getElementById('btnCylinder').classList.add('active');
+            heightGroup.style.display = 'flex';
+            formulaScreen.innerHTML = `V = &pi; r² <span>h</span><div class="formula-sub">Cylinder Volume Formula</div>`;
+        } else if (shape === 'cone') {
+            document.getElementById('btnCone').classList.add('active');
+            heightGroup.style.display = 'flex';
+            formulaScreen.innerHTML = `V = <span>1/3</span> &pi; r² h<div class="formula-sub">Cone Volume Formula</div>`;
+        }
+
+        currentShape = shape;
+        calculateVolume();
+    }
+
+    // --- MATH ENGINE ---
+    function calculateVolume() {
+        const r = parseFloat(valRadius.value);
+        const h = parseFloat(valHeight.value);
+
+        if (isNaN(r) || r <= 0 || (currentShape !== 'sphere' && (isNaN(h) || h <= 0))) {
+            errorBanner.style.display = 'block';
+            resetOutputs();
+            return;
+        }
+        errorBanner.style.display = 'none';
+
+        let vol = 0;
+        let baseArea = Math.PI * Math.pow(r, 2);
+        let piMultiplier = 0;
+
+        if (currentShape === 'sphere') {
+            vol = (4/3) * Math.PI * Math.pow(r, 3);
+            piMultiplier = (4/3) * Math.pow(r, 3);
+            // Great circle area for sphere
+            resBaseArea.innerText = roundSafe(baseArea);
+            resBaseArea.previousElementSibling.innerText = "Great Circle Area";
+        } 
+        else if (currentShape === 'cylinder') {
+            vol = Math.PI * Math.pow(r, 2) * h;
+            piMultiplier = Math.pow(r, 2) * h;
+            resBaseArea.innerText = roundSafe(baseArea);
+            resBaseArea.previousElementSibling.innerText = "Base Area (πr²)";
+        } 
+        else if (currentShape === 'cone') {
+            vol = (1/3) * Math.PI * Math.pow(r, 2) * h;
+            piMultiplier = (1/3) * Math.pow(r, 2) * h;
+            resBaseArea.innerText = roundSafe(baseArea);
+            resBaseArea.previousElementSibling.innerText = "Base Area (πr²)";
+        }
+
+        resVol.innerText = roundSafe(vol);
+        resPiForm.innerHTML = `${roundSafe(piMultiplier)}&pi;`;
+
+        drawWireframe(r, h);
+    }
+
+    // --- CANVAS 3D ISOMETRIC WIREFRAME ENGINE ---
+    function drawWireframe(r, h) {
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const canvasH = canvas.height / (window.devicePixelRatio || 1);
+        
+        ctx.clearRect(0, 0, w, canvasH);
+
+        const cx = w / 2;
+        const cy = canvasH / 2;
+        const padding = 60;
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#0d6efd';
+        ctx.fillStyle = 'rgba(13, 110, 253, 0.05)';
+
+        // Common Isometric scale factor for the ellipse (tilt)
+        const tilt = 0.35; 
+
+        if (currentShape === 'sphere') {
+            const drawR = Math.min(w, canvasH) / 2 - padding;
+
+            // Main outline
+            ctx.beginPath();
+            ctx.arc(cx, cy, drawR, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Equator (Solid front, dashed back)
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, drawR, drawR * tilt, 0, 0, Math.PI);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.ellipse(cx, cy, drawR, drawR * tilt, 0, Math.PI, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Radius Line
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + drawR, cy);
+            ctx.strokeStyle = '#dc3545';
+            ctx.stroke();
+
+            // Label
+            ctx.fillStyle = '#dc3545';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText(`r = ${r}`, cx + (drawR/2), cy - 10);
+            
+            // Center point
+            ctx.beginPath();
+            ctx.arc(cx, cy, 4, 0, Math.PI*2);
+            ctx.fillStyle = '#212529';
+            ctx.fill();
+
+        } 
+        else if (currentShape === 'cylinder') {
+            // Scale based on both r and h
+            const maxDrawH = canvasH - (padding * 2);
+            const maxDrawW = w - (padding * 2);
+            
+            // Normalize scale so proportions look somewhat realistic
+            const logicRatio = (2*r) / h;
+            let drawW, drawH;
+
+            if (logicRatio > (maxDrawW / maxDrawH)) {
+                drawW = maxDrawW;
+                drawH = drawW / logicRatio;
+            } else {
+                drawH = maxDrawH;
+                drawW = drawH * logicRatio;
+            }
+
+            const drawR = drawW / 2;
+            const topY = cy - (drawH / 2);
+            const botY = cy + (drawH / 2);
+
+            // Fill body
+            ctx.beginPath();
+            ctx.moveTo(cx - drawR, topY);
+            ctx.lineTo(cx - drawR, botY);
+            ctx.ellipse(cx, botY, drawR, drawR * tilt, 0, Math.PI, 0, true);
+            ctx.lineTo(cx + drawR, topY);
+            ctx.ellipse(cx, topY, drawR, drawR * tilt, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Top Ellipse
+            ctx.beginPath();
+            ctx.ellipse(cx, topY, drawR, drawR * tilt, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Bottom Ellipse Front (Solid)
+            ctx.beginPath();
+            ctx.ellipse(cx, botY, drawR, drawR * tilt, 0, 0, Math.PI);
+            ctx.stroke();
+
+            // Bottom Ellipse Back (Dashed)
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.ellipse(cx, botY, drawR, drawR * tilt, 0, Math.PI, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Sides
+            ctx.beginPath();
+            ctx.moveTo(cx - drawR, topY);
+            ctx.lineTo(cx - drawR, botY);
+            ctx.moveTo(cx + drawR, topY);
+            ctx.lineTo(cx + drawR, botY);
+            ctx.stroke();
+
+            // Labels
+            ctx.strokeStyle = '#dc3545';
+            ctx.fillStyle = '#dc3545';
+            ctx.font = 'bold 14px Arial';
+            
+            // R line (top)
+            ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx + drawR, topY); ctx.stroke();
+            ctx.fillText(`r=${r}`, cx + drawR/2, topY - 10);
+            
+            // H line
+            ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, botY); ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillText(`h=${h}`, cx + 5, cy);
+
+        } 
+        else if (currentShape === 'cone') {
+            const maxDrawH = canvasH - (padding * 2);
+            const maxDrawW = w - (padding * 2);
+            
+            const logicRatio = (2*r) / h;
+            let drawW, drawH;
+
+            if (logicRatio > (maxDrawW / maxDrawH)) {
+                drawW = maxDrawW;
+                drawH = drawW / logicRatio;
+            } else {
+                drawH = maxDrawH;
+                drawW = drawH * logicRatio;
+            }
+
+            const drawR = drawW / 2;
+            const topY = cy - (drawH / 2);
+            const botY = cy + (drawH / 2);
+
+            // Fill body
+            ctx.beginPath();
+            ctx.moveTo(cx, topY);
+            ctx.lineTo(cx - drawR, botY);
+            ctx.ellipse(cx, botY, drawR, drawR * tilt, 0, Math.PI, 0, true);
+            ctx.fill();
+
+            // Bottom Ellipse Front (Solid)
+            ctx.beginPath();
+            ctx.ellipse(cx, botY, drawR, drawR * tilt, 0, 0, Math.PI);
+            ctx.stroke();
+
+            // Bottom Ellipse Back (Dashed)
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.ellipse(cx, botY, drawR, drawR * tilt, 0, Math.PI, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Sides
+            ctx.beginPath();
+            ctx.moveTo(cx, topY);
+            ctx.lineTo(cx - drawR, botY);
+            ctx.moveTo(cx, topY);
+            ctx.lineTo(cx + drawR, botY);
+            ctx.stroke();
+
+            // Labels
+            ctx.strokeStyle = '#dc3545';
+            ctx.fillStyle = '#dc3545';
+            ctx.font = 'bold 14px Arial';
+            
+            // R line (bottom)
+            ctx.beginPath(); ctx.moveTo(cx, botY); ctx.lineTo(cx + drawR, botY); ctx.stroke();
+            ctx.fillText(`r=${r}`, cx + drawR/2, botY - 10);
+            
+            // H line
+            ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, botY); ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillText(`h=${h}`, cx + 5, cy);
+        }
+    }
+
+    function resetOutputs() {
+        resVol.innerText = '--';
+        resBaseArea.innerText = '--';
+        resPiForm.innerHTML = '--&pi;';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function clearInputs() {
+        valRadius.value = '';
+        valHeight.value = '';
+        valRadius.focus();
+        errorBanner.style.display = 'block';
+        errorBanner.innerText = 'Waiting for input...';
+        resetOutputs();
+    }
+
+    // Init
+    setTimeout(() => {
+        resizeCanvas();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

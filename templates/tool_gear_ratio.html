@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gear Ratio Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --gear-drive: #fd7e14;
+            --gear-driven: #0d6efd;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            width: 170px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        .input-label small { font-size: 0.75rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; margin-top: 2px;}
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-label {
+            background: #f8f9fa;
+            border-left: 1px solid #ced4da;
+            padding: 0 15px;
+            font-weight: 800;
+            color: var(--math-blue);
+            display: flex;
+            align-items: center;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            width: 60px;
+            justify-content: center;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* Advanced Kinematic Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            min-height: 400px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center center;
+        }
+
+        #gearCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: transparent;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            padding: 6px 15px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .control-btn:hover { background: rgba(0, 255, 0, 0.2); box-shadow: 0 0 15px rgba(0,255,0,0.4); }
+        .control-btn.paused { color: #fd7e14; border-color: #fd7e14; }
+        .control-btn.paused:hover { background: rgba(253, 126, 20, 0.2); box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #adb5bd;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.d1 { background: var(--gear-drive); box-shadow: 0 0 5px var(--gear-drive); }
+        .dot.d2 { background: var(--gear-driven); box-shadow: 0 0 5px var(--gear-driven); }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .telemetry-bar { flex-direction: column; gap: 15px; align-items: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-cogs"></i> Transmission Specs
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid positive numbers.
+            </div>
+
+            <div class="pane-header border-0 mb-2 pb-0 mt-2" style="font-size: 0.9rem; color: var(--gear-drive);">
+                <i class="fas fa-cog"></i> Drive Gear (Input)
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label" style="color: var(--gear-drive);">Teeth <small>(N<sub>1</sub>)</small></div>
+                <input type="number" class="num-input" id="valN1" value="10" step="1" oninput="updateMechanics()">
+                <div class="unit-label text-muted">T</div>
+            </div>
+            
+            <div class="input-group-custom">
+                <div class="input-label">Speed <small>(RPM<sub>1</sub>)</small></div>
+                <input type="number" class="num-input" id="valRPM1" value="120" step="any" oninput="updateMechanics()">
+                <div class="unit-label text-muted">rpm</div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label">Torque <small>(&tau;<sub>1</sub>)</small></div>
+                <input type="number" class="num-input" id="valT1" value="50" step="any" oninput="updateMechanics()">
+                <div class="unit-label text-muted">Nm</div>
+            </div>
+
+            <div class="pane-header border-0 mb-2 pb-0 mt-3" style="font-size: 0.9rem; color: var(--gear-driven);">
+                <i class="fas fa-cog"></i> Driven Gear (Output)
+            </div>
+
+            <div class="input-group-custom mb-0">
+                <div class="input-label" style="color: var(--gear-driven);">Teeth <small>(N<sub>2</sub>)</small></div>
+                <input type="number" class="num-input" id="valN2" value="30" step="1" oninput="updateMechanics()">
+                <div class="unit-label text-muted">T</div>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-4" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Reset Gears
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-success bg-success bg-opacity-10 p-3" style="border-width: 2px; border-radius: 12px; box-shadow: none;">
+                    <div class="text-uppercase fw-bold text-muted mb-2" style="font-size: 0.85rem; letter-spacing: 1px;">Gear Ratio (R)</div>
+                    <div class="d-flex justify-content-center align-items-baseline mb-1">
+                        <span class="fw-bold text-success" id="resRatioVal" style="font-family: 'Fira Code', monospace; font-size: 2.2rem; line-height: 1;">3.00</span>
+                        <span class="text-muted ms-1 fw-bold" style="font-size: 1.1rem;">: 1</span>
+                    </div>
+                    <div class="text-muted small fw-bold font-monospace mt-1">R = N<sub>2</sub> / N<sub>1</sub></div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-primary bg-primary bg-opacity-10 p-3" style="border-width: 2px; border-radius: 12px; box-shadow: none;">
+                    <div class="text-uppercase fw-bold text-muted mb-2" style="font-size: 0.85rem; letter-spacing: 1px;">Output Speed (RPM<sub>2</sub>)</div>
+                    <div class="d-flex justify-content-center align-items-baseline mb-1">
+                        <span class="fw-bold text-primary" id="resRPM2Val" style="font-family: 'Fira Code', monospace; font-size: 2.2rem; line-height: 1;">40.0</span>
+                        <span class="text-muted ms-1 fw-bold" style="font-size: 1.1rem;">rpm</span>
+                    </div>
+                    <div class="text-muted small fw-bold font-monospace mt-1">RPM<sub>2</sub> = RPM<sub>1</sub> / R</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-danger bg-danger bg-opacity-10 p-3" style="border-width: 2px; border-radius: 12px; box-shadow: none;">
+                    <div class="text-uppercase fw-bold text-muted mb-2" style="font-size: 0.85rem; letter-spacing: 1px;">Output Torque (&tau;<sub>2</sub>)</div>
+                    <div class="d-flex justify-content-center align-items-baseline mb-1">
+                        <span class="fw-bold text-danger" id="resT2Val" style="font-family: 'Fira Code', monospace; font-size: 2.2rem; line-height: 1;">150.0</span>
+                        <span class="text-muted ms-1 fw-bold" style="font-size: 1.1rem;">Nm</span>
+                    </div>
+                    <div class="text-muted small fw-bold font-monospace mt-1">&tau;<sub>2</sub> = &tau;<sub>1</sub> &times; R</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="simulation-box mt-2">
+            
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="gearCanvas"></canvas>
+            </div>
+
+            <div class="telemetry-bar">
+                <div class="legend">
+                    <div class="legend-item"><div class="dot d1"></div> Drive Gear</div>
+                    <div class="legend-item"><div class="dot d2"></div> Driven Gear</div>
+                </div>
+                
+                <button class="control-btn" id="playBtn" onclick="togglePlay()">
+                    <i class="fas fa-pause"></i> Pause Motor
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valN1 = document.getElementById('valN1');
+    const valRPM1 = document.getElementById('valRPM1');
+    const valT1 = document.getElementById('valT1');
+    const valN2 = document.getElementById('valN2');
+    const errorBanner = document.getElementById('errorBanner');
+
+    const resRatioVal = document.getElementById('resRatioVal');
+    const resRPM2Val = document.getElementById('resRPM2Val');
+    const resT2Val = document.getElementById('resT2Val');
+    const playBtn = document.getElementById('playBtn');
+
+    const canvas = document.getElementById('gearCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    let G = { n1: 10, rpm1: 120, t1: 50, n2: 30, ratio: 3, rpm2: 40, t2: 150 };
+    let theta1 = 0; 
+    let theta2 = 0; 
+    let isPlaying = true;
+    let animationFrameId = null;
+    let lastRenderTime = 0;
+
+    function togglePlay() {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            playBtn.innerHTML = '<i class="fas fa-pause"></i> Pause Motor';
+            playBtn.classList.remove('paused');
+            lastRenderTime = performance.now();
+            animate(lastRenderTime);
+        } else {
+            playBtn.innerHTML = '<i class="fas fa-play"></i> Run Motor';
+            playBtn.classList.add('paused');
+            cancelAnimationFrame(animationFrameId);
+        }
+    }
+
+    function resizeCanvas() {
+        const rect = container.getBoundingClientRect();
+        if(rect.width === 0) return;
+        // Strict mapping
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        if (!isPlaying) drawFrame();
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+
+    function formatNumber(num) {
+        return (Math.round(num * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+    }
+
+    function updateMechanics() {
+        const n1 = parseInt(valN1.value);
+        const rpm1 = parseFloat(valRPM1.value);
+        const t1 = parseFloat(valT1.value);
+        const n2 = parseInt(valN2.value);
+
+        if (isNaN(n1) || isNaN(rpm1) || isNaN(t1) || isNaN(n2) || n1 <= 0 || n2 <= 0) {
+            errorBanner.style.display = 'block';
+            return;
+        }
+        errorBanner.style.display = 'none';
+
+        G.n1 = n1; G.rpm1 = rpm1; G.t1 = t1; G.n2 = n2;
+        G.ratio = G.n2 / G.n1; 
+        G.rpm2 = G.rpm1 / G.ratio; 
+        G.t2 = G.t1 * G.ratio; 
+
+        // Targeted updates to prevent CSS structure corruption
+        resRatioVal.innerText = formatNumber(G.ratio);
+        resRPM2Val.innerText = formatNumber(G.rpm2);
+        resT2Val.innerText = formatNumber(G.t2);
+        
+        theta1 = 0; 
+        if (!isPlaying) drawFrame();
+    }
+
+    function drawGear(cx, cy, radius, teeth, rotation, color, label) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rotation);
+
+        const innerRadius = radius * 0.85;
+        const holeRadius = Math.min(radius * 0.15, 20);
+        const toothWidth = ((Math.PI * 2) / teeth) * 0.35; 
+        
+        ctx.fillStyle = '#0d1117'; 
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = color;
+
+        ctx.beginPath();
+        for (let i = 0; i < teeth; i++) {
+            let angle = i * ((Math.PI * 2) / teeth);
+            ctx.lineTo(Math.cos(angle - toothWidth) * innerRadius, Math.sin(angle - toothWidth) * innerRadius);
+            ctx.lineTo(Math.cos(angle - toothWidth*0.7) * radius, Math.sin(angle - toothWidth*0.7) * radius);
+            ctx.lineTo(Math.cos(angle + toothWidth*0.7) * radius, Math.sin(angle + toothWidth*0.7) * radius);
+            ctx.lineTo(Math.cos(angle + toothWidth) * innerRadius, Math.sin(angle + toothWidth) * innerRadius);
+        }
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.beginPath(); ctx.arc(0, 0, innerRadius * 0.7, 0, Math.PI * 2); 
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.stroke();
+        
+        ctx.beginPath(); ctx.arc(0, 0, holeRadius, 0, Math.PI * 2); 
+        ctx.fillStyle = '#000000'; ctx.fill(); ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, holeRadius); ctx.lineTo(0, innerRadius * 0.7);
+        ctx.moveTo(0, -holeRadius); ctx.lineTo(0, -innerRadius * 0.7);
+        ctx.moveTo(holeRadius, 0); ctx.lineTo(innerRadius * 0.7, 0);
+        ctx.moveTo(-holeRadius, 0); ctx.lineTo(-innerRadius * 0.7, 0);
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.rotate(-rotation); 
+        if(innerRadius > 40) {
+            ctx.fillStyle = color;
+            ctx.font = 'bold 16px "Fira Code", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, 0, -innerRadius * 0.35);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 20px "Fira Code", monospace';
+            ctx.fillText(`${teeth}T`, 0, innerRadius * 0.45);
+        }
+        ctx.restore();
+    }
+
+    function drawFrame() {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        ctx.clearRect(0, 0, cw, ch);
+
+        if (cw === 0 || ch === 0) return;
+
+        const cy = ch / 2;
+        const cx = cw / 2;
+
+        // FLAWLESS BOUNDING BOX: The total width of the assembly is 2*R1 + 2*R2.
+        // We mandate the assembly fits within 80% of the canvas.
+        const maxW = cw * 0.8;
+        const maxH = ch * 0.8;
+
+        const logicW = (G.n1 * 2) + (G.n2 * 2);
+        const logicH = Math.max(G.n1, G.n2) * 2;
+
+        const scale = Math.min(maxW / logicW, maxH / logicH);
+
+        const r1 = G.n1 * scale;
+        const r2 = G.n2 * scale;
+
+        // Perfect geometric centering
+        const cx1 = cx - r2;
+        const cx2 = cx + r1;
+
+        const theta2 = (Math.PI / G.n2) - (theta1 * (G.n1 / G.n2));
+
+        drawGear(cx1, cy, r1, G.n1, theta1, '#fd7e14', 'INPUT');
+        drawGear(cx2, cy, r2, G.n2, theta2, '#0d6efd', 'OUTPUT');
+
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.font = 'bold 28px Arial';
+        ctx.textAlign = 'center';
+        
+        if (G.rpm1 !== 0) {
+            const dir1 = G.rpm1 > 0 ? "↻" : "↺";
+            const dir2 = G.rpm2 > 0 ? "↻" : "↺";
+            ctx.fillText(dir1, cx1, cy - r1 - 15);
+            ctx.fillText(dir2, cx2, cy - r2 - 15);
+        }
+    }
+
+    function animate(now) {
+        if (!isPlaying) return;
+        if (!lastRenderTime) lastRenderTime = now;
+        
+        const dt = (now - lastRenderTime) / 1000;
+        lastRenderTime = now;
+
+        const visualDampener = 0.5; 
+        const w1 = (G.rpm1 * Math.PI) / 30 * visualDampener;
+        theta1 += w1 * dt;
+
+        drawFrame();
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function clearInputs() {
+        valN1.value = '10'; valRPM1.value = '120'; valT1.value = '50'; valN2.value = '30';
+        errorBanner.style.display = 'none';
+        updateMechanics();
+    }
+
+    // INIT
+    setTimeout(() => {
+        resizeCanvas();
+        updateMechanics();
+        lastRenderTime = performance.now();
+        animate(lastRenderTime);
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0dcaf0; 
+            --math-dark-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+            
+            /* Phase Colors */
+            --color-focus: #dc3545;
+            --color-short: #198754;
+            --color-long: #0d6efd;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-preset {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 10px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-preset span { font-family: 'Fira Code', monospace; color: var(--math-red); font-weight: 800; font-size: 1.1rem; }
+        .btn-preset:hover, .btn-preset.active { background: rgba(220, 53, 69, 0.05); border-color: var(--math-red); color: var(--math-red); }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-red); box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15); }
+        .input-group-custom.disabled { background: #e9ecef; opacity: 0.6; pointer-events: none; }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            width: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 12px 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-label {
+            background: #f8f9fa;
+            border-left: 1px solid #ced4da;
+            padding: 0 15px;
+            font-weight: 800;
+            color: var(--math-red);
+            display: flex;
+            align-items: center;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            width: 70px;
+            justify-content: center;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-control {
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-play { background-color: var(--lasu-accent); flex: 2; }
+        .btn-play:hover { background-color: #146c43; transform: translateY(-2px); }
+        .btn-play.paused { background-color: var(--math-orange); }
+        .btn-play.paused:hover { background-color: #d36a10; }
+        
+        .btn-reset { background-color: #6c757d; flex: 1; }
+        .btn-reset:hover { background-color: #5c636a; transform: translateY(-2px); }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+            transition: all 0.3s;
+        }
+        
+        /* Dynamic Theme Classes */
+        .theme-focus { border-color: rgba(220, 53, 69, 0.4); background: rgba(220, 53, 69, 0.05); }
+        .theme-focus .stat-val { color: var(--color-focus); }
+        
+        .theme-short { border-color: rgba(25, 135, 84, 0.4); background: rgba(25, 135, 84, 0.05); }
+        .theme-short .stat-val { color: var(--color-short); }
+        
+        .theme-long { border-color: rgba(13, 110, 253, 0.4); background: rgba(13, 110, 253, 0.05); }
+        .theme-long .stat-val { color: var(--color-long); }
+
+        .theme-idle { border-color: rgba(108, 117, 125, 0.4); background: rgba(108, 117, 125, 0.05); }
+        .theme-idle .stat-val { color: #6c757d; }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .res-unit { font-size: 1rem; color: #adb5bd; margin-left: 2px; font-family: 'Segoe UI', sans-serif;}
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* Advanced Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #121212; 
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+            min-height: 400px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 60%);
+        }
+
+        #pomodoroCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .formula-bar span { color: #adb5bd; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; text-transform: uppercase; margin-right: 8px;}
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-brain"></i> Session Setup
+            </div>
+
+            <div class="preset-grid">
+                <button class="btn-preset active" id="btnPStandard" onclick="setPreset('standard', 25, 5, 15, 4)">
+                    Standard
+                    <span>25 / 5</span>
+                </button>
+                <button class="btn-preset" id="btnPDeep" onclick="setPreset('deep', 50, 10, 30, 3)">
+                    Deep Work
+                    <span>50 / 10</span>
+                </button>
+            </div>
+
+            <div class="input-group-custom" id="grpFocus">
+                <div class="input-label" style="color: var(--color-focus);">Focus Time</div>
+                <input type="number" class="num-input" id="valFocus" value="25" min="1" oninput="customInput()">
+                <div class="unit-label" style="color: var(--color-focus);">min</div>
+            </div>
+            
+            <div class="input-group-custom" id="grpShort">
+                <div class="input-label" style="color: var(--color-short);">Short Break</div>
+                <input type="number" class="num-input" id="valShort" value="5" min="1" oninput="customInput()">
+                <div class="unit-label" style="color: var(--color-short);">min</div>
+            </div>
+
+            <div class="input-group-custom" id="grpLong">
+                <div class="input-label" style="color: var(--color-long);">Long Break</div>
+                <input type="number" class="num-input" id="valLong" value="15" min="1" oninput="customInput()">
+                <div class="unit-label" style="color: var(--color-long);">min</div>
+            </div>
+
+            <div class="input-group-custom mb-4">
+                <div class="input-label" style="color: var(--math-purple);">Rounds</div>
+                <input type="number" class="num-input" id="valRounds" value="4" min="1" oninput="customInput()">
+                <div class="unit-label" style="color: var(--math-purple);">cycles</div>
+            </div>
+
+            <div class="controls-row">
+                <button class="btn-control btn-play" id="btnPlay" onclick="toggleTimer()">
+                    <i class="fas fa-play"></i> Start
+                </button>
+                <button class="btn-control btn-reset" onclick="resetTimer()">
+                    <i class="fas fa-undo"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card theme-idle" id="cardPhase">
+                    <div class="stat-label">Current Phase</div>
+                    <div class="stat-val" style="font-family: 'Segoe UI', sans-serif; font-size: 1.8rem;">
+                        <span id="resPhase">Ready</span>
+                    </div>
+                    <div class="stat-sub" id="subPhase">Awaiting Start</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card theme-idle" id="cardTime">
+                    <div class="stat-label">Time Remaining</div>
+                    <div class="stat-val" style="font-size: 3rem;">
+                        <span id="resTime">25:00</span>
+                    </div>
+                    <div class="stat-sub">MM : SS</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card theme-idle" id="cardRounds">
+                    <div class="stat-label">Session Progress</div>
+                    <div class="stat-val">
+                        <span id="resRound">1</span>
+                        <span style="font-size: 1.5rem; color: #adb5bd; margin: 0 5px;">/</span>
+                        <span id="resTotalRounds">4</span>
+                    </div>
+                    <div class="stat-sub">Rounds until Long Break</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="simulation-box mt-2">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="pomodoroCanvas"></canvas>
+            </div>
+            <div class="telemetry-bar">
+                <div class="formula-bar">
+                    <span>Engine:</span> Chrono-Kinematic Progress Tracker
+                </div>
+                <div class="text-muted fw-bold small text-uppercase">
+                    <i class="fas fa-clock me-1 text-primary"></i> High-Resolution Sync
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Config Elements
+    const valFocus = document.getElementById('valFocus');
+    const valShort = document.getElementById('valShort');
+    const valLong = document.getElementById('valLong');
+    const valRounds = document.getElementById('valRounds');
+    const btnPStandard = document.getElementById('btnPStandard');
+    const btnPDeep = document.getElementById('btnPDeep');
+    
+    // UI Elements
+    const btnPlay = document.getElementById('btnPlay');
+    
+    const cardPhase = document.getElementById('cardPhase');
+    const resPhase = document.getElementById('resPhase');
+    const subPhase = document.getElementById('subPhase');
+    
+    const cardTime = document.getElementById('cardTime');
+    const resTime = document.getElementById('resTime');
+    
+    const cardRounds = document.getElementById('cardRounds');
+    const resRound = document.getElementById('resRound');
+    const resTotalRounds = document.getElementById('resTotalRounds');
+
+    // Canvas
+    const canvas = document.getElementById('pomodoroCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // State Machine
+    let isRunning = false;
+    let isPaused = false;
+    
+    let currentPhase = 'focus'; // 'focus', 'short', 'long', 'idle'
+    let currentRound = 1;
+    
+    let phaseDurationMs = 0;
+    let timeRemainingMs = 0;
+    let lastTime = 0;
+    let animationFrameId = null;
+
+    function setPreset(type, f, s, l, r) {
+        valFocus.value = f; valShort.value = s; valLong.value = l; valRounds.value = r;
+        btnPStandard.classList.remove('active');
+        btnPDeep.classList.remove('active');
+        if (type === 'standard') btnPStandard.classList.add('active');
+        if (type === 'deep') btnPDeep.classList.add('active');
+        
+        if (!isRunning && !isPaused) resetTimer();
+    }
+
+    function customInput() {
+        btnPStandard.classList.remove('active');
+        btnPDeep.classList.remove('active');
+        if (!isRunning && !isPaused) resetTimer();
+    }
+
+    // FLAWLESS CANVAS SCALING
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
+            
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            drawRing(); 
+        }
+    });
+    resizeObserver.observe(container);
+
+    function formatTime(ms) {
+        let totalSeconds = Math.ceil(ms / 1000);
+        let m = Math.floor(totalSeconds / 60);
+        let s = totalSeconds % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function applyTheme() {
+        // Reset classes
+        [cardPhase, cardTime, cardRounds].forEach(c => {
+            c.className = 'card h-100 text-center border-2 p-3 stat-card';
+        });
+
+        if (!isRunning && !isPaused) {
+            [cardPhase, cardTime, cardRounds].forEach(c => c.classList.add('theme-idle'));
+            resPhase.innerText = 'Ready';
+            subPhase.innerText = 'Awaiting Start';
+            return;
+        }
+
+        if (currentPhase === 'focus') {
+            [cardPhase, cardTime, cardRounds].forEach(c => c.classList.add('theme-focus'));
+            resPhase.innerText = 'Focus';
+            subPhase.innerText = 'Deep Work Block';
+        } else if (currentPhase === 'short') {
+            [cardPhase, cardTime, cardRounds].forEach(c => c.classList.add('theme-short'));
+            resPhase.innerText = 'Short Break';
+            subPhase.innerText = 'Rest & Recharge';
+        } else if (currentPhase === 'long') {
+            [cardPhase, cardTime, cardRounds].forEach(c => c.classList.add('theme-long'));
+            resPhase.innerText = 'Long Break';
+            subPhase.innerText = 'Extended Rest';
+        }
+
+        resTotalRounds.innerText = valRounds.value;
+        resRound.innerText = currentRound;
+    }
+
+    function toggleTimer() {
+        if (!isRunning && !isPaused) {
+            // Start completely fresh
+            startPhase('focus');
+            isRunning = true;
+            isPaused = false;
+            lastTime = performance.now();
+            btnPlay.innerHTML = '<i class="fas fa-pause"></i> Pause';
+            btnPlay.classList.add('paused');
+            disableInputs(true);
+            animate(performance.now());
+        } else if (isRunning) {
+            // Pause
+            isRunning = false;
+            isPaused = true;
+            btnPlay.innerHTML = '<i class="fas fa-play"></i> Resume';
+            btnPlay.classList.remove('paused');
+        } else if (isPaused) {
+            // Resume
+            isRunning = true;
+            isPaused = false;
+            lastTime = performance.now();
+            btnPlay.innerHTML = '<i class="fas fa-pause"></i> Pause';
+            btnPlay.classList.add('paused');
+            animate(performance.now());
+        }
+    }
+
+    function resetTimer() {
+        isRunning = false;
+        isPaused = false;
+        currentPhase = 'focus';
+        currentRound = 1;
+        
+        const fMins = parseInt(valFocus.value) || 25;
+        phaseDurationMs = fMins * 60 * 1000;
+        timeRemainingMs = phaseDurationMs;
+        
+        btnPlay.innerHTML = '<i class="fas fa-play"></i> Start';
+        btnPlay.classList.remove('paused');
+        disableInputs(false);
+        
+        resTime.innerText = formatTime(timeRemainingMs);
+        resRound.innerText = '1';
+        resTotalRounds.innerText = valRounds.value || '4';
+        
+        applyTheme();
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        drawRing();
+    }
+
+    function disableInputs(disable) {
+        valFocus.disabled = disable;
+        valShort.disabled = disable;
+        valLong.disabled = disable;
+        valRounds.disabled = disable;
+        
+        const grps = [document.getElementById('grpFocus'), document.getElementById('grpShort'), document.getElementById('grpLong')];
+        grps.forEach(g => disable ? g.classList.add('disabled') : g.classList.remove('disabled'));
+    }
+
+    function startPhase(phase) {
+        currentPhase = phase;
+        let mins = 0;
+        
+        if (phase === 'focus') mins = parseInt(valFocus.value) || 25;
+        if (phase === 'short') mins = parseInt(valShort.value) || 5;
+        if (phase === 'long') mins = parseInt(valLong.value) || 15;
+
+        phaseDurationMs = mins * 60 * 1000;
+        timeRemainingMs = phaseDurationMs;
+        
+        applyTheme();
+        
+        // Optional Web Audio Beep (Subtle)
+        try { playBeep(); } catch(e){}
+    }
+
+    function nextPhase() {
+        const totalRounds = parseInt(valRounds.value) || 4;
+
+        if (currentPhase === 'focus') {
+            if (currentRound >= totalRounds) {
+                startPhase('long');
+            } else {
+                startPhase('short');
+            }
+        } else if (currentPhase === 'short') {
+            currentRound++;
+            startPhase('focus');
+        } else if (currentPhase === 'long') {
+            // Cycle complete, reset to start
+            currentRound = 1;
+            startPhase('focus');
+        }
+    }
+
+    // --- KINEMATIC CANVAS RENDERER ---
+    function drawRing() {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        if(cw === 0) return;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const cx = cw / 2;
+        const cy = ch / 2;
+        const radius = Math.min(cw, ch) * 0.35;
+        
+        // Background track
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = '#2b3035';
+        ctx.lineWidth = 15;
+        ctx.stroke();
+
+        let progress = 1 - (timeRemainingMs / phaseDurationMs);
+        if (isNaN(progress)) progress = 0;
+        if (progress > 1) progress = 1;
+        if (progress < 0) progress = 0;
+
+        let ringColor = '#6c757d'; // Idle
+        if (currentPhase === 'focus') ringColor = '#dc3545';
+        if (currentPhase === 'short') ringColor = '#198754';
+        if (currentPhase === 'long') ringColor = '#0d6efd';
+
+        // Draw Progress Arc
+        if (progress > 0) {
+            const startAngle = -Math.PI / 2; // Top
+            const endAngle = startAngle + (Math.PI * 2 * progress);
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, startAngle, endAngle);
+            ctx.strokeStyle = ringColor;
+            ctx.lineWidth = 15;
+            ctx.lineCap = 'round';
+            
+            // Glow if running
+            if (isRunning) {
+                ctx.shadowColor = ringColor;
+                ctx.shadowBlur = 20;
+            }
+            
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        // Center Text
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = 'bold 4rem "Fira Code", monospace';
+        ctx.fillText(formatTime(timeRemainingMs), cx, cy);
+
+        // Subtext
+        ctx.fillStyle = ringColor;
+        ctx.font = 'bold 1.2rem "Segoe UI", sans-serif';
+        ctx.textTransform = 'uppercase';
+        
+        let label = 'READY';
+        if (currentPhase === 'focus') label = 'FOCUS PHASE';
+        if (currentPhase === 'short') label = 'SHORT BREAK';
+        if (currentPhase === 'long') label = 'LONG BREAK';
+        if (isPaused) label = 'PAUSED';
+
+        ctx.fillText(label, cx, cy + 60);
+    }
+
+    function animate(now) {
+        if (!isRunning) return;
+
+        const delta = now - lastTime;
+        lastTime = now;
+
+        timeRemainingMs -= delta;
+
+        if (timeRemainingMs <= 0) {
+            timeRemainingMs = 0;
+            drawRing();
+            resTime.innerText = "00:00";
+            nextPhase();
+            lastTime = performance.now();
+        } else {
+            drawRing();
+            resTime.innerText = formatTime(timeRemainingMs);
+        }
+
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // Simple beep function using Web Audio API
+    function playBeep() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        
+        gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+    }
+
+    // INIT
+    setTimeout(() => { resetTimer(); }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Certification Vault | LASU Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        
+        .header-section {
+            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 30px;
+        }
+
+        .cert-card {
+            border: none;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: 0.3s;
+            overflow: hidden;
+            position: relative;
+        }
+        .cert-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        .issuer-logo {
+            width: 50px; height: 50px;
+            background: #f1f3f5;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: #555;
+            margin-bottom: 15px;
+        }
+
+        /* Brand Colors */
+        .brand-aws { color: #ff9900; background: #fff4e6; }
+        .brand-microsoft { color: #00a4ef; background: #e5f6fd; }
+        .brand-cisco { color: #1ba0d7; background: #e0f4fc; }
+        .brand-google { color: #db4437; background: #fce8e6; }
+        .brand-paloalto { color: #fa582d; background: #ffebe6; }
+        .brand-comptia { color: #ff0000; background: #ffe6e6; }
+        .brand-ican { color: #004d40; background: #e0f2f1; }
+
+        .cert-file-preview {
+            height: 120px;
+            background: #f8f9fa;
+            display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid #eee;
+            color: #adb5bd;
+        }
+        .cert-file-preview img { width: 100%; height: 100%; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+<div class="header-section text-center">
+    <h1 class="fw-bold"><i class="fas fa-certificate me-2 text-warning"></i>Certification Vault</h1>
+    <p class="mb-0 opacity-75">Build your "God Mode" Professional Profile</p>
+    <div class="mt-3">
+        <a href="{{ url_for('student_portal') }}" class="btn btn-outline-light btn-sm rounded-pill px-4 me-2">Dashboard</a>
+        <button class="btn btn-light text-dark fw-bold btn-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#uploadModal">
+            <i class="fas fa-plus me-1"></i> Add Credential
+        </button>
+    </div>
+</div>
+
+<div class="container pb-5">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row g-4">
+        {% if certs %}
+            {% for cert in certs %}
+            <div class="col-md-6 col-lg-4">
+                <div class="cert-card h-100 p-0 d-flex flex-column">
+                    <div class="cert-file-preview">
+                        {% if cert.file_path %}
+                            {% if cert.file_path.endswith('.pdf') %}
+                                <div class="text-center p-3">
+                                    <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                                    <span class="d-block small mt-2">PDF Document</span>
+                                </div>
+                            {% else %}
+                                <img src="{{ url_for('static', filename=cert.file_path) }}" alt="Cert Preview">
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center">
+                                <i class="fas fa-award fa-3x opacity-25"></i>
+                                <span class="d-block small mt-1 text-muted">No File</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="p-4 flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                            {% set il = cert.issuer.lower() %}
+                            <div class="issuer-logo 
+                                {% if 'aws' in il or 'amazon' in il %}brand-aws
+                                {% elif 'microsoft' in il %}brand-microsoft
+                                {% elif 'cisco' in il %}brand-cisco
+                                {% elif 'google' in il %}brand-google
+                                {% elif 'palo' in il %}brand-paloalto
+                                {% elif 'comptia' in il %}brand-comptia
+                                {% elif 'ican' in il %}brand-ican
+                                {% endif %}">
+                                <i class="fas fa-medal"></i>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                                <ul class="dropdown-menu">
+                                    {% if cert.file_path %}
+                                    <li><a class="dropdown-item" href="{{ url_for('static', filename=cert.file_path) }}" target="_blank"><i class="fas fa-eye me-2"></i>View File</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('static', filename=cert.file_path) }}" download><i class="fas fa-download me-2"></i>Download</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    {% endif %}
+                                    
+                                    {% if cert.credly_link %}
+                                    <li><a class="dropdown-item text-primary" href="{{ cert.credly_link }}" target="_blank"><i class="fas fa-external-link-alt me-2"></i>Verify Badge</a></li>
+                                    {% endif %}
+                                    
+                                    <li>
+                                        <form action="{{ url_for('delete_certification', id=cert.id) }}" method="POST" onsubmit="return confirm('Remove this credential?');">
+                                            <button class="dropdown-item text-danger"><i class="fas fa-trash me-2"></i>Delete</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-1">{{ cert.name }}</h5>
+                        <p class="text-muted small mb-3">{{ cert.issuer }}</p>
+
+                        <div class="d-flex justify-content-between align-items-end mt-4">
+                            <div>
+                                <small class="text-uppercase text-secondary" style="font-size: 0.7rem;">Earned</small>
+                                <div class="fw-bold text-dark">{{ cert.date_earned.strftime('%b %Y') }}</div>
+                            </div>
+                            {% if cert.expiry_date %}
+                            <div class="text-end">
+                                <small class="text-uppercase text-secondary" style="font-size: 0.7rem;">Expires</small>
+                                <div class="fw-bold {% if cert.expiry_date < today %}text-danger{% else %}text-success{% endif %}">
+                                    {{ cert.expiry_date.strftime('%b %Y') }}
+                                </div>
+                            </div>
+                            {% else %}
+                            <span class="badge bg-light text-dark border">No Expiry</span>
+                            {% endif %}
+                        </div>
+
+                        {% if cert.credential_id %}
+                        <div class="mt-3 pt-3 border-top">
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">Credential ID</small>
+                            <span class="font-monospace text-dark">{{ cert.credential_id }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if cert.credly_link %}
+                        <div class="mt-2">
+                             <a href="{{ cert.credly_link }}" target="_blank" class="badge bg-primary bg-opacity-10 text-primary text-decoration-none border border-primary">
+                                <i class="fas fa-check-circle me-1"></i> Verified Credential
+                             </a>
+                        </div>
+                        {% endif %}
+                        
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-5">
+                <div class="mb-3"><i class="fas fa-certificate fa-4x text-muted opacity-25"></i></div>
+                <h4 class="text-muted">No Certifications Yet</h4>
+                <p class="text-muted">Start uploading your achievements to build your profile.</p>
+                <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#uploadModal">Upload First Cert</button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Add New Certification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('upload_certification') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Certification Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. AWS Solutions Architect" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Issuing Organization</label>
+                        <input type="text" name="issuer" class="form-control" placeholder="e.g. Amazon, Microsoft, Cisco" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Date Earned</label>
+                            <input type="date" name="date_earned" class="form-control" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Expiry Date (Optional)</label>
+                            <input type="date" name="expiry_date" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Credential ID (Optional)</label>
+                        <input type="text" name="credential_id" class="form-control" placeholder="Verification Code">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-primary"><i class="fas fa-link me-1"></i> Credly / Badge Link</label>
+                        <input type="url" name="credly_link" class="form-control" placeholder="https://www.credly.com/badges/...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Upload Certificate (PDF/Image)</label>
+                        <input type="file" name="cert_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success px-4">Save Credential</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

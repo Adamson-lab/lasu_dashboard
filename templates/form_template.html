@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ student.matric_no }} {{ 'EXAM FORM' if 'EXAM' in form_type.upper() else 'Course Form' }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @page { size: portrait; margin: 0.5cm; }
+        body { font-family: "Helvetica", "Arial", sans-serif; background: #fff; color: #000; font-size: 13px; line-height: 1.15; }
+        
+        /* 🏷️ Precise PDF Headers */
+        .timestamp { font-size: 11.5px; color: #000; margin-bottom: 2px; }
+        .doc-filename { font-size: 12.5px; margin-bottom: 12px; font-weight: 500; }
+
+        /* 🏛️ Institutional Header */
+        .institution-header { font-weight: bold; margin-bottom: 0; line-height: 1.1; text-align: center; }
+        .form-type-title { font-size: 18px; font-weight: bold; text-decoration: underline; margin-top: 8px; margin-bottom: 15px; text-align: center; }
+
+        /* 🖼️ Passport Box Placement */
+        .passport-box { 
+            width: 140px; 
+            height: 165px; 
+            border: 1px solid #000; 
+            float: right; 
+            margin-top: -105px; 
+            background: #fff; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; 
+        }
+        .passport-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* 📋 Student Info Table */
+        .info-table { width: 100%; margin-top: 5px; border-collapse: collapse; }
+        .info-table td { padding: 2px 0; vertical-align: top; border: none; }
+        .label { font-weight: bold; width: 195px; }
+
+        /* ✍️ COURSE DETAILS (Placed BEFORE table as seen in PDF) */
+        .details-header { font-weight: bold; text-decoration: underline; margin-top: 15px; font-size: 13.5px; }
+        .certification-text { margin-top: 4px; font-size: 13.5px; width: 88%; text-align: justify; line-height: 1.2; }
+
+        /* 📊 Course Grid (Maniac Border Density) */
+        .course-table { width: 100%; margin-top: 15px; border: 2px solid #000; border-collapse: collapse; }
+        .course-table th, .course-table td { border: 1.5px solid #000 !important; padding: 4px 8px; font-size: 13px; }
+        .course-table th { text-align: left; background-color: #fff; font-weight: bold; }
+        .total-row td { font-weight: bold; border-top: 2px solid #000 !important; }
+
+        /* ✍️ Signatures & Footer */
+        .official-use { font-weight: bold; margin-top: 20px; font-size: 14px; }
+        .sig-line { margin-top: 30px; font-weight: bold; }
+        .footer-note { font-size: 12px; margin-top: 20px; line-height: 1.2; }
+        .footer-link { color: #0000EE; text-decoration: underline; font-size: 12px; display: block; margin-top: 2px; }
+        .page-num { text-align: right; font-size: 12px; margin-top: 5px; }
+
+        @media print { .print-btn { display: none; } body { padding: 0.3cm; } }
+    </style>
+</head>
+<body onload="window.print()">
+
+    <div class="container-fluid">
+        <div class="timestamp">{{ today_date }}, {{ now_time }}</div>
+        <div class="doc-filename">{{ student.matric_no }} {{ 'EXAM FORM' if 'EXAM' in form_type.upper() else 'Course Form' }}</div>
+
+        <div class="text-center" style="width: 85%; margin: 0 auto;">
+            <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" style="width: 82px; height: auto; margin-bottom: 5px;" alt="LASU Logo">
+            
+            <div class="institution-header" style="font-size: 17px;">COURSE REGISTRATION FORM</div>
+            <div class="institution-header" style="font-size: 15px;">LAGOS STATE UNIVERSITY, CAMPUS</div>
+            <div class="institution-header" style="font-size: 14px;">{{ student.department.upper() }}</div>
+            <div class="institution-header" style="font-size: 14px; font-weight: normal;">FIRST SEMESTER</div>
+            <div class="institution-header" style="font-size: 14px;">2025/2026 SESSION</div>
+            
+            <div class="form-type-title">{{ 'EXAM FORM' if 'EXAM' in form_type.upper() else 'COURSE FORM' }}</div>
+        </div>
+
+        <div class="passport-box">
+            <img src="{{ image_file }}" onerror="this.src='https://ui-avatars.com/api/?name={{ student.name }}&background=fff&color=000'" alt="Passport">
+        </div>
+
+        <table class="info-table">
+            <tr><td class="label">Surname:</td><td>{{ student.name.split(' ')[-1] | upper }}</td></tr>
+            <tr><td class="label">Other Names:</td><td>{{ " ".join(student.name.split(' ')[:-1]) | upper }}</td></tr>
+            <tr><td class="label">Matriculation Number:</td><td>{{ student.matric_no }}</td></tr>
+            <tr><td class="label">Address (Current):</td><td>{{ student.address.upper() if student.address else 'NOT UPDATED' }}</td></tr>
+            <tr><td class="label">EMail:</td><td>{{ student.personal_email if student.personal_email else 'N/A' }}</td></tr>
+            <tr><td class="label">Phone Number:</td><td>{{ student.phone_number if student.phone_number else 'N/A' }}</td></tr>
+            <tr>
+                <td class="label">Bursary Number.:</td>
+                <td>{{ student.matric_no }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Level:</b> {{ student.level }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Date printed:</b> {{ today_date }}</td>
+            </tr>
+            <tr>
+                <td class="label" style="padding-top: 10px;">Student's Signature:</td>
+                <td style="border-bottom: 1.5px dotted #000; width: 320px; padding-top: 10px;">&nbsp;</td>
+            </tr>
+        </table>
+
+        <div class="details-header">COURSE DETAILS</div>
+        <div class="certification-text">
+            I certify that the above named student has submitted five (5) copies of his harmattan semester 
+            {{ 'Exam' if 'EXAM' in form_type.upper() else 'Course' }} form and is qualified to register the above listed 
+            courses for the harmattan semester.
+        </div>
+
+        <table class="table course-table">
+            <thead>
+                <tr>
+                    <th style="width: 20%;">COURSE CODE</th>
+                    <th style="width: 55%;">COURSE TITLE</th>
+                    <th style="width: 15%;">UNITS</th>
+                    <th style="width: 10%;">STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in courses %}
+                <tr>
+                    <td>{{ course.code.upper() }}</td>
+                    <td>{{ course.title }}</td>
+                    <td>{{ course.units }}</td>
+                    <td>{{ course.status if course.status else 'C' }}</td>
+                </tr>
+                {% endfor %}
+                <tr class="total-row">
+                    <td>&nbsp;</td>
+                    <td style="text-align: right; padding-right: 15px;">TOTAL NUMBER OF UNITS:</td>
+                    <td>{{ total_units }} Units</td>
+                    <td>&nbsp;</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="official-use">For Official Use</div>
+        <div class="sig-line">1. __________________________________</div>
+        <div class="sig-line" style="margin-top: 10px; padding-left: 20px;">H. O. D's Signature & Date:</div>
+
+        <div class="footer-note">
+            Please note that registration is not complete until registration form is endorsed by the H.O.D
+        </div>
+        
+        <a href="#" class="footer-link">
+            https://studentservices.lasu.edu.ng/returningstudents/{{ 'examform' if 'EXAM' in form_type.upper() else 'courseform' }}.php
+        </a>
+        
+        <div class="page-num">1/1</div>
+    </div>
+
+    <button class="btn btn-dark print-btn" onclick="window.print()" style="position: fixed; bottom: 20px; right: 20px;">🖨️ Print Form</button>
+
+</body>
+</html>

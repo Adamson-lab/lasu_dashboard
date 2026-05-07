@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Codon Table | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            
+            /* Chemical Properties Colors */
+            --aa-nonpolar: #fd7e14; /* Orange */
+            --aa-polar: #0d6efd;    /* Blue */
+            --aa-basic: #6f42c1;    /* Purple */
+            --aa-acidic: #dc3545;   /* Red */
+            --aa-start: #198754;    /* Green */
+            --aa-stop: #343a40;     /* Dark Grey */
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1500px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input & Legend --- */
+        .input-pane {
+            flex: 0 0 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #adb5bd;
+        }
+
+        .live-search {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            outline: none;
+            transition: all 0.2s;
+            font-family: 'Fira Code', monospace;
+        }
+        .live-search:focus { border-color: var(--lasu-accent); box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15); }
+
+        .legend-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .legend-title {
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        .legend-item:last-child { margin-bottom: 0; }
+
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+        }
+
+        .stats-summary {
+            margin-top: auto;
+            background: #212529;
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .stats-summary span { display: block; font-family: 'Fira Code', monospace; font-size: 1.5rem; font-weight: 800; color: #00ff00; line-height: 1; margin-bottom: 5px;}
+        .stats-summary small { font-weight: 700; color: #adb5bd; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;}
+
+        /* --- Right Pane: The Table --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow-x: auto;
+        }
+
+        .codon-grid-wrapper {
+            display: grid;
+            grid-template-columns: 40px 1fr 40px; /* Left Base, Content, Right Base */
+            grid-template-rows: 40px 1fr; /* Top Base, Content */
+            gap: 5px;
+            min-width: 900px; /* Ensure no squishing on resize */
+        }
+
+        .axis-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #adb5bd;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .axis-top { grid-column: 2 / 3; grid-row: 1 / 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .axis-left { grid-column: 1 / 2; grid-row: 2 / 3; display: grid; grid-template-rows: repeat(4, 1fr); gap: 10px; }
+        .axis-right { grid-column: 3 / 4; grid-row: 2 / 3; display: grid; grid-template-rows: repeat(4, 1fr); gap: 10px; }
+
+        .main-grid {
+            grid-column: 2 / 3;
+            grid-row: 2 / 3;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .codon-block {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            padding: 5px;
+            gap: 2px;
+        }
+
+        .codon-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 4px;
+            background: white;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        /* Hover & Search Highlight Logic */
+        .codon-row.dimmed { opacity: 0.2; }
+        .codon-row.highlighted { transform: scale(1.02); box-shadow: 0 4px 8px rgba(0,0,0,0.1); z-index: 2; }
+        
+        .codon-rna {
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: #212529;
+            letter-spacing: 1px;
+        }
+
+        .codon-aa {
+            font-weight: 800;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+        }
+
+        /* Property Dynamic Borders */
+        .prop-nonpolar { border-left-color: var(--aa-nonpolar) !important; }
+        .prop-nonpolar .codon-aa { color: var(--aa-nonpolar); }
+        
+        .prop-polar { border-left-color: var(--aa-polar) !important; }
+        .prop-polar .codon-aa { color: var(--aa-polar); }
+        
+        .prop-basic { border-left-color: var(--aa-basic) !important; }
+        .prop-basic .codon-aa { color: var(--aa-basic); }
+        
+        .prop-acidic { border-left-color: var(--aa-acidic) !important; }
+        .prop-acidic .codon-aa { color: var(--aa-acidic); }
+        
+        .prop-start { border-left-color: var(--aa-start) !important; background: rgba(25, 135, 84, 0.05); }
+        .prop-start .codon-aa { color: var(--aa-start); }
+        
+        .prop-stop { border-left-color: var(--aa-stop) !important; background: rgba(52, 58, 64, 0.05);}
+        .prop-stop .codon-aa { color: var(--aa-stop); }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-search"></i> Dictionary Lookup
+            </div>
+
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="live-search" id="searchBox" placeholder="Type AUG, Ser, Met..." oninput="handleSearch()">
+            </div>
+
+            <div class="legend-box">
+                <div class="legend-title">Chemical Properties</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--aa-nonpolar);"></div> Nonpolar (Hydrophobic)</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--aa-polar);"></div> Polar (Uncharged)</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--aa-basic);"></div> Basic (+ Charge)</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--aa-acidic);"></div> Acidic (- Charge)</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--aa-start);"></div> Start Codon</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--aa-stop);"></div> Stop Codon</div>
+            </div>
+
+            <div class="stats-summary">
+                <span id="matchCount">64</span>
+                <small>Matching Codons Found</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="pane-header border-0 mb-2 pb-0">
+            <i class="fas fa-table text-primary"></i> Standard Genetic Code
+        </div>
+        
+        <div class="codon-grid-wrapper">
+            <div class="axis-top">
+                <div class="axis-label">U</div>
+                <div class="axis-label">C</div>
+                <div class="axis-label">A</div>
+                <div class="axis-label">G</div>
+            </div>
+
+            <div class="axis-left">
+                <div class="axis-label">U</div>
+                <div class="axis-label">C</div>
+                <div class="axis-label">A</div>
+                <div class="axis-label">G</div>
+            </div>
+
+            <div class="main-grid" id="mainGrid">
+                </div>
+
+            <div class="axis-right">
+                <div class="d-flex flex-column justify-content-around h-100 py-2">
+                    <div class="axis-label" style="font-size:0.9rem;">U</div><div class="axis-label" style="font-size:0.9rem;">C</div><div class="axis-label" style="font-size:0.9rem;">A</div><div class="axis-label" style="font-size:0.9rem;">G</div>
+                </div>
+                <div class="d-flex flex-column justify-content-around h-100 py-2">
+                    <div class="axis-label" style="font-size:0.9rem;">U</div><div class="axis-label" style="font-size:0.9rem;">C</div><div class="axis-label" style="font-size:0.9rem;">A</div><div class="axis-label" style="font-size:0.9rem;">G</div>
+                </div>
+                <div class="d-flex flex-column justify-content-around h-100 py-2">
+                    <div class="axis-label" style="font-size:0.9rem;">U</div><div class="axis-label" style="font-size:0.9rem;">C</div><div class="axis-label" style="font-size:0.9rem;">A</div><div class="axis-label" style="font-size:0.9rem;">G</div>
+                </div>
+                <div class="d-flex flex-column justify-content-around h-100 py-2">
+                    <div class="axis-label" style="font-size:0.9rem;">U</div><div class="axis-label" style="font-size:0.9rem;">C</div><div class="axis-label" style="font-size:0.9rem;">A</div><div class="axis-label" style="font-size:0.9rem;">G</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Bioinformatics Data Engine
+    const aaProps = {
+        'Phe': { fullName: 'Phenylalanine', type: 'nonpolar' },
+        'Leu': { fullName: 'Leucine', type: 'nonpolar' },
+        'Ile': { fullName: 'Isoleucine', type: 'nonpolar' },
+        'Met': { fullName: 'Methionine', type: 'start' },
+        'Val': { fullName: 'Valine', type: 'nonpolar' },
+        'Ser': { fullName: 'Serine', type: 'polar' },
+        'Pro': { fullName: 'Proline', type: 'nonpolar' },
+        'Thr': { fullName: 'Threonine', type: 'polar' },
+        'Ala': { fullName: 'Alanine', type: 'nonpolar' },
+        'Tyr': { fullName: 'Tyrosine', type: 'polar' },
+        'STOP': { fullName: 'Stop Codon', type: 'stop' },
+        'His': { fullName: 'Histidine', type: 'basic' },
+        'Gln': { fullName: 'Glutamine', type: 'polar' },
+        'Asn': { fullName: 'Asparagine', type: 'polar' },
+        'Lys': { fullName: 'Lysine', type: 'basic' },
+        'Asp': { fullName: 'Aspartic Acid', type: 'acidic' },
+        'Glu': { fullName: 'Glutamic Acid', type: 'acidic' },
+        'Cys': { fullName: 'Cysteine', type: 'polar' },
+        'Trp': { fullName: 'Tryptophan', type: 'nonpolar' },
+        'Arg': { fullName: 'Arginine', type: 'basic' },
+        'Gly': { fullName: 'Glycine', type: 'nonpolar' }
+    };
+
+    const codonMap = {
+        'UUU':'Phe', 'UUC':'Phe', 'UUA':'Leu', 'UUG':'Leu',
+        'UCU':'Ser', 'UCC':'Ser', 'UCA':'Ser', 'UCG':'Ser',
+        'UAU':'Tyr', 'UAC':'Tyr', 'UAA':'STOP', 'UAG':'STOP',
+        'UGU':'Cys', 'UGC':'Cys', 'UGA':'STOP', 'UGG':'Trp',
+        
+        'CUU':'Leu', 'CUC':'Leu', 'CUA':'Leu', 'CUG':'Leu',
+        'CCU':'Pro', 'CCC':'Pro', 'CCA':'Pro', 'CCG':'Pro',
+        'CAU':'His', 'CAC':'His', 'CAA':'Gln', 'CAG':'Gln',
+        'CGU':'Arg', 'CGC':'Arg', 'CGA':'Arg', 'CGG':'Arg',
+        
+        'AUU':'Ile', 'AUC':'Ile', 'AUA':'Ile', 'AUG':'Met',
+        'ACU':'Thr', 'ACC':'Thr', 'ACA':'Thr', 'ACG':'Thr',
+        'AAU':'Asn', 'AAC':'Asn', 'AAA':'Lys', 'AAG':'Lys',
+        'AGU':'Ser', 'AGC':'Ser', 'AGA':'Arg', 'AGG':'Arg',
+        
+        'GUU':'Val', 'GUC':'Val', 'GUA':'Val', 'GUG':'Val',
+        'GCU':'Ala', 'GCC':'Ala', 'GCA':'Ala', 'GCG':'Ala',
+        'GAU':'Asp', 'GAC':'Asp', 'GAA':'Glu', 'GAG':'Glu',
+        'GGU':'Gly', 'GGC':'Gly', 'GGA':'Gly', 'GGG':'Gly'
+    };
+
+    const bases = ['U', 'C', 'A', 'G'];
+    const mainGrid = document.getElementById('mainGrid');
+    const searchBox = document.getElementById('searchBox');
+    const matchCount = document.getElementById('matchCount');
+
+    let allRows = [];
+
+    // Algorithmic Grid Construction
+    function buildTable() {
+        let html = '';
+        
+        // Loop 1st base (rows)
+        for (let b1 of bases) {
+            // Loop 2nd base (cols)
+            for (let b2 of bases) {
+                
+                html += `<div class="codon-block">`;
+                
+                // Loop 3rd base (inner rows)
+                for (let b3 of bases) {
+                    let codon = b1 + b2 + b3;
+                    let aa = codonMap[codon];
+                    let prop = aaProps[aa];
+                    let cssClass = `prop-${prop.type}`;
+
+                    html += `
+                        <div class="codon-row ${cssClass}" data-codon="${codon}" data-aa="${aa}" data-full="${prop.fullName.toLowerCase()}">
+                            <span class="codon-rna">${codon}</span>
+                            <span class="codon-aa">${aa}</span>
+                        </div>
+                    `;
+                }
+                html += `</div>`;
+            }
+        }
+        mainGrid.innerHTML = html;
+        allRows = document.querySelectorAll('.codon-row');
+    }
+
+    // Live Bi-directional Search Engine
+    function handleSearch() {
+        let term = searchBox.value.trim().toUpperCase();
+        // Convert T to U instantly for easy DNA searching
+        term = term.replace(/T/g, 'U');
+        let lowerTerm = term.toLowerCase();
+
+        let visibleCount = 0;
+
+        allRows.forEach(row => {
+            let rna = row.getAttribute('data-codon');
+            let aa = row.getAttribute('data-aa').toUpperCase();
+            let full = row.getAttribute('data-full');
+
+            // Match Logic: Matches RNA string, or 3-letter AA, or full AA name
+            let isMatch = rna.includes(term) || aa.includes(term) || full.includes(lowerTerm);
+
+            if (term === '') {
+                // Reset
+                row.classList.remove('dimmed');
+                row.classList.remove('highlighted');
+                visibleCount++;
+            } else if (isMatch) {
+                row.classList.remove('dimmed');
+                row.classList.add('highlighted');
+                visibleCount++;
+            } else {
+                row.classList.add('dimmed');
+                row.classList.remove('highlighted');
+            }
+        });
+
+        matchCount.innerText = visibleCount;
+        
+        if (visibleCount === 0 && term !== '') {
+            matchCount.style.color = '#dc3545'; // Red if no matches
+        } else {
+            matchCount.style.color = '#00ff00';
+        }
+    }
+
+    // INIT
+    buildTable();
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

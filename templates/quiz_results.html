@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results: {{ quiz.title }}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        .score-badge { font-size: 0.9rem; padding: 8px 12px; }
+        
+        /* Avatar Styles */
+        .avatar-img { width: 40px; height: 40px; object-fit: cover; border: 2px solid #eee; border-radius: 50%; }
+        .avatar-initials { width: 40px; height: 40px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        /* Large Modal Avatar */
+        .modal-avatar-img { width: 80px; height: 80px; object-fit: cover; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+        /* Timeline Styling */
+        .timeline { position: relative; padding-left: 20px; border-left: 2px solid #dee2e6; margin-left: 10px; }
+        .timeline-item { position: relative; margin-bottom: 25px; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -27px; top: 0;
+            width: 14px; height: 14px; border-radius: 50%; background: #adb5bd; border: 3px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .timeline-item.danger::before { background: #dc3545; box-shadow: 0 0 0 3px rgba(220,53,69,0.2); }
+        .timeline-item.success::before { background: #198754; }
+        .timeline-item.warning::before { background: #ffc107; }
+        
+        .t-time { font-size: 0.7rem; color: #6c757d; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .t-desc { font-size: 0.9rem; margin-bottom: 0; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1 fw-bold">📊 Test Results</h2>
+            <h4 class="text-primary">{{ quiz.title }}</h4>
+            <p class="text-muted mb-0">{{ quiz.description }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('manage_quizzes') }}" class="btn btn-secondary me-2">
+                <i class="fas fa-arrow-left me-1"></i> Back
+            </a>
+            <button onclick="window.print()" class="btn btn-outline-dark">
+                <i class="fas fa-print me-1"></i> Print
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h3>{{ results|length }}</h3>
+                    <small>Total Submissions</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h3>{{ quiz.questions|length }}</h3>
+                    <small>Total Questions</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">Student Performance List</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Rank</th>
+                            <th>Student</th>
+                            <th>Matric No</th>
+                            <th class="text-center">Score</th>
+                            <th class="text-center">Performance</th>
+                            <th class="text-center">Action / Status</th>
+                            <th>Date Taken</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if results %}
+                            {% for result in results %}
+                            
+                            {% set pending_appeals_list = result.appeals | selectattr("status", "equalto", "Pending") | list %}
+                            
+                            <tr id="row-{{ result.id }}">
+                                <td class="ps-4 text-muted fw-bold">#{{ loop.index }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if result.student.image_file == 'default.jpg' %}
+                                            <div class="avatar-initials me-3 shadow-sm" style="background-color: #198754;">
+                                                {% set names = result.student.name.split() %}
+                                                {{ names[0][0] }}{{ names[-1][0] if names|length > 1 else '' }}
+                                            </div>
+                                        {% else %}
+                                            <img src="{{ url_for('static', filename='profile_pics/' + result.student.image_file) }}" 
+                                                 class="rounded-circle avatar-img me-3 shadow-sm" 
+                                                 onerror="this.src='https://ui-avatars.com/api/?name={{ result.student.name }}&background=198754&color=fff'">
+                                        {% endif %}
+                                        
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-dark">{{ result.student.name }}</h6>
+                                            <small class="text-muted" style="font-size: 0.75rem;">{{ result.student.department }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-muted">{{ result.student.matric_no }}</td>
+                                
+                                <td class="text-center">
+                                    {% if result.score == -1 %}
+                                        <span class="badge rounded-pill bg-danger border border-danger fw-bold" style="padding: 8px 12px;">VOIDED</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-dark" style="font-size: 0.9rem; padding: 8px 12px;">{{ result.score }} / {{ result.total_questions }}</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td style="width: 15%;">
+                                    {% if result.score == -1 %}
+                                        <div class="d-flex align-items-center">
+                                            <small class="fw-bold text-danger text-uppercase me-2" style="font-size: 0.7rem;">DISQUALIFIED</small>
+                                            <div class="progress flex-grow-1" style="height: 4px;">
+                                                <div class="progress-bar bg-danger" role="progressbar" style="width: 100%"></div>
+                                            </div>
+                                        </div>
+                                    {% elif result.total_questions > 0 %}
+                                        {% set pct = (result.score / result.total_questions) * 100 %}
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                                <div class="progress-bar {{ 'bg-success' if pct >= 50 else 'bg-danger' }}" role="progressbar" style="width: {{ pct }}%"></div>
+                                            </div>
+                                            <small class="fw-bold">{{ "%.0f"|format(pct) }}%</small>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted small">N/A</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-center">
+                                    {% if pending_appeals_list|length > 0 %}
+                                        {% set appeal = pending_appeals_list[0] %}
+                                        <button class="btn btn-warning btn-sm fw-bold shadow-sm animate__animated animate__pulse animate__infinite w-100"
+                                            onclick="openReviewModal(
+                                                '{{ appeal.id }}', 
+                                                '{{ result.student.name }}', 
+                                                '{{ url_for('static', filename='profile_pics/' + result.student.image_file) }}',
+                                                '{{ result.student.matric_no }}',
+                                                '{{ appeal.message|replace('\n', ' ')|replace("'", "&#39;")|escape }}'
+                                            )">
+                                            <i class="fas fa-gavel me-1"></i> Review Defense
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-sm rounded-pill w-100 fw-bold 
+                                            {% if result.violations == 0 %} btn-success-subtle text-success border-success
+                                            {% elif result.violations <= 2 %} btn-warning-subtle text-warning border-warning
+                                            {% else %} btn-danger-subtle text-danger border-danger animate__animated animate__pulse animate__infinite {% endif %}"
+                                            
+                                            onclick="openAuditModal(
+                                                '{{ result.id }}', 
+                                                '{{ result.student.name }}', 
+                                                '{{ url_for('static', filename='profile_pics/' + result.student.image_file) }}', 
+                                                '{{ result.student.matric_no }}',
+                                                {{ result.violations }}, 
+                                                '{{ result.score }}',
+                                                '{{ result.date_taken }}'
+                                            )">
+                                            
+                                            {% if result.violations == 0 %}
+                                                <i class="fas fa-shield-alt me-1"></i> Verified Clean
+                                            {% else %}
+                                                <i class="fas fa-exclamation-triangle me-1"></i> {{ result.violations }} Events
+                                            {% endif %}
+                                        </button>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-muted small">
+                                    {{ result.date_taken.strftime('%d %b, %H:%M') }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="fas fa-clipboard-list fa-3x mb-3 opacity-25"></i>
+                                    <h4>No submissions yet</h4>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold"><i class="fas fa-balance-scale me-2"></i>Review Appeal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="p-4 bg-light border-bottom text-center">
+                    <img id="reviewImg" src="" class="modal-avatar-img mb-2">
+                    <h5 class="fw-bold mb-0" id="reviewStudentName">Student Name</h5>
+                    <p class="text-muted small mb-0">ID: <span id="reviewMatric">...</span></p>
+                    <span class="badge bg-danger mt-2">Requesting Retake</span>
+                </div>
+
+                <div class="p-4">
+                    <div class="alert alert-secondary border-start border-4 border-dark mb-0">
+                        <strong class="text-uppercase small text-muted d-block mb-1">Defense Statement:</strong>
+                        <p class="mb-0 fst-italic mt-1" id="reviewMessage">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <form id="formReject" method="POST">
+                    <button type="submit" class="btn btn-outline-danger fw-bold">
+                        <i class="fas fa-times me-1"></i> Reject Appeal
+                    </button>
+                </form>
+
+                <form id="formApprove" method="POST">
+                    <button type="submit" class="btn btn-success fw-bold px-4">
+                        <i class="fas fa-check me-1"></i> Grant Retake
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="auditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
+            <div class="modal-header text-white" id="auditHeader">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-user-secret me-2"></i>Exam Integrity Report
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                <div class="p-4 bg-light border-bottom text-center">
+                    <img id="auditImg" src="" class="modal-avatar-img mb-2">
+                    <h5 class="fw-bold mb-0" id="auditName">Student Name</h5>
+                    <p class="text-muted small mb-2">ID: <span id="auditID">...</span></p>
+                    
+                    <div class="mt-3 px-4">
+                        <div class="d-flex justify-content-between small fw-bold mb-1">
+                            <span>Trust Score</span>
+                            <span id="integrityScore">100%</span>
+                        </div>
+                        <div class="progress" style="height: 10px; background-color: #e9ecef;">
+                            <div class="progress-bar bg-success" id="integrityBar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4" style="max-height: 300px; overflow-y: auto;">
+                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary text-uppercase small">Session Timeline</h6>
+                    <div class="timeline" id="auditTimeline"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light justify-content-between">
+                <div id="voidedActions" class="d-none w-100 d-flex justify-content-between align-items-center">
+                    <span class="badge bg-danger p-2"><i class="fas fa-ban me-1"></i> RESULT VOIDED</span>
+                    
+                    <button class="btn btn-success btn-sm fw-bold shadow-sm" onclick="reverseVoid()">
+                        <i class="fas fa-undo me-1"></i> Reverse Void & Grant Retake
+                    </button>
+                </div>
+
+                <button class="btn btn-outline-danger btn-sm" id="voidBtn" onclick="voidResult()">
+                    <i class="fas fa-ban me-1"></i> Void Result
+                </button>
+                
+                <button class="btn btn-dark btn-sm" data-bs-dismiss="modal">Close Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    let currentResultId = null;
+
+    // Helper to handle avatar fallback
+    function setAvatar(imgElId, name, imgSrc) {
+        let imgEl = document.getElementById(imgElId);
+        let fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=198754&color=fff&size=128&bold=true`;
+        
+        if (imgSrc.includes('default.jpg') || !imgSrc) {
+            imgEl.src = fallback;
+        } else {
+            imgEl.src = imgSrc;
+            imgEl.onerror = function() { this.src = fallback; };
+        }
+    }
+
+    // 1. OPEN REVIEW APPEAL MODAL
+    function openReviewModal(appealId, studentName, studentImg, matric, message) {
+        document.getElementById('reviewStudentName').innerText = studentName;
+        document.getElementById('reviewMatric').innerText = matric;
+        
+        // 🟢 FIX: Use innerHTML to render apostrophes properly
+        document.getElementById('reviewMessage').innerHTML = message;
+        
+        // Sync Avatar
+        setAvatar('reviewImg', studentName, studentImg);
+
+        // Set Form Actions
+        document.getElementById('formApprove').action = `/cbt/appeal/${appealId}/approve`;
+        document.getElementById('formReject').action = `/cbt/appeal/${appealId}/reject`;
+
+        new bootstrap.Modal(document.getElementById('reviewModal')).show();
+    }
+
+    // 2. OPEN AUDIT MODAL
+    function openAuditModal(id, name, img, matric, violations, score, dateStr) {
+        currentResultId = id; 
+        document.getElementById('auditName').innerText = name;
+        document.getElementById('auditID').innerText = matric;
+        setAvatar('auditImg', name, img);
+        
+        let integrity = Math.max(0, 100 - (violations * 15));
+        let bar = document.getElementById('integrityBar');
+        let header = document.getElementById('auditHeader');
+
+        document.getElementById('integrityScore').innerText = integrity + "% Trustworthy";
+        bar.style.width = integrity + "%";
+
+        if (violations === 0) {
+            header.className = "modal-header bg-success text-white";
+            bar.className = "progress-bar bg-success";
+        } else if (violations <= 2) {
+            header.className = "modal-header bg-warning text-dark";
+            bar.className = "progress-bar bg-warning";
+        } else {
+            header.className = "modal-header bg-danger text-white";
+            bar.className = "progress-bar bg-danger";
+        }
+
+        // 🟢 TOGGLE BUTTONS: Handle Void vs Reverse Void
+        let voidBtn = document.getElementById('voidBtn');
+        let voidedActions = document.getElementById('voidedActions');
+        
+        if (score == -1) {
+            voidBtn.classList.add('d-none');
+            voidedActions.classList.remove('d-none');
+            voidedActions.classList.add('d-flex');
+        } else {
+            voidBtn.classList.remove('d-none');
+            voidedActions.classList.add('d-none');
+            voidedActions.classList.remove('d-flex');
+        }
+
+        let timelineHTML = `<div class="timeline-item success"><div class="t-time">START SESSION</div><p class="t-desc">Exam initialized.</p></div>`;
+        if (violations > 0) {
+            for(let i=0; i<violations; i++) {
+                timelineHTML += `<div class="timeline-item danger"><div class="t-time">SECURITY ALERT #${i+1}</div><p class="t-desc fw-bold text-danger">Focus Lost / Tab Switch Detected</p></div>`;
+            }
+        } else {
+            timelineHTML += `<div class="timeline-item success"><div class="t-time">MONITORING LOG</div><p class="t-desc">User focus maintained 100%.</p></div>`;
+        }
+
+        let scoreDisplay = (score == -1) ? '<span class="text-danger fw-bold">VOIDED</span>' : score;
+        timelineHTML += `<div class="timeline-item ${violations > 2 || score == -1 ? 'danger' : 'success'}"><div class="t-time">SUBMISSION</div><p class="t-desc">Final Score: <strong>${scoreDisplay}</strong></p></div>`;
+
+        document.getElementById('auditTimeline').innerHTML = timelineHTML;
+        new bootstrap.Modal(document.getElementById('auditModal')).show();
+    }
+
+    // 🟢 3. REVERSE VOID LOGIC (New Feature)
+    function reverseVoid() {
+        if (!currentResultId) return;
+        Swal.fire({
+            title: 'Reverse this Void?',
+            text: "This will delete the voided record and grant the student a fresh attempt.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            confirmButtonText: 'Yes, Grant Retake'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/cbt/reverse_void/${currentResultId}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire('Granted!', 'Student can now retake the test.', 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', 'Could not process request.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    // 4. VOID RESULT LOGIC
+    function voidResult() {
+        if (!currentResultId) return;
+        Swal.fire({
+            title: 'Void this Result?',
+            text: "This will delete the score permanently and notify the student.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, Void it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/cbt/void_result/${currentResultId}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire('Voided!', 'The result has been cancelled.', 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', 'Could not void result.', 'error');
+                    }
+                });
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

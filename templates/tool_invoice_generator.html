@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V3800 Enterprise Invoice Generator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* ==========================================
+           V3800 TITAN THEME ENGINE
+           ========================================== */
+        :root {
+            --brand-purple: #6f42c1;
+            --brand-purple-light: rgba(111, 66, 193, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 20px;
+        }
+        .tool-container {
+            max-width: 98%; 
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        
+        /* Input Panel Styling */
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+            max-height: 850px;
+            overflow-y: auto;
+        }
+        .input-panel::-webkit-scrollbar { width: 6px; }
+        .input-panel::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        .form-label {
+            font-weight: 800;
+            color: #64748b;
+            margin-bottom: 5px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-purple);
+            box-shadow: 0 0 0 3px var(--brand-purple-light);
+        }
+        .form-control-color {
+            height: 36px;
+            padding: 4px;
+            cursor: pointer;
+        }
+        .section-divider {
+            margin: 30px 0 15px 0;
+            border-top: 2px solid #cbd5e1;
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: #64748b;
+            letter-spacing: 1px;
+        }
+        
+        /* Line Item Controls */
+        .item-row-input {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            position: relative;
+            transition: 0.2s;
+        }
+        .item-row-input:focus-within {
+            border-color: var(--brand-purple);
+            box-shadow: 0 4px 10px rgba(111, 66, 193, 0.1);
+        }
+        .delete-item-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+        .delete-item-btn:hover { transform: scale(1.1); }
+
+        /* Invoice Live Preview Paper */
+        .preview-wrapper {
+            background: #e2e8f0;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px dashed #94a3b8;
+            overflow-x: auto;
+        }
+        
+        .invoice-paper {
+            background: white;
+            padding: 45px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            min-height: 750px;
+            width: 100%; 
+            max-width: 100%;
+            color: #0f172a;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            transition: font-family 0.3s ease;
+        }
+
+        .invoice-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 8rem;
+            font-weight: 900;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            color: #000000;
+            opacity: 0.04;
+            pointer-events: none;
+            z-index: 0;
+            white-space: nowrap;
+        }
+
+        /* V3800 MASSIVE LOGO GEOMETRY - WIDTH DRIVEN */
+        .invoice-logo {
+            width: 150px; /* Default starting width */
+            max-width: 100%;
+            height: auto; /* Height automatically scales to maintain aspect ratio */
+            object-fit: contain;
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .invoice-title {
+            font-size: 2.8rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin: 0;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+        }
+
+        /* Strict Table Layout */
+        .invoice-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            table-layout: fixed;
+            position: relative;
+            z-index: 2;
+        }
+        .invoice-table th {
+            color: white;
+            padding: 12px 10px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.3s ease;
+        }
+        .col-desc { width: 50%; text-align: left; }
+        .col-qty { width: 15%; text-align: center; }
+        .col-price { width: 15%; text-align: right; }
+        .col-total { width: 20%; text-align: right; }
+
+        .invoice-table td {
+            padding: 14px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            font-weight: 600;
+            color: #334155;
+            word-wrap: break-word;
+            background-color: transparent;
+        }
+
+        /* Strict Table Totals */
+        .layout-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+            table-layout: fixed;
+            position: relative;
+            z-index: 2;
+        }
+        .layout-table td {
+            vertical-align: top;
+            border: none;
+            padding: 0;
+        }
+
+        .banking-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 25px;
+            margin-right: 30px;
+        }
+
+        .banking-lbl {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .banking-val {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+
+        .qr-code-img {
+            width: 80px;
+            height: 80px;
+            border: 1px solid #cbd5e1;
+            padding: 2px;
+            background: white;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .signature-box {
+            width: 250px;
+            text-align: center;
+            float: right;
+            margin-top: 60px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .uploaded-stamp {
+            max-width: 200px;
+            max-height: 80px;
+            object-fit: contain;
+            margin-bottom: -15px;
+            position: relative;
+            z-index: 5;
+            display: none;
+        }
+
+        .signature-line {
+            border-bottom: 2px solid #0f172a;
+            height: 40px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* V3800: Remittance Slip Styling */
+        .remittance-slip {
+            margin-top: 60px;
+            padding-top: 30px;
+            position: relative;
+            z-index: 2;
+        }
+        .scissor-line {
+            border-top: 2px dashed #94a3b8;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .scissor-icon {
+            position: absolute;
+            top: -12px;
+            left: 5%;
+            background: white;
+            padding: 0 10px;
+            color: #64748b;
+            font-size: 1.2rem;
+        }
+
+        .invoice-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 0.85rem;
+            color: #64748b;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .download-btn {
+            background: var(--brand-purple);
+            color: white;
+            font-weight: 800;
+            padding: 14px 24px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+            transition: 0.2s;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(111, 66, 193, 0.4);
+        }
+
+        /* V2000 ABSOLUTE PRINT ISOLATION MATRIX */
+        @media print {
+            @page {
+                size: letter portrait;
+                margin: 0.5in;
+            }
+            body {
+                background-color: #ffffff;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .col-lg-3, .btn-outline-secondary, .download-btn, .border-bottom { 
+                display: none !important; 
+            }
+            .row, .col-lg-9, .tool-container, .container, .container-fluid, .preview-wrapper {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+            }
+            .invoice-paper {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                background-color: transparent !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-file-invoice-dollar me-2" style="color: var(--brand-purple);"></i> Enterprise Billing Engine <span class="badge bg-dark ms-2" style="font-size: 0.7rem;">V3800 TITAN</span></h2>
+            <a href="{{ url_for('student_tools_dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Dashboard</a>
+        </div>
+
+        <div class="row g-4" id="mainGridRow">
+            
+            <div class="col-lg-3">
+                <div class="input-panel">
+                    
+                    <div class="section-divider mt-0"><span>BRANDING & METADATA</span></div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Document Type</label>
+                        <select id="docType" class="form-select form-select-sm mb-2" onchange="syncInvoice()">
+                            <option value="INVOICE">Standard Invoice</option>
+                            <option value="PROFORMA INVOICE">Proforma Invoice</option>
+                            <option value="TAX RECEIPT">Tax Receipt</option>
+                            <option value="PRICE QUOTE">Price Quote</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Typography Engine</label>
+                        <select id="docFont" class="form-select form-select-sm mb-2" onchange="syncInvoice()">
+                            <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Modern Sans-Serif</option>
+                            <option value="'Times New Roman', Times, serif">Corporate Serif</option>
+                            <option value="'Courier New', Courier, monospace">Bespoke Monospace</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" style="background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                        <label class="form-label">Upload High-Res Logo</label>
+                        <input type="file" class="form-control form-control-sm mb-3" accept="image/*" onchange="handleLogoUpload(event)">
+                        
+                        <label class="form-label text-primary"><i class="fas fa-expand-arrows-alt me-1"></i> Force Logo Width Size</label>
+                        <input type="range" class="form-range" id="logoScaleSlider" min="50" max="600" value="150" oninput="adjustLogoSize()">
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Small</span>
+                            <span>Massive</span>
+                        </div>
+                    </div>
+                        
+                    <div class="row g-2 mt-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label mt-1">Brand Color</label>
+                            <input type="color" id="brandColor" class="form-control form-control-color w-100" value="#0f172a" oninput="syncInvoice()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label mt-1">Status Stamp</label>
+                            <select id="invStatus" class="form-select form-select-sm" onchange="syncInvoice()">
+                                <option value="">Draft (None)</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="PAID">Paid</option>
+                                <option value="OVERDUE">Overdue</option>
+                                <option value="VOID">Void</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-5">
+                            <label class="form-label">Currency</label>
+                            <select id="invCurrency" class="form-select form-select-sm" onchange="syncInvoice()">
+                                <option value="$">USD ($)</option>
+                                <option value="₦">NGN (₦)</option>
+                                <option value="€">EUR (€)</option>
+                                <option value="£">GBP (£)</option>
+                            </select>
+                        </div>
+                        <div class="col-7">
+                            <label class="form-label">Document Number</label>
+                            <input type="text" id="invNumber" class="form-control form-control-sm" value="INV-2026-001" oninput="syncInvoice()">
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Date Issued</label>
+                            <input type="date" id="invDate" class="form-control form-control-sm" oninput="syncInvoice()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" id="invDueDate" class="form-control form-control-sm" oninput="syncInvoice()">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">P.O. Number (Optional)</label>
+                        <input type="text" id="invPO" class="form-control form-control-sm" placeholder="e.g. PO-99812" oninput="syncInvoice()">
+                    </div>
+
+                    <div class="section-divider"><span>BUSINESS INFO (FROM)</span></div>
+                    <div class="mb-2">
+                        <input type="text" id="fromName" class="form-control form-control-sm mb-2 fw-bold" placeholder="Your Business Name" value="L.I.S.A. Architecture" oninput="syncInvoice()">
+                        <input type="text" id="fromEmail" class="form-control form-control-sm mb-2" placeholder="Email Address" value="admin@lasu.edu.ng" oninput="syncInvoice()">
+                        <input type="text" id="fromAddress" class="form-control form-control-sm mb-2" placeholder="Physical Address" value="Ojo Campus, Lagos, Nigeria" oninput="syncInvoice()">
+                        <input type="text" id="fromTax" class="form-control form-control-sm" placeholder="Tax ID / VAT No." value="VAT: NG-448190X" oninput="syncInvoice()">
+                    </div>
+
+                    <div class="section-divider"><span>CLIENT INFO (TO)</span></div>
+                    <div class="mb-3">
+                        <input type="text" id="toName" class="form-control form-control-sm mb-2 fw-bold" placeholder="Client Business Name" value="Acme Global Inc." oninput="syncInvoice()">
+                        <input type="text" id="toEmail" class="form-control form-control-sm mb-2" placeholder="Client Email" oninput="syncInvoice()">
+                        <input type="text" id="toAddress" class="form-control form-control-sm" placeholder="Client Address" oninput="syncInvoice()">
+                    </div>
+
+                    <div class="section-divider"><span>DUAL-CURRENCY CONVERSION</span></div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Target Currency</label>
+                            <input type="text" id="targetCurrency" class="form-control form-control-sm" placeholder="e.g. EUR" oninput="syncInvoice()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Exchange Rate</label>
+                            <input type="number" id="exchangeRate" class="form-control form-control-sm" placeholder="e.g. 0.92" min="0" step="0.01" oninput="syncInvoice()">
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>PAYMENT CHANNELS & BANKING</span></div>
+                    <div class="mb-3">
+                        <select id="paymentMethod" class="form-select form-select-sm mb-2" onchange="syncInvoice()">
+                            <option value="">Select Payment Method...</option>
+                            <option value="Wire Transfer">Wire Transfer</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="PayPal">PayPal</option>
+                            <option value="Cryptocurrency (USDT/BTC)">Cryptocurrency (USDT/BTC)</option>
+                            <option value="Check">Check</option>
+                        </select>
+                        <input type="text" id="paymentLink" class="form-control form-control-sm mb-2" placeholder="Payment Link (Generates QR Code)" oninput="syncInvoice()">
+                        <input type="text" id="bankName" class="form-control form-control-sm mb-2" placeholder="Bank Name" oninput="syncInvoice()">
+                        <input type="text" id="bankAccName" class="form-control form-control-sm mb-2" placeholder="Account Name" oninput="syncInvoice()">
+                        <input type="text" id="bankAccNo" class="form-control form-control-sm mb-2" placeholder="Account Number" oninput="syncInvoice()">
+                        <input type="text" id="bankRouting" class="form-control form-control-sm" placeholder="SWIFT / Routing No." oninput="syncInvoice()">
+                    </div>
+
+                    <div class="section-divider"><span>FINANCIAL MODIFIERS</span></div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <label class="form-label">Tax (%)</label>
+                            <input type="number" id="invTax" class="form-control form-control-sm" value="0" min="0" step="0.1" oninput="syncInvoice()">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Discount</label>
+                            <input type="number" id="invDiscount" class="form-control form-control-sm" value="0" min="0" max="100" step="1" oninput="syncInvoice()">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Shipping</label>
+                            <input type="number" id="invShipping" class="form-control form-control-sm" value="0" min="0" step="1" oninput="syncInvoice()">
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>LINE ITEMS</span></div>
+                    <div id="itemsContainer">
+                        </div>
+                    <button class="btn btn-sm btn-outline-primary fw-bold w-100 mb-3" onclick="addItem()"><i class="fas fa-plus me-1"></i> Add Line Item</button>
+
+                    <div class="section-divider"><span>NOTES & SIGN-OFF</span></div>
+                    <label class="form-label">Upload Digital Stamp / Signature</label>
+                    <input type="file" class="form-control form-control-sm mb-2" accept="image/png, image/jpeg" onchange="handleStampUpload(event)">
+                    
+                    <input type="text" id="invSignoff" class="form-control form-control-sm mb-2 mt-2" placeholder="Sign-off (e.g. Thank you for your business!)" oninput="syncInvoice()">
+                    <textarea id="invNotes" class="form-control form-control-sm" rows="3" placeholder="Terms & Conditions (e.g., Payment due within 30 days.)" oninput="syncInvoice()"></textarea>
+
+                </div>
+            </div>
+
+            <div class="col-lg-9" id="outputGridColumn">
+                
+                <div class="preview-wrapper">
+                    <div class="invoice-paper" id="invoiceDocument">
+                        
+                        <div class="invoice-watermark" id="docWatermark"></div>
+
+                        <table class="layout-table" style="margin-bottom: 30px;">
+                            <tr>
+                                <td style="width: 50%;">
+                                    <img id="docLogo" class="invoice-logo" alt="Company Logo">
+                                    <div class="fw-bold fs-5 text-dark" id="docFromName">L.I.S.A. Architecture</div>
+                                    <div class="text-muted small" id="docFromEmail" style="margin-top: 5px;">admin@lasu.edu.ng</div>
+                                    <div class="text-muted small" id="docFromAddress">Ojo Campus, Lagos, Nigeria</div>
+                                    <div class="text-muted small fw-bold mt-1" id="docFromTax">VAT: NG-448190X</div>
+                                </td>
+                                <td style="width: 50%; text-align: right;">
+                                    <div class="invoice-title theme-text" id="docTitle">INVOICE</div>
+                                    <div class="text-dark fw-bold mt-1" id="docInvoiceNum" style="font-size: 1.1rem;">#INV-2026-001</div>
+                                    <div class="text-muted small fw-bold mt-1" id="docPOContainer" style="display: none;">PO: <span id="docPO"></span></div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table class="layout-table" style="margin-bottom: 40px;">
+                            <tr>
+                                <td style="width: 50%;">
+                                    <div class="text-muted small fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">Billed To:</div>
+                                    <div class="fw-bold text-dark" id="docToName" style="font-size: 1.2rem;">Acme Global Inc.</div>
+                                    <div class="text-muted small mt-1" id="docToEmail"></div>
+                                    <div class="text-muted small" id="docToAddress"></div>
+                                </td>
+                                <td style="width: 50%;">
+                                    <table class="layout-table" style="background: #f8fafc; border-radius: 8px;">
+                                        <tr>
+                                            <td style="padding: 15px 10px 5px 15px; font-size: 0.85rem; font-weight: bold; color: #64748b; text-transform: uppercase;">Date Issued:</td>
+                                            <td id="docDate" style="padding: 15px 15px 5px 10px; font-size: 1rem; font-weight: bold; color: #0f172a; text-align: right;">---</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 5px 10px 15px 15px; font-size: 0.85rem; font-weight: bold; color: #64748b; text-transform: uppercase;">Due Date:</td>
+                                            <td id="docDueDate" style="padding: 5px 15px 15px 10px; font-size: 1rem; font-weight: bold; color: #0f172a; text-align: right;">---</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th class="theme-bg col-desc">Description</th>
+                                    <th class="theme-bg col-qty">Qty</th>
+                                    <th class="theme-bg col-price">Unit Price</th>
+                                    <th class="theme-bg col-total">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="docItemsBody">
+                                </tbody>
+                        </table>
+
+                        <table class="layout-table" style="margin-top: 25px;">
+                            <tr>
+                                <td style="width: 50%;">
+                                    <div class="banking-box" id="docBankingBox" style="display: none;">
+                                        <div style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: #0f172a; margin-bottom: 10px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px;">Payment Details</div>
+                                        
+                                        <div id="rowPaymentMethod" style="display: none; margin-bottom: 5px;">
+                                            <span class="banking-lbl">Method:</span> <span class="banking-val theme-text" id="docPaymentMethod"></span>
+                                        </div>
+                                        <div id="rowPaymentLink" style="display: none; margin-bottom: 10px;">
+                                            <span class="banking-lbl">Pay Online:</span> <span class="banking-val" style="color: #2563eb;" id="docPaymentLink"></span>
+                                        </div>
+
+                                        <div id="rowBankName" style="display: none; margin-bottom: 5px;">
+                                            <span class="banking-lbl">Bank:</span> <span class="banking-val" id="docBankName"></span>
+                                        </div>
+                                        <div id="rowBankAccName" style="display: none; margin-bottom: 5px;">
+                                            <span class="banking-lbl">Account Name:</span> <span class="banking-val" id="docBankAccName"></span>
+                                        </div>
+                                        <div id="rowBankAccNo" style="display: none; margin-bottom: 5px;">
+                                            <span class="banking-lbl">Account No:</span> <span class="banking-val" id="docBankAccNo"></span>
+                                        </div>
+                                        <div id="rowBankRouting" style="display: none; margin-bottom: 5px;">
+                                            <span class="banking-lbl">SWIFT/Routing:</span> <span class="banking-val" id="docBankRouting"></span>
+                                        </div>
+
+                                        <img id="docQRCode" class="qr-code-img" src="" alt="Payment QR Code">
+                                    </div>
+                                </td>
+
+                                <td style="width: 50%;">
+                                    <table style="width: 100%; border-collapse: collapse; background: #f8fafc; border-radius: 8px;">
+                                        <tr>
+                                            <td style="padding: 15px 10px 5px 15px; color: #475569; font-weight: bold; font-size: 1rem;">Subtotal:</td>
+                                            <td id="docSubtotal" style="padding: 15px 15px 5px 10px; color: #0f172a; font-weight: bold; font-size: 1rem; text-align: right;">$0.00</td>
+                                        </tr>
+                                        <tr id="rowDiscount" style="display: none;">
+                                            <td style="padding: 5px 10px 5px 15px; color: #16a34a; font-weight: bold; font-size: 1rem;">Discount (<span id="docDiscountRate">0</span>%):</td>
+                                            <td id="docDiscountAmount" style="padding: 5px 15px 5px 10px; color: #16a34a; font-weight: bold; font-size: 1rem; text-align: right;">-$0.00</td>
+                                        </tr>
+                                        <tr id="rowTax" style="display: none;">
+                                            <td style="padding: 5px 10px 5px 15px; color: #475569; font-weight: bold; font-size: 1rem;">Tax (<span id="docTaxRate">0</span>%):</td>
+                                            <td id="docTaxAmount" style="padding: 5px 15px 5px 10px; color: #0f172a; font-weight: bold; font-size: 1rem; text-align: right;">$0.00</td>
+                                        </tr>
+                                        <tr id="rowShipping" style="display: none;">
+                                            <td style="padding: 5px 10px 15px 15px; color: #475569; font-weight: bold; font-size: 1rem;">Shipping/Fees:</td>
+                                            <td id="docShippingAmount" style="padding: 5px 15px 15px 10px; color: #0f172a; font-weight: bold; font-size: 1rem; text-align: right;">$0.00</td>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td colspan="2" class="theme-bg" style="padding: 15px; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+                                                <table style="width: 100%;">
+                                                    <tr>
+                                                        <td style="font-weight: 900; font-size: 1.4rem; color: #ffffff;">Total Due:</td>
+                                                        <td id="docGrandTotal" style="font-weight: 900; font-size: 1.4rem; text-align: right; color: #ffffff;">$0.00</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <div id="docDualCurrencyBox" style="text-align: right; margin-top: 8px; display: none;">
+                                        <span style="font-size: 0.8rem; font-weight: bold; color: #64748b; text-transform: uppercase;">Equivalent in <span id="docTargetCurrCode"></span>:</span>
+                                        <span id="docTargetCurrAmount" class="theme-text" style="font-size: 1rem; font-weight: 900; margin-left: 5px;">0.00</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div class="signature-box">
+                            <img id="docStampImg" class="uploaded-stamp" src="" alt="Digital Stamp">
+                            <div class="signature-line"></div>
+                            <div style="font-weight: bold; font-size: 0.85rem; color: #0f172a; text-transform: uppercase; letter-spacing: 1px;">Authorized Signature</div>
+                        </div>
+                        <div style="clear: both;"></div>
+
+                        <div class="invoice-footer" id="docFooter" style="display: none;">
+                            <div id="docSignoffText" class="theme-text" style="font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; display: none;"></div>
+                            <div class="fw-bold text-dark text-uppercase mb-1" style="font-size: 0.75rem; letter-spacing: 1px;" id="docNotesHeader">Terms & Instructions</div>
+                            <div id="docNotesText" style="white-space: pre-wrap; line-height: 1.5;"></div>
+                        </div>
+
+                        <div class="remittance-slip" id="docRemittanceBox" style="display: none;">
+                            <div class="scissor-line">
+                                <i class="fas fa-cut scissor-icon"></i>
+                            </div>
+                            <table class="layout-table">
+                                <tr>
+                                    <td style="width: 50%;">
+                                        <div style="font-size: 1.2rem; font-weight: 900; text-transform: uppercase; color: #0f172a; margin-bottom: 5px;">Payment Remittance</div>
+                                        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">Please detach and return with your payment.</div>
+                                        <div style="font-size: 0.8rem; font-weight: bold; color: #0f172a;">To: <span id="remitToName"></span></div>
+                                        <div style="font-size: 0.8rem; color: #64748b;" id="remitToAddress"></div>
+                                    </td>
+                                    <td style="width: 50%; text-align: right;">
+                                        <div style="font-size: 0.8rem; font-weight: bold; color: #64748b; text-transform: uppercase;">Invoice No.</div>
+                                        <div style="font-size: 1.1rem; font-weight: 900; color: #0f172a; margin-bottom: 10px;" id="remitInvoiceNum"></div>
+                                        <div style="font-size: 0.8rem; font-weight: bold; color: #64748b; text-transform: uppercase;">Amount Due</div>
+                                        <div style="font-size: 1.4rem; font-weight: 900;" class="theme-text" id="remitAmount"></div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+
+                <button class="download-btn" onclick="executeNativePrint()">
+                    <i class="fas fa-print me-2"></i> Print Document (Save as PDF)
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // V3800 EXPLICIT JAVASCRIPT ENGINE
+        // ZERO ARROW FUNCTIONS. ZERO TERNARIES.
+        // ==========================================
+
+        let invoiceItemsArray = [
+            { id: 1, desc: 'Enterprise Systems Architecture Consulting', qty: 1, price: 2500 },
+            { id: 2, desc: 'SaaS Platform Deployment', qty: 1, price: 1250 }
+        ];
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let todayObject = new Date();
+            
+            let yearString = String(todayObject.getFullYear());
+            let monthString = String(todayObject.getMonth() + 1);
+            let dayString = String(todayObject.getDate());
+
+            if (monthString.length === 1) { monthString = "0" + monthString; }
+            if (dayString.length === 1) { dayString = "0" + dayString; }
+
+            document.getElementById('invDate').value = yearString + "-" + monthString + "-" + dayString;
+            
+            let nextMonthObject = new Date();
+            nextMonthObject.setDate(todayObject.getDate() + 30);
+            
+            let nextYearString = String(nextMonthObject.getFullYear());
+            let nextMonthStr = String(nextMonthObject.getMonth() + 1);
+            let nextDayString = String(nextMonthObject.getDate());
+
+            if (nextMonthStr.length === 1) { nextMonthStr = "0" + nextMonthStr; }
+            if (nextDayString.length === 1) { nextDayString = "0" + nextDayString; }
+
+            document.getElementById('invDueDate').value = nextYearString + "-" + nextMonthStr + "-" + nextDayString;
+
+            renderInputItems();
+            syncInvoice();
+        });
+
+        // ==========================================
+        // V3800 LOGO & PHYSICAL SCALING
+        // ==========================================
+        function handleLogoUpload(event) {
+            let fileObject = event.target.files[0];
+            
+            if (fileObject) {
+                let fileReader = new FileReader();
+                
+                fileReader.onload = function(e) {
+                    let logoElement = document.getElementById('docLogo');
+                    logoElement.src = e.target.result;
+                    logoElement.style.display = 'block';
+                    
+                    document.getElementById('docFromName').style.display = 'none';
+                    adjustLogoSize(); // Ensure default scale applies immediately
+                };
+                
+                fileReader.readAsDataURL(fileObject);
+            }
+        }
+
+        function adjustLogoSize() {
+            // V3800 Override: Directly modify width so portrait images can grow massively
+            let scaleValue = document.getElementById('logoScaleSlider').value;
+            let logoElement = document.getElementById('docLogo');
+            logoElement.style.width = String(scaleValue) + "px";
+        }
+
+        function handleStampUpload(event) {
+            let fileObject = event.target.files[0];
+            
+            if (fileObject) {
+                let fileReader = new FileReader();
+                
+                fileReader.onload = function(e) {
+                    let stampElement = document.getElementById('docStampImg');
+                    stampElement.src = e.target.result;
+                    stampElement.style.display = 'inline-block';
+                };
+                
+                fileReader.readAsDataURL(fileObject);
+            }
+        }
+
+        // ==========================================
+        // DYNAMIC LINE ITEM ENGINE
+        // ==========================================
+        function renderInputItems() {
+            let containerElement = document.getElementById('itemsContainer');
+            containerElement.innerHTML = '';
+
+            for (let i = 0; i < invoiceItemsArray.length; i = i + 1) {
+                let currentItem = invoiceItemsArray[i];
+                
+                let rowDiv = document.createElement('div');
+                rowDiv.className = 'item-row-input';
+                
+                let htmlString = "";
+                htmlString = htmlString + "<button class='delete-item-btn' onclick='removeItem(" + String(currentItem.id) + ")'><i class='fas fa-times'></i></button>";
+                htmlString = htmlString + "<input type='text' class='form-control form-control-sm mb-2 fw-bold' placeholder='Description' value='" + currentItem.desc + "' oninput='updateItem(" + String(currentItem.id) + ", \"desc\", this.value)'>";
+                htmlString = htmlString + "<div class='row g-2'>";
+                htmlString = htmlString + "<div class='col-6'><input type='number' class='form-control form-control-sm' value='" + String(currentItem.qty) + "' min='1' oninput='updateItem(" + String(currentItem.id) + ", \"qty\", this.value)'></div>";
+                htmlString = htmlString + "<div class='col-6'><input type='number' class='form-control form-control-sm' value='" + String(currentItem.price) + "' min='0' step='0.01' oninput='updateItem(" + String(currentItem.id) + ", \"price\", this.value)'></div>";
+                htmlString = htmlString + "</div>";
+
+                rowDiv.innerHTML = htmlString;
+                containerElement.appendChild(rowDiv);
+            }
+        }
+
+        function addItem() {
+            let newIdentifier = 1;
+            
+            if (invoiceItemsArray.length > 0) {
+                let highestId = 0;
+                for (let i = 0; i < invoiceItemsArray.length; i = i + 1) {
+                    if (invoiceItemsArray[i].id > highestId) {
+                        highestId = invoiceItemsArray[i].id;
+                    }
+                }
+                newIdentifier = highestId + 1;
+            }
+
+            let newItemObject = { id: newIdentifier, desc: '', qty: 1, price: 0 };
+            invoiceItemsArray.push(newItemObject);
+            
+            renderInputItems();
+            syncInvoice();
+        }
+
+        function removeItem(targetId) {
+            let updatedArray = [];
+            
+            for (let i = 0; i < invoiceItemsArray.length; i = i + 1) {
+                if (invoiceItemsArray[i].id !== targetId) {
+                    updatedArray.push(invoiceItemsArray[i]);
+                }
+            }
+
+            invoiceItemsArray = updatedArray;
+            renderInputItems();
+            syncInvoice();
+        }
+
+        function updateItem(targetId, fieldName, stringValue) {
+            for (let i = 0; i < invoiceItemsArray.length; i = i + 1) {
+                if (invoiceItemsArray[i].id === targetId) {
+                    if (fieldName === 'qty' || fieldName === 'price') {
+                        let floatValue = parseFloat(stringValue);
+                        if (isNaN(floatValue) === true) {
+                            floatValue = 0;
+                        }
+                        invoiceItemsArray[i][fieldName] = floatValue;
+                    } else {
+                        invoiceItemsArray[i][fieldName] = stringValue;
+                    }
+                }
+            }
+            syncInvoice();
+        }
+
+        // ==========================================
+        // V3800 SYNC ENGINE
+        // ==========================================
+        function formatMoneyString(numberValue, currencySymbol) {
+            let formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return currencySymbol + formatter.format(numberValue);
+        }
+
+        function formatDateString(dateString) {
+            if (dateString === "") {
+                return "---";
+            }
+            let dateObject = new Date(dateString);
+            let offsetMillis = dateObject.getTimezoneOffset() * 60000;
+            let localDate = new Date(dateObject.getTime() + offsetMillis);
+            
+            return localDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function syncInvoice() {
+            // Document Typography Engine
+            let selectedFontValue = document.getElementById('docFont').value;
+            document.getElementById('invoiceDocument').style.fontFamily = selectedFontValue;
+
+            let currencySymbol = document.getElementById('invCurrency').value;
+            let brandColorValue = document.getElementById('brandColor').value;
+            
+            let docTypeValue = document.getElementById('docType').value;
+            document.getElementById('docTitle').innerText = docTypeValue;
+            document.getElementById('docTitle').style.color = brandColorValue;
+            
+            let themeTextElements = document.querySelectorAll('.theme-text');
+            for (let i = 0; i < themeTextElements.length; i = i + 1) {
+                themeTextElements[i].style.color = brandColorValue;
+            }
+
+            let bgElementsArray = document.querySelectorAll('.theme-bg');
+            for (let i = 0; i < bgElementsArray.length; i = i + 1) {
+                bgElementsArray[i].style.backgroundColor = brandColorValue;
+            }
+
+            let statusValue = document.getElementById('invStatus').value;
+            let watermarkElement = document.getElementById('docWatermark');
+            
+            if (statusValue === "") {
+                watermarkElement.style.display = "none";
+            } else {
+                watermarkElement.style.display = "block";
+                watermarkElement.innerText = statusValue;
+                
+                if (statusValue === "PAID") {
+                    watermarkElement.style.color = "#16a34a"; 
+                } else if (statusValue === "OVERDUE" || statusValue === "VOID") {
+                    watermarkElement.style.color = "#dc2626"; 
+                } else {
+                    watermarkElement.style.color = "#000000"; 
+                }
+            }
+
+            let poNumberString = document.getElementById('invPO').value;
+            let poContainerElement = document.getElementById('docPOContainer');
+            if (poNumberString.trim() !== "") {
+                poContainerElement.style.display = "block";
+                document.getElementById('docPO').innerText = poNumberString;
+            } else {
+                poContainerElement.style.display = "none";
+            }
+
+            let invoiceNumberString = document.getElementById('invNumber').value;
+            document.getElementById('docInvoiceNum').innerText = "#" + invoiceNumberString;
+            
+            document.getElementById('docDate').innerText = formatDateString(document.getElementById('invDate').value);
+            document.getElementById('docDueDate').innerText = formatDateString(document.getElementById('invDueDate').value);
+            
+            let fromNameValue = document.getElementById('fromName').value;
+            if (fromNameValue === "") {
+                fromNameValue = "---";
+            }
+            document.getElementById('docFromName').innerText = fromNameValue;
+            
+            let logoImageElement = document.getElementById('docLogo');
+            let isLogoEmpty = true;
+            if (logoImageElement.src !== "" && logoImageElement.src.indexOf("http") === 0 || logoImageElement.src.indexOf("data:") === 0) {
+                isLogoEmpty = false;
+            }
+
+            if (isLogoEmpty === true) {
+                document.getElementById('docFromName').style.display = 'block';
+            }
+
+            document.getElementById('docFromEmail').innerText = document.getElementById('fromEmail').value;
+            document.getElementById('docFromAddress').innerText = document.getElementById('fromAddress').value;
+            
+            let fromTaxValue = document.getElementById('fromTax').value;
+            let docFromTaxElement = document.getElementById('docFromTax');
+            if (fromTaxValue.trim() !== "") {
+                docFromTaxElement.style.display = "block";
+                docFromTaxElement.innerText = fromTaxValue;
+            } else {
+                docFromTaxElement.style.display = "none";
+            }
+
+            let toNameValue = document.getElementById('toName').value;
+            if (toNameValue === "") {
+                toNameValue = "---";
+            }
+            document.getElementById('docToName').innerText = toNameValue;
+            document.getElementById('docToEmail').innerText = document.getElementById('toEmail').value;
+            document.getElementById('docToAddress').innerText = document.getElementById('toAddress').value;
+
+            let paymentMethodStr = document.getElementById('paymentMethod').value;
+            let paymentLinkStr = document.getElementById('paymentLink').value;
+            let bankNameStr = document.getElementById('bankName').value;
+            let bankAccNameStr = document.getElementById('bankAccName').value;
+            let bankAccNoStr = document.getElementById('bankAccNo').value;
+            let bankRoutingStr = document.getElementById('bankRouting').value;
+            
+            let docBankingBox = document.getElementById('docBankingBox');
+            let showBanking = false;
+
+            if (paymentMethodStr !== "") { showBanking = true; document.getElementById('rowPaymentMethod').style.display = "block"; document.getElementById('docPaymentMethod').innerText = paymentMethodStr; } else { document.getElementById('rowPaymentMethod').style.display = "none"; }
+            if (paymentLinkStr.trim() !== "") { showBanking = true; document.getElementById('rowPaymentLink').style.display = "block"; document.getElementById('docPaymentLink').innerText = paymentLinkStr; } else { document.getElementById('rowPaymentLink').style.display = "none"; }
+            
+            if (bankNameStr.trim() !== "") { showBanking = true; document.getElementById('rowBankName').style.display = "block"; document.getElementById('docBankName').innerText = bankNameStr; } else { document.getElementById('rowBankName').style.display = "none"; }
+            if (bankAccNameStr.trim() !== "") { showBanking = true; document.getElementById('rowBankAccName').style.display = "block"; document.getElementById('docBankAccName').innerText = bankAccNameStr; } else { document.getElementById('rowBankAccName').style.display = "none"; }
+            if (bankAccNoStr.trim() !== "") { showBanking = true; document.getElementById('rowBankAccNo').style.display = "block"; document.getElementById('docBankAccNo').innerText = bankAccNoStr; } else { document.getElementById('rowBankAccNo').style.display = "none"; }
+            if (bankRoutingStr.trim() !== "") { showBanking = true; document.getElementById('rowBankRouting').style.display = "block"; document.getElementById('docBankRouting').innerText = bankRoutingStr; } else { document.getElementById('rowBankRouting').style.display = "none"; }
+
+            let qrImageElement = document.getElementById('docQRCode');
+            if (paymentLinkStr.trim() !== "") {
+                qrImageElement.style.display = "block";
+                qrImageElement.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(paymentLinkStr);
+            } else {
+                qrImageElement.style.display = "none";
+                qrImageElement.src = "";
+            }
+
+            if (showBanking === true) {
+                docBankingBox.style.display = "block";
+            } else {
+                docBankingBox.style.display = "none";
+            }
+
+            let tbodyElement = document.getElementById('docItemsBody');
+            tbodyElement.innerHTML = '';
+            
+            let accumulatedSubtotal = 0;
+
+            if (invoiceItemsArray.length === 0) {
+                tbodyElement.innerHTML = "<tr><td colspan='4' style='text-align: center; color: #64748b; font-size: 0.85rem; padding: 15px;'>No items added.</td></tr>";
+            } else {
+                for (let i = 0; i < invoiceItemsArray.length; i = i + 1) {
+                    let itemObject = invoiceItemsArray[i];
+                    let lineTotalValue = itemObject.qty * itemObject.price;
+                    accumulatedSubtotal = accumulatedSubtotal + lineTotalValue;
+                    
+                    let tableRow = document.createElement('tr');
+                    
+                    let descriptionDisplay = itemObject.desc;
+                    if (descriptionDisplay === "") {
+                        descriptionDisplay = "<span style='color: #64748b;'>Item Description</span>";
+                    }
+
+                    let rowHtml = "";
+                    rowHtml = rowHtml + "<td style='padding: 14px 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;'>" + descriptionDisplay + "</td>";
+                    rowHtml = rowHtml + "<td style='padding: 14px 10px; border-bottom: 1px solid #e2e8f0; text-align: center;'>" + String(itemObject.qty) + "</td>";
+                    rowHtml = rowHtml + "<td style='padding: 14px 10px; border-bottom: 1px solid #e2e8f0; text-align: right;'>" + formatMoneyString(itemObject.price, currencySymbol) + "</td>";
+                    rowHtml = rowHtml + "<td style='padding: 14px 10px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold; color: #0f172a;'>" + formatMoneyString(lineTotalValue, currencySymbol) + "</td>";
+                    
+                    tableRow.innerHTML = rowHtml;
+                    tbodyElement.appendChild(tableRow);
+                }
+            }
+
+            let discountInputString = document.getElementById('invDiscount').value;
+            let taxInputString = document.getElementById('invTax').value;
+            let shippingInputString = document.getElementById('invShipping').value;
+
+            let discountRateValue = parseFloat(discountInputString);
+            if (isNaN(discountRateValue) === true) { discountRateValue = 0; }
+
+            let taxRateValue = parseFloat(taxInputString);
+            if (isNaN(taxRateValue) === true) { taxRateValue = 0; }
+
+            let shippingAmountValue = parseFloat(shippingInputString);
+            if (isNaN(shippingAmountValue) === true) { shippingAmountValue = 0; }
+
+            let discountDeduction = accumulatedSubtotal * (discountRateValue / 100);
+            let discountedSubtotal = accumulatedSubtotal - discountDeduction;
+            let taxAddition = discountedSubtotal * (taxRateValue / 100);
+            
+            let finalGrandTotal = discountedSubtotal + taxAddition + shippingAmountValue;
+
+            document.getElementById('docSubtotal').innerText = formatMoneyString(accumulatedSubtotal, currencySymbol);
+            
+            if (discountRateValue > 0) {
+                document.getElementById('rowDiscount').style.display = 'table-row';
+                document.getElementById('docDiscountRate').innerText = String(discountRateValue);
+                document.getElementById('docDiscountAmount').innerText = "-" + formatMoneyString(discountDeduction, currencySymbol);
+            } else {
+                document.getElementById('rowDiscount').style.display = 'none';
+            }
+
+            if (taxRateValue > 0) {
+                document.getElementById('rowTax').style.display = 'table-row';
+                document.getElementById('docTaxRate').innerText = String(taxRateValue);
+                document.getElementById('docTaxAmount').innerText = formatMoneyString(taxAddition, currencySymbol);
+            } else {
+                document.getElementById('rowTax').style.display = 'none';
+            }
+
+            if (shippingAmountValue > 0) {
+                document.getElementById('rowShipping').style.display = 'table-row';
+                document.getElementById('docShippingAmount').innerText = formatMoneyString(shippingAmountValue, currencySymbol);
+            } else {
+                document.getElementById('rowShipping').style.display = 'none';
+            }
+
+            document.getElementById('docGrandTotal').innerText = formatMoneyString(finalGrandTotal, currencySymbol);
+
+            // V3800 Dual Currency Engine
+            let targetCurrStr = document.getElementById('targetCurrency').value;
+            let exchangeRateStr = document.getElementById('exchangeRate').value;
+            let dualCurrBox = document.getElementById('docDualCurrencyBox');
+
+            if (targetCurrStr.trim() !== "" && exchangeRateStr.trim() !== "") {
+                let rateValue = parseFloat(exchangeRateStr);
+                if (isNaN(rateValue) === false && rateValue > 0) {
+                    let convertedAmount = finalGrandTotal * rateValue;
+                    
+                    // Simple formatting for the secondary currency
+                    let formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    
+                    document.getElementById('docTargetCurrCode').innerText = targetCurrStr.toUpperCase();
+                    document.getElementById('docTargetCurrAmount').innerText = formatter.format(convertedAmount);
+                    dualCurrBox.style.display = "block";
+                } else {
+                    dualCurrBox.style.display = "none";
+                }
+            } else {
+                dualCurrBox.style.display = "none";
+            }
+
+            // Notes & Sign-off processing
+            let signoffString = document.getElementById('invSignoff').value;
+            let notesString = document.getElementById('invNotes').value;
+            let footerElement = document.getElementById('docFooter');
+            let showFooter = false;
+
+            if (signoffString.trim() !== "") {
+                document.getElementById('docSignoffText').innerText = signoffString;
+                document.getElementById('docSignoffText').style.display = 'block';
+                showFooter = true;
+            } else {
+                document.getElementById('docSignoffText').style.display = 'none';
+            }
+
+            if (notesString.trim() !== "") {
+                document.getElementById('docNotesText').innerText = notesString;
+                document.getElementById('docNotesText').style.display = 'block';
+                document.getElementById('docNotesHeader').style.display = 'block';
+                showFooter = true;
+            } else {
+                document.getElementById('docNotesText').style.display = 'none';
+                document.getElementById('docNotesHeader').style.display = 'none';
+            }
+
+            if (showFooter === true) {
+                footerElement.style.display = 'block';
+            } else {
+                footerElement.style.display = 'none';
+            }
+
+            // V3800 Remittance Slip sync
+            document.getElementById('remitToName').innerText = fromNameValue;
+            document.getElementById('remitToAddress').innerText = document.getElementById('fromAddress').value;
+            document.getElementById('remitInvoiceNum').innerText = "#" + invoiceNumberString;
+            document.getElementById('remitAmount').innerText = formatMoneyString(finalGrandTotal, currencySymbol);
+
+            // Always show the slip if an invoice number exists
+            if (invoiceNumberString.trim() !== "") {
+                document.getElementById('docRemittanceBox').style.display = "block";
+            } else {
+                document.getElementById('docRemittanceBox').style.display = "none";
+            }
+        }
+
+        // ==========================================
+        // V2000 NATIVE PRINT ENGINE (NO CLIP)
+        // ==========================================
+        function executeNativePrint() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

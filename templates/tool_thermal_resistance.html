@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thermal Resistance Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .mode-selector {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-label {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .mode-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-red); box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1rem;
+            color: #495057;
+            width: 170px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        .input-label small { font-size: 0.75rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; margin-top: 2px;}
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-label {
+            background: #f8f9fa;
+            border-left: 1px solid #ced4da;
+            padding: 0 15px;
+            font-weight: 800;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .formula-display {
+            background: #212529;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.3rem;
+            text-align: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 110px;
+        }
+        .formula-display span { color: var(--math-orange); font-weight: 800; }
+        .formula-sub { font-size: 0.9rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .result-box.highlight {
+            background: rgba(220, 53, 69, 0.05);
+            border-color: rgba(220, 53, 69, 0.2);
+            grid-column: span 2;
+        }
+
+        .res-label {
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .res-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+        .res-unit { font-size: 1.1rem; color: #adb5bd; }
+        
+        .highlight .res-val { color: var(--math-red); font-size: 2.8rem; margin: 0; }
+        .highlight .res-label { margin: 0; font-size: 1rem; color: var(--math-red); }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
+            min-height: 400px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+            background-image: 
+                linear-gradient(rgba(220, 53, 69, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(220, 53, 69, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #thermalCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .result-grid { grid-template-columns: 1fr; }
+            .result-box.highlight { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-fire-alt"></i> Thermal Parameters
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid numbers.
+            </div>
+
+            <div class="mode-selector">
+                <label class="mode-label">Design Mode:</label>
+                <div class="mode-grid">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="calcMode" id="modeTj" value="Tj" checked onchange="updateMode()">
+                        <label class="form-check-label fw-bold text-danger" for="modeTj">Find Junction Temp (T<sub>j</sub>)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="calcMode" id="modeRha" value="Rha" onchange="updateMode()">
+                        <label class="form-check-label fw-bold text-primary" for="modeRha">Find Heatsink Required (R<sub>ha</sub>)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group-custom" id="grpPd">
+                <div class="input-label text-warning">Power Dissipated <small>(P<sub>d</sub>)</small></div>
+                <input type="number" class="num-input" id="valPd" value="10" step="any" oninput="calculateThermal()">
+                <div class="unit-select text-warning" style="pointer-events: none;">W</div>
+            </div>
+
+            <div class="input-group-custom" id="grpTa">
+                <div class="input-label text-primary">Ambient Air Temp <small>(T<sub>a</sub>)</small></div>
+                <input type="number" class="num-input" id="valTa" value="25" step="any" oninput="calculateThermal()">
+                <div class="unit-select text-primary" style="pointer-events: none;">&deg;C</div>
+            </div>
+
+            <div class="input-group-custom" id="grpRjc">
+                <div class="input-label text-danger">Junction to Case <small>(R<sub>jc</sub>)</small></div>
+                <input type="number" class="num-input" id="valRjc" value="1.5" step="any" oninput="calculateThermal()">
+                <div class="unit-select text-danger" style="pointer-events: none;">&deg;C/W</div>
+            </div>
+
+            <div class="input-group-custom" id="grpRch">
+                <div class="input-label text-orange">Case to Heatsink <small>(Thermal Paste R<sub>ch</sub>)</small></div>
+                <input type="number" class="num-input" id="valRch" value="0.5" step="any" oninput="calculateThermal()">
+                <div class="unit-select text-orange" style="pointer-events: none;">&deg;C/W</div>
+            </div>
+
+            <div class="input-group-custom" id="grpRha">
+                <div class="input-label text-info">Heatsink to Air <small>(R<sub>ha</sub>)</small></div>
+                <input type="number" class="num-input" id="valRha" value="5.0" step="any" oninput="calculateThermal()">
+                <div class="unit-select text-info" style="pointer-events: none;">&deg;C/W</div>
+            </div>
+
+            <div class="input-group-custom" id="grpTjMax" style="display: none;">
+                <div class="input-label text-danger">Max Allowed Junction <small>(Target T<sub>j</sub>)</small></div>
+                <input type="number" class="num-input" id="valTjMax" value="100" step="any" oninput="calculateThermal()">
+                <div class="unit-select text-danger" style="pointer-events: none;">&deg;C</div>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-auto" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Values
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            
+            <div class="formula-display" id="formulaScreen">
+                T<sub>j</sub> = 25 + 10 &times; (1.5 + 0.5 + 5.0)
+                <div class="formula-sub">Formula: T<sub>j</sub> = T<sub>a</sub> + P<sub>d</sub> &times; (R<sub>jc</sub> + R<sub>ch</sub> + R<sub>ha</sub>)</div>
+            </div>
+
+            <div class="result-grid">
+                <div class="result-box highlight" id="heroResultBox">
+                    <div class="res-label" id="mainResLabel">Final Junction Temp (T<sub>j</sub>)</div>
+                    <div class="res-val" id="mainResVal">95.0 <span class="res-unit">&deg;C</span></div>
+                </div>
+                
+                <div class="result-box">
+                    <div class="res-label text-danger">Case Surface Temp (T<sub>c</sub>)</div>
+                    <div class="res-val" id="resTc">80.0 <span class="res-unit">&deg;C</span></div>
+                </div>
+
+                <div class="result-box">
+                    <div class="res-label text-warning">Heatsink Base Temp (T<sub>h</sub>)</div>
+                    <div class="res-val" id="resTh">75.0 <span class="res-unit">&deg;C</span></div>
+                </div>
+            </div>
+
+            <div class="pane-header text-dark border-0 mt-4 mb-2 pb-0">
+                <i class="fas fa-layer-group text-primary"></i> Thermodynamic Stack Heat Map
+            </div>
+
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="thermalCanvas"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valPd = document.getElementById('valPd');
+    const valTa = document.getElementById('valTa');
+    const valRjc = document.getElementById('valRjc');
+    const valRch = document.getElementById('valRch');
+    const valRha = document.getElementById('valRha');
+    const valTjMax = document.getElementById('valTjMax');
+    
+    const grpRha = document.getElementById('grpRha');
+    const grpTjMax = document.getElementById('grpTjMax');
+    
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const heroResultBox = document.getElementById('heroResultBox');
+    const mainResLabel = document.getElementById('mainResLabel');
+    const mainResVal = document.getElementById('mainResVal');
+    const resTc = document.getElementById('resTc');
+    const resTh = document.getElementById('resTh');
+    const formulaScreen = document.getElementById('formulaScreen');
+
+    const canvas = document.getElementById('thermalCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    let mode = 'Tj'; 
+
+    function updateMode() {
+        const radios = document.getElementsByName('calcMode');
+        for (let r of radios) {
+            if (r.checked) mode = r.value;
+        }
+
+        if (mode === 'Tj') {
+            grpRha.style.display = 'flex';
+            grpTjMax.style.display = 'none';
+            mainResLabel.innerText = 'Final Junction Temp (T_j)';
+            heroResultBox.className = 'result-box highlight';
+        } else {
+            grpRha.style.display = 'none';
+            grpTjMax.style.display = 'flex';
+            mainResLabel.innerText = 'Max Heatsink Resistance (R_ha)';
+            heroResultBox.className = 'result-box highlight' ;
+            heroResultBox.style.backgroundColor = 'rgba(13, 110, 253, 0.05)';
+            heroResultBox.style.borderColor = 'rgba(13, 110, 253, 0.2)';
+            mainResVal.style.color = 'var(--math-blue)';
+            mainResLabel.style.color = 'var(--math-blue)';
+        }
+        
+        calculateThermal();
+    }
+
+    function resizeCanvas() {
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        if(cw === 0 || ch === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = cw * dpr;
+        canvas.height = ch * dpr;
+        
+        canvas.style.width = `${cw}px`;
+        canvas.style.height = `${ch}px`;
+        
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        calculateThermal();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function roundSafe(num) {
+        return (Math.round(num * 100) / 100).toFixed(2);
+    }
+
+    // --- MATH ENGINE ---
+    function calculateThermal() {
+        const pd = parseFloat(valPd.value);
+        const ta = parseFloat(valTa.value);
+        const rjc = parseFloat(valRjc.value);
+        const rch = parseFloat(valRch.value);
+
+        let isError = false;
+        let errMsg = "Please enter valid numerical values.";
+
+        let tj = 0, tc = 0, th = 0, rha = 0;
+
+        if (mode === 'Tj') {
+            rha = parseFloat(valRha.value);
+            if (isNaN(pd) || isNaN(ta) || isNaN(rjc) || isNaN(rch) || isNaN(rha) || pd < 0 || rjc < 0 || rch < 0 || rha < 0) {
+                isError = true;
+            } else {
+                // Tj = Ta + Pd*(Rjc + Rch + Rha)
+                tj = ta + (pd * (rjc + rch + rha));
+                tc = tj - (pd * rjc);
+                th = tc - (pd * rch);
+
+                formulaScreen.innerHTML = `T<sub>j</sub> = <span>${ta}</span> + <span>${pd}</span> &times; (<span>${rjc}</span> + <span>${rch}</span> + <span>${rha}</span>)<div class="formula-sub">Formula: T<sub>j</sub> = T<sub>a</sub> + P<sub>d</sub> &times; (R<sub>jc</sub> + R<sub>ch</sub> + R<sub>ha</sub>)</div>`;
+                mainResVal.innerHTML = `${roundSafe(tj)} <span class="res-unit">&deg;C</span>`;
+                
+                // Color coding for danger level
+                if(tj >= 125) {
+                    mainResVal.style.color = '#dc3545'; // Danger Red
+                } else if(tj >= 100) {
+                    mainResVal.style.color = '#fd7e14'; // Warning Orange
+                } else {
+                    mainResVal.style.color = '#dc3545'; // Standard Red
+                }
+            }
+        } else {
+            // Find Rha
+            tj = parseFloat(valTjMax.value);
+            if (isNaN(pd) || isNaN(ta) || isNaN(rjc) || isNaN(rch) || isNaN(tj) || pd <= 0 || rjc < 0 || rch < 0) {
+                isError = true;
+            } else if (ta >= tj) {
+                isError = true;
+                errMsg = "Ambient temp must be lower than Max Junction temp.";
+            } else {
+                // Rha = ((Tj - Ta) / Pd) - Rjc - Rch
+                rha = ((tj - ta) / pd) - rjc - rch;
+                
+                tc = tj - (pd * rjc);
+                th = tc - (pd * rch);
+
+                formulaScreen.innerHTML = `R<sub>ha</sub> = [(<span>${tj}</span> - <span>${ta}</span>) / <span>${pd}</span>] - <span>${rjc}</span> - <span>${rch}</span><div class="formula-sub">Formula: R<sub>ha</sub> = [(T<sub>j</sub> - T<sub>a</sub>) / P<sub>d</sub>] - R<sub>jc</sub> - R<sub>ch</sub></div>`;
+                
+                if (rha < 0) {
+                    mainResVal.innerHTML = `Impossible <span class="res-unit">Cooling</span>`;
+                    mainResVal.style.color = '#dc3545';
+                    errMsg = "Target temperature is physically impossible with current thermal paste/case resistance. Lower power or improve Rjc/Rch.";
+                    isError = true; // Still calculate to show error banner but preserve some UI
+                } else {
+                    mainResVal.innerHTML = `${roundSafe(rha)} <span class="res-unit">&deg;C/W</span>`;
+                    mainResVal.style.color = '#0d6efd';
+                }
+            }
+        }
+
+        if (isError && mainResVal.innerText.includes('Impossible')) {
+            errorBanner.style.display = 'block';
+            errorBanner.innerText = errMsg;
+            // Don't early return, let it draw the failing stack
+        } else if (isError) {
+            errorBanner.style.display = 'block';
+            errorBanner.innerText = errMsg;
+            resetOutputs();
+            return;
+        } else {
+            errorBanner.style.display = 'none';
+        }
+
+        resTc.innerHTML = `${roundSafe(tc)} <span class="res-unit">&deg;C</span>`;
+        resTh.innerHTML = `${roundSafe(th)} <span class="res-unit">&deg;C</span>`;
+
+        drawStack(ta, th, tc, tj);
+    }
+
+    // Heat Color Mapper: 25C (Blue) -> 125C (Red)
+    function getTempColor(temp) {
+        if (temp <= 25) return 'rgb(13, 110, 253)'; // Blue
+        if (temp >= 125) return 'rgb(220, 53, 69)'; // Red
+        
+        // Map 25-125 to 0-1
+        let ratio = (temp - 25) / 100;
+        
+        // Simple RGB interpolation: Blue(13,110,253) -> Yellow(253,126,20) -> Red(220,53,69)
+        let r, g, b;
+        if (ratio < 0.5) {
+            let r2 = ratio * 2; // 0 to 1
+            r = Math.round(13 + (253 - 13) * r2);
+            g = Math.round(110 + (126 - 110) * r2);
+            b = Math.round(253 + (20 - 253) * r2);
+        } else {
+            let r2 = (ratio - 0.5) * 2; // 0 to 1
+            r = Math.round(253 + (220 - 253) * r2);
+            g = Math.round(126 + (53 - 126) * r2);
+            b = Math.round(20 + (69 - 20) * r2);
+        }
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    // --- CANVAS THERMODYNAMIC STACK ENGINE ---
+    function drawStack(ta, th, tc, tj) {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        ctx.clearRect(0, 0, cw, ch);
+
+        // Auto Scaling variables
+        const padding = ch * 0.1;
+        const stackW = Math.min(cw * 0.4, 250);
+        const cx = cw / 2;
+        const startX = cx - (stackW / 2);
+        
+        // Heights of components
+        const hDie = (ch - padding*2) * 0.15;
+        const hCase = (ch - padding*2) * 0.20;
+        const hPaste = (ch - padding*2) * 0.05;
+        const hSink = (ch - padding*2) * 0.40;
+        const hAir = (ch - padding*2) * 0.20;
+
+        let currentY = ch - padding; // Draw from bottom up
+
+        // Function to draw block and gradient
+        const drawBlock = (y, height, width, cBottom, cTop, label, border) => {
+            const topY = y - height;
+            
+            // Fill gradient
+            let grad = ctx.createLinearGradient(0, y, 0, topY);
+            grad.addColorStop(0, cBottom);
+            grad.addColorStop(1, cTop);
+            
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.rect(cx - width/2, topY, width, height);
+            ctx.fill();
+
+            // Border
+            ctx.strokeStyle = border;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Label
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px "Fira Code", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Text shadow for readability
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowBlur = 4;
+            ctx.fillText(label, cx, topY + height/2);
+            ctx.shadowBlur = 0; // reset
+
+            return topY;
+        };
+
+        const drawInterfaceLabel = (y, tempStr, labelRight) => {
+            ctx.fillStyle = '#212529';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            
+            // Draw Line
+            ctx.beginPath();
+            ctx.moveTo(cx + stackW/2, y);
+            ctx.lineTo(cx + stackW/2 + 20, y);
+            ctx.strokeStyle = '#adb5bd';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillText(tempStr, cx + stackW/2 + 25, y);
+            
+            ctx.fillStyle = '#6c757d';
+            ctx.font = '12px Arial';
+            ctx.fillText(labelRight, cx + stackW/2 + 25, y + 16);
+        };
+
+        // 1. Draw Die (Junction)
+        const cJunction = getTempColor(tj);
+        const cCaseBot = getTempColor(tj - (tj-tc)*0.5); // mid temp
+        let nextY = drawBlock(currentY, hDie, stackW * 0.6, cJunction, cCaseBot, 'DIE (Junction)', '#8B0000');
+        drawInterfaceLabel(currentY, `${roundSafe(tj)}°C`, 'Max Junction (Tj)');
+
+        // 2. Draw Package Case
+        const cCaseTop = getTempColor(tc);
+        nextY = drawBlock(nextY, hCase, stackW * 0.8, cCaseBot, cCaseTop, 'IC PACKAGE CASE', '#495057');
+        drawInterfaceLabel(nextY + hCase, `${roundSafe(tc)}°C`, 'Case Surface (Tc)');
+
+        // 3. Draw TIM (Thermal Paste)
+        const cSinkBot = getTempColor(th);
+        nextY = drawBlock(nextY, hPaste, stackW * 0.8, cCaseTop, cSinkBot, 'TIM', '#adb5bd');
+        
+        // 4. Draw Heatsink
+        const cSinkTop = getTempColor(ta + (th-ta)*0.3); // Heatsink gets cooler at top
+        nextY = drawBlock(nextY, hSink, stackW, cSinkBot, cSinkTop, 'ALUMINUM HEATSINK', '#0d6efd');
+        drawInterfaceLabel(nextY + hSink, `${roundSafe(th)}°C`, 'Heatsink Base (Th)');
+
+        // 5. Draw Ambient Air (Fade to transparent)
+        const cAir = getTempColor(ta);
+        
+        let grad = ctx.createLinearGradient(0, nextY, 0, nextY - hAir);
+        grad.addColorStop(0, cSinkTop);
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        // Heat radiating wider
+        ctx.moveTo(cx - stackW/2, nextY);
+        ctx.lineTo(cx + stackW/2, nextY);
+        ctx.lineTo(cx + stackW, nextY - hAir);
+        ctx.lineTo(cx - stackW, nextY - hAir);
+        ctx.closePath();
+        ctx.fill();
+
+        drawInterfaceLabel(nextY, `${roundSafe(ta)}°C`, 'Ambient Air (Ta)');
+        
+        // Add Heat Arrows going up
+        ctx.strokeStyle = 'rgba(220, 53, 69, 0.5)';
+        ctx.lineWidth = 3;
+        
+        const drawArrow = (xOffset) => {
+            ctx.beginPath();
+            ctx.moveTo(cx + xOffset, currentY - 10);
+            ctx.lineTo(cx + xOffset, nextY - hAir/2);
+            ctx.stroke();
+            // Arrow head
+            ctx.beginPath();
+            ctx.moveTo(cx + xOffset - 5, nextY - hAir/2 + 10);
+            ctx.lineTo(cx + xOffset, nextY - hAir/2);
+            ctx.lineTo(cx + xOffset + 5, nextY - hAir/2 + 10);
+            ctx.stroke();
+        };
+
+        drawArrow(0);
+        drawArrow(-40);
+        drawArrow(40);
+    }
+
+    function resetOutputs() {
+        mainResVal.innerHTML = '--';
+        resTc.innerHTML = '-- <span class="res-unit">&deg;C</span>';
+        resTh.innerHTML = '-- <span class="res-unit">&deg;C</span>';
+        formulaScreen.innerHTML = `Awaiting valid input...<div class="formula-sub">T<sub>j</sub> = T<sub>a</sub> + P<sub>d</sub> &times; (R<sub>jc</sub> + R<sub>ch</sub> + R<sub>ha</sub>)</div>`;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function clearInputs() {
+        valPd.value = '';
+        valTa.value = '';
+        valRjc.value = '';
+        valRch.value = '';
+        valRha.value = '';
+        valTjMax.value = '';
+        errorBanner.style.display = 'block';
+        errorBanner.innerText = 'Waiting for input...';
+        resetOutputs();
+    }
+
+    // SAFE INIT
+    setTimeout(() => {
+        updateMode();
+        resizeCanvas();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

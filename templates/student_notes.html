@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Notes | LASU Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
+    <style>
+        body { background: #f8f9fa; height: 100vh; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        
+        /* --- LAYOUT CONTAINER --- */
+        .notes-container { display: flex; height: 100vh; width: 100%; }
+        
+        /* --- SIDEBAR STYLING --- */
+        .notes-sidebar { 
+            width: 320px; 
+            min-width: 320px; /* Force fixed width */
+            background: #fff; 
+            border-right: 1px solid #e0e0e0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100%;
+            z-index: 10;
+        }
+
+        .sidebar-header { 
+            padding: 20px; 
+            background: #fff; 
+            border-bottom: 1px solid #f0f0f0; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-actions {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .btn-new-note {
+            width: 100%;
+            background: #e8f5e9;
+            color: #198754;
+            border: 1px solid #198754;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 8px;
+            transition: 0.2s;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        .btn-new-note:hover { background: #198754; color: #fff; }
+
+        /* --- NOTE LIST ITEMS --- */
+        .notes-list { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 0;
+        }
+
+        .note-item { 
+            display: block;
+            padding: 18px 25px; 
+            border-bottom: 1px solid #f0f0f0; 
+            cursor: pointer; 
+            transition: background 0.2s; 
+            position: relative;
+            text-decoration: none;
+        }
+
+        .note-item:hover { background-color: #f8f9fa; }
+        
+        .note-item.active { 
+            background-color: #e3f2fd; 
+            border-right: 4px solid #0d6efd; 
+        }
+        
+        .note-title { 
+            font-size: 1rem; 
+            font-weight: 700; 
+            color: #333; 
+            display: block; 
+            margin-bottom: 5px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+        
+        .note-date { 
+            font-size: 0.8rem; 
+            color: #888; 
+            display: block;
+        }
+
+        /* Delete Button on Hover */
+        .delete-btn-wrapper {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            display: none; /* Hidden by default */
+        }
+        .note-item:hover .delete-btn-wrapper { display: block; }
+
+        /* --- EDITOR AREA --- */
+        .editor-area { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            background: #fff; 
+            height: 100%;
+        }
+        
+        .editor-header { 
+            padding: 20px 40px; 
+            border-bottom: 1px solid #eee; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            background: #fff;
+        }
+        
+        .title-input { 
+            border: none; 
+            font-size: 1.8rem; 
+            font-weight: 700; 
+            width: 70%; 
+            outline: none; 
+            color: #2c3e50;
+            background: transparent;
+        }
+        .title-input::placeholder { color: #ccc; }
+
+        /* Markdown Editor Tweaks */
+        .CodeMirror { 
+            border: none; 
+            height: calc(100vh - 100px); 
+            font-size: 1.1rem; 
+            padding: 20px 40px; 
+            color: #333;
+            background: #fff;
+        }
+        .editor-toolbar { 
+            border: none; 
+            background: #f9f9f9; 
+            padding: 0 20px; 
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+
+<div class="notes-container">
+    <div class="notes-sidebar">
+        <div class="sidebar-header">
+            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-book me-2 text-primary"></i>My Notebook</h5>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-sm btn-light border" title="Close"><i class="fas fa-times"></i></a>
+        </div>
+        
+        <div class="sidebar-actions">
+            <a href="{{ url_for('student_notes') }}" class="btn-new-note">
+                <i class="fas fa-plus me-2"></i> Create New Note
+            </a>
+        </div>
+        
+        <div class="notes-list">
+            {% if notes %}
+                {% for note in notes %}
+                <div class="note-item {% if selected_note and selected_note.id == note.id %}active{% endif %}">
+                    <a href="{{ url_for('student_notes', edit=note.id) }}" class="text-decoration-none d-block">
+                        <span class="note-title">{{ note.title }}</span>
+                        <span class="note-date">
+                            <i class="far fa-clock me-1"></i> {{ note.last_updated.strftime('%d %b, %I:%M %p') }}
+                        </span>
+                    </a>
+                    
+                    <div class="delete-btn-wrapper">
+                        <form action="{{ url_for('delete_note', id=note.id) }}" method="POST" onsubmit="return confirm('Delete this note permanently?');">
+                            <button class="btn btn-sm btn-outline-danger border-0 rounded-circle" style="width: 30px; height: 30px;">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center mt-5 text-muted">
+                    <i class="far fa-folder-open fa-3x mb-3 opacity-50"></i>
+                    <p>No notes yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="editor-area">
+        <form action="{{ url_for('save_personal_note') }}" method="POST" id="noteForm" class="h-100 d-flex flex-column">
+            {% if selected_note %}
+                <input type="hidden" name="note_id" value="{{ selected_note.id }}">
+            {% endif %}
+            
+            <div class="editor-header">
+                <input type="text" name="title" class="title-input" placeholder="Untitled Note" value="{{ selected_note.title if selected_note else '' }}" required autocomplete="off">
+                
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted small fst-italic" id="saveStatus"></span>
+                    <button type="submit" class="btn btn-success px-4 fw-bold rounded-pill">
+                        <i class="fas fa-save me-2"></i> Save
+                    </button>
+                </div>
+            </div>
+            
+            <textarea name="content" id="markdown-editor">{{ selected_note.content if selected_note else '' }}</textarea>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+<script>
+    var simplemde = new SimpleMDE({ 
+        element: document.getElementById("markdown-editor"),
+        placeholder: "Start typing your lecture notes, ideas, or drafts here...",
+        spellChecker: false,
+        status: false, // Hide bottom status bar for cleaner look
+        toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
+    });
+
+    // Simple auto-save visual indicator
+    simplemde.codemirror.on("change", function(){
+        document.getElementById("saveStatus").innerText = "Unsaved changes...";
+        document.getElementById("saveStatus").style.color = "#dc3545";
+    });
+</script>
+
+</body>
+</html>

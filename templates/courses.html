@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Courses | LASU {{ session.role | capitalize }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">LASU {{ session.role | upper }}</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="{{ url_for('dashboard') }}">Overview</a>
+            <a class="nav-link" href="{{ url_for('student_list') }}">Students</a>
+            <a class="nav-link active fw-bold" href="#">Courses</a>
+            <a class="nav-link" href="{{ url_for('manage_timetable') }}">📅 Time-Table</a>
+            <a class="nav-link" href="{{ url_for('manage_quizzes') }}">🖥️ CBT / Tests</a>
+            <a class="nav-link" href="{{ url_for('course_analysis') }}">Analysis</a>
+            <a class="nav-link text-success fw-bold" href="{{ url_for('bursary_dashboard') }}">₦ Finance</a>
+            <a class="nav-link" href="{{ url_for('activity_log') }}">Logs</a>
+            <a class="nav-link" href="{{ url_for('settings') }}">Settings</a>
+            <span class="navbar-text ms-3 text-white">{{ session.user_name }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-md-8">
+            <h3>📚 Course Management</h3>
+            <p class="text-muted">Add or remove courses available for student grading.</p>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white fw-bold">Available Courses</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 120px;">Code</th>
+                                    <th>Title</th>
+                                    <th style="width: 80px;">Units</th>
+                                    <th>Course Materials</th>
+                                    <th class="text-end" style="width: 250px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in courses %}
+                                <tr>
+                                    <td class="text-nowrap fw-bold text-primary">{{ course.code }}</td>
+                                    
+                                    <td>
+                                        {{ course.title }}<br>
+                                        <small class="text-muted">{{ course.students|length }} Students</small>
+                                    </td>
+                                    <td>{{ course.units }}</td>
+                                    
+                                    <td>
+                                        <form action="{{ url_for('upload_course_pdf', course_id=course.id) }}" method="POST" enctype="multipart/form-data" class="d-flex gap-1 align-items-center">
+                                            {% if course.materials %}
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        {{ course.materials|length }} Files
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        {% for mat in course.materials %}
+                                                            <li><a class="dropdown-item small" href="{{ url_for('download_material_direct', material_id=mat.id) }}">📄 {{ mat.title }}</a></li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            {% else %}
+                                                <span class="badge bg-secondary">No files yet</span>
+                                            {% endif %}
+                                            
+                                            <div class="input-group input-group-sm" style="width: 130px;">
+                                                <label class="btn btn-outline-secondary btn-sm" for="upload_{{ course.id }}" style="cursor: pointer;">Choose Files</label>
+                                                <input type="file" class="d-none" id="upload_{{ course.id }}" name="file" multiple onchange="this.form.submit()">
+                                            </div>
+                                            <button type="submit" class="d-none">⬆</button>
+                                        </form>
+                                    </td>
+
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('input_results', course_id=course.id) }}" class="btn btn-warning text-dark fw-bold" title="Input Scores">📝</a>
+                                            <a href="{{ url_for('admin_register_student', course_id=course.id) }}" class="btn btn-primary" title="Register Student">+</a>
+                                            
+                                            <a href="{{ url_for('mark_daily_attendance', course_id=course.id) }}" class="btn btn-info text-white fw-bold" title="Mark Attendance">📅</a>
+
+                                            <a href="{{ url_for('manage_assignments', course_id=course.id) }}" class="btn btn-success" title="Assignments">HW</a>
+                                            <form action="{{ url_for('delete_course', id=course.id) }}" method="POST" onsubmit="return confirm('Are you sure? This will delete ALL grades for this course!');" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete Course">🗑</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No courses added yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Add New Course</h5>
+                    <form action="{{ url_for('manage_courses') }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Course Code</label>
+                            <input type="text" name="code" class="form-control" placeholder="e.g. MTH 201" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Course Title</label>
+                            <input type="text" name="title" class="form-control" placeholder="e.g. Linear Algebra" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Units</label>
+                            <input type="number" name="units" class="form-control" value="3" min="1" max="6" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Create Course</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-body bg-light">
+                    <h6>Quick Stats</h6>
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-1">📚 Total Courses: <strong>{{ courses|length }}</strong></li>
+                        {% set ns = namespace(total=0) %}
+                        {% for c in courses %}
+                            {% set ns.total = ns.total + c.students|length %}
+                        {% endfor %}
+                        <li class="mb-1">👥 Total Students Registered: <strong>{{ ns.total }}</strong> (Cumulative)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procedural Soundscape Generator | Tool</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --surface: #1e293b;
+            --background: #020617;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --accent: #38bdf8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            padding: 2rem;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* Animated Ambient Background */
+        .ambient-bg {
+            position: fixed;
+            top: -50%; left: -50%; right: -50%; bottom: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 60%);
+            z-index: -1;
+            animation: breathe 10s infinite alternate ease-in-out;
+            opacity: 0.5;
+        }
+
+        @keyframes breathe {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .app-container { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
+
+        .header { margin-bottom: 3rem; text-align: center; }
+        .back-link { color: var(--accent); text-decoration: none; font-weight: 600; display: inline-block; margin-bottom: 1rem; }
+        
+        .master-control {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .btn-master {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 4px solid var(--border);
+            color: var(--text-main);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .btn-master span { font-size: 0.8rem; font-weight: bold; letter-spacing: 1px; color: var(--text-muted); }
+
+        .btn-master.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+            transform: scale(1.05);
+        }
+        .btn-master.active span { color: var(--accent); }
+
+        .mixer-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .channel-strip {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .channel-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #cbd5e1;
+        }
+
+        .channel-desc { font-size: 0.8rem; color: var(--text-muted); text-align: center; height: 40px; }
+
+        /* Custom Vertical Sliders */
+        .slider-wrapper {
+            height: 150px;
+            display: flex;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 130px;
+            height: 6px;
+            background: #0f172a;
+            border-radius: 3px;
+            outline: none;
+            transform: rotate(-90deg);
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--text-main);
+            border: 2px solid var(--surface);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            transition: 0.2s;
+        }
+
+        input[type="range"]:focus::-webkit-slider-thumb { background: var(--accent); transform: scale(1.2); }
+
+        .volume-readout { font-family: monospace; font-size: 1.2rem; font-weight: bold; color: var(--accent); }
+
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="ambient-bg"></div>
+
+<div class="app-container">
+    <div class="header">
+        <a href="{{ url_for('student_portal') }}" class="back-link">← Back To Dashboard</a>
+        <h1>Procedural Soundscape</h1>
+        <p style="color: var(--text-muted);">Mix synthetic acoustic profiles for deep focus or relaxation.</p>
+    </div>
+
+    <div class="master-control">
+        <button class="btn-master" id="masterToggle">
+            <i class="fas fa-power-off"></i>
+            <span id="masterStatus">OFF</span>
+        </button>
+    </div>
+
+    <div class="mixer-board">
+        <div class="channel-strip">
+            <div class="channel-header"><i class="fas fa-tv"></i> White Noise</div>
+            <div class="channel-desc">Equal energy across all frequencies. Like television static.</div>
+            <div class="slider-wrapper">
+                <input type="range" id="volWhite" min="0" max="100" value="0">
+            </div>
+            <div class="volume-readout" id="readoutWhite">0%</div>
+        </div>
+
+        <div class="channel-strip">
+            <div class="channel-header"><i class="fas fa-wave-square" style="color: #ec4899;"></i> Pink Noise</div>
+            <div class="channel-desc">Lower frequencies are louder. Sounds like steady rainfall or wind.</div>
+            <div class="slider-wrapper">
+                <input type="range" id="volPink" min="0" max="100" value="0">
+            </div>
+            <div class="volume-readout" id="readoutPink">0%</div>
+        </div>
+
+        <div class="channel-strip">
+            <div class="channel-header"><i class="fas fa-water" style="color: #8b5cf6;"></i> Brown Noise</div>
+            <div class="channel-desc">Deep frequency dominance. Sounds like a distant waterfall or ocean rumble.</div>
+            <div class="slider-wrapper">
+                <input type="range" id="volBrown" min="0" max="100" value="50">
+            </div>
+            <div class="volume-readout" id="readoutBrown">50%</div>
+        </div>
+
+        <div class="channel-strip">
+            <div class="channel-header"><i class="fas fa-cloud-rain" style="color: #38bdf8;"></i> Rain Sim</div>
+            <div class="channel-desc">Filtered acoustic modulation mimicking heavy precipitation.</div>
+            <div class="slider-wrapper">
+                <input type="range" id="volRain" min="0" max="100" value="50">
+            </div>
+            <div class="volume-readout" id="readoutRain">50%</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Enterprise Procedural Audio Engine
+     * Generates endless, non-repeating acoustic algorithms directly in RAM.
+     */
+    class AmbientEngine {
+        constructor() {
+            this.audioCtx = null;
+            this.isPlaying = false;
+            
+            // Nodes
+            this.masterGain = null;
+            this.sources = {};
+            this.gains = {};
+
+            this.channels = ['White', 'Pink', 'Brown', 'Rain'];
+            
+            this.initBindings();
+        }
+
+        initBindings() {
+            document.getElementById('masterToggle').addEventListener('click', () => this.toggleEngine());
+
+            this.channels.forEach(ch => {
+                const slider = document.getElementById(`vol${ch}`);
+                const readout = document.getElementById(`readout${ch}`);
+                
+                slider.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    readout.textContent = `${val}%`;
+                    if (this.isPlaying && this.gains[ch.toLowerCase()]) {
+                        // Exponential curve for natural volume perception
+                        const gainValue = Math.pow(val / 100, 2);
+                        // Smooth transition to prevent audio pops
+                        this.gains[ch.toLowerCase()].gain.setTargetAtTime(gainValue, this.audioCtx.currentTime + 0.05);
+                    }
+                });
+            });
+        }
+
+        toggleEngine() {
+            const btn = document.getElementById('masterToggle');
+            const status = document.getElementById('masterStatus');
+
+            if (this.isPlaying) {
+                this.audioCtx.suspend();
+                this.isPlaying = false;
+                btn.classList.remove('active');
+                status.textContent = 'OFF';
+            } else {
+                if (!this.audioCtx) this.buildArchitecture();
+                this.audioCtx.resume();
+                this.isPlaying = true;
+                btn.classList.add('active');
+                status.textContent = 'ON';
+            }
+        }
+
+        buildArchitecture() {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.audioCtx.createGain();
+            
+            // Limit master output to prevent digital clipping
+            this.masterGain.gain.value = 0.5; 
+            this.masterGain.connect(this.audioCtx.destination);
+
+            // Generate 5 seconds of algorithmic audio per channel (loops infinitely)
+            const bufferSize = this.audioCtx.sampleRate * 5; 
+            
+            this.setupWhiteNoise(bufferSize);
+            this.setupPinkNoise(bufferSize);
+            this.setupBrownNoise(bufferSize);
+            this.setupRainSim(bufferSize);
+        }
+
+        createChannel(id, buffer) {
+            const source = this.audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.loop = true;
+
+            const gainNode = this.audioCtx.createGain();
+            const initialVol = document.getElementById(`vol${id}`).value;
+            gainNode.gain.value = Math.pow(initialVol / 100, 2);
+
+            source.connect(gainNode);
+            
+            this.sources[id.toLowerCase()] = source;
+            this.gains[id.toLowerCase()] = gainNode;
+
+            source.start();
+            return gainNode;
+        }
+
+        setupWhiteNoise(bufferSize) {
+            const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+            const output = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            const gainNode = this.createChannel('White', buffer);
+            gainNode.connect(this.masterGain);
+        }
+
+        setupPinkNoise(bufferSize) {
+            const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+            const output = buffer.getChannelData(0);
+            // Voss Algorithm for Pink Noise approximation
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                let white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+                b6 = white * 0.115926;
+            }
+            const gainNode = this.createChannel('Pink', buffer);
+            gainNode.connect(this.masterGain);
+        }
+
+        setupBrownNoise(bufferSize) {
+            const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+            const output = buffer.getChannelData(0);
+            let lastOut = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                let white = Math.random() * 2 - 1;
+                output[i] = (lastOut + (0.02 * white)) / 1.02;
+                lastOut = output[i];
+                output[i] *= 3.5; // Compensate for gain loss
+            }
+            const gainNode = this.createChannel('Brown', buffer);
+            gainNode.connect(this.masterGain);
+        }
+
+        setupRainSim(bufferSize) {
+            // Rain is synthesized using Pink noise heavily passed through a lowpass filter, 
+            // mixed with a highpass filter to mimic droplets.
+            const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+            const output = buffer.getChannelData(0);
+            
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                let white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+                b6 = white * 0.115926;
+            }
+
+            const source = this.audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.loop = true;
+
+            const lpFilter = this.audioCtx.createBiquadFilter();
+            lpFilter.type = 'lowpass';
+            lpFilter.frequency.value = 1200; // Muffles the pink noise to sound like heavy rain
+            
+            const gainNode = this.audioCtx.createGain();
+            const initialVol = document.getElementById('volRain').value;
+            gainNode.gain.value = Math.pow(initialVol / 100, 2);
+
+            source.connect(lpFilter);
+            lpFilter.connect(gainNode);
+            gainNode.connect(this.masterGain);
+
+            this.sources['rain'] = source;
+            this.gains['rain'] = gainNode;
+            
+            source.start();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => new AmbientEngine());
+</script>
+
+</body>
+</html>

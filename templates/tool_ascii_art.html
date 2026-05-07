@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Art Generator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            
+            /* Dynamic Terminal Variables */
+            --terminal-bg: #1e1e1e;
+            --terminal-fg: #00ff00;
+            --terminal-glow: rgba(0, 255, 0, 0.3);
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        
+        .back-btn:hover { 
+            opacity: 0.8; color: white; 
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        /* Controls Pane */
+        .controls-pane {
+            flex: 0 0 350px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .control-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 700;
+            color: var(--lasu-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-area {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            flex: 1;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        .input-text {
+            resize: none;
+            font-family: 'Fira Code', monospace;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 12px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+        }
+        
+        .input-text:focus {
+            border-color: var(--lasu-green);
+            box-shadow: inset 0 0 0 1px var(--lasu-green);
+            outline: none;
+        }
+
+        .form-select, .form-control {
+            font-size: 0.95rem;
+        }
+
+        /* Output Pane */
+        .output-pane {
+            flex: 1;
+            background: var(--terminal-bg);
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            transition: background 0.3s ease;
+        }
+
+        .pane-header {
+            background: rgba(0,0,0,0.4);
+            padding: 12px 20px;
+            border-bottom: 1px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .terminal-dots {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .dot {
+            width: 12px; 
+            height: 12px; 
+            border-radius: 50%;
+        }
+        
+        .dot-red { background-color: #ff5f56; }
+        .dot-yellow { background-color: #ffbd2e; }
+        .dot-green { background-color: #27c93f; }
+
+        .ascii-output {
+            flex-grow: 1;
+            padding: 25px;
+            overflow: auto;
+            color: var(--terminal-fg);
+            font-family: 'Fira Code', Consolas, Monaco, monospace;
+            font-size: 14px;
+            line-height: 1.2;
+            white-space: pre;
+            text-shadow: 0 0 8px var(--terminal-glow);
+            margin: 0;
+            background-color: transparent;
+            border: none;
+            outline: none;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            /* Default alignment */
+            text-align: left;
+        }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            z-index: 1050;
+            display: none; 
+            min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .controls-pane { flex: none; width: 100%; }
+            .output-pane { min-height: 50vh; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-pane">
+        <div class="control-header">
+            <i class="fas fa-sliders-h"></i> Art Settings
+        </div>
+
+        <div class="form-area">
+            <div>
+                <label class="form-label">Text to Convert</label>
+                <textarea class="input-text w-100" id="textInput" rows="3" placeholder="Enter text..." oninput="generateAscii()">LASU IS THE BEST STATE UNIVERSITY IN NIGERIA</textarea>
+            </div>
+
+            <div>
+                <label class="form-label">Font Style / Fill Character</label>
+                <select class="form-select" id="fontSelect" onchange="toggleCustomInput()">
+                    <option value="Standard">Standard Block</option>
+                    <option value="Wide">Wide Block</option>
+                    <option value="Hash">Retro Hash (##)</option>
+                    <option value="Cyber">Cyber Matrix (01)</option>
+                    <option value="Ghost">Ghost Mode (░░)</option>
+                    <option value="Money">Hacker Green ($$)</option>
+                    <option value="Custom">Custom Build...</option>
+                </select>
+            </div>
+
+            <div id="customCharDiv" style="display: none;">
+                <label class="form-label text-primary">Custom Character</label>
+                <input type="text" class="form-control border-primary" id="customCharInput" maxlength="3" value="@" placeholder="e.g. @ or *" oninput="generateAscii()">
+            </div>
+
+            <div class="row g-2">
+                <div class="col-6">
+                    <label class="form-label">Theme</label>
+                    <select class="form-select" id="themeSelect" onchange="changeTheme()">
+                        <option value="matrix">Matrix Green</option>
+                        <option value="cyan">Cyber Cyan</option>
+                        <option value="amber">Retro Amber</option>
+                        <option value="blood">Blood Red</option>
+                        <option value="white">Ghost White</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label class="form-label">Alignment</label>
+                    <select class="form-select" id="alignSelect" onchange="changeAlignment()">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="alert alert-success py-2 mt-2 mb-0 small border-0 shadow-sm">
+                <i class="fas fa-shield-alt me-1"></i> Offline God Mode Active.
+            </div>
+
+            <hr class="my-0 mt-2">
+
+            <button class="btn btn-outline-danger w-100" onclick="clearText()">
+                <i class="fas fa-eraser me-1"></i> Clear Board
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="pane-header">
+            <div class="terminal-dots">
+                <div class="dot dot-red"></div>
+                <div class="dot dot-yellow"></div>
+                <div class="dot dot-green"></div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-light" onclick="copyAscii()">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+                <button class="btn btn-sm btn-outline-light" onclick="downloadAscii()">
+                    <i class="fas fa-download"></i> Save
+                </button>
+            </div>
+        </div>
+        
+        <textarea id="asciiOutput" class="ascii-output" readonly spellcheck="false"></textarea>
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    // ---------------------------------------------------------
+    // THE OFFLINE, ZERO-DEPENDENCY, FIREWALL-IMMUNE ASCII ENGINE
+    // (LOCKED DOWN: DO NOT MODIFY THIS ENGINE BLOCK)
+    // ---------------------------------------------------------
+    
+    // 5x5 Bitmask Map
+    const font5x5 = {
+        'A': [14,17,31,17,17], 'B': [30,17,30,17,30], 'C': [14,17,16,17,14], 'D': [30,17,17,17,30],
+        'E': [31,16,30,16,31], 'F': [31,16,30,16,16], 'G': [14,16,23,17,14], 'H': [17,17,31,17,17],
+        'I': [14,4,4,4,14], 'J': [15,2,2,18,12], 'K': [17,18,28,18,17], 'L': [16,16,16,16,31],
+        'M': [17,27,21,17,17], 'N': [17,25,21,19,17], 'O': [14,17,17,17,14], 'P': [30,17,30,16,16],
+        'Q': [14,17,21,18,13], 'R': [30,17,30,18,17], 'S': [15,16,14,1,30], 'T': [31,4,4,4,4],
+        'U': [17,17,17,17,14], 'V': [17,17,17,10,4], 'W': [17,17,21,21,10], 'X': [17,10,4,10,17],
+        'Y': [17,10,4,4,4], 'Z': [31,2,4,8,31],
+        '0': [14,17,17,17,14], '1': [4,12,4,4,14], '2': [14,17,2,4,31], '3': [31,2,14,2,31],
+        '4': [10,10,31,2,2], '5': [31,16,30,1,30], '6': [14,16,30,17,14], '7': [31,2,4,8,16],
+        '8': [14,17,14,17,14], '9': [14,17,15,1,14],
+        ' ': [0,0,0,0,0], '.': [0,0,0,12,12], ',': [0,0,0,12,8], '!': [4,4,4,0,4], '?': [14,17,2,0,4], '-': [0,0,14,0,0]
+    };
+
+    // UI Elements
+    const textInput = document.getElementById('textInput');
+    const fontSelect = document.getElementById('fontSelect');
+    const customCharDiv = document.getElementById('customCharDiv');
+    const customCharInput = document.getElementById('customCharInput');
+    const asciiOutput = document.getElementById('asciiOutput');
+    const alignSelect = document.getElementById('alignSelect');
+    const toastBox = document.getElementById('toastBox');
+
+    // ---------------------------------------------------------
+    // NEW FEATURE 1: Custom Character Toggle
+    // ---------------------------------------------------------
+    function toggleCustomInput() {
+        if (fontSelect.value === "Custom") {
+            customCharDiv.style.display = "block";
+        } else {
+            customCharDiv.style.display = "none";
+        }
+        generateAscii();
+    }
+
+    // ---------------------------------------------------------
+    // NEW FEATURE 2: Theme Switching
+    // ---------------------------------------------------------
+    function changeTheme() {
+        const theme = document.getElementById('themeSelect').value;
+        const root = document.documentElement;
+        
+        if (theme === "matrix") { 
+            root.style.setProperty('--terminal-fg', '#00ff00'); 
+            root.style.setProperty('--terminal-bg', '#1e1e1e');
+            root.style.setProperty('--terminal-glow', 'rgba(0, 255, 0, 0.3)');
+        }
+        else if (theme === "cyan") { 
+            root.style.setProperty('--terminal-fg', '#00ffff'); 
+            root.style.setProperty('--terminal-bg', '#001a1a'); 
+            root.style.setProperty('--terminal-glow', 'rgba(0, 255, 255, 0.4)');
+        }
+        else if (theme === "amber") { 
+            root.style.setProperty('--terminal-fg', '#ffb000'); 
+            root.style.setProperty('--terminal-bg', '#2b1d00'); 
+            root.style.setProperty('--terminal-glow', 'rgba(255, 176, 0, 0.3)');
+        }
+        else if (theme === "blood") { 
+            root.style.setProperty('--terminal-fg', '#ff3333'); 
+            root.style.setProperty('--terminal-bg', '#1a0000'); 
+            root.style.setProperty('--terminal-glow', 'rgba(255, 0, 0, 0.4)');
+        }
+        else if (theme === "white") { 
+            root.style.setProperty('--terminal-fg', '#ffffff'); 
+            root.style.setProperty('--terminal-bg', '#111111'); 
+            root.style.setProperty('--terminal-glow', 'rgba(255, 255, 255, 0.2)');
+        }
+    }
+
+    // ---------------------------------------------------------
+    // NEW FEATURE 3: Alignment
+    // ---------------------------------------------------------
+    function changeAlignment() {
+        asciiOutput.style.textAlign = alignSelect.value;
+    }
+
+    // ---------------------------------------------------------
+    // CORE GENERATOR
+    // ---------------------------------------------------------
+    function generateAscii() {
+        const text = textInput.value.toUpperCase();
+        const style = fontSelect.value;
+        
+        if (!text.trim()) {
+            asciiOutput.value = '';
+            return;
+        }
+
+        // Determine rendering character based on Style
+        let fill = "█"; 
+        if (style === "Wide") fill = "██";
+        if (style === "Cyber") fill = "01";
+        if (style === "Hash") fill = "##";
+        if (style === "Ghost") fill = "░░";
+        if (style === "Money") fill = "$$";
+        
+        // Handle Custom Character
+        if (style === "Custom") {
+            fill = customCharInput.value || "@"; 
+        }
+
+        const space = " ".repeat(fill.length);
+        const lines = text.split('\n');
+        let finalArt = "";
+
+        // Mathematics to draw the font (UNTOUCHED)
+        for (let line of lines) {
+            let rowStrings = ["", "", "", "", ""];
+            
+            for (let i = 0; i < line.length; i++) {
+                let char = line[i];
+                let mask = font5x5[char] || font5x5[' ']; 
+                
+                for (let r = 0; r < 5; r++) {
+                    let val = mask[r];
+                    let rStr = "";
+                    for (let c = 4; c >= 0; c--) {
+                        if ((val >> c) & 1) {
+                            rStr += fill;
+                        } else {
+                            rStr += space;
+                        }
+                    }
+                    rowStrings[r] += rStr + space;
+                }
+            }
+            finalArt += rowStrings.join('\n') + "\n\n";
+        }
+
+        asciiOutput.value = finalArt;
+    }
+
+    function clearText() {
+        textInput.value = '';
+        asciiOutput.value = '';
+        textInput.focus();
+    }
+
+    function copyAscii() {
+        if (!asciiOutput.value) return;
+        asciiOutput.select();
+        document.execCommand('copy');
+        showToast('ASCII Art copied to clipboard!', 'success');
+        window.getSelection().removeAllRanges();
+    }
+
+    function downloadAscii() {
+        if (!asciiOutput.value) return;
+        const blob = new Blob([asciiOutput.value], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ascii_art_${Date.now()}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('ASCII Art downloaded!', 'info');
+    }
+
+    function showToast(message, type) {
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Initialize UI and Generation
+    window.onload = function() {
+        changeTheme();      // Set initial colors
+        changeAlignment();  // Set initial alignment
+        generateAscii();    // Draw art
+    };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

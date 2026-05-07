@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadratic Equation Solver | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Inputs --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .equation-display {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #212529;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 25px;
+        }
+
+        .var-highlight-a { color: var(--math-red); }
+        .var-highlight-b { color: var(--math-blue); }
+        .var-highlight-c { color: var(--lasu-accent); }
+
+        .input-group-custom {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1.1rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            outline: none;
+        }
+
+        /* --- Right Pane: Output & Graph --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .result-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+            word-break: break-word;
+        }
+
+        .roots-container {
+            grid-column: span 2;
+            background: rgba(25, 135, 84, 0.05);
+            border-color: rgba(25, 135, 84, 0.2);
+        }
+        .roots-value {
+            color: var(--lasu-accent);
+            font-size: 1.5rem;
+        }
+
+        /* Canvas Graph */
+        .graph-container {
+            flex: 1;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            min-height: 350px;
+            position: relative;
+        }
+
+        #parabolaCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+
+        .graph-legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .results-grid { grid-template-columns: 1fr; }
+            .roots-container { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <i class="fas fa-square-root-alt"></i> Quadratic Form
+            </div>
+            
+            <div class="equation-display">
+                <span class="var-highlight-a" id="dispA">1</span>x² + 
+                <span class="var-highlight-b" id="dispB">-3</span>x + 
+                <span class="var-highlight-c" id="dispC">2</span> = 0
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label var-highlight-a">a =</div>
+                <input type="number" class="num-input" id="valA" value="1" step="any" oninput="solve()">
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label var-highlight-b">b =</div>
+                <input type="number" class="num-input" id="valB" value="-3" step="any" oninput="solve()">
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label var-highlight-c">c =</div>
+                <input type="number" class="num-input" id="valC" value="2" step="any" oninput="solve()">
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-2" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Values
+            </button>
+        </div>
+
+        <div class="card-box py-3">
+            <h6 class="fw-bold text-muted small mb-2 text-uppercase">The Quadratic Formula</h6>
+            <div class="text-center font-monospace" style="font-size: 1.1rem; font-weight: 600;">
+                x = <span style="display:inline-block; vertical-align:middle; text-align:center;">
+                    <span style="border-bottom: 2px solid #000; display:block; padding: 0 5px;">-b &plusmn; &radic;<span style="border-top: 2px solid #000; padding-top: 1px;">b&sup2; - 4ac</span></span>
+                    <span style="display:block;">2a</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: none;">
+            <div class="pane-header text-dark border-0 mb-3 pb-0">
+                <i class="fas fa-calculator text-success"></i> Calculation Results
+            </div>
+            
+            <div class="results-grid">
+                
+                <div class="result-box roots-container">
+                    <div class="result-title">Roots (X-Intercepts)</div>
+                    <div class="result-value roots-value" id="resRoots">x₁ = 2, x₂ = 1</div>
+                    <div class="small fw-bold mt-1 text-success" id="resType">Two Real Roots</div>
+                </div>
+
+                <div class="result-box">
+                    <div class="result-title">Discriminant (Δ)</div>
+                    <div class="result-value" id="resDisc">1</div>
+                    <div class="small text-muted mt-1" id="resDiscCalc">(-3)² - 4(1)(2)</div>
+                </div>
+
+                <div class="result-box">
+                    <div class="result-title">Parabola Vertex (h, k)</div>
+                    <div class="result-value" id="resVertex">(1.5, -0.25)</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="pane-header text-dark border-0 mb-2 pb-0">
+                <i class="fas fa-chart-line text-primary"></i> Native Visual Graph
+            </div>
+            <div class="graph-container" id="graphContainer">
+                <canvas id="parabolaCanvas"></canvas>
+                <div class="graph-legend">
+                    <div><span class="dot" style="background:#dc3545;"></span> Roots</div>
+                    <div><span class="dot" style="background:#0d6efd;"></span> Vertex</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valA = document.getElementById('valA');
+    const valB = document.getElementById('valB');
+    const valC = document.getElementById('valC');
+    
+    const dispA = document.getElementById('dispA');
+    const dispB = document.getElementById('dispB');
+    const dispC = document.getElementById('dispC');
+    
+    const resRoots = document.getElementById('resRoots');
+    const resType = document.getElementById('resType');
+    const resDisc = document.getElementById('resDisc');
+    const resDiscCalc = document.getElementById('resDiscCalc');
+    const resVertex = document.getElementById('resVertex');
+
+    const canvas = document.getElementById('parabolaCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    function resizeCanvas() {
+        const rect = container.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        solve(); 
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function roundSafe(num) {
+        return Math.round(num * 1000) / 1000;
+    }
+
+    function solve() {
+        const a = parseFloat(valA.value);
+        const b = parseFloat(valB.value) || 0;
+        const c = parseFloat(valC.value) || 0;
+
+        // Update Equation Display
+        dispA.innerText = isNaN(a) ? "a" : a;
+        dispB.innerText = b < 0 ? `- ${Math.abs(b)}` : `+ ${b}`;
+        dispC.innerText = c < 0 ? `- ${Math.abs(c)}` : `+ ${c}`;
+
+        if (isNaN(a) || a === 0) {
+            resRoots.innerHTML = `<span class="text-danger">Error: 'a' cannot be 0.</span>`;
+            resType.innerText = "Not a quadratic equation.";
+            resDisc.innerText = "-";
+            resDiscCalc.innerText = "-";
+            resVertex.innerText = "-";
+            drawEmptyGrid();
+            return;
+        }
+
+        // Math Logic
+        const discriminant = (b * b) - (4 * a * c);
+        resDisc.innerText = roundSafe(discriminant);
+        resDiscCalc.innerText = `(${b})² - 4(${a})(${c})`;
+
+        const vertexX = -b / (2 * a);
+        const vertexY = a * Math.pow(vertexX, 2) + b * vertexX + c;
+        resVertex.innerText = `(${roundSafe(vertexX)}, ${roundSafe(vertexY)})`;
+
+        let r1, r2;
+
+        if (discriminant > 0) {
+            r1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+            r2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+            resRoots.innerHTML = `x₁ = ${roundSafe(r1)} <br> x₂ = ${roundSafe(r2)}`;
+            resType.innerText = "Two Distinct Real Roots";
+            resType.className = "small fw-bold mt-1 text-success";
+            plotParabola(a, b, c, vertexX, vertexY, [r1, r2]);
+
+        } else if (discriminant === 0) {
+            r1 = -b / (2 * a);
+            resRoots.innerHTML = `x = ${roundSafe(r1)}`;
+            resType.innerText = "One Real Root (Double Root)";
+            resType.className = "small fw-bold mt-1 text-warning";
+            plotParabola(a, b, c, vertexX, vertexY, [r1]);
+
+        } else {
+            // Complex Roots
+            const realPart = roundSafe(-b / (2 * a));
+            const imagPart = roundSafe(Math.sqrt(Math.abs(discriminant)) / (2 * a));
+            resRoots.innerHTML = `x₁ = ${realPart} + ${Math.abs(imagPart)}i <br> x₂ = ${realPart} - ${Math.abs(imagPart)}i`;
+            resType.innerText = "Two Complex Roots (No X-Intercept)";
+            resType.className = "small fw-bold mt-1 text-danger";
+            plotParabola(a, b, c, vertexX, vertexY, []);
+        }
+    }
+
+    // --- NATIVE HTML5 PARABOLA PLOTTER ---
+    function drawEmptyGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawAxes(canvas.width/2, canvas.height/2);
+    }
+
+    function drawAxes(originX, originY) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#ced4da';
+        ctx.lineWidth = 2;
+        
+        // X-Axis
+        ctx.moveTo(0, originY);
+        ctx.lineTo(canvas.width, originY);
+        
+        // Y-Axis
+        ctx.moveTo(originX, 0);
+        ctx.lineTo(originX, canvas.height);
+        ctx.stroke();
+
+        ctx.fillStyle = '#6c757d';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('0', originX + 5, originY + 15);
+    }
+
+    function plotParabola(a, b, c, vX, vY, roots) {
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        // Auto-scaling logic: Find domain to show vertex and roots properly
+        let xSpan = 10; 
+        if (roots.length === 2) {
+            xSpan = Math.abs(roots[0] - roots[1]) * 2; // Pad around roots
+            if (xSpan < 10) xSpan = 10;
+        }
+
+        const pixelsPerUnitX = w / xSpan;
+        
+        // Auto-scale Y based on vertex depth
+        let ySpan = Math.abs(vY) * 3;
+        if (ySpan < 10) ySpan = 10;
+        const pixelsPerUnitY = h / ySpan;
+
+        // Establish Origin (Centered X, shift Y based on vertex)
+        const originX = w / 2 - (vX * pixelsPerUnitX);
+        const originY = a > 0 ? (h * 0.75) + (vY * pixelsPerUnitY) : (h * 0.25) - (Math.abs(vY) * pixelsPerUnitY);
+
+        drawAxes(originX, originY);
+
+        // Draw Parabola
+        ctx.beginPath();
+        ctx.strokeStyle = '#198754';
+        ctx.lineWidth = 3;
+
+        for (let px = 0; px <= w; px++) {
+            // Convert Pixel X to Math X
+            const mathX = (px - originX) / pixelsPerUnitX;
+            // Solve Math Y
+            const mathY = (a * mathX * mathX) + (b * mathX) + c;
+            // Convert Math Y to Pixel Y
+            const py = originY - (mathY * pixelsPerUnitY);
+
+            if (px === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        // Draw Roots (Red Dots)
+        ctx.fillStyle = '#dc3545';
+        roots.forEach(r => {
+            const px = originX + (r * pixelsPerUnitX);
+            const py = originY; // Roots are on x-axis
+            ctx.beginPath();
+            ctx.arc(px, py, 6, 0, Math.PI*2);
+            ctx.fill();
+        });
+
+        // Draw Vertex (Blue Dot)
+        ctx.fillStyle = '#0d6efd';
+        const vPx = originX + (vX * pixelsPerUnitX);
+        const vPy = originY - (vY * pixelsPerUnitY);
+        ctx.beginPath();
+        ctx.arc(vPx, vPy, 6, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    function clearInputs() {
+        valA.value = '';
+        valB.value = '';
+        valC.value = '';
+        valA.focus();
+        solve();
+    }
+
+    // Initialize
+    setTimeout(() => {
+        resizeCanvas();
+    }, 100);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

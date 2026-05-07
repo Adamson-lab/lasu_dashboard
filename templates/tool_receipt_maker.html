@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Receipt Engine | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --brand-teal: #20c997; 
+            --brand-teal-light: rgba(32, 201, 151, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        
+        /* Input Panel Styling */
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+            max-height: 850px;
+            overflow-y: auto;
+        }
+        .input-panel::-webkit-scrollbar { width: 6px; }
+        .input-panel::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        .form-label {
+            font-weight: 800;
+            color: #64748b;
+            margin-bottom: 5px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-teal);
+            box-shadow: 0 0 0 3px var(--brand-teal-light);
+        }
+        .section-divider {
+            margin: 25px 0 15px 0;
+            border-top: 2px solid #e2e8f0;
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+
+        /* Line Item Controls */
+        .item-row-input {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .delete-item-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* LIVE PREVIEW WRAPPER */
+        .preview-wrapper {
+            background: #e2e8f0;
+            padding: 40px 20px;
+            border-radius: 12px;
+            border: 1px dashed #94a3b8;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 800px;
+            transition: 0.3s;
+        }
+
+        /* =========================================
+           MODE 1: CORPORATE RECEIPT (A4 Style)
+           ========================================= */
+        .receipt-paper.mode-corporate {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            padding: 45px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            color: #0f172a;
+            position: relative;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+        .mode-corporate .r-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        .mode-corporate .r-title { font-size: 2.5rem; font-weight: 900; letter-spacing: -1px; margin: 0; color: var(--brand-teal); }
+        .mode-corporate .r-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        .mode-corporate .r-table th { background: #f8fafc; color: #475569; padding: 12px 10px; font-size: 0.85rem; text-transform: uppercase; border-bottom: 2px solid #cbd5e1; }
+        .mode-corporate .r-table td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600; }
+        .mode-corporate .r-totals-wrapper { display: flex; justify-content: space-between; margin-top: 20px; }
+        .mode-corporate .r-totals { width: 300px; background: #f8fafc; padding: 15px; border-radius: 8px; }
+        .mode-corporate .r-totals-row { display: flex; justify-content: space-between; padding: 6px 0; font-weight: 600; color: #475569; }
+        .mode-corporate .r-grand-total { display: flex; justify-content: space-between; padding-top: 10px; margin-top: 5px; font-weight: 900; font-size: 1.3rem; border-top: 2px solid #cbd5e1; color: var(--brand-teal); }
+        .mode-corporate .r-qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        /* =========================================
+           MODE 2: THERMAL POS RECEIPT (Store Style)
+           ========================================= */
+        .receipt-paper.mode-thermal {
+            background: #fffdf9; /* Slight paper yellow tint */
+            width: 380px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            color: #111;
+            position: relative;
+            font-family: 'Courier New', Courier, monospace; /* Monospace for POS feel */
+            border-top: 4px dashed #ccc;
+            border-bottom: 4px dashed #ccc;
+            overflow: hidden;
+        }
+        .mode-thermal .r-header { text-align: center; border-bottom: 1px dashed #111; padding-bottom: 15px; margin-bottom: 15px; }
+        .mode-thermal .r-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 10px 0; }
+        .mode-thermal .r-table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+        .mode-thermal .r-table th { border-bottom: 1px dashed #111; padding: 5px 0; font-size: 0.9rem; text-transform: uppercase; text-align: left; }
+        .mode-thermal .r-table td { padding: 8px 0; font-weight: 600; font-size: 0.9rem; }
+        .mode-thermal .r-totals-wrapper { display: block; margin-top: 15px; border-top: 1px dashed #111; padding-top: 10px; }
+        .mode-thermal .r-totals { width: 100%; }
+        .mode-thermal .r-totals-row { display: flex; justify-content: space-between; padding: 4px 0; font-weight: 600; }
+        .mode-thermal .r-grand-total { display: flex; justify-content: space-between; padding: 8px 0; font-weight: 900; font-size: 1.2rem; }
+        .mode-thermal .r-qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; border-top: 1px dashed #111; padding-top: 20px; }
+
+        /* Watermark */
+        .watermark-paid {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 8rem;
+            font-weight: 900;
+            color: rgba(32, 201, 151, 0.15);
+            text-transform: uppercase;
+            letter-spacing: 10px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .mode-thermal .watermark-paid { font-size: 5rem; }
+
+        .download-btn {
+            background: var(--brand-teal);
+            color: white;
+            font-weight: 800;
+            padding: 14px 24px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+            transition: 0.2s;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);
+        }
+        .download-btn:hover { background: #189872; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-receipt me-2" style="color: var(--brand-teal);"></i> Dual-Mode Receipt Engine</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="input-panel">
+                    
+                    <div class="mb-3 p-3 rounded" style="background: rgba(32, 201, 151, 0.1); border: 1px solid var(--brand-teal);">
+                        <label class="form-label text-dark">Document Format Layout</label>
+                        <select id="layoutMode" class="form-select fw-bold" style="color: var(--brand-teal);" onchange="toggleLayout()">
+                            <option value="corporate" selected>Corporate (A4 Standard)</option>
+                            <option value="thermal">POS Thermal (Store Receipt)</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <label class="form-label">Currency</label>
+                            <select id="recCurrency" class="form-select form-select-sm" onchange="syncReceipt()">
+                                <option value="$">USD ($)</option>
+                                <option value="₦">NGN (₦)</option>
+                                <option value="€">EUR (€)</option>
+                                <option value="£">GBP (£)</option>
+                            </select>
+                        </div>
+                        <div class="col-8">
+                            <label class="form-label">Receipt Number</label>
+                            <input type="text" id="recNumber" class="form-control form-control-sm" value="REC-99201" oninput="syncReceipt()">
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>BUSINESS INFO</span></div>
+                    <div class="mb-2">
+                        <input type="text" id="bizName" class="form-control form-control-sm mb-2 fw-bold" placeholder="Business Name" value="L.I.S.A. Retail Systems" oninput="syncReceipt()">
+                        <input type="text" id="bizAddress" class="form-control form-control-sm mb-2" placeholder="Address" value="Ojo Campus, Lagos" oninput="syncReceipt()">
+                        <input type="text" id="bizContact" class="form-control form-control-sm mb-2" placeholder="Phone / Email" value="support@lasu-lisa.edu" oninput="syncReceipt()">
+                        <input type="text" id="bizTax" class="form-control form-control-sm" placeholder="Tax ID / VAT No (Optional)" oninput="syncInvoice()">
+                    </div>
+
+                    <div class="section-divider"><span>TRANSACTION DETAILS</span></div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Payment Date</label>
+                            <input type="date" id="recDate" class="form-control form-control-sm" oninput="syncReceipt()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Time</label>
+                            <input type="time" id="recTime" class="form-control form-control-sm" oninput="syncReceipt()">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select id="payMethod" class="form-select form-select-sm mb-2" onchange="handlePayMethod()">
+                            <option value="Card" selected>Credit / Debit Card</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Transfer">Bank Transfer</option>
+                            <option value="Crypto">Cryptocurrency</option>
+                        </select>
+                        <input type="text" id="cardLast4" class="form-control form-control-sm" placeholder="Card Last 4 Digits (e.g. 4242)" value="4242" oninput="syncReceipt()" maxlength="4">
+                    </div>
+
+                    <div class="section-divider"><span>LINE ITEMS</span></div>
+                    <div id="itemsContainer"></div>
+                    <button class="btn btn-sm btn-outline-primary fw-bold w-100 mb-3" onclick="addItem()"><i class="fas fa-plus me-1"></i> Add Line Item</button>
+
+                    <div class="section-divider"><span>MODIFIERS & QR</span></div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Tax (%)</label>
+                            <input type="number" id="recTax" class="form-control form-control-sm" value="7.5" min="0" step="0.1" oninput="syncReceipt()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Discount Amt</label>
+                            <input type="number" id="recDiscount" class="form-control form-control-sm" value="0" min="0" step="1" oninput="syncReceipt()">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Generate QR Code (URL)</label>
+                        <input type="text" id="qrLink" class="form-control form-control-sm" placeholder="https://yourwebsite.com/review" value="https://lasu.edu.ng" oninput="generateQR()">
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                
+                <div class="preview-wrapper" id="previewBg">
+                    <div class="receipt-paper mode-corporate" id="receiptDocument">
+                        
+                        <div class="watermark-paid">PAID</div>
+
+                        <div class="r-header">
+                            <div>
+                                <h1 class="r-title" id="docBizName">L.I.S.A. Retail Systems</h1>
+                                <div id="docBizAddress">Ojo Campus, Lagos</div>
+                                <div id="docBizContact">support@lasu-lisa.edu</div>
+                                <div id="docBizTax" style="display: none;"></div>
+                            </div>
+                            <div style="text-align: right;" id="docHeaderRight">
+                                <h2 style="margin:0; font-weight: 900; color:#0f172a;">RECEIPT</h2>
+                                <div class="fw-bold mt-1" id="docRecNum">#REC-99201</div>
+                                <div id="docDateTime" class="small mt-1">---</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 6px; display: inline-block;">
+                            <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748b;">Payment Details</div>
+                            <div style="font-weight: 700; font-size: 1.1rem;" id="docPayMethod">Card ending in ****4242</div>
+                        </div>
+
+                        <table class="r-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50%; text-align: left;">Item Description</th>
+                                    <th style="text-align: center;">Qty</th>
+                                    <th style="text-align: right;">Price</th>
+                                    <th style="text-align: right;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="docItemsBody"></tbody>
+                        </table>
+
+                        <div class="r-totals-wrapper">
+                            <div class="r-qr-container">
+                                <div id="qrcode"></div>
+                                <div style="font-size: 0.7rem; margin-top: 5px; font-weight: 700; color: #64748b;">SCAN ME</div>
+                            </div>
+                            <div class="r-totals">
+                                <div class="r-totals-row">
+                                    <span>Subtotal:</span>
+                                    <span id="docSubtotal">$0.00</span>
+                                </div>
+                                <div class="r-totals-row" id="rowDiscount" style="display: none; color: #198754;">
+                                    <span>Discount:</span>
+                                    <span id="docDiscountAmount">-$0.00</span>
+                                </div>
+                                <div class="r-totals-row" id="rowTax" style="display: none;">
+                                    <span>Tax (<span id="docTaxRate">0</span>%):</span>
+                                    <span id="docTaxAmount">$0.00</span>
+                                </div>
+                                <div class="r-grand-total">
+                                    <span>Amount Paid:</span>
+                                    <span id="docGrandTotal">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 30px; font-size: 0.85rem; font-weight: 600; color: #64748b;" id="docThankYou">
+                            Thank you for your business!
+                        </div>
+
+                    </div>
+                </div>
+
+                <button class="download-btn" id="downloadBtn" onclick="generatePDF()">
+                    <i class="fas fa-file-pdf me-2"></i> Render & Download Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let receiptItems = [
+            { id: 1, desc: 'Mechanical Keyboard Switch Set', qty: 2, price: 35.50 },
+            { id: 2, desc: 'USB-C Braided Cable', qty: 1, price: 12.99 }
+        ];
+
+        let qrCodeInstance = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const today = new Date();
+            document.getElementById('recDate').valueAsDate = today;
+            document.getElementById('recTime').value = today.toTimeString().slice(0,5);
+
+            renderInputItems();
+            syncReceipt();
+            generateQR();
+        });
+
+        // 1. Dual-Mode Shape-Shifting Engine
+        function toggleLayout() {
+            const mode = document.getElementById('layoutMode').value;
+            const paper = document.getElementById('receiptDocument');
+            const headerRight = document.getElementById('docHeaderRight');
+
+            if (mode === 'thermal') {
+                paper.className = "receipt-paper mode-thermal";
+                headerRight.style.textAlign = 'center';
+                headerRight.style.marginTop = '15px';
+            } else {
+                paper.className = "receipt-paper mode-corporate";
+                headerRight.style.textAlign = 'right';
+                headerRight.style.marginTop = '0';
+            }
+        }
+
+        function handlePayMethod() {
+            const method = document.getElementById('payMethod').value;
+            const cardInput = document.getElementById('cardLast4');
+            if (method === 'Card') {
+                cardInput.style.display = 'block';
+            } else {
+                cardInput.style.display = 'none';
+            }
+            syncReceipt();
+        }
+
+        // 2. Line Items
+        function renderInputItems() {
+            const container = document.getElementById('itemsContainer');
+            container.innerHTML = '';
+
+            receiptItems.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'item-row-input';
+                row.innerHTML = `
+                    <button class="delete-item-btn" onclick="removeItem(${item.id})"><i class="fas fa-times"></i></button>
+                    <input type="text" class="form-control form-control-sm mb-2 fw-bold" placeholder="Item Name" value="${item.desc}" oninput="updateItem(${item.id}, 'desc', this.value)">
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <input type="number" class="form-control form-control-sm" placeholder="Qty" value="${item.qty}" min="1" oninput="updateItem(${item.id}, 'qty', this.value)">
+                        </div>
+                        <div class="col-8">
+                            <input type="number" class="form-control form-control-sm" placeholder="Price" value="${item.price}" min="0" step="0.01" oninput="updateItem(${item.id}, 'price', this.value)">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addItem() {
+            const newId = receiptItems.length > 0 ? Math.max(...receiptItems.map(i => i.id)) + 1 : 1;
+            receiptItems.push({ id: newId, desc: '', qty: 1, price: 0 });
+            renderInputItems();
+            syncReceipt();
+        }
+
+        function removeItem(id) {
+            receiptItems = receiptItems.filter(item => item.id !== id);
+            renderInputItems();
+            syncReceipt();
+        }
+
+        function updateItem(id, field, value) {
+            const item = receiptItems.find(i => i.id === id);
+            if (item) {
+                if (field === 'qty' || field === 'price') item[field] = parseFloat(value) || 0;
+                else item[field] = value;
+                syncReceipt();
+            }
+        }
+
+        // 3. Document Synchronizer
+        function syncReceipt() {
+            const sym = document.getElementById('recCurrency').value;
+            const formatMoney = (num) => sym + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+
+            // Metadata
+            document.getElementById('docBizName').innerText = document.getElementById('bizName').value || 'Business Name';
+            document.getElementById('docBizAddress').innerText = document.getElementById('bizAddress').value;
+            document.getElementById('docBizContact').innerText = document.getElementById('bizContact').value;
+            
+            const taxId = document.getElementById('bizTax').value;
+            const taxEl = document.getElementById('docBizTax');
+            if (taxId) { taxEl.innerText = "Tax ID: " + taxId; taxEl.style.display = 'block'; } 
+            else { taxEl.style.display = 'none'; }
+
+            document.getElementById('docRecNum').innerText = '#' + document.getElementById('recNumber').value;
+            
+            // Format Date/Time cleanly
+            const dateStr = document.getElementById('recDate').value;
+            const timeStr = document.getElementById('recTime').value;
+            let displayDateTime = '---';
+            if(dateStr) {
+                displayDateTime = new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                if(timeStr) displayDateTime += ` @ ${timeStr}`;
+            }
+            document.getElementById('docDateTime').innerText = displayDateTime;
+
+            // Payment Method Logic
+            const method = document.getElementById('payMethod').value;
+            if (method === 'Card') {
+                const last4 = document.getElementById('cardLast4').value || 'XXXX';
+                document.getElementById('docPayMethod').innerHTML = `<i class="fas fa-credit-card me-2"></i>Card ending in ****${last4}`;
+            } else if (method === 'Cash') {
+                document.getElementById('docPayMethod').innerHTML = `<i class="fas fa-money-bill-wave me-2"></i>Paid in Cash`;
+            } else if (method === 'Transfer') {
+                document.getElementById('docPayMethod').innerHTML = `<i class="fas fa-university me-2"></i>Bank Transfer`;
+            } else {
+                document.getElementById('docPayMethod').innerHTML = `<i class="fab fa-bitcoin me-2"></i>Cryptocurrency`;
+            }
+
+            // Line Items
+            const tbody = document.getElementById('docItemsBody');
+            tbody.innerHTML = '';
+            let subtotal = 0;
+
+            receiptItems.forEach(item => {
+                const lineTotal = item.qty * item.price;
+                subtotal += lineTotal;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align: left;">${item.desc || 'Item'}</td>
+                    <td style="text-align: center;">${item.qty}</td>
+                    <td style="text-align: right;">${formatMoney(item.price)}</td>
+                    <td style="text-align: right; font-weight: 700;">${formatMoney(lineTotal)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Math
+            const discountAmt = parseFloat(document.getElementById('recDiscount').value) || 0;
+            const taxRate = parseFloat(document.getElementById('recTax').value) || 0;
+            
+            const discountedSubtotal = subtotal - discountAmt;
+            const taxAmt = discountedSubtotal * (taxRate / 100);
+            const grandTotal = discountedSubtotal + taxAmt;
+
+            document.getElementById('docSubtotal').innerText = formatMoney(subtotal);
+            
+            if (discountAmt > 0) {
+                document.getElementById('rowDiscount').style.display = 'flex';
+                document.getElementById('docDiscountAmount').innerText = `-${formatMoney(discountAmt)}`;
+            } else {
+                document.getElementById('rowDiscount').style.display = 'none';
+            }
+
+            if (taxRate > 0) {
+                document.getElementById('rowTax').style.display = 'flex';
+                document.getElementById('docTaxRate').innerText = taxRate;
+                document.getElementById('docTaxAmount').innerText = formatMoney(taxAmt);
+            } else {
+                document.getElementById('rowTax').style.display = 'none';
+            }
+
+            document.getElementById('docGrandTotal').innerText = formatMoney(grandTotal);
+        }
+
+        // 4. Live QR Code Generator
+        function generateQR() {
+            const url = document.getElementById('qrLink').value;
+            const container = document.getElementById("qrcode");
+            container.innerHTML = ""; // Clear existing
+            
+            if (url.trim() !== "") {
+                qrCodeInstance = new QRCode(container, {
+                    text: url,
+                    width: 70,
+                    height: 70,
+                    colorDark : "#0f172a",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.L
+                });
+            }
+        }
+
+        // 5. PDF Engine
+        function generatePDF() {
+            const btn = document.getElementById('downloadBtn');
+            const recNum = document.getElementById('recNumber').value || 'Doc';
+            const mode = document.getElementById('layoutMode').value;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Printing Receipt...';
+            
+            const element = document.getElementById('receiptDocument');
+            
+            // Adjust PDF dimensions based on the mode
+            let pdfFormat = 'letter';
+            if (mode === 'thermal') {
+                // Approximate 80mm thermal receipt roll dimensions
+                pdfFormat = [3.15, 8.5]; 
+            }
+
+            const opt = {
+                margin:       0,
+                filename:     `Receipt_${recNum}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: pdfFormat, orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = '<i class="fas fa-check me-2"></i> Downloaded';
+                btn.style.background = '#198754';
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-file-pdf me-2"></i> Render & Download Receipt';
+                    btn.style.background = 'var(--brand-teal)';
+                }, 3000);
+            });
+        }
+    </script>
+</body>
+</html>

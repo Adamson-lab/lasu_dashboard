@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skill Assessment Center | LASU</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        
+        .badge-card {
+            background: linear-gradient(135deg, #FFD700, #FDB931);
+            color: #333;
+            border: none;
+            border-radius: 15px;
+            text-align: center;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            transition: 0.3s;
+        }
+        .badge-card:hover { transform: translateY(-5px); }
+        .badge-icon { font-size: 3rem; margin-bottom: 10px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        
+        .quiz-card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            transition: 0.3s;
+            overflow: hidden;
+            border-left: 5px solid #0d6efd;
+        }
+        .quiz-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        
+        .diff-Beginner { border-left-color: #198754; }
+        .diff-Intermediate { border-left-color: #ffc107; }
+        .diff-Advanced { border-left-color: #dc3545; }
+        
+        .badge-earned { filter: grayscale(0); opacity: 1; }
+        .badge-locked { filter: grayscale(1); opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <a href="{{ url_for('student_portal') }}" class="text-decoration-none text-muted mb-2 d-inline-block">
+                <i class="fas fa-arrow-left"></i> Dashboard
+            </a>
+            <h2 class="fw-bold"><i class="fas fa-award me-2 text-warning"></i>Skill Assessment Center</h2>
+            <p class="text-muted">Take quizzes, prove your skills, earn badges.</p>
+        </div>
+        <div class="text-end">
+            <h1 class="fw-bold text-primary">{{ my_badges|length }}</h1>
+            <small class="text-uppercase fw-bold text-muted">Badges Earned</small>
+        </div>
+    </div>
+
+    {% if my_badges %}
+    <h5 class="fw-bold mb-3"><i class="fas fa-trophy text-warning me-2"></i>Your Trophy Case</h5>
+    <div class="row g-3 mb-5">
+        {% for badge in my_badges %}
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="badge-card">
+                <i class="fas fa-medal badge-icon"></i>
+                <h6 class="fw-bold mb-0">{{ badge.badge_name }}</h6>
+                <small style="font-size: 0.7rem;">Earned: {{ badge.earned_date.strftime('%d %b') }}</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h5 class="fw-bold mb-3">Available Assessments</h5>
+    <div class="row g-4">
+        {% for quiz in quizzes %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card quiz-card h-100 diff-{{ quiz.difficulty }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-light text-dark border">{{ quiz.topic }}</span>
+                        <span class="badge {{ 'bg-success' if quiz.difficulty=='Beginner' else 'bg-warning text-dark' if quiz.difficulty=='Intermediate' else 'bg-danger' }}">
+                            {{ quiz.difficulty }}
+                        </span>
+                    </div>
+                    
+                    <h5 class="fw-bold mb-1">{{ quiz.title }}</h5>
+                    <p class="text-muted small mb-3">Reward: <strong>{{ quiz.badge_name }} Badge</strong></p>
+                    
+                    {% if quiz.id in earned_ids %}
+                        <button class="btn btn-success w-100 fw-bold" disabled>
+                            <i class="fas fa-check-circle me-2"></i> Completed
+                        </button>
+                    {% else %}
+                        <a href="{{ url_for('take_skill_quiz', id=quiz.id) }}" class="btn btn-outline-primary w-100 fw-bold">
+                            Start Quiz <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

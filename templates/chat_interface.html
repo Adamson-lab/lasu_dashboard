@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat with {{ 'Student' if is_lecturer else 'Lecturer' }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #e5ddd5; } /* WhatsApp bg color */
+        .chat-container { max-width: 600px; margin: 20px auto; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); height: 90vh; display: flex; flex-direction: column; }
+        .chat-header { background: #075e54; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .chat-body { flex: 1; padding: 20px; overflow-y: auto; background: #efe7dd; display: flex; flex-direction: column; gap: 10px; }
+        
+        .message-bubble { max-width: 75%; padding: 10px 15px; border-radius: 15px; position: relative; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; }
+        
+        /* SELF (Green Bubble, Right) */
+        .msg-self { align-self: flex-end; background-color: #dcf8c6; border-bottom-right-radius: 2px; }
+        
+        /* OTHER (White Bubble, Left) */
+        .msg-other { align-self: flex-start; background-color: #fff; border-bottom-left-radius: 2px; }
+        
+        .msg-time { display: block; font-size: 0.7rem; color: #999; margin-top: 5px; text-align: right; }
+        
+        .chat-footer { padding: 10px; background: #f0f0f0; border-top: 1px solid #ddd; }
+        .btn-send { background-color: #075e54; color: white; border-radius: 50%; width: 45px; height: 45px; border: none; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{{ url_for('lecturer_complaints' if is_lecturer else 'student_portal') }}" class="text-white text-decoration-none fs-4">←</a>
+            <div>
+                <h6 class="mb-0 fw-bold">{{ complaint.student_name if is_lecturer else 'Lecturer Support' }}</h6>
+                <small class="opacity-75">{{ complaint.category }} - {{ complaint.status }}</small>
+            </div>
+        </div>
+        {% if is_lecturer %}
+        <form action="{{ url_for('resolve_complaint', id=complaint.id) }}" method="POST" style="margin:0;">
+            <button class="btn btn-sm btn-outline-light">✅ Resolve</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div class="chat-body" id="chatBox">
+        
+        <div class="message-bubble {{ 'msg-other' if is_lecturer else 'msg-self' }}">
+            <strong>{{ complaint.student_name }} (Original Issue):</strong><br>
+            {{ complaint.message }}
+            <span class="msg-time">{{ complaint.date_lodged.strftime('%H:%M') }}</span>
+        </div>
+
+        {% for msg in complaint.messages %}
+            {% set is_me = (is_lecturer and msg.sender == 'Lecturer') or (not is_lecturer and msg.sender == 'Student') %}
+            
+            <div class="message-bubble {{ 'msg-self' if is_me else 'msg-other' }}">
+                {{ msg.text }}
+                <span class="msg-time">{{ msg.timestamp.strftime('%H:%M') }}</span>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="chat-footer">
+        <form method="POST" class="d-flex gap-2">
+            <input type="text" name="message" class="form-control rounded-pill" placeholder="Type a message..." required autocomplete="off">
+            <button type="submit" class="btn-send">➤</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Auto-scroll to bottom
+    const chatBox = document.getElementById("chatBox");
+    chatBox.scrollTop = chatBox.scrollHeight;
+</script>
+
+</body>
+</html>

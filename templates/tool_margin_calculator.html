@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Margin & Markup Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-green: #198754; 
+            --brand-green-light: rgba(25, 135, 84, 0.1);
+            --brand-danger: #dc3545;
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-green);
+            box-shadow: 0 0 0 3px var(--brand-green-light);
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(25, 135, 84, 0.2);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .result-card.loss {
+            background: linear-gradient(135deg, #dc3545 0%, #8b0000 100%);
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.2);
+        }
+        .result-card::after {
+            content: '\f51e'; /* FA Coins */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -10px;
+            bottom: -20px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+            transform: rotate(-10deg);
+        }
+        .result-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 5px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+        .color-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .section-divider {
+            margin: 25px 0 15px 0;
+            border-top: 2px solid #e2e8f0;
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+        .metric-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-coins me-2" style="color: var(--brand-green);" id="headerIcon"></i> Margin Calculator</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="input-panel">
+                    
+                    <div class="mb-4">
+                        <label class="form-label text-primary">Calculation Mode</label>
+                        <select id="calcMode" class="form-select fw-bold text-primary" onchange="toggleMode()">
+                            <option value="margin" selected>Calculate Margin & Profit</option>
+                            <option value="price">Calculate Target Selling Price</option>
+                            <option value="cost">Calculate Max Allowable Cost</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-end mb-2">
+                        <select id="currencySelect" class="form-select form-select-sm w-auto" onchange="updateCurrency()">
+                            <option value="USD" selected>USD ($)</option>
+                            <option value="NGN">NGN (₦)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                        </select>
+                    </div>
+
+                    <div id="inputGroupCost" class="mb-3">
+                        <label class="form-label">Cost of Goods (COGS)</label>
+                        <div class="input-group">
+                            <span class="input-group-text dynamic-cur">$</span>
+                            <input type="number" id="valCost" class="form-control" value="50" min="0" step="0.01" oninput="runEngine()">
+                        </div>
+                    </div>
+
+                    <div id="inputGroupRevenue" class="mb-3">
+                        <label class="form-label">Selling Price (Revenue)</label>
+                        <div class="input-group">
+                            <span class="input-group-text dynamic-cur">$</span>
+                            <input type="number" id="valRevenue" class="form-control" value="85" min="0" step="0.01" oninput="runEngine()">
+                        </div>
+                    </div>
+
+                    <div id="inputGroupMargin" class="mb-3" style="display: none;">
+                        <label class="form-label">Target Gross Margin</label>
+                        <div class="input-group">
+                            <input type="number" id="valMargin" class="form-control" value="40" min="0" max="99.9" step="0.1" oninput="runEngine()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline-secondary w-100 fw-bold mt-3" onclick="resetCalculator()"><i class="fas fa-redo-alt me-2"></i>Reset</button>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="result-card" id="mainResultCard">
+                    <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.9;" id="primaryLabel">Gross Profit Margin</div>
+                    <div class="result-value" id="primaryValue">41.18%</div>
+                    <div style="font-size: 1rem; opacity: 0.9; font-weight: 600;" id="secondaryValue">Net Profit: $35.00</div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <div class="metric-box">
+                            <div class="text-muted text-uppercase fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Margin (Profit / Revenue)</div>
+                            <div class="fs-4 fw-bold" style="color: var(--brand-green);" id="marginBox">41.18%</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-box">
+                            <div class="text-muted text-uppercase fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Markup (Profit / Cost)</div>
+                            <div class="fs-4 fw-bold text-primary" id="markupBox">70.00%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row align-items-center g-4 mt-2">
+                    <div class="col-md-5">
+                        <div class="chart-container">
+                            <canvas id="marginChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div style="background: var(--bg-surface); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                            <h6 class="fw-bold text-uppercase mb-3" style="font-size: 0.75rem; color: #64748b; letter-spacing: 1px;">Revenue Breakdown</h6>
+                            
+                            <div class="breakdown-row">
+                                <div><span class="color-dot" style="background: #e2e8f0;"></span> <span class="text-muted">Total Revenue</span></div>
+                                <span class="text-dark fw-bold" id="breakdownRev">$0.00</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <div><span class="color-dot" style="background: #dc3545;"></span> <span class="text-danger">COGS (Cost)</span></div>
+                                <span class="text-danger" id="breakdownCost">-$0.00</span>
+                            </div>
+                            <div class="breakdown-row border-0">
+                                <div><span class="color-dot" style="background: #198754;"></span> <span class="text-success fw-bold">Gross Profit</span></div>
+                                <span class="text-success fw-bold fs-5" id="breakdownProfit">+$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let marginChartInstance = null;
+        let currentCurrency = 'USD';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateCurrency();
+        });
+
+        // 1. Dynamic Tri-State UI Toggler
+        function toggleMode() {
+            const mode = document.getElementById('calcMode').value;
+            const grpCost = document.getElementById('inputGroupCost');
+            const grpRev = document.getElementById('inputGroupRevenue');
+            const grpMar = document.getElementById('inputGroupMargin');
+
+            if (mode === 'margin') {
+                grpCost.style.display = 'block';
+                grpRev.style.display = 'block';
+                grpMar.style.display = 'none';
+            } else if (mode === 'price') {
+                grpCost.style.display = 'block';
+                grpRev.style.display = 'none';
+                grpMar.style.display = 'block';
+            } else if (mode === 'cost') {
+                grpCost.style.display = 'none';
+                grpRev.style.display = 'block';
+                grpMar.style.display = 'block';
+            }
+
+            runEngine();
+        }
+
+        // 2. Formatting Engine
+        function updateCurrency() {
+            currentCurrency = document.getElementById('currencySelect').value;
+            const symbols = { 'USD': '$', 'NGN': '₦', 'EUR': '€', 'GBP': '£' };
+            const sym = symbols[currentCurrency];
+            
+            document.querySelectorAll('.dynamic-cur').forEach(el => el.innerText = sym);
+            runEngine();
+        }
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currentCurrency,
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // 3. Core Omni-Directional Math Engine
+        function runEngine() {
+            const mode = document.getElementById('calcMode').value;
+            
+            let cost = parseFloat(document.getElementById('valCost').value) || 0;
+            let revenue = parseFloat(document.getElementById('valRevenue').value) || 0;
+            let targetMargin = parseFloat(document.getElementById('valMargin').value) || 0;
+
+            let profit = 0;
+            let margin = 0;
+            let markup = 0;
+
+            if (mode === 'margin') {
+                if (revenue === 0) { updateUI(cost, 0, 0, 0, 0, mode); return; }
+                
+                profit = revenue - cost;
+                margin = (profit / revenue) * 100;
+                markup = cost > 0 ? (profit / cost) * 100 : Infinity;
+                
+            } 
+            else if (mode === 'price') {
+                if (targetMargin >= 100) targetMargin = 99.99; // Prevent divide by zero (can't have 100% margin if cost > 0)
+                
+                // Revenue = Cost / (1 - Margin)
+                revenue = cost / (1 - (targetMargin / 100));
+                profit = revenue - cost;
+                margin = targetMargin;
+                markup = cost > 0 ? (profit / cost) * 100 : Infinity;
+            } 
+            else if (mode === 'cost') {
+                // Cost = Revenue * (1 - Margin)
+                cost = revenue * (1 - (targetMargin / 100));
+                profit = revenue - cost;
+                margin = targetMargin;
+                markup = cost > 0 ? (profit / cost) * 100 : Infinity;
+            }
+
+            updateUI(cost, revenue, profit, margin, markup, mode);
+        }
+
+        // 4. Reactive UI Updater
+        function updateUI(cost, revenue, profit, margin, markup, mode) {
+            const isLoss = profit < 0;
+            
+            // Handle Card Theming
+            const card = document.getElementById('mainResultCard');
+            const icon = document.getElementById('headerIcon');
+            
+            if (isLoss) {
+                card.className = "result-card loss";
+                icon.style.color = "var(--brand-danger)";
+            } else {
+                card.className = "result-card";
+                icon.style.color = "var(--brand-green)";
+            }
+
+            // Handle Primary Display based on Mode
+            const lblPrimary = document.getElementById('primaryLabel');
+            const valPrimary = document.getElementById('primaryValue');
+            const valSecondary = document.getElementById('secondaryValue');
+
+            if (mode === 'margin') {
+                lblPrimary.innerText = "Gross Profit Margin";
+                valPrimary.innerText = `${margin.toFixed(2)}%`;
+                valSecondary.innerText = `Net Profit: ${formatMoney(profit)}`;
+            } else if (mode === 'price') {
+                lblPrimary.innerText = "Target Selling Price";
+                valPrimary.innerText = formatMoney(revenue);
+                valSecondary.innerText = `Generates Profit: ${formatMoney(profit)}`;
+            } else if (mode === 'cost') {
+                lblPrimary.innerText = "Max Allowable Cost";
+                valPrimary.innerText = formatMoney(cost);
+                valSecondary.innerText = `To maintain a ${margin.toFixed(1)}% margin`;
+            }
+
+            // Handle Metric Boxes
+            document.getElementById('marginBox').innerText = `${margin.toFixed(2)}%`;
+            document.getElementById('marginBox').style.color = isLoss ? 'var(--brand-danger)' : 'var(--brand-green)';
+            
+            if (markup === Infinity) {
+                document.getElementById('markupBox').innerText = "Infinite";
+            } else {
+                document.getElementById('markupBox').innerText = `${markup.toFixed(2)}%`;
+            }
+
+            // Handle Breakdown
+            document.getElementById('breakdownRev').innerText = formatMoney(revenue);
+            document.getElementById('breakdownCost').innerText = `-${formatMoney(cost)}`;
+            
+            const profEl = document.getElementById('breakdownProfit');
+            profEl.innerText = `${isLoss ? '' : '+'}${formatMoney(profit)}`;
+            profEl.className = isLoss ? 'text-danger fw-bold fs-5' : 'text-success fw-bold fs-5';
+
+            renderChart(cost, profit, revenue);
+        }
+
+        // 5. Charting Engine
+        function renderChart(cost, profit, revenue) {
+            const ctx = document.getElementById('marginChart').getContext('2d');
+            
+            if (marginChartInstance) {
+                marginChartInstance.destroy();
+            }
+
+            if (revenue <= 0) return;
+
+            // If taking a loss, represent it cleanly on the chart
+            let labels = ['COGS (Cost)', 'Gross Profit'];
+            let data = [cost, profit];
+            let colors = ['#e2e8f0', '#198754']; // Gray cost, Green profit
+
+            if (profit < 0) {
+                labels = ['COGS', 'Loss Deficit'];
+                data = [revenue, Math.abs(profit)]; // Visual representation of revenue vs missing money
+                colors = ['#e2e8f0', '#dc3545']; // Gray revenue, Red loss
+            }
+
+            marginChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${formatMoney(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function resetCalculator() {
+            document.getElementById('calcMode').value = 'margin';
+            document.getElementById('valCost').value = 50;
+            document.getElementById('valRevenue').value = 85;
+            document.getElementById('valMargin').value = 40;
+            toggleMode();
+        }
+    </script>
+</body>
+</html>

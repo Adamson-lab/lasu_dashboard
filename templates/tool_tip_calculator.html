@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tip Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-purple: #6f42c1; /* Dining Purple */
+            --brand-purple-light: rgba(111, 66, 193, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-purple);
+            box-shadow: 0 0 0 3px var(--brand-purple-light);
+        }
+        
+        /* Quick Select Buttons */
+        .tip-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .tip-btn {
+            flex: 1;
+            min-width: 60px;
+            background: var(--bg-surface);
+            border: 1px solid #cbd5e1;
+            color: var(--text-primary);
+            font-weight: 700;
+            padding: 10px 5px;
+            border-radius: 8px;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .tip-btn.active {
+            background: var(--brand-purple);
+            border-color: var(--brand-purple);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px var(--brand-purple-light);
+        }
+
+        /* Result Card */
+        .result-card {
+            background: linear-gradient(135deg, #6f42c1 0%, #46198f 100%);
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(111, 66, 193, 0.2);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-card::after {
+            content: '\f2e7'; /* FA Utensils */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -10px;
+            bottom: -20px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+            transform: rotate(-15deg);
+        }
+        .result-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 5px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Split Box */
+        .split-box {
+            background: #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            border: 1px solid #cbd5e1;
+        }
+        .split-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .color-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .section-divider {
+            margin: 25px 0 15px 0;
+            border-top: 2px solid #e2e8f0;
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-utensils me-2" style="color: var(--brand-purple);"></i> Tip Calculator</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="input-panel">
+                    
+                    <div class="d-flex justify-content-between align-items-end mb-4">
+                        <div class="flex-grow-1 me-2">
+                            <label class="form-label">Bill Subtotal</label>
+                            <div class="input-group">
+                                <span class="input-group-text dynamic-currency">$</span>
+                                <input type="number" id="billSubtotal" class="form-control" value="85.50" min="0" step="0.01" oninput="calculateTip()">
+                            </div>
+                        </div>
+                        <div style="width: 90px;">
+                            <label class="form-label">Currency</label>
+                            <select id="currencySelect" class="form-select" onchange="updateCurrency()">
+                                <option value="USD" selected>USD</option>
+                                <option value="NGN">NGN</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label class="form-label">Tax Amount (Optional)</label>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="tipPreTax" checked onchange="calculateTip()" style="cursor:pointer;">
+                                <label class="form-check-label text-muted small fw-bold" for="tipPreTax" style="font-size: 0.7rem;">Tip Pre-Tax</label>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text dynamic-currency">$</span>
+                            <input type="number" id="taxAmount" class="form-control" value="6.50" min="0" step="0.01" oninput="calculateTip()">
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>GRATUITY</span></div>
+
+                    <div class="tip-btn-group">
+                        <button class="tip-btn" onclick="setTip(10)">10%</button>
+                        <button class="tip-btn" onclick="setTip(15)">15%</button>
+                        <button class="tip-btn active" onclick="setTip(18)">18%</button>
+                        <button class="tip-btn" onclick="setTip(20)">20%</button>
+                        <button class="tip-btn" onclick="setTip(25)">25%</button>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="input-group">
+                            <input type="number" id="tipPercentage" class="form-control" value="18" min="0" step="1" oninput="customTip()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>SPLIT BILL</span></div>
+
+                    <div class="mb-2">
+                        <label class="form-label d-flex justify-content-between">
+                            <span>Number of People</span>
+                            <span class="text-primary fw-bold" id="splitCountDisplay">1 Person</span>
+                        </label>
+                        <input type="range" class="form-range w-100" id="splitCount" min="1" max="20" value="1" oninput="calculateTip()">
+                    </div>
+
+                    <button class="btn btn-outline-secondary w-100 fw-bold mt-3" onclick="resetCalculator()"><i class="fas fa-redo-alt me-2"></i>Reset</button>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="result-card">
+                    <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.9;">Total Bill Amount</div>
+                    <div class="result-value" id="finalTotalDisplay">$0.00</div>
+                    <div style="font-size: 0.95rem; opacity: 0.9; font-weight: 600;" id="totalTipDisplay">Total Tip: $0.00</div>
+                </div>
+
+                <div class="split-box" id="splitDetailsBox" style="display: none;">
+                    <div>
+                        <div class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;"><i class="fas fa-user-friends me-1"></i> Per Person Total</div>
+                        <div class="split-val text-primary" id="perPersonTotalDisplay">$0.00</div>
+                    </div>
+                    <div style="width: 1px; background: #cbd5e1; height: 40px;"></div>
+                    <div class="text-end">
+                        <div class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Tip Per Person</div>
+                        <div class="split-val text-success" id="perPersonTipDisplay">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="row align-items-center g-4 mt-1">
+                    <div class="col-md-5">
+                        <div class="chart-container">
+                            <canvas id="tipChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div style="background: var(--bg-surface); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                            <h6 class="fw-bold text-uppercase mb-3" style="font-size: 0.75rem; color: #64748b; letter-spacing: 1px;">Check Breakdown</h6>
+                            
+                            <div class="d-flex justify-content-between mb-2 pb-2" style="border-bottom: 1px dashed #cbd5e1;">
+                                <div class="fw-bold"><span class="color-dot" style="background: #e2e8f0;"></span> Subtotal</div>
+                                <span class="text-dark fw-bold" id="breakdownSubtotal">$0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 pb-2" style="border-bottom: 1px dashed #cbd5e1;">
+                                <div class="fw-bold"><span class="color-dot" style="background: #dc3545;"></span> Tax</div>
+                                <span class="text-dark fw-bold" id="breakdownTax">$0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <div class="fw-bold"><span class="color-dot" style="background: var(--brand-purple);"></span> Gratuity (Tip)</div>
+                                <span class="text-dark fw-bold" id="breakdownTip">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tipChartInstance = null;
+        let currentCurrency = 'USD';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateCurrency();
+        });
+
+        function updateCurrency() {
+            currentCurrency = document.getElementById('currencySelect').value;
+            const symbols = { 'USD': '$', 'NGN': '₦', 'EUR': '€', 'GBP': '£' };
+            const sym = symbols[currentCurrency];
+            
+            document.querySelectorAll('.dynamic-currency').forEach(el => {
+                el.innerText = sym;
+            });
+            
+            calculateTip();
+        }
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currentCurrency,
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Handle Quick Select Buttons
+        function setTip(percentage) {
+            document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('active'));
+            // Highlight the clicked button
+            event.target.classList.add('active');
+            
+            document.getElementById('tipPercentage').value = percentage;
+            calculateTip();
+        }
+
+        // Remove active state from buttons if user types custom amount
+        function customTip() {
+            document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('active'));
+            calculateTip();
+        }
+
+        function calculateTip() {
+            // 1. Fetch Inputs
+            const subtotal = parseFloat(document.getElementById('billSubtotal').value) || 0;
+            const tax = parseFloat(document.getElementById('taxAmount').value) || 0;
+            const tipPct = parseFloat(document.getElementById('tipPercentage').value) || 0;
+            const splitCount = parseInt(document.getElementById('splitCount').value) || 1;
+            const tipPreTax = document.getElementById('tipPreTax').checked;
+
+            // 2. Update Split Count Label
+            document.getElementById('splitCountDisplay').innerText = splitCount === 1 ? '1 Person' : `${splitCount} People`;
+
+            if (subtotal <= 0) {
+                updateUI(0, 0, 0, 0, 0, 1);
+                return;
+            }
+
+            // 3. Gratuity Logic (Enterprise Pre-Tax vs Post-Tax routing)
+            let baseForTip = subtotal;
+            if (!tipPreTax) {
+                // If user turns OFF Pre-Tax tipping, they want to tip on the Subtotal + Tax
+                baseForTip = subtotal + tax; 
+            }
+
+            const totalTip = baseForTip * (tipPct / 100);
+            const finalBill = subtotal + tax + totalTip;
+
+            // 4. Split Logic
+            const perPersonTotal = finalBill / splitCount;
+            const perPersonTip = totalTip / splitCount;
+
+            updateUI(subtotal, tax, totalTip, finalBill, perPersonTotal, perPersonTip, splitCount);
+        }
+
+        function updateUI(subtotal, tax, totalTip, finalBill, perPersonTotal, perPersonTip, splitCount) {
+            // Main Card
+            document.getElementById('finalTotalDisplay').innerText = formatMoney(finalBill);
+            document.getElementById('totalTipDisplay').innerText = `Total Tip: ${formatMoney(totalTip)}`;
+            
+            // Breakdown Table
+            document.getElementById('breakdownSubtotal').innerText = formatMoney(subtotal);
+            document.getElementById('breakdownTax').innerText = formatMoney(tax);
+            document.getElementById('breakdownTip').innerText = formatMoney(totalTip);
+
+            // Split Display Toggle
+            const splitBox = document.getElementById('splitDetailsBox');
+            if (splitCount > 1) {
+                splitBox.style.display = 'flex';
+                document.getElementById('perPersonTotalDisplay').innerText = formatMoney(perPersonTotal);
+                document.getElementById('perPersonTipDisplay').innerText = formatMoney(perPersonTip);
+            } else {
+                splitBox.style.display = 'none';
+            }
+
+            renderChart(subtotal, tax, totalTip);
+        }
+
+        function renderChart(subtotal, tax, totalTip) {
+            const ctx = document.getElementById('tipChart').getContext('2d');
+            
+            if (tipChartInstance) {
+                tipChartInstance.destroy();
+            }
+
+            if (subtotal === 0) return;
+
+            tipChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Subtotal', 'Tax', 'Tip'],
+                    datasets: [{
+                        data: [subtotal, tax, totalTip],
+                        backgroundColor: [
+                            '#e2e8f0', // Subtotal (Neutral Gray)
+                            '#dc3545', // Tax (Red)
+                            '#6f42c1'  // Tip (Purple)
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${formatMoney(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function resetCalculator() {
+            document.getElementById('billSubtotal').value = 85.50;
+            document.getElementById('taxAmount').value = 6.50;
+            setTip(18); // This resets input and highlights 18% button
+            document.getElementById('splitCount').value = 1;
+            document.getElementById('tipPreTax').checked = true;
+            calculateTip();
+        }
+    </script>
+</body>
+</html>

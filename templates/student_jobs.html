@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Tracker | LASU Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+        
+        .stats-box {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+        .stats-box:hover { transform: translateY(-5px); }
+        .stats-icon { font-size: 2rem; opacity: 0.2; margin-bottom: 10px; }
+        
+        .job-card {
+            background: white;
+            border: none;
+            border-left: 5px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .job-card:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        
+        /* Status Colors */
+        .status-Applied { border-left-color: #0d6efd; }
+        .status-Interview { border-left-color: #ffc107; background: #fffbf0; }
+        .status-Offer { border-left-color: #198754; background: #f0fff4; }
+        .status-Rejected { border-left-color: #dc3545; opacity: 0.7; }
+        
+        .badge-Applied { background: #0d6efd; }
+        .badge-Interview { background: #ffc107; color: black; }
+        .badge-Offer { background: #198754; }
+        .badge-Rejected { background: #dc3545; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{{ url_for('student_portal') }}" class="text-decoration-none text-muted mb-2 d-inline-block">
+                <i class="fas fa-arrow-left"></i> Dashboard
+            </a>
+            <h2 class="fw-bold"><i class="fas fa-briefcase me-2 text-primary"></i>Job Application Tracker</h2>
+        </div>
+        <button class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#addJobModal">
+            <i class="fas fa-plus me-2"></i> Track New Job
+        </button>
+    </div>
+
+    <div class="row mb-5 g-3">
+        <div class="col-md-4">
+            <div class="stats-box border-bottom border-primary border-4">
+                <i class="fas fa-paper-plane stats-icon text-primary"></i>
+                <h3 class="fw-bold m-0">{{ stats.total }}</h3>
+                <span class="text-muted">Total Applications</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-box border-bottom border-warning border-4">
+                <i class="fas fa-user-clock stats-icon text-warning"></i>
+                <h3 class="fw-bold m-0">{{ stats.interviews }}</h3>
+                <span class="text-muted">Interviews Secured</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-box border-bottom border-success border-4">
+                <i class="fas fa-check-circle stats-icon text-success"></i>
+                <h3 class="fw-bold m-0">{{ stats.offers }}</h3>
+                <span class="text-muted">Job Offers</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h5 class="fw-bold mb-3 text-muted">Recent Applications</h5>
+            
+            {% if jobs %}
+                {% for job in jobs %}
+                <div class="card job-card status-{{ job.status }}">
+                    <div class="card-body d-flex align-items-center flex-wrap">
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-1">{{ job.role }}</h5>
+                            <h6 class="text-muted mb-2"><i class="far fa-building me-1"></i> {{ job.company }}</h6>
+                            <small class="text-secondary me-3"><i class="far fa-calendar-alt me-1"></i> Applied: {{ job.date_applied.strftime('%d %b, %Y') }}</small>
+                            {% if job.link %}
+                                <a href="{{ job.link }}" target="_blank" class="small text-decoration-none"><i class="fas fa-external-link-alt"></i> Job Post</a>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-3 mt-2 mt-md-0">
+                            <span class="badge rounded-pill px-3 py-2 badge-{{ job.status }}">{{ job.status }}</span>
+                            
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm border" data-bs-toggle="dropdown">Update Status</button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ url_for('update_job_status', id=job.id, new_status='Applied') }}">🔵 Applied</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('update_job_status', id=job.id, new_status='Interview') }}">🟡 Interview</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('update_job_status', id=job.id, new_status='Offer') }}">🟢 Offer</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('update_job_status', id=job.id, new_status='Rejected') }}">🔴 Rejected</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ url_for('delete_job', id=job.id) }}" method="POST" onsubmit="return confirm('Delete record?');">
+                                            <button class="dropdown-item text-danger">Delete</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3 opacity-50"></i>
+                    <p class="text-muted">No applications tracked yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addJobModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Track Application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('add_job') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Company Name</label>
+                        <input type="text" name="company" class="form-control" required placeholder="e.g. Microsoft, Paystack">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role Title</label>
+                        <input type="text" name="role" class="form-control" required placeholder="e.g. Intern, DevOps Engineer">
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">Date Applied</label>
+                            <input type="date" name="date_applied" class="form-control" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label">Current Status</label>
+                            <select name="status" class="form-select">
+                                <option value="Applied">Applied</option>
+                                <option value="Interview">Interviewing</option>
+                                <option value="Offer">Offer Received</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Job Link (Optional)</label>
+                        <input type="url" name="link" class="form-control" placeholder="https://...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea name="notes" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary w-100">Save Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

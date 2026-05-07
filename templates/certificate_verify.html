@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Degree Verification | LASU</title>
+    <style>
+        body { font-family: 'Times New Roman', serif; background: #f4f4f4; text-align: center; padding: 50px; }
+        .cert-container { width: 800px; margin: 0 auto; background: white; padding: 40px; border: 10px double #198754; position: relative; }
+        .header { font-size: 30px; font-weight: bold; color: #198754; text-transform: uppercase; margin-bottom: 5px; }
+        .sub-header { font-size: 18px; margin-bottom: 30px; }
+        .content { font-size: 20px; line-height: 1.6; margin: 40px 0; }
+        .name { font-size: 32px; font-weight: bold; border-bottom: 2px solid #333; display: inline-block; padding: 0 20px; }
+        .footer { display: flex; justify-content: space-between; margin-top: 50px; }
+        .stamp { width: 100px; height: 100px; border: 3px solid #d32f2f; color: #d32f2f; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; transform: rotate(-15deg); opacity: 0.8; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="cert-container">
+    <div class="header">Lagos State University</div>
+    <div class="sub-header">Ojo, Lagos State, Nigeria</div>
+
+    <img src="{{ url_for('static', filename='profile_pics/' + student.image_file) }}" style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid #ccc;">
+
+    <div class="content">
+        This is to certify that
+        <br><br>
+        <span class="name">{{ student.name }}</span>
+        <br><br>
+        Having completed the necessary course of study and satisfied the Senate of the University, is hereby awarded the
+        <br><br>
+        <strong>Bachelor of Science in {{ student.department }}</strong>
+        <br>
+        with <strong>{{ remark }}</strong> (CGPA: {{ cgpa }})
+    </div>
+
+    <div class="footer">
+        <div style="text-align: left;">
+            <p>_____________________</p>
+            <strong>Registrar</strong>
+        </div>
+        <div class="stamp">
+            OFFICIALLY<br>VERIFIED<br>LASU
+        </div>
+        <div style="text-align: right;">
+            <p>{{ date }}</p>
+            <strong>Date Issued</strong>
+        </div>
+    </div>
+    
+    <p style="font-size: 10px; color: #999; margin-top: 20px;">
+        Verification ID: LASU/{{ date.year }}/{{ student.matric_no }} <br>
+        This document is electronically generated and valid without a physical signature.
+    </p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+<a href="#summarySection" class="btn btn-outline-dark position-relative">
+    📩 Lecture Summaries
+    {% if unread_count > 0 %}
+    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+        {{ unread_count }}
+    </span>
+    {% endif %}
+</a>
+
+<hr>
+
+<div id="summarySection" class="mt-5">
+    <h3 class="fw-bold mb-4">📖 Recent Lecture Summaries</h3>
+    
+    {% for note in notifications %}
+    <div class="card shadow-sm border-0 mb-3 {% if not note.is_read %}border-start border-primary border-4{% endif %}">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="card-title fw-bold mb-0">{{ note.course_code }} Summary</h5>
+                <small class="text-muted">{{ note.timestamp.strftime('%d %b, %H:%M') }}</small>
+            </div>
+            
+            <div class="card-text text-secondary mb-3" style="white-space: pre-line;">
+                {{ note.message }}
+            </div>
+
+            {% if not note.is_read %}
+            <a href="{{ url_for('mark_read', note_id=note.id) }}" class="btn btn-sm btn-primary">Mark as Read</a>
+            {% else %}
+            <span class="badge bg-light text-dark border">Read ✓</span>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5 bg-white rounded shadow-sm">
+        <i class="fas fa-envelope-open text-muted fa-3x mb-3"></i>
+        <p class="text-muted">No lecture summaries posted yet.</p>
+    </div>
+    {% endfor %}
+</div>

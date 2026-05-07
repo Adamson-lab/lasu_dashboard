@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Base Converter | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-purple); box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15); }
+        .input-group-custom.error { border-color: var(--math-red); box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ced4da;
+            font-size: 0.9rem;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .error .input-label { background: #fff5f5; color: var(--math-red); border-bottom-color: var(--math-red); }
+
+        .num-input {
+            width: 100%;
+            border: none;
+            padding: 15px;
+            font-size: 1.4rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .base-select {
+            border: none;
+            background: transparent;
+            font-weight: 700;
+            color: var(--math-purple);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info-custom {
+            background: rgba(111, 66, 193, 0.05);
+            border: 1px solid rgba(111, 66, 193, 0.2);
+            color: var(--math-purple);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: auto;
+            line-height: 1.5;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .hero-result {
+            background: #212529;
+            border-radius: 12px;
+            padding: 30px;
+            color: white;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .hero-label {
+            font-weight: 800;
+            color: var(--math-orange);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .hero-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #00ff00;
+            word-break: break-all;
+            line-height: 1.2;
+        }
+
+        .hero-base-sub {
+            font-size: 1.2rem;
+            color: #adb5bd;
+            vertical-align: sub;
+        }
+
+        .expansion-box {
+            background: #2b3035;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            color: #dee2e6;
+            word-break: break-all;
+            border-left: 4px solid var(--math-orange);
+        }
+
+        .quick-conversions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .conv-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .conv-label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .conv-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #212529;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--math-blue);
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 0;
+        }
+        .copy-btn:hover { color: #0b5ed7; transform: scale(1.1); }
+
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .quick-conversions { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-exchange-alt"></i> Base Engine
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Invalid characters for this base.
+            </div>
+
+            <div class="input-group-custom" id="inputGroup">
+                <div class="input-label">
+                    <span>Input Number</span>
+                    <span>Base: <input type="number" class="base-select" id="inBase" value="10" min="2" max="36" onchange="validateAndConvert()"></span>
+                </div>
+                <input type="text" class="num-input" id="inVal" value="2026" placeholder="Enter number..." oninput="validateAndConvert()">
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-success">
+                    <span>Target Custom Base</span>
+                </div>
+                <input type="number" class="num-input text-success" id="outBase" value="2" min="2" max="36" oninput="validateAndConvert()">
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-2" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Form
+            </button>
+
+            <div class="alert-info-custom mt-4">
+                <i class="fas fa-infinity mb-2 fa-lg"></i><br>
+                <strong>Infinite Precision <code>BigInt</code> Core:</strong><br>
+                This engine completely bypasses standard browser 53-bit integer limits. You can safely convert massive alphanumeric strings up to Base-36 without mathematical corruption.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box p-0 border-0" style="background: transparent; box-shadow: none;">
+            
+            <div class="hero-result">
+                <div class="hero-label">Custom Base Result</div>
+                <div class="hero-value">
+                    <span id="heroOutput">11111101010</span><sub class="hero-base-sub" id="heroBase">2</sub>
+                </div>
+                <div class="expansion-box" id="expansionBox">
+                    Work: 2026 = (2 &times; 10³) + (0 &times; 10²) + (2 &times; 10¹) + (6 &times; 10⁰)
+                </div>
+            </div>
+
+            <div class="pane-header text-dark border-0 mt-2 mb-2 pb-0">
+                <i class="fas fa-bolt text-primary"></i> Standard Formats
+            </div>
+
+            <div class="quick-conversions">
+                <div class="conv-card">
+                    <div class="conv-label">
+                        <span class="text-primary">Binary (Base 2)</span>
+                        <button class="copy-btn" onclick="copyVal('resBin')"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="conv-val" id="resBin">11111101010</div>
+                </div>
+                <div class="conv-card">
+                    <div class="conv-label">
+                        <span class="text-danger">Octal (Base 8)</span>
+                        <button class="copy-btn" onclick="copyVal('resOct')"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="conv-val" id="resOct">3752</div>
+                </div>
+                <div class="conv-card">
+                    <div class="conv-label">
+                        <span class="text-success">Decimal (Base 10)</span>
+                        <button class="copy-btn" onclick="copyVal('resDec')"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="conv-val" id="resDec">2026</div>
+                </div>
+                <div class="conv-card">
+                    <div class="conv-label">
+                        <span style="color: var(--math-purple);">Hexadecimal (Base 16)</span>
+                        <button class="copy-btn" onclick="copyVal('resHex')"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="conv-val" id="resHex">7EA</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    const inVal = document.getElementById('inVal');
+    const inBase = document.getElementById('inBase');
+    const outBase = document.getElementById('outBase');
+    
+    const inputGroup = document.getElementById('inputGroup');
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const heroOutput = document.getElementById('heroOutput');
+    const heroBase = document.getElementById('heroBase');
+    const expansionBox = document.getElementById('expansionBox');
+    
+    const resBin = document.getElementById('resBin');
+    const resOct = document.getElementById('resOct');
+    const resDec = document.getElementById('resDec');
+    const resHex = document.getElementById('resHex');
+    
+    const toastBox = document.getElementById('toastBox');
+
+    const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    // --- INFINITE PRECISION ENGINE ---
+    // Parses a string of a given base into a native BigInt
+    function parseBigIntBase(str, base) {
+        if (str === "") return null;
+        let res = 0n;
+        let bigBase = BigInt(base);
+        str = str.toUpperCase();
+
+        for(let i = 0; i < str.length; i++) {
+            let val = BigInt(charset.indexOf(str[i]));
+            // Validation: character must exist in charset and be less than the base
+            if(val < 0n || val >= bigBase) {
+                return null; // Invalid character found
+            }
+            res = (res * bigBase) + val;
+        }
+        return res;
+    }
+
+    // Converts a native BigInt into a string of a given base
+    function bigIntToBaseString(num, base) {
+        if (num === 0n) return "0";
+        let res = "";
+        let bigBase = BigInt(base);
+        
+        while (num > 0n) {
+            let rem = Number(num % bigBase);
+            res = charset[rem] + res;
+            num = num / bigBase;
+        }
+        return res;
+    }
+
+    // Builds the polynomial expansion string (to Base 10)
+    function buildExpansion(str, base) {
+        str = str.toUpperCase();
+        let terms = [];
+        let pow = str.length - 1;
+        
+        for(let i = 0; i < str.length; i++) {
+            let val = charset.indexOf(str[i]);
+            terms.push(`(${val} &times; ${base}<sup style="font-size:0.7em">${pow}</sup>)`);
+            pow--;
+        }
+        
+        // Truncate if massive to prevent UI overflow
+        if (terms.length > 8) {
+            return `Work (to Base 10): ${terms.slice(0, 4).join(" + ")} + ... + ${terms[terms.length-1]}`;
+        }
+        return `Work (to Base 10): ${terms.join(" + ")}`;
+    }
+
+    // --- CONTROLLER ---
+    function validateAndConvert() {
+        let rawStr = inVal.value.replace(/\s+/g, ''); // Remove spaces
+        let baseFrom = parseInt(inBase.value, 10);
+        let baseTo = parseInt(outBase.value, 10);
+
+        // Clamp Base ranges
+        if (isNaN(baseFrom) || baseFrom < 2) baseFrom = 2;
+        if (baseFrom > 36) baseFrom = 36;
+        
+        if (isNaN(baseTo) || baseTo < 2) baseTo = 2;
+        if (baseTo > 36) baseTo = 36;
+
+        if (rawStr === '') {
+            resetOutputs();
+            return;
+        }
+
+        // 1. Parse into Base 10 (BigInt)
+        let decimalBigInt = parseBigIntBase(rawStr, baseFrom);
+
+        if (decimalBigInt === null) {
+            inputGroup.classList.add('error');
+            errorBanner.style.display = 'block';
+            resetOutputs();
+            return;
+        }
+
+        inputGroup.classList.remove('error');
+        errorBanner.style.display = 'none';
+
+        // 2. Convert to Target Base
+        let customRes = bigIntToBaseString(decimalBigInt, baseTo);
+        heroOutput.innerText = customRes;
+        heroBase.innerText = baseTo;
+
+        // 3. Convert to Standards
+        resBin.innerText = bigIntToBaseString(decimalBigInt, 2);
+        resOct.innerText = bigIntToBaseString(decimalBigInt, 8);
+        resDec.innerText = decimalBigInt.toString(10); // Native Base 10 string
+        resHex.innerText = bigIntToBaseString(decimalBigInt, 16);
+
+        // 4. Update Work UI
+        expansionBox.innerHTML = buildExpansion(rawStr, baseFrom);
+    }
+
+    function resetOutputs() {
+        heroOutput.innerText = '--';
+        heroBase.innerText = outBase.value || 2;
+        expansionBox.innerHTML = 'Work: Awaiting valid input...';
+        resBin.innerText = '--';
+        resOct.innerText = '--';
+        resDec.innerText = '--';
+        resHex.innerText = '--';
+    }
+
+    function clearInputs() {
+        inVal.value = '';
+        inVal.focus();
+        inputGroup.classList.remove('error');
+        errorBanner.style.display = 'none';
+        resetOutputs();
+    }
+
+    function copyVal(id) {
+        const text = document.getElementById(id).innerText;
+        if (text === '--' || text === '') return;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast(`Copied ${text}`, 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 text-center text-white bg-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 2500);
+    }
+
+    // Init
+    window.onload = () => {
+        validateAndConvert();
+    };
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

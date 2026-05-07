@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institutional Forex Engine | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --brand-forex: #20c997; 
+            --brand-forex-light: rgba(32, 201, 151, 0.1);
+            --brand-forex-dark: #0c7b5a;
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 30px 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            position: relative;
+        }
+        .form-label {
+            font-weight: 800;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Spread Simulator Pills */
+        .spread-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: white;
+            padding: 5px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+        }
+        .spread-pill {
+            flex: 1;
+            text-align: center;
+            padding: 10px 5px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #64748b;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid transparent;
+        }
+        .spread-pill.active {
+            background: var(--brand-forex-light);
+            color: var(--brand-forex-dark);
+            border-color: var(--brand-forex);
+        }
+        .spread-pill:hover:not(.active) {
+            background: #f1f5f9;
+        }
+
+        .currency-block {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 15px;
+            transition: 0.3s;
+        }
+        .currency-block:focus-within {
+            border-color: var(--brand-forex);
+            box-shadow: 0 0 0 3px var(--brand-forex-light);
+        }
+        .currency-select {
+            border: none;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            background: transparent;
+            cursor: pointer;
+            outline: none;
+            width: 100%;
+            margin-bottom: 10px;
+            text-overflow: ellipsis;
+        }
+        optgroup {
+            font-weight: 800;
+            color: var(--brand-forex-dark);
+            background: #f8f9fa;
+        }
+        .amount-input {
+            border: none;
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            width: 100%;
+            background: transparent;
+            outline: none;
+            padding: 0;
+            letter-spacing: -1px;
+        }
+        .amount-input::placeholder { color: #cbd5e1; }
+        .amount-input::-webkit-outer-spin-button,
+        .amount-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .swap-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -10%);
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: white;
+            border: 1px solid #cbd5e1;
+            color: var(--brand-forex);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+        .swap-btn:hover {
+            background: var(--brand-forex);
+            color: white;
+            border-color: var(--brand-forex);
+            transform: translate(-50%, -10%) rotate(180deg);
+        }
+
+        /* Main Display Card */
+        .rate-display-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .exchange-rate-text {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 5px 0 0 0;
+            color: var(--brand-forex);
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .inverse-rate {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Custom Rate Logic */
+        .custom-rate-input {
+            background: rgba(255,255,255,0.1);
+            border: 2px dashed var(--brand-forex);
+            color: var(--brand-forex);
+            font-weight: 800;
+            font-size: 2.2rem;
+            text-align: center;
+            width: 220px;
+            border-radius: 8px;
+            outline: none;
+            padding: 0 10px;
+        }
+        .custom-rate-input:focus { background: rgba(255,255,255,0.2); border-style: solid; }
+        .edit-rate-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .edit-rate-btn:hover { color: white; }
+
+        /* Status & Sync */
+        .status-text {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--brand-forex);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--brand-forex);
+            animation: pulse 1.5s infinite;
+        }
+        .custom-dot {
+            background-color: #ffc107;
+            box-shadow: 0 0 8px #ffc107;
+            animation: none;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.5; }
+        }
+        .refresh-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 15px;
+        }
+        .refresh-btn:hover { background: rgba(255,255,255,0.2); }
+        .refresh-btn:disabled { opacity: 0.5; cursor: wait; }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-exchange-alt me-2" style="color: var(--brand-forex);"></i> Institutional Forex</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="rate-display-card">
+            <div class="text-uppercase fw-bold text-muted" style="font-size: 0.8rem; letter-spacing: 2px;" id="rateTitle">Effective Exchange Rate</div>
+            
+            <div class="exchange-rate-text" id="liveRateContainer">
+                <span id="rateBase">1 USD =</span>
+                <span id="rateValueDisplay">Loading...</span>
+                <input type="number" id="customRateInput" class="custom-rate-input" style="display: none;" step="0.0001">
+                <span id="rateTarget">NGN</span>
+                
+                <button class="edit-rate-btn" id="editRateBtn" onclick="toggleCustomRate()" title="Lock exact P2P/Bank Rate">
+                    <i class="fas fa-pen"></i>
+                </button>
+            </div>
+            
+            <div class="inverse-rate" id="inverseRateDisplay">Inverse: ---</div>
+
+            <div class="status-text" id="apiStatusText">
+                <span class="live-dot" id="liveIndicator"></span> 
+                <span id="timestampText">Connecting to global network...</span>
+            </div>
+            
+            <button class="refresh-btn" id="refreshBtn" onclick="forceRefreshRates()">
+                <i class="fas fa-sync-alt me-1"></i> Sync Latest Web Data
+            </button>
+        </div>
+
+        <div class="input-panel">
+            
+            <label class="form-label">Simulate Provider Spread (Fees)</label>
+            <div class="spread-container" id="spreadBox">
+                <div class="spread-pill active" data-spread="0" onclick="setSpread(this)">Mid-Market (0%)</div>
+                <div class="spread-pill" data-spread="0.03" onclick="setSpread(this)">Credit Card (3%)</div>
+                <div class="spread-pill" data-spread="0.05" onclick="setSpread(this)">Bank/Kiosk (5%)</div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <label class="form-label">Amount You Have</label>
+                    <div class="currency-block">
+                        <select class="currency-select" id="currencyFrom" onchange="handleCurrencyChange()">
+                            <option value="USD">Loading...</option>
+                        </select>
+                        <input type="number" class="amount-input" id="amountFrom" value="1" min="0" placeholder="0.00" oninput="calculateForward()">
+                    </div>
+                </div>
+
+                <div class="col-md-2 position-relative d-none d-md-block">
+                    <button class="swap-btn" onclick="swapCurrencies()" title="Swap Currencies">
+                        <i class="fas fa-exchange-alt"></i>
+                    </button>
+                </div>
+
+                <div class="col-12 d-md-none text-center" style="margin: -10px 0;">
+                    <button class="btn btn-light border rounded-circle p-3 shadow-sm text-success" onclick="swapCurrencies()">
+                        <i class="fas fa-exchange-alt fa-rotate-90"></i>
+                    </button>
+                </div>
+
+                <div class="col-md-5">
+                    <label class="form-label">Amount You Get</label>
+                    <div class="currency-block">
+                        <select class="currency-select" id="currencyTo" onchange="handleCurrencyChange()">
+                            <option value="NGN">Loading...</option>
+                        </select>
+                        <input type="number" class="amount-input" id="amountTo" placeholder="0.00" oninput="calculateBackward()">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Engine Architecture
+        let globalRates = {};
+        let isCustomRateActive = false;
+        let isEditing = false;
+        let customRateMultiplier = 1;
+        let currentSpread = 0; // Default Mid-Market
+        
+        // Machine Learning Native API for Currency Names
+        const currencyNames = new Intl.DisplayNames(['en'], { type: 'currency' });
+        const majorCurrencies = ['USD', 'NGN', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CNY', 'INR', 'ZAR'];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchLiveRates();
+        });
+
+        // --- LAYER 1: PROVIDER SPREAD SIMULATOR ---
+        function setSpread(element) {
+            // If custom rate is locked, we don't apply automated spreads
+            if (isCustomRateActive) {
+                alert("Spread Simulator is disabled while a Custom Locked Rate is active. Your custom rate IS your spread.");
+                return;
+            }
+
+            document.querySelectorAll('.spread-pill').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            
+            currentSpread = parseFloat(element.getAttribute('data-spread'));
+            calculateForward();
+        }
+
+        // --- LAYER 2: API INGESTION ---
+        async function fetchLiveRates(isManualRefresh = false) {
+            const statusText = document.getElementById('timestampText');
+            const liveIndicator = document.getElementById('liveIndicator');
+            const refreshBtn = document.getElementById('refreshBtn');
+            
+            if (isManualRefresh) {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Syncing Web Data...';
+            }
+
+            try {
+                let response = await fetch('https://open.er-api.com/v6/latest/USD');
+                
+                if (!response.ok) {
+                    response = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+                    if (!response.ok) throw new Error("Complete Network Failure");
+                    const data = await response.json();
+                    globalRates = data.usd;
+                    if(!isCustomRateActive && !isEditing) statusText.innerText = `Market Data: ${data.date} (CDN Node)`;
+                } else {
+                    const data = await response.json();
+                    globalRates = data.rates;
+                    const updateTime = new Date(data.time_last_update_unix * 1000).toLocaleString();
+                    if(!isCustomRateActive && !isEditing) {
+                        statusText.innerText = `Web Data Synced: ${updateTime}`;
+                        liveIndicator.className = "live-dot";
+                    }
+                }
+
+                // Inject Dropdowns safely
+                const fromSelect = document.getElementById('currencyFrom');
+                if (fromSelect.options.length <= 1) populateSmartDropdowns();
+
+                // Trigger Math
+                if(!isCustomRateActive && !isEditing) calculateForward();
+
+            } catch (error) {
+                console.error("API Blocked.", error);
+                if(!isCustomRateActive && !isEditing) {
+                    statusText.innerHTML = `Offline. Check connection.`;
+                    liveIndicator.className = "live-dot custom-dot"; 
+                    liveIndicator.style.backgroundColor = "#dc3545"; 
+                }
+            } finally {
+                if (isManualRefresh) {
+                    setTimeout(() => {
+                        refreshBtn.disabled = false;
+                        refreshBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Sync Latest Web Data';
+                    }, 800);
+                }
+            }
+        }
+
+        // --- LAYER 3: SMART PRIORITY ROUTING ---
+        function populateSmartDropdowns() {
+            const fromSelect = document.getElementById('currencyFrom');
+            const toSelect = document.getElementById('currencyTo');
+            
+            fromSelect.innerHTML = '';
+            toSelect.innerHTML = '';
+
+            const allCodes = Object.keys(globalRates).sort();
+            const minors = allCodes.filter(code => !majorCurrencies.includes(code));
+
+            // Create OptGroups
+            const groupMajorFrom = document.createElement('optgroup');
+            groupMajorFrom.label = "🔥 Major Currencies";
+            const groupMajorTo = groupMajorFrom.cloneNode(true);
+
+            const groupMinorFrom = document.createElement('optgroup');
+            groupMinorFrom.label = "🌍 All Currencies";
+            const groupMinorTo = groupMinorFrom.cloneNode(true);
+
+            // Populate Majors
+            majorCurrencies.forEach(code => {
+                if(!globalRates[code]) return;
+                let fullName = code;
+                try { fullName = currencyNames.of(code); } catch(e) {}
+                groupMajorFrom.appendChild(new Option(`${code} - ${fullName}`, code, false, code === 'USD'));
+                groupMajorTo.appendChild(new Option(`${code} - ${fullName}`, code, false, code === 'NGN'));
+            });
+
+            // Populate Minors
+            minors.forEach(code => {
+                let fullName = code;
+                try { fullName = currencyNames.of(code); } catch(e) {}
+                groupMinorFrom.appendChild(new Option(`${code} - ${fullName}`, code));
+                groupMinorTo.appendChild(new Option(`${code} - ${fullName}`, code));
+            });
+
+            fromSelect.appendChild(groupMajorFrom);
+            fromSelect.appendChild(groupMinorFrom);
+            
+            toSelect.appendChild(groupMajorTo);
+            toSelect.appendChild(groupMinorTo);
+        }
+
+        function forceRefreshRates() {
+            fetchLiveRates(true);
+        }
+
+        // --- LAYER 4: CUSTOM LOCK ENGINE ---
+        function toggleCustomRate() {
+            const display = document.getElementById('rateValueDisplay');
+            const input = document.getElementById('customRateInput');
+            const btn = document.getElementById('editRateBtn');
+            const spreadBox = document.getElementById('spreadBox');
+
+            if (!isEditing && !isCustomRateActive) {
+                // EDIT MODE
+                isEditing = true;
+                display.style.display = 'none';
+                input.style.display = 'inline-block';
+                spreadBox.style.opacity = '0.5'; // Dim spread simulator
+                
+                const fromCur = document.getElementById('currencyFrom').value;
+                const toCur = document.getElementById('currencyTo').value;
+                const rawRate = globalRates[toCur] / globalRates[fromCur];
+                
+                input.value = rawRate ? rawRate.toFixed(4) : '';
+                input.focus();
+                
+                btn.innerHTML = '<i class="fas fa-check text-success"></i>';
+                document.getElementById('rateTitle').innerText = "ENTER EXACT CUSTOM RATE...";
+            } 
+            else if (isEditing) {
+                // LOCK MODE
+                isEditing = false;
+                isCustomRateActive = true;
+                customRateMultiplier = parseFloat(input.value) || 0;
+                
+                input.style.display = 'none';
+                display.style.display = 'inline-block';
+                
+                btn.innerHTML = '<i class="fas fa-undo text-warning" title="Revert to Web API"></i>';
+                
+                document.getElementById('rateTitle').innerText = "LOCKED P2P / CUSTOM RATE";
+                document.getElementById('timestampText').innerText = "Math locked to custom input.";
+                document.getElementById('liveIndicator').className = "live-dot custom-dot";
+                
+                calculateForward();
+            }
+            else if (!isEditing && isCustomRateActive) {
+                // REVERT MODE
+                isCustomRateActive = false;
+                spreadBox.style.opacity = '1'; // Restore spread simulator
+                btn.innerHTML = '<i class="fas fa-pen"></i>';
+                document.getElementById('rateTitle').innerText = "Effective Exchange Rate";
+                document.getElementById('liveIndicator').className = "live-dot";
+                document.getElementById('timestampText').innerText = "Restored to Web API Data.";
+                
+                calculateForward();
+            }
+        }
+
+        function resetCustomState() {
+            if (isCustomRateActive || isEditing) {
+                isEditing = false;
+                isCustomRateActive = false;
+                document.getElementById('customRateInput').style.display = 'none';
+                document.getElementById('rateValueDisplay').style.display = 'inline-block';
+                document.getElementById('editRateBtn').innerHTML = '<i class="fas fa-pen"></i>';
+                document.getElementById('rateTitle').innerText = "Effective Exchange Rate";
+                document.getElementById('liveIndicator').className = "live-dot";
+                document.getElementById('spreadBox').style.opacity = '1';
+                document.getElementById('timestampText').innerText = "Live Web API Restored.";
+            }
+        }
+
+        // --- LAYER 5: BIDIRECTIONAL MATH & INVERSE LOGIC ---
+        function formatDisplay(num) {
+            if (num < 0.01) return new Intl.NumberFormat('en-US', { maximumSignificantDigits: 4 }).format(num);
+            return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(num);
+        }
+
+        function getEffectiveRate(fromCur, toCur) {
+            if (isCustomRateActive) return customRateMultiplier;
+            if (!globalRates[fromCur] || !globalRates[toCur]) return 0;
+            
+            // Calculate base mid-market rate
+            let rawRate = globalRates[toCur] / globalRates[fromCur];
+            
+            // Apply Spread (Bank Fee Simulation). You receive less output currency.
+            return rawRate * (1 - currentSpread);
+        }
+
+        function calculateForward() {
+            const fromCur = document.getElementById('currencyFrom').value;
+            const toCur = document.getElementById('currencyTo').value;
+            const amountFrom = parseFloat(document.getElementById('amountFrom').value);
+
+            const effectiveRate = getEffectiveRate(fromCur, toCur);
+            updateBigDisplay(fromCur, toCur, effectiveRate);
+
+            if (isNaN(amountFrom)) {
+                document.getElementById('amountTo').value = '';
+                return;
+            }
+
+            const finalAmount = amountFrom * effectiveRate;
+            document.getElementById('amountTo').value = finalAmount > 0 ? parseFloat(finalAmount.toFixed(4)) : '';
+        }
+
+        function calculateBackward() {
+            const fromCur = document.getElementById('currencyFrom').value;
+            const toCur = document.getElementById('currencyTo').value;
+            const amountTo = parseFloat(document.getElementById('amountTo').value);
+
+            const effectiveRate = getEffectiveRate(fromCur, toCur);
+            updateBigDisplay(fromCur, toCur, effectiveRate);
+
+            if (isNaN(amountTo) || effectiveRate === 0) {
+                document.getElementById('amountFrom').value = '';
+                return;
+            }
+
+            const reverseAmount = amountTo / effectiveRate;
+            document.getElementById('amountFrom').value = reverseAmount > 0 ? parseFloat(reverseAmount.toFixed(4)) : '';
+        }
+
+        function swapCurrencies() {
+            resetCustomState();
+            const fromSelect = document.getElementById('currencyFrom');
+            const toSelect = document.getElementById('currencyTo');
+            
+            const tempCur = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = tempCur;
+
+            calculateForward();
+        }
+
+        function handleCurrencyChange() {
+            resetCustomState();
+            calculateForward();
+        }
+
+        function updateBigDisplay(fromCur, toCur, rate) {
+            if (rate === 0) return;
+            
+            // Base update
+            document.getElementById('rateBase').innerText = `1 ${fromCur} =`;
+            document.getElementById('rateTarget').innerText = toCur;
+            
+            if (!isEditing && !isCustomRateActive) {
+                document.getElementById('rateValueDisplay').innerText = formatDisplay(rate);
+            }
+
+            // Inverse Calculation Layer
+            const inverseValue = 1 / rate;
+            document.getElementById('inverseRateDisplay').innerHTML = `<i class="fas fa-retweet me-1"></i> Inverse Liquidity: <b>1 ${toCur} = ${formatDisplay(inverseValue)} ${fromCur}</b>`;
+        }
+    </script>
+</body>
+</html>

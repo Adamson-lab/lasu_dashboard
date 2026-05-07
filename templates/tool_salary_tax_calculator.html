@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Tax Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-teal: #20c997; /* Payroll Teal */
+            --brand-teal-light: rgba(32, 201, 151, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-teal);
+            box-shadow: 0 0 0 3px var(--brand-teal-light);
+        }
+        .result-card {
+            background: linear-gradient(135deg, #20c997 0%, #0c7b5a 100%);
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(32, 201, 151, 0.2);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-card::after {
+            content: '\f53d'; /* FA Money Check */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -10px;
+            bottom: -20px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+            transform: rotate(-10deg);
+        }
+        .result-value {
+            font-size: 3.2rem;
+            font-weight: 800;
+            margin: 5px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .paystub-table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+        }
+        .paystub-table th, .paystub-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.95rem;
+        }
+        .paystub-table th {
+            text-align: left;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+        .paystub-table td.amount {
+            text-align: right;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .paystub-table tr:last-child td {
+            border-bottom: none;
+        }
+        .color-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .chart-container {
+            position: relative;
+            height: 220px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .section-divider {
+            margin: 25px 0 15px 0;
+            border-top: 2px solid #e2e8f0;
+            position: relative;
+        }
+        .section-divider span {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-file-invoice-dollar me-2" style="color: var(--brand-teal);"></i> Salary Tax Calculator</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="input-panel">
+                    
+                    <div class="d-flex justify-content-between align-items-end mb-4">
+                        <div class="flex-grow-1 me-2">
+                            <label class="form-label">Gross Salary</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="currencySymbol">$</span>
+                                <input type="number" id="grossSalary" class="form-control" value="85000" min="0" oninput="calculatePaycheck()">
+                            </div>
+                        </div>
+                        <div style="width: 100px;">
+                            <label class="form-label">Per</label>
+                            <select id="salaryPeriod" class="form-select" onchange="calculatePaycheck()">
+                                <option value="year" selected>Year</option>
+                                <option value="month">Month</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>TAX PROFILE</span></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Calculation Mode</label>
+                        <select id="taxMode" class="form-select" onchange="toggleTaxMode()">
+                            <option value="progressive" selected>Progressive Tax Brackets (Standard)</option>
+                            <option value="flat">Flat Tax Rate</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4" id="flatRateContainer" style="display: none;">
+                        <label class="form-label">Flat Income Tax Rate</label>
+                        <div class="input-group">
+                            <input type="number" id="flatTaxRate" class="form-control" value="15" min="0" max="100" step="0.1" oninput="calculatePaycheck()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"><span>DEDUCTIONS & SETTINGS</span></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Pre-Tax Deductions (Pension, 401k)</label>
+                        <div class="input-group">
+                            <input type="number" id="preTaxDeduction" class="form-control" value="5" min="0" max="100" step="0.1" oninput="calculatePaycheck()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Currency Format</label>
+                        <select id="currencySelect" class="form-select" onchange="updateCurrency()">
+                            <option value="USD">USD ($) - US Dollar</option>
+                            <option value="NGN">NGN (₦) - Nigerian Naira</option>
+                            <option value="EUR">EUR (€) - Euro</option>
+                            <option value="GBP">GBP (£) - British Pound</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="result-card">
+                    <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.9;">Estimated Net Pay (Monthly)</div>
+                    <div class="result-value" id="monthlyNetDisplay">$0.00</div>
+                    <div style="font-size: 0.95rem; opacity: 0.9; font-weight: 600;" id="effectiveTaxDisplay">Effective Tax Rate: 0.0%</div>
+                </div>
+
+                <div class="row align-items-center g-4">
+                    <div class="col-md-5">
+                        <div class="chart-container">
+                            <canvas id="salaryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div style="background: var(--bg-surface); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                            <h6 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; color: #64748b; letter-spacing: 1px;">Annual Paystub Breakdown</h6>
+                            <table class="paystub-table">
+                                <tr>
+                                    <td><div><span class="color-dot" style="background: #e2e8f0;"></span>Gross Income</div></td>
+                                    <td class="amount" id="tableGross">$0.00</td>
+                                </tr>
+                                <tr>
+                                    <td><div><span class="color-dot" style="background: #ffc107;"></span>Pre-Tax Deductions</div></td>
+                                    <td class="amount text-warning" id="tableDeductions">-$0.00</td>
+                                </tr>
+                                <tr>
+                                    <td><div><span class="color-dot" style="background: #dc3545;"></span>Income Tax Paid</div></td>
+                                    <td class="amount text-danger" id="tableTax">-$0.00</td>
+                                </tr>
+                                <tr style="border-top: 2px solid var(--text-primary);">
+                                    <td class="fw-bold"><div><span class="color-dot" style="background: var(--brand-teal);"></span>Net Take-Home</div></td>
+                                    <td class="amount text-success fs-5" id="tableNet">$0.00</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 text-center d-flex justify-content-around p-3" style="background: #f8f9fa; border-radius: 12px; border: 1px solid var(--glass-border);">
+                    <div>
+                        <div class="small text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Bi-Weekly Pay</div>
+                        <div class="fw-bold fs-5 text-dark" id="biWeeklyNetDisplay">$0.00</div>
+                    </div>
+                    <div style="width: 1px; background: #cbd5e1;"></div>
+                    <div>
+                        <div class="small text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Weekly Pay</div>
+                        <div class="fw-bold fs-5 text-dark" id="weeklyNetDisplay">$0.00</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let salaryChartInstance = null;
+        let currentCurrency = 'USD';
+
+        // Standardized Progressive Tax Brackets (Simulated generic model for accurate curves)
+        const progressiveBrackets = [
+            { limit: 11000, rate: 0.10 },
+            { limit: 44725, rate: 0.12 },
+            { limit: 95375, rate: 0.22 },
+            { limit: 182100, rate: 0.24 },
+            { limit: 231250, rate: 0.32 },
+            { limit: 578125, rate: 0.35 },
+            { limit: Infinity, rate: 0.37 }
+        ];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateCurrency();
+        });
+
+        function toggleTaxMode() {
+            const mode = document.getElementById('taxMode').value;
+            document.getElementById('flatRateContainer').style.display = (mode === 'flat') ? 'block' : 'none';
+            calculatePaycheck();
+        }
+
+        function updateCurrency() {
+            currentCurrency = document.getElementById('currencySelect').value;
+            
+            // Update UI input symbols
+            const symbols = { 'USD': '$', 'NGN': '₦', 'EUR': '€', 'GBP': '£' };
+            document.getElementById('currencySymbol').innerText = symbols[currentCurrency];
+            
+            calculatePaycheck();
+        }
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currentCurrency,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function calculatePaycheck() {
+            // 1. Gather Inputs & Standardize to Annual Gross
+            const rawSalary = parseFloat(document.getElementById('grossSalary').value) || 0;
+            const period = document.getElementById('salaryPeriod').value;
+            const annualGross = period === 'month' ? rawSalary * 12 : rawSalary;
+            
+            if (annualGross <= 0) {
+                updateUI(0, 0, 0, 0);
+                return;
+            }
+
+            // 2. Pre-Tax Deductions
+            const dedPct = parseFloat(document.getElementById('preTaxDeduction').value) || 0;
+            const annualDeductions = annualGross * (dedPct / 100);
+            
+            const taxableIncome = annualGross - annualDeductions;
+
+            // 3. Tax Engine Calculation
+            let annualTax = 0;
+            const mode = document.getElementById('taxMode').value;
+
+            if (mode === 'flat') {
+                const flatRate = parseFloat(document.getElementById('flatTaxRate').value) || 0;
+                annualTax = taxableIncome * (flatRate / 100);
+            } else {
+                // Progressive Calculation Engine
+                let remainingIncome = taxableIncome;
+                let previousLimit = 0;
+
+                for (let bracket of progressiveBrackets) {
+                    let taxableAtThisBracket = Math.min(remainingIncome, bracket.limit - previousLimit);
+                    if (taxableAtThisBracket > 0) {
+                        annualTax += taxableAtThisBracket * bracket.rate;
+                        remainingIncome -= taxableAtThisBracket;
+                        previousLimit = bracket.limit;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // Prevent negative net pay edge cases
+            annualTax = Math.max(0, annualTax);
+            const annualNet = Math.max(0, annualGross - annualDeductions - annualTax);
+
+            updateUI(annualGross, annualDeductions, annualTax, annualNet);
+        }
+
+        function updateUI(gross, deductions, tax, net) {
+            // Calculate Frequencies
+            const monthlyNet = net / 12;
+            const biWeeklyNet = net / 26;
+            const weeklyNet = net / 52;
+            
+            const effectiveTaxRate = gross > 0 ? (tax / gross * 100).toFixed(1) : 0;
+
+            // Update DOM Elements
+            document.getElementById('monthlyNetDisplay').innerText = formatMoney(monthlyNet);
+            document.getElementById('effectiveTaxDisplay').innerText = `Effective Tax Rate: ${effectiveTaxRate}%`;
+            
+            document.getElementById('biWeeklyNetDisplay').innerText = formatMoney(biWeeklyNet);
+            document.getElementById('weeklyNetDisplay').innerText = formatMoney(weeklyNet);
+
+            document.getElementById('tableGross').innerText = formatMoney(gross);
+            document.getElementById('tableDeductions').innerText = `-${formatMoney(deductions)}`;
+            document.getElementById('tableTax').innerText = `-${formatMoney(tax)}`;
+            document.getElementById('tableNet').innerText = formatMoney(net);
+
+            renderChart(net, tax, deductions);
+        }
+
+        function renderChart(net, tax, deductions) {
+            const ctx = document.getElementById('salaryChart').getContext('2d');
+            
+            if (salaryChartInstance) {
+                salaryChartInstance.destroy();
+            }
+
+            if (net === 0 && tax === 0 && deductions === 0) return;
+
+            salaryChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Net Take-Home', 'Income Tax', 'Deductions'],
+                    datasets: [{
+                        data: [net, tax, deductions],
+                        backgroundColor: [
+                            '#20c997', // Teal (Net)
+                            '#dc3545', // Red (Tax)
+                            '#ffc107'  // Yellow (Deductions)
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${formatMoney(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V70 Global Market Matrix | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V70 MASTER THEME ENGINE
+           ========================================== */
+        
+        /* DARK MODE */
+        [data-theme="dark"] {
+            --bg-master: #0b0f19;
+            --bg-surface: #111827;
+            --bg-radar: radial-gradient(circle, #1f2937 0%, #000000 100%);
+            --border-core: #1f2937;
+            --border-hover: #3b82f6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --grid-line: rgba(255, 255, 255, 0.03);
+            --shadow-core: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --panel-bg: #000000;
+        }
+
+        /* LIGHT MODE */
+        [data-theme="light"] {
+            --bg-master: #f1f5f9;
+            --bg-surface: #ffffff;
+            --bg-radar: radial-gradient(circle, #f8fafc 0%, #e2e8f0 100%);
+            --border-core: #cbd5e1;
+            --border-hover: #0ea5e9;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --grid-line: rgba(0, 0, 0, 0.04);
+            --shadow-core: 0 15px 35px rgba(0, 0, 0, 0.05);
+            --panel-bg: #f8fafc;
+        }
+
+        /* BRAND COLORS */
+        :root {
+            --neon-blue: #0ea5e9;
+            --neon-green: #10b981;
+            --neon-red: #f43f5e;
+            --neon-amber: #f59e0b;
+        }
+
+        /* GLOBALS */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-master);
+            color: var(--text-main);
+            padding: 40px 20px;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .tool-container {
+            max-width: 1500px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-core);
+            border: 1px solid var(--border-core);
+            transition: all 0.4s ease;
+        }
+
+        /* HEADER & LIQUIDITY RADAR */
+        .liquidity-radar {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 10px;
+            padding: 20px 25px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.4s ease;
+        }
+
+        .liquidity-status {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 900;
+            font-size: 1.15rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .pulse-beacon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            box-shadow: 0 0 15px currentColor;
+            animation: radarPulse 2s infinite;
+        }
+        
+        @keyframes radarPulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+
+        /* CONTROL PANEL */
+        .control-panel {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-core);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.4s ease;
+        }
+
+        .form-select {
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            border-color: var(--border-core);
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .form-select:focus {
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+        }
+        
+        .btn-neon {
+            background: transparent;
+            color: var(--neon-blue);
+            border: 2px solid var(--neon-blue);
+            font-weight: 800;
+            padding: 8px 20px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-neon:hover {
+            background: var(--neon-blue);
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn-theme {
+            background: var(--bg-surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-core);
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-theme:hover { border-color: var(--text-main); }
+
+        /* NODE GRID & CARDS */
+        .clock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 25px;
+        }
+
+        .node-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 12px;
+            padding: 30px 25px;
+            position: relative;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .node-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.1);
+            transform: translateY(-4px);
+        }
+
+        /* Individual Card Diurnal Shading */
+        .node-card.local-night .radar-face {
+            background: radial-gradient(circle, #1e293b 0%, #000000 100%);
+            border-color: #334155;
+        }
+        .node-card.local-day .radar-face {
+            background: radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%);
+            border-color: #94a3b8;
+        }
+
+        .btn-kill {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-kill:hover { color: var(--neon-red); transform: scale(1.1); }
+        .node-card.home-node .btn-kill { display: none; }
+
+        /* Typography */
+        .node-title {
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            color: var(--text-main);
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+        
+        .node-subtitle {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .time-delta-badge {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-core);
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+
+        /* Radar Clock Face */
+        .radar-face {
+            width: 190px;
+            height: 190px;
+            border-radius: 50%;
+            background: var(--bg-radar);
+            border: 3px solid var(--border-core);
+            position: relative;
+            margin-bottom: 25px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+
+        .radar-face::before {
+            content: '';
+            position: absolute;
+            top: 6px; bottom: 6px; left: 6px; right: 6px;
+            border: 1px dashed var(--text-muted);
+            opacity: 0.3;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .radar-center {
+            width: 10px;
+            height: 10px;
+            background: var(--text-main);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%; left: 50%;
+            transform-origin: bottom center;
+            border-radius: 4px;
+            z-index: 5;
+        }
+        .hand.hour { width: 5px; height: 50px; margin-left: -2.5px; background: var(--text-muted); }
+        .hand.minute { width: 3px; height: 75px; margin-left: -1.5px; background: var(--text-main); }
+        .hand.second { 
+            width: 2px; 
+            height: 85px; 
+            margin-left: -1px;
+            background: var(--neon-red); 
+            z-index: 6;
+            border-radius: 0;
+        }
+
+        /* Digital Terminal Text */
+        .terminal-time {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 2.3rem;
+            font-weight: 900;
+            color: var(--text-main);
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+        }
+
+        /* Market Phase Tag */
+        .market-phase {
+            width: 100%;
+            padding: 10px 0;
+            text-align: center;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .phase-rth { background: rgba(16, 185, 129, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); }
+        .phase-pre { background: rgba(245, 158, 11, 0.1); color: var(--neon-amber); border: 1px solid var(--neon-amber); }
+        .phase-post { background: rgba(14, 165, 233, 0.1); color: var(--neon-blue); border: 1px solid var(--neon-blue); }
+        .phase-closed { background: var(--bg-surface); color: var(--text-muted); border: 1px solid var(--border-core); }
+
+        /* Diurnal Illumination Bar */
+        .diurnal-track {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-core);
+            border-radius: 4px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .diurnal-fill {
+            height: 100%;
+            background: var(--neon-amber);
+            width: 0%;
+        }
+        .node-card.local-night .diurnal-fill { background: var(--neon-blue); }
+
+        .diurnal-label {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--border-core);">
+            <h2 class="fw-bold m-0" style="color: var(--text-main);">
+                <i class="fas fa-satellite-dish me-2" style="color: var(--neon-blue);"></i> GLOBAL COMMAND MATRIX 
+                <span class="badge ms-2" style="background: var(--border-core); color: var(--text-main); font-size: 0.75rem; vertical-align: middle;">V70</span>
+            </h2>
+            <div class="d-flex gap-2">
+                <button class="btn-theme" id="themeToggleBtn" onclick="toggleMasterTheme()" title="Toggle Interface Engine">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary fw-bold border-0" style="color: var(--text-main); background: var(--panel-bg);">
+                    <i class="fas fa-arrow-left me-1"></i> Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="liquidity-radar">
+            <div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px;">Global Planetary Overlap</div>
+                <div class="liquidity-status" id="globalLiquidityStatus">
+                    <div class="pulse-beacon" id="liquidityBeacon" style="color: var(--text-muted);"></div>
+                    <span id="liquidityText" style="color: var(--text-main);">SCANNING GLOBAL NODES...</span>
+                </div>
+            </div>
+            <div class="text-end" style="font-family: 'Courier New', monospace; color: var(--neon-blue); font-size: 1.1rem; font-weight: 900;">
+                UTC <span id="masterUTC">00:00:00</span>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="flex-grow-1">
+                <select id="tzSelect" class="form-select form-select-lg">
+                    </select>
+            </div>
+            <button class="btn-neon" onclick="addNode()">
+                <i class="fas fa-crosshairs me-2"></i> Lock Target
+            </button>
+        </div>
+
+        <div class="clock-grid" id="clockGrid">
+            </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // THEME ENGINE
+        // ==========================================
+        function toggleMasterTheme() {
+            const htmlTag = document.documentElement;
+            const currentTheme = htmlTag.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            htmlTag.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('lisa_v70_theme', newTheme);
+        }
+
+        // ==========================================
+        // V70 OMNI-ZONE DATABASE GENERATOR
+        // ==========================================
+        function populateTimezones() {
+            const select = document.getElementById('tzSelect');
+            select.innerHTML = ''; 
+
+            // 1. Hardcoded Tier 1 Markets for specific tracking
+            const tier1Group = document.createElement('optgroup');
+            tier1Group.label = "🔥 TIER 1 FINANCIAL MARKETS";
+            const tier1Markets = [
+                { val: "America/New_York|NYSE / NASDAQ|09:30|16:00", text: "New York (NYSE / NASDAQ)" },
+                { val: "Europe/London|LSE|08:00|16:30", text: "London (LSE)" },
+                { val: "Asia/Tokyo|TSE|09:00|15:00", text: "Tokyo (TSE)" },
+                { val: "Asia/Hong_Kong|HKEX|09:30|16:00", text: "Hong Kong (HKEX)" },
+                { val: "Europe/Frankfurt|FSE|09:00|17:30", text: "Frankfurt (FSE)" },
+                { val: "Australia/Sydney|ASX|10:00|16:00", text: "Sydney (ASX)" }
+            ];
+            tier1Markets.forEach(m => tier1Group.appendChild(new Option(m.text, m.val)));
+            select.appendChild(tier1Group);
+
+            // 2. Fetch EVERY Timezone in the World natively from the browser
+            const allZones = Intl.supportedValuesOf('timeZone');
+            const groupedZones = {};
+
+            // Group by Continent Prefix
+            allZones.forEach(zone => {
+                const parts = zone.split('/');
+                if (parts.length > 1) {
+                    const continent = parts[0];
+                    if (!groupedZones[continent]) groupedZones[continent] = [];
+                    groupedZones[continent].push(zone);
+                }
+            });
+
+            // 3. Build UI OptGroups for all countries
+            const continents = ['Africa', 'America', 'Asia', 'Europe', 'Pacific', 'Australia', 'Indian', 'Atlantic'];
+            
+            continents.forEach(continent => {
+                if (groupedZones[continent]) {
+                    const optGroup = document.createElement('optgroup');
+                    optGroup.label = `🌍 ${continent.toUpperCase()} (ALL REGIONS)`;
+                    
+                    groupedZones[continent].forEach(zone => {
+                        // Extract the exact city/country name cleanly
+                        let cityName = zone.split('/').pop().replace(/_/g, ' ');
+                        optGroup.appendChild(new Option(`${cityName} (${zone})`, zone));
+                    });
+                    
+                    select.appendChild(optGroup);
+                }
+            });
+        }
+
+        // ==========================================
+        // V70 ARCHITECTURE STATE
+        // ==========================================
+        let activeNodes = [
+            // Home Node
+            { id: 'node-home', tz: 'Africa/Lagos', city: 'Lagos', exchange: 'NGX Command', open: '10:00', close: '14:30', locked: true },
+            { id: generateId(), tz: 'America/New_York', city: 'New York', exchange: 'NYSE / NASDAQ', open: '09:30', close: '16:00', locked: false },
+            { id: generateId(), tz: 'Europe/London', city: 'London', exchange: 'LSE', open: '08:00', close: '16:30', locked: false }
+        ];
+
+        let engineRAF;
+
+        function generateId() {
+            return 'node-' + Math.random().toString(36).substr(2, 9);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Restore Theme
+            const savedTheme = localStorage.getItem('lisa_v70_theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                document.getElementById('themeIcon').className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            }
+
+            populateTimezones();
+            renderNodeGrid();
+            requestAnimationFrame(coreTemporalLoop);
+        });
+
+        // ==========================================
+        // NODE MUTATION & SMART PARSER
+        // ==========================================
+        function addNode() {
+            const select = document.getElementById('tzSelect');
+            const valString = select.value;
+            
+            let tzStr, exchangeStr, openStr, closeStr;
+
+            // Smart Parser: Check if it's a Tier-1 Market with explicit data, or a standard World Country
+            if (valString.includes('|')) {
+                const parts = valString.split('|');
+                tzStr = parts[0];
+                exchangeStr = parts[1];
+                openStr = parts[2];
+                closeStr = parts[3];
+            } else {
+                // It's a standard country pulled from the API
+                tzStr = valString;
+                exchangeStr = "Local Business Hours";
+                openStr = "09:00"; // Standard Global Business Open
+                closeStr = "17:00"; // Standard Global Business Close
+            }
+
+            // Format City cleanly
+            let cityStr = tzStr.split('/').pop().replace(/_/g, ' ');
+
+            if (activeNodes.some(node => node.tz === tzStr)) {
+                alert("Node is already active in the matrix.");
+                return;
+            }
+
+            activeNodes.push({ 
+                id: generateId(), 
+                tz: tzStr, 
+                city: cityStr, 
+                exchange: exchangeStr, 
+                open: openStr, 
+                close: closeStr, 
+                locked: false 
+            });
+            
+            renderNodeGrid();
+        }
+
+        function removeNode(id) {
+            activeNodes = activeNodes.filter(n => n.id !== id);
+            renderNodeGrid();
+        }
+
+        // ==========================================
+        // DOM RENDERING
+        // ==========================================
+        function renderNodeGrid() {
+            const grid = document.getElementById('clockGrid');
+            grid.innerHTML = '';
+
+            activeNodes.forEach(node => {
+                const card = document.createElement('div');
+                card.id = `card-${node.id}`;
+                card.className = `node-card ${node.locked ? 'home-node' : ''}`;
+                
+                card.innerHTML = `
+                    <button class="btn-kill" onclick="removeNode('${node.id}')"><i class="fas fa-times"></i></button>
+                    
+                    <div class="node-title" title="${node.city}">${node.city}</div>
+                    <div class="node-subtitle" id="date-${node.id}">--- | ${node.exchange}</div>
+                    
+                    <div class="time-delta-badge" id="delta-${node.id}">CALCULATING DELTA...</div>
+
+                    <div class="radar-face">
+                        <div class="radar-center"></div>
+                        <div class="hand hour" id="h-${node.id}"></div>
+                        <div class="hand minute" id="m-${node.id}"></div>
+                        <div class="hand second" id="s-${node.id}"></div>
+                    </div>
+
+                    <div class="terminal-time" id="digi-${node.id}">--:--:--</div>
+
+                    <div class="market-phase" id="phase-${node.id}">SCANNING...</div>
+
+                    <div class="diurnal-track">
+                        <div class="diurnal-fill" id="sun-${node.id}"></div>
+                    </div>
+                    <div class="diurnal-label">
+                        <span>00:00</span>
+                        <span>Solar Position</span>
+                        <span>24:00</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // ==========================================
+        // V70 TEMPORAL ENGINE (60 FPS)
+        // ==========================================
+        function coreTemporalLoop() {
+            const now = new Date();
+            
+            // Master UTC Clock
+            const utcStr = now.toISOString().substring(11, 19);
+            document.getElementById('masterUTC').innerText = utcStr;
+
+            const localMachineHours = now.getHours();
+            let openMarkets = [];
+
+            activeNodes.forEach(node => {
+                // IANA Time Extraction
+                const localDateStr = now.toLocaleString("en-US", { timeZone: node.tz });
+                const localDate = new Date(localDateStr);
+
+                const hh = localDate.getHours();
+                const mm = localDate.getMinutes();
+                const ss = localDate.getSeconds();
+                const ms = localDate.getMilliseconds();
+                const day = localDate.getDay();
+
+                // --- A. TEMPORAL DELTA ALGORITHM ---
+                let hourDiff = hh - localMachineHours;
+                if (hourDiff > 12) hourDiff -= 24;
+                if (hourDiff < -12) hourDiff += 24;
+                
+                const deltaBadge = document.getElementById(`delta-${node.id}`);
+                if (hourDiff === 0) {
+                    deltaBadge.innerText = "LOCAL SYSTEM TIME";
+                    deltaBadge.style.color = "var(--neon-green)";
+                } else {
+                    const sign = hourDiff > 0 ? "+" : "";
+                    deltaBadge.innerText = `DELTA: ${sign}${hourDiff} HOURS`;
+                    deltaBadge.style.color = "var(--text-muted)";
+                }
+
+                // --- B. ANALOG RADAR PHYSICS ---
+                const secDeg = ((ss + ms/1000) / 60) * 360;
+                const minDeg = ((mm + ss/60) / 60) * 360;
+                const hourDeg = ((hh % 12 + mm/60) / 12) * 360;
+
+                document.getElementById(`s-${node.id}`).style.transform = `rotate(${secDeg}deg)`;
+                document.getElementById(`m-${node.id}`).style.transform = `rotate(${minDeg}deg)`;
+                document.getElementById(`h-${node.id}`).style.transform = `rotate(${hourDeg}deg)`;
+
+                // --- C. DIGITAL READOUT ---
+                const p_hh = String(hh).padStart(2, '0');
+                const p_mm = String(mm).padStart(2, '0');
+                const p_ss = String(ss).padStart(2, '0');
+                document.getElementById(`digi-${node.id}`).innerText = `${p_hh}:${p_mm}:${p_ss}`;
+                
+                const displayDate = localDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                document.getElementById(`date-${node.id}`).innerText = `${displayDate} | ${node.exchange}`;
+
+                // --- D. LOCAL DIURNAL SHADING ---
+                const minutesElapsed = (hh * 60) + mm;
+                const totalMinutes = 24 * 60;
+                const solarPct = (minutesElapsed / totalMinutes) * 100;
+                
+                document.getElementById(`sun-${node.id}`).style.width = `${solarPct}%`;
+
+                const cardEl = document.getElementById(`card-${node.id}`);
+                if (hh >= 6 && hh < 18) {
+                    cardEl.classList.add('local-day');
+                    cardEl.classList.remove('local-night');
+                } else {
+                    cardEl.classList.add('local-night');
+                    cardEl.classList.remove('local-day');
+                }
+
+                // --- E. SMART BUSINESS HOURS LOGIC ---
+                const phaseEl = document.getElementById(`phase-${node.id}`);
+                
+                if (day === 0 || day === 6) {
+                    phaseEl.className = 'market-phase phase-closed';
+                    phaseEl.innerText = "WEEKEND CLOSED";
+                } else {
+                    const openParts = node.open.split(':');
+                    const closeParts = node.close.split(':');
+                    const openMin = parseInt(openParts[0]) * 60 + parseInt(openParts[1]);
+                    const closeMin = parseInt(closeParts[0]) * 60 + parseInt(closeParts[1]);
+                    
+                    const preMarketMin = openMin - 120;
+                    const postMarketMin = closeMin + 120;
+
+                    if (minutesElapsed >= openMin && minutesElapsed < closeMin) {
+                        phaseEl.className = 'market-phase phase-rth';
+                        phaseEl.innerText = "ACTIVE HOURS";
+                        openMarkets.push(node.city);
+                    } else if (minutesElapsed >= preMarketMin && minutesElapsed < openMin) {
+                        phaseEl.className = 'market-phase phase-pre';
+                        phaseEl.innerText = "PRE-OPEN";
+                    } else if (minutesElapsed >= closeMin && minutesElapsed < postMarketMin) {
+                        phaseEl.className = 'market-phase phase-post';
+                        phaseEl.innerText = "AFTER-HOURS";
+                    } else {
+                        phaseEl.className = 'market-phase phase-closed';
+                        phaseEl.innerText = "CLOSED";
+                    }
+                }
+            });
+
+            // --- F. MASTER LIQUIDITY RADAR ---
+            updateLiquidityRadar(openMarkets);
+
+            engineRAF = requestAnimationFrame(coreTemporalLoop);
+        }
+
+        function updateLiquidityRadar(openArray) {
+            const statusEl = document.getElementById('liquidityText');
+            const beaconEl = document.getElementById('liquidityBeacon');
+            
+            if (openArray.length === 0) {
+                statusEl.innerText = "GLOBAL NODES OFFLINE";
+                beaconEl.style.color = "var(--border-core)";
+                statusEl.style.color = "var(--text-muted)";
+            } else if (openArray.length === 1) {
+                statusEl.innerText = `ISOLATED HUB ACTIVE: ${openArray[0].toUpperCase()}`;
+                beaconEl.style.color = "var(--neon-amber)";
+                statusEl.style.color = "var(--text-main)";
+            } else {
+                // If there are too many open, just say "MULTIPLE HUBS ACTIVE" to prevent text overflow
+                const displayStr = openArray.length > 3 ? "MULTIPLE HUBS ACTIVE" : openArray.join(' + ').toUpperCase();
+                statusEl.innerText = `HIGH LIQUIDITY OVERLAP: ${displayStr}`;
+                beaconEl.style.color = "var(--neon-green)";
+                statusEl.style.color = "var(--text-main)";
+            }
+        }
+    </script>
+</body>
+</html>

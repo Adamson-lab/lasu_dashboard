@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resume - {{ student.name }}</title>
+    <style>
+        /* Exact layout replication settings */
+        body {
+            font-family: "Calibri", "Arial", sans-serif;
+            font-size: 11pt;
+            line-height: 1.3;
+            color: #000;
+            margin: 0;
+            padding: 40px;
+            background: #fff;
+        }
+        
+        @page { size: A4; margin: 0.5in; }
+        
+        .header { text-align: left; margin-bottom: 15px; }
+        .name { font-size: 20pt; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; }
+        .contact-info { font-size: 10pt; margin-bottom: 15px; }
+        
+        .section-title {
+            font-size: 11pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1px solid #000;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            padding-bottom: 2px;
+            color: #2e74b5; /* Matches the bluish tone in some modern CVs, or use #000 for strict bw */
+        }
+        
+        p { margin: 0 0 5px 0; text-align: justify; }
+        
+        .job-header { display: flex; justify-content: space-between; font-weight: bold; margin-top: 8px; }
+        .job-sub { display: flex; justify-content: space-between; font-style: italic; margin-bottom: 3px; }
+        
+        ul { margin: 0; padding-left: 18px; }
+        li { margin-bottom: 3px; }
+        
+        .skills-list { margin-top: 5px; }
+        .skill-cat { font-weight: bold; }
+        
+        /* Print optimization */
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+        }
+        
+        .btn-print {
+            position: fixed; top: 20px; right: 20px;
+            padding: 10px 20px; background: #007bff; color: white;
+            text-decoration: none; font-family: sans-serif; font-weight: bold;
+            border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+<a href="javascript:window.print()" class="btn-print no-print">Download PDF</a>
+
+<div class="header">
+    <div class="name">{{ student.name }}</div>
+    <div>Lagos, Nigeria.</div>
+    <div class="contact-info">
+        {{ student.phone_number }} | {{ student.email }} | {{ student.matric_no }}
+    </div>
+</div>
+
+<div class="section-title">PROFESSIONAL SUMMARY</div>
+<p>
+    A highly passionate and dedicated student with a strong background in technology, seeking to leverage a solid academic foundation. 
+    Proven experience working both independently and as part of a team. My objective is to apply my skills in a dynamic environment to drive positive outcomes.
+</p>
+
+{% if work_exp %}
+<div class="section-title">WORK EXPERIENCE</div>
+    {% for job in work_exp %}
+    <div class="job-header">
+        <span>{{ job.company }}</span>
+    </div>
+    <div class="job-sub">
+        <span>{{ job.role }}</span>
+        <span>{{ job.start_date }} - {{ job.end_date }}</span>
+    </div>
+    <ul>
+        {% for line in job.description.split('\n') %}
+            {% if line.strip() %}<li>{{ line }}</li>{% endif %}
+        {% endfor %}
+    </ul>
+    {% endfor %}
+{% endif %}
+
+<div class="section-title">EDUCATION</div>
+<div class="job-header">
+    <span>Lagos State University</span>
+</div>
+<div class="job-sub">
+    <span>B.Sc., {{ student.department }}</span>
+    <span>{{ student.level }} Level</span>
+</div>
+
+{% if certs %}
+<div class="section-title">CERTIFICATIONS</div>
+<ul>
+    {% for cert in certs %}
+    <li>{{ cert.name }} - {{ cert.issuer }} ({{ cert.date_earned.strftime('%Y') }})</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if awards %}
+<div class="section-title">AWARDS & SCHOLARSHIPS</div>
+<ul>
+    {% for award in awards %}
+    <li>{{ award.title }}: {{ award.issuer }} {{ award.date_received }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if projects %}
+<div class="section-title">PROJECTS</div>
+    {% for proj in projects %}
+    <div class="job-header">
+        <span>{{ proj.title }}</span>
+    </div>
+    <div class="job-sub">
+        <span>{{ proj.role_type }}</span>
+        <span>{{ proj.date_range }}</span>
+    </div>
+    <ul>
+        {% for line in proj.description.split('\n') %}
+            {% if line.strip() %}<li>{{ line }}</li>{% endif %}
+        {% endfor %}
+        {% if proj.tools %}<li><strong>Tools:</strong> {{ proj.tools }}</li>{% endif %}
+    </ul>
+    {% endfor %}
+{% endif %}
+
+{% if volunteers %}
+<div class="section-title">VOLUNTEERING & LEADERSHIP</div>
+    {% for vol in volunteers %}
+    <div class="job-header">
+        <span>{{ vol.organization }}</span>
+    </div>
+    <div class="job-sub">
+        <span>{{ vol.role }}</span>
+        <span>{{ vol.date_range }}</span>
+    </div>
+    <ul>
+        {% for line in vol.description.split('\n') %}
+            {% if line.strip() %}<li>{{ line }}</li>{% endif %}
+        {% endfor %}
+    </ul>
+    {% endfor %}
+{% endif %}
+
+<div class="section-title">SKILLS</div>
+<div class="skills-list">
+    {% if hard_skills %}
+    <div><span class="skill-cat">• HARD SKILLS:</span> {{ hard_skills.name }}</div>
+    {% endif %}
+    {% if soft_skills %}
+    <div><span class="skill-cat">• SOFT SKILLS:</span> {{ soft_skills.name }}</div>
+    {% endif %}
+</div>
+
+</body>
+</html>

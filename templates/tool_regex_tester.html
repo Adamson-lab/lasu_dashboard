@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dracula">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RegEx Quantum Studio V3 | LASU Tools</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-root: #1e1e1e;
+            --bg-sidebar: #252526;
+            --bg-panel: #1e1e1e;
+            --bg-input: #3c3c3c;
+            --bg-highlight: rgba(255, 215, 0, 0.2);
+            --bg-highlight-focus: rgba(255, 215, 0, 0.4);
+            
+            --border-color: #3e3e42;
+            --accent-color: #bd93f9; /* Dracula Purple */
+            --accent-hover: #a37acc;
+            --success-color: #50fa7b;
+            
+            --text-main: #f8f8f2;
+            --text-muted: #8b949e;
+            
+            --match-1: #ff79c6;
+            --match-2: #8be9fd;
+            --match-3: #50fa7b;
+            --match-4: #f1fa8c;
+            
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        [data-theme="light"] {
+            --bg-root: #ffffff;
+            --bg-sidebar: #f6f8fa;
+            --bg-panel: #ffffff;
+            --bg-input: #ffffff;
+            --bg-highlight: rgba(255, 215, 0, 0.3);
+            
+            --border-color: #d1d5da;
+            --accent-color: #0366d6;
+            --accent-hover: #005cc5;
+            --success-color: #28a745;
+            
+            --text-main: #24292e;
+            --text-muted: #586069;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-sidebar); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; border: 2px solid var(--bg-sidebar); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        body { background: var(--bg-root); color: var(--text-main); font-family: var(--font-ui); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* HEADER */
+        .app-header { height: 50px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--bg-sidebar); }
+        .brand { font-weight: 700; font-size: 14px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
+        .brand i { color: var(--accent-color); }
+
+        /* LAYOUT */
+        .app-shell { display: flex; flex: 1; height: calc(100vh - 50px); }
+        .sidebar { width: 320px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; transition: width 0.2s; }
+        .workspace { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-panel); padding: 20px; overflow-y: auto; }
+
+        /* INPUT AREAS */
+        .regex-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; position: relative; }
+        .regex-input-wrapper { flex: 1; position: relative; display: flex; align-items: center; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; padding: 5px 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .regex-slash { color: var(--text-muted); font-family: var(--font-code); font-weight: bold; font-size: 16px; user-select: none; }
+        .regex-input { flex: 1; background: transparent; border: none; color: var(--text-main); font-family: var(--font-code); font-size: 16px; padding: 5px; width: 100%; }
+        .flag-btn { background: transparent; border: 1px solid transparent; color: var(--text-muted); font-family: var(--font-code); font-size: 12px; font-weight: bold; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: 0.2s; }
+        .flag-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.1); }
+        .flag-btn.active { color: var(--accent-color); background: rgba(189, 147, 249, 0.1); border-color: rgba(189, 147, 249, 0.3); }
+
+        /* TEXT EDITOR */
+        .editor-box { position: relative; border: 1px solid var(--border-color); border-radius: 6px; height: 300px; background: var(--bg-input); overflow: hidden; font-family: var(--font-code); font-size: 14px; line-height: 1.6; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); transition: border-color 0.3s; }
+        .editor-box.drag-over { border-color: var(--accent-color); border-width: 2px; }
+        .editor-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 15px; white-space: pre-wrap; overflow-wrap: break-word; overflow: auto; border: none; background: transparent; font-family: inherit; line-height: inherit; }
+        
+        .editor-backdrop { z-index: 1; color: var(--text-main); pointer-events: none; }
+        .editor-textarea { z-index: 2; color: var(--text-main); caret-color: var(--text-main); resize: none; -webkit-text-fill-color: transparent; } 
+        
+        /* Highlighting Classes */
+        mark { background: var(--bg-highlight); color: inherit; border-radius: 2px; padding: 2px 0; animation: flash 0.5s; }
+        mark.current { background: var(--bg-highlight-focus); border: 1px solid var(--accent-color); }
+        .match-group-1 { color: var(--match-1); font-weight: bold; }
+        .match-group-2 { color: var(--match-2); font-weight: bold; }
+        .match-group-3 { color: var(--match-3); font-weight: bold; }
+
+        @keyframes flash { from { opacity: 0.5; } to { opacity: 1; } }
+
+        /* PANELS */
+        .panel-header { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+        .match-list { list-style: none; padding: 0; margin: 0; }
+        .match-item { padding: 8px 10px; border-bottom: 1px solid var(--border-color); font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.1s; }
+        .match-item:hover { background: var(--bg-input); }
+        .match-index { font-family: var(--font-code); color: var(--accent-color); font-size: 11px; opacity: 0.8; margin-right: 10px; }
+
+        /* CHEAT SHEET & EXPLAINER */
+        .cheat-category { margin-bottom: 15px; }
+        .cheat-item { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 10px; cursor: pointer; border-radius: 4px; }
+        .cheat-item:hover { background: rgba(255,255,255,0.05); }
+        .cheat-code { font-family: var(--font-code); color: var(--accent-color); background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px; }
+        .cheat-desc { color: var(--text-muted); }
+
+        .explain-token { display: flex; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border-color); font-size: 12px; align-items: flex-start; }
+        .explain-char { font-family: var(--font-code); color: var(--match-2); background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; min-width: 30px; text-align: center; }
+        .explain-text { color: var(--text-main); opacity: 0.9; }
+
+        /* TOOLS */
+        .tool-bar { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-tool { background: var(--bg-sidebar); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 15px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap; }
+        .btn-tool:hover { border-color: var(--accent-color); color: var(--accent-color); background: var(--bg-input); }
+        .btn-tool-primary { border-color: var(--accent-color); color: var(--accent-color); }
+
+        /* CODE GEN MODAL */
+        .code-block { background: #0b0c0e; padding: 15px; border-radius: 6px; font-family: var(--font-code); font-size: 12px; color: #a5d6ff; margin-bottom: 10px; overflow-x: auto; border: 1px solid #333; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .modal-box { background: var(--bg-sidebar); width: 700px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 80vh; }
+        .modal-body { padding: 20px; overflow-y: auto; }
+        
+        .error-tooltip { position: absolute; top: 100%; left: 0; background: #ff5555; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; margin-top: 5px; z-index: 100; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: slideDown 0.2s; }
+        .error-tooltip::before { content: ''; position: absolute; top: -5px; left: 20px; border-width: 0 5px 5px 5px; border-style: solid; border-color: transparent transparent #ff5555 transparent; }
+        
+        /* V3 New Animations & UI */
+        .toast-notification { position: fixed; bottom: 20px; right: 20px; background: var(--bg-sidebar); border: 1px solid var(--accent-color); color: var(--text-main); padding: 10px 20px; border-radius: 6px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 2000; animation: slideInRight 0.3s; display: none; align-items: center; gap: 10px; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        @keyframes slideDown { from { transform: translateY(-5px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<header class="app-header">
+    <div class="brand">
+        <i class="fas fa-atom fa-lg"></i>
+        <span>REG<span style="color:var(--accent-color)">EX</span> QUANTUM STUDIO <span class="badge bg-primary bg-opacity-10 text-primary border border-primary ms-2" style="font-size:9px;">V3.0</span></span>
+    </div>
+    <div class="d-flex gap-3">
+        <button class="btn btn-sm btn-outline-success" onclick="App.share.generateLink()" title="Share State"><i class="fas fa-share-nodes"></i> Share</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="App.toggleTheme()" title="Toggle Theme"><i class="fas fa-adjust"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="window.location.href='{{ url_for('student_tools_dashboard') }}'">Exit</button>
+    </div>
+</header>
+
+<div class="app-shell">
+    
+    <aside class="sidebar">
+        <div class="d-flex border-bottom border-secondary">
+            <button class="flex-1 btn btn-dark rounded-0 border-0 py-2 active" id="btn-tab-library" onclick="App.ui.switchTab('library')"><i class="fas fa-book me-1"></i> Lib</button>
+            <button class="flex-1 btn btn-dark rounded-0 border-0 py-2" id="btn-tab-explain" onclick="App.ui.switchTab('explain')"><i class="fas fa-info-circle me-1"></i> Explain</button>
+            <button class="flex-1 btn btn-dark rounded-0 border-0 py-2" id="btn-tab-cheat" onclick="App.ui.switchTab('cheat')"><i class="fas fa-list me-1"></i> Cheat</button>
+        </div>
+        
+        <div id="tab-library" class="p-3 tab-pane" style="flex:1; overflow-y:auto;">
+            <div class="panel-header">SAVED PATTERNS</div>
+            <div id="saved-list" class="d-flex flex-column gap-2 mb-3"></div>
+            
+            <div class="panel-header text-info mt-4">SYSTEM PRESETS</div>
+            <div class="d-flex flex-column gap-2">
+                <div class="cheat-item" onclick="App.ui.loadPreset('email')"><span class="cheat-code">Email</span> <span class="cheat-desc">RFC 5322</span></div>
+                <div class="cheat-item" onclick="App.ui.loadPreset('url')"><span class="cheat-code">URL</span> <span class="cheat-desc">HTTP/HTTPS</span></div>
+                <div class="cheat-item" onclick="App.ui.loadPreset('ipv4')"><span class="cheat-code">IPv4</span> <span class="cheat-desc">IP Address</span></div>
+                <div class="cheat-item" onclick="App.ui.loadPreset('date')"><span class="cheat-code">Date</span> <span class="cheat-desc">YYYY-MM-DD</span></div>
+                <div class="cheat-item" onclick="App.ui.loadPreset('password')"><span class="cheat-code">Pass</span> <span class="cheat-desc">Strong Pwd</span></div>
+                <div class="cheat-item" onclick="App.ui.loadPreset('slug')"><span class="cheat-code">Slug</span> <span class="cheat-desc">URL Slug</span></div>
+            </div>
+        </div>
+
+        <div id="tab-explain" class="p-3 d-none tab-pane" style="flex:1; overflow-y:auto;">
+            <div class="panel-header text-primary">PATTERN BREAKDOWN</div>
+            <div class="text-xs text-muted mb-2">Auto-generated explanation of your regex tokens.</div>
+            <div id="explanation-list" class="d-flex flex-column">
+                <div class="text-center text-muted mt-5">Type a pattern to see explanation</div>
+            </div>
+        </div>
+
+        <div id="tab-cheat" class="p-3 d-none tab-pane" style="flex:1; overflow-y:auto;">
+            <div class="cheat-category">
+                <div class="panel-header text-info">Character Classes</div>
+                <div class="cheat-item" onclick="App.editor.insert('.')" title="Any character except newline"><span class="cheat-code">.</span> <span class="cheat-desc">Any char</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('\\w')" title="Word character [a-zA-Z0-9_]"><span class="cheat-code">\w</span> <span class="cheat-desc">Word</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('\\d')" title="Digit [0-9]"><span class="cheat-code">\d</span> <span class="cheat-desc">Digit</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('\\s')" title="Whitespace"><span class="cheat-code">\s</span> <span class="cheat-desc">Whitespace</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('[abc]')"><span class="cheat-code">[..]</span> <span class="cheat-desc">Character Set</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('[^abc]')"><span class="cheat-code">[^..]</span> <span class="cheat-desc">Negated Set</span></div>
+            </div>
+            <div class="cheat-category">
+                <div class="panel-header text-warning">Quantifiers</div>
+                <div class="cheat-item" onclick="App.editor.insert('*')"><span class="cheat-code">*</span> <span class="cheat-desc">0 or more</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('+')"><span class="cheat-code">+</span> <span class="cheat-desc">1 or more</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('?')"><span class="cheat-code">?</span> <span class="cheat-desc">0 or 1</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('{3}')"><span class="cheat-code">{3}</span> <span class="cheat-desc">Exactly 3</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('{3,5}')"><span class="cheat-code">{3,5}</span> <span class="cheat-desc">Range</span></div>
+            </div>
+            <div class="cheat-category">
+                <div class="panel-header text-success">Anchors & Groups</div>
+                <div class="cheat-item" onclick="App.editor.insert('^')"><span class="cheat-code">^</span> <span class="cheat-desc">Start Line</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('$')"><span class="cheat-code">$</span> <span class="cheat-desc">End Line</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('\\b')"><span class="cheat-code">\b</span> <span class="cheat-desc">Word Bound</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('(..)')"><span class="cheat-code">(..)</span> <span class="cheat-desc">Group</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('(?:..)')"><span class="cheat-code">(?:..)</span> <span class="cheat-desc">Non-capture</span></div>
+                <div class="cheat-item" onclick="App.editor.insert('(?=..)')"><span class="cheat-code">(?=..)</span> <span class="cheat-desc">Lookahead</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="workspace">
+        
+        <div class="regex-bar">
+            <div class="regex-input-wrapper">
+                <span class="regex-slash">/</span>
+                <input type="text" class="regex-input" id="regexInput" placeholder="Enter regular expression..." value="([A-Z])\w+" spellcheck="false" autocomplete="off">
+                <span class="regex-slash">/</span>
+            </div>
+            
+            <div class="d-flex gap-1">
+                <button class="flag-btn active" data-flag="g" title="Global match">g</button>
+                <button class="flag-btn" data-flag="i" title="Case insensitive">i</button>
+                <button class="flag-btn active" data-flag="m" title="Multi-line">m</button>
+                <button class="flag-btn" data-flag="s" title="Dot matches newline">s</button>
+                <button class="flag-btn" data-flag="u" title="Unicode">u</button>
+            </div>
+            
+            <div class="error-tooltip" id="errorTooltip">Invalid Regular Expression</div>
+        </div>
+
+        <div class="panel-header">
+            <span>TEST STRING <span class="text-muted fw-normal text-xs ms-2">(Drag & Drop .txt files supported)</span></span>
+            <div>
+                <input type="file" id="fileUpload" hidden onchange="App.io.importFile(this)">
+                <button class="btn btn-xs btn-link text-info text-decoration-none p-0 me-3" onclick="document.getElementById('fileUpload').click()"><i class="fas fa-upload me-1"></i>Upload</button>
+                <button class="btn btn-xs btn-link text-muted text-decoration-none p-0 me-2" onclick="App.editor.clearText()" style="font-size:10px">Clear</button>
+                <span class="badge bg-secondary" id="match-timer">0ms</span>
+            </div>
+        </div>
+        <div class="editor-box" id="dropZone">
+            <div class="editor-layer editor-backdrop" id="highlights"></div>
+            <textarea class="editor-layer editor-textarea" id="testString" spellcheck="false" placeholder="Enter your test string here...">LASU Computer Science
+Matric: 12345678
+Email: favour@lasu.edu.ng
+Date: 2026-02-13
+
+Welcome to the Fortune 5 RegEx Studio V3.
+Try matching Email addresses: [\w\.-]+@[\w\.-]+\.\w+
+Or Dates: \d{4}-\d{2}-\d{2}</textarea>
+        </div>
+
+        <div class="row mt-4 flex-1" style="min-height: 0;">
+            <div class="col-md-8 h-100 d-flex flex-column">
+                <div class="panel-header">
+                    <span>MATCH RESULTS</span>
+                    <span class="badge bg-primary" id="match-count">0 Matches</span>
+                </div>
+                <div class="border rounded border-secondary bg-dark flex-1 overflow-auto" id="match-container">
+                    <ul class="match-list" id="matchList">
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-4 h-100 overflow-y-auto">
+                <div class="panel-header">ACTIONS</div>
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn-tool" onclick="App.ui.openCodeModal()"><i class="fas fa-code"></i> Generate Code</button>
+                    <button class="btn-tool" onclick="App.db.savePattern()"><i class="fas fa-save"></i> Save Pattern</button>
+                    <div class="d-flex gap-2">
+                         <button class="btn-tool flex-1" onclick="App.ui.copyMatches()"><i class="fas fa-copy"></i> Copy</button>
+                         <button class="btn-tool flex-1" onclick="App.editor.formatJson()"><i class="fas fa-brackets-curly"></i> JSON</button>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn-tool flex-1" onclick="App.io.exportMatches('csv')"><i class="fas fa-file-csv"></i> CSV</button>
+                        <button class="btn-tool flex-1" onclick="App.io.exportMatches('json')"><i class="fas fa-file-code"></i> Exp JSON</button>
+                    </div>
+                    <button class="btn-tool" onclick="App.engine.toggleReplaceMode()"><i class="fas fa-exchange-alt"></i> Replace Mode</button>
+                    <button class="btn-tool text-danger" onclick="App.engine.clear()"><i class="fas fa-trash"></i> Reset All</button>
+                </div>
+
+                <div id="replace-box" class="mt-4 d-none animate__animated animate__fadeIn">
+                    <div class="panel-header text-warning">SUBSTITUTION</div>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text bg-dark border-secondary text-muted">$</span>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="replaceInput" placeholder="Replacement (e.g. $1)">
+                    </div>
+                    <div class="p-2 border rounded border-secondary bg-dark text-muted small" id="replacePreview" style="min-height: 50px; max-height: 100px; overflow-y:auto;">Preview...</div>
+                    <button class="btn btn-sm btn-warning w-100 mt-2" onclick="App.engine.applyReplace()">Apply Replacement</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<div class="modal-overlay" id="codeModal">
+    <div class="modal-box">
+        <div class="modal-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white m-0">Integration Code</h5>
+                <button class="btn-close btn-close-white" onclick="document.getElementById('codeModal').style.display='none'"></button>
+            </div>
+            
+            <ul class="nav nav-tabs mb-3 border-secondary" id="codeTabs">
+                <li class="nav-item"><a class="nav-link active text-white" data-bs-toggle="tab" href="#code-js">JavaScript</a></li>
+                <li class="nav-item"><a class="nav-link text-white" data-bs-toggle="tab" href="#code-py">Python</a></li>
+                <li class="nav-item"><a class="nav-link text-white" data-bs-toggle="tab" href="#code-php">PHP</a></li>
+                <li class="nav-item"><a class="nav-link text-white" data-bs-toggle="tab" href="#code-java">Java</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="code-js">
+                    <pre class="code-block" id="out-js"></pre>
+                </div>
+                <div class="tab-pane fade" id="code-py">
+                    <pre class="code-block" id="out-py"></pre>
+                </div>
+                <div class="tab-pane fade" id="code-php">
+                    <pre class="code-block" id="out-php"></pre>
+                </div>
+                <div class="tab-pane fade" id="code-java">
+                    <pre class="code-block" id="out-java"></pre>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-end mt-3 gap-2">
+                <button class="btn btn-primary btn-sm" onclick="App.ui.copyCode()"><i class="fas fa-clipboard"></i> Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-notification" id="appToast">
+    <i class="fas fa-check-circle text-success"></i>
+    <span id="toastMsg">Operation Successful</span>
+</div>
+
+<script>
+/**
+ * LASU REGEX ENGINE (FORTUNE 5 KERNEL V3.0)
+ * Expanded with Explainer, Advanced Code Gen, Presets, File I/O, Share & Export
+ */
+const App = {
+    state: {
+        regex: null,
+        text: "",
+        matches: [],
+        flags: "gm",
+        saved: JSON.parse(localStorage.getItem('lasu_regex_saved') || '[]')
+    },
+
+    init: function() {
+        this.dom = {
+            input: document.getElementById('regexInput'),
+            text: document.getElementById('testString'),
+            backdrop: document.getElementById('highlights'),
+            list: document.getElementById('matchList'),
+            error: document.getElementById('errorTooltip'),
+            explainer: document.getElementById('explanation-list'),
+            dropZone: document.getElementById('dropZone')
+        };
+
+        // Event Listeners
+        this.dom.input.addEventListener('input', () => this.engine.run());
+        this.dom.text.addEventListener('input', () => {
+            this.engine.syncScroll();
+            this.engine.run();
+        });
+        this.dom.text.addEventListener('scroll', () => this.engine.syncScroll());
+
+        // Flag Toggles
+        document.querySelectorAll('.flag-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.target.classList.toggle('active');
+                this.engine.updateFlags();
+            });
+        });
+
+        // Replace Input
+        document.getElementById('replaceInput').addEventListener('input', () => this.engine.previewReplace());
+
+        // Drag & Drop
+        this.io.initDragDrop();
+
+        // Load Saved
+        this.ui.renderSaved();
+        
+        // Check URL for shared state
+        this.share.checkLoad();
+        
+        // Initial Run (if not loaded from share)
+        if(!window.location.hash) {
+            this.engine.run();
+        }
+        
+        // Initialize Tooltips/Tab logic
+        const triggerTabList = document.querySelectorAll('#codeTabs a');
+        triggerTabList.forEach(triggerEl => {
+            const tabTrigger = new bootstrap.Tab(triggerEl);
+            triggerEl.addEventListener('click', event => {
+                event.preventDefault();
+                tabTrigger.show();
+            });
+        });
+    },
+
+    engine: {
+        updateFlags: function() {
+            const btns = document.querySelectorAll('.flag-btn.active');
+            App.state.flags = Array.from(btns).map(b => b.dataset.flag).join('');
+            this.run();
+        },
+
+        run: function() {
+            const pattern = App.dom.input.value;
+            const text = App.dom.text.value;
+            App.state.text = text;
+
+            // Clear Error
+            App.dom.input.style.borderColor = "var(--border-color)";
+            App.dom.error.style.display = 'none';
+
+            // Run Explainer even if empty
+            App.explainer.analyze(pattern);
+
+            if (!pattern) {
+                App.dom.backdrop.innerHTML = this.escapeHtml(text);
+                App.dom.list.innerHTML = '<div class="p-3 text-center text-muted">Enter a pattern to begin</div>';
+                document.getElementById('match-count').innerText = "0 Matches";
+                App.state.matches = [];
+                return;
+            }
+
+            try {
+                const start = performance.now();
+                const regex = new RegExp(pattern, App.state.flags);
+                App.state.regex = regex;
+
+                let match;
+                let matches = [];
+                
+                // Safety check: Prevent infinite loops on zero-length matches (e.g., /.*/)
+                let loopGuard = 0;
+                
+                if (regex.global) {
+                    while ((match = regex.exec(text)) !== null) {
+                        matches.push(match);
+                        if (match.index === regex.lastIndex) regex.lastIndex++; 
+                        loopGuard++;
+                        if(loopGuard > 10000) break; // Break extremely large loops
+                    }
+                } else {
+                    match = regex.exec(text);
+                    if (match) matches.push(match);
+                }
+
+                App.state.matches = matches;
+                const end = performance.now();
+                const timeTaken = (end - start).toFixed(2);
+                document.getElementById('match-timer').innerText = `${timeTaken}ms`;
+
+                // Update UI
+                this.renderHighlights(matches);
+                this.renderList(matches);
+                this.previewReplace();
+
+            } catch (e) {
+                App.dom.input.style.borderColor = "#ff5555";
+                App.dom.error.innerText = e.message;
+                App.dom.error.style.display = 'block';
+                App.dom.backdrop.innerHTML = this.escapeHtml(text);
+                App.state.matches = [];
+            }
+        },
+
+        renderHighlights: function(matches) {
+            let html = "";
+            let lastIdx = 0;
+            const text = App.state.text;
+
+            // Limit highlights for performance on huge text
+            const renderMatches = matches.slice(0, 1000); 
+
+            renderMatches.forEach((m, i) => {
+                // Prevent overlap issues
+                if (m.index < lastIdx) return;
+                
+                html += this.escapeHtml(text.substring(lastIdx, m.index));
+                // Add current class to first one or hovered one
+                const className = i === 0 ? "current" : "";
+                html += `<mark id="mark-${i}" class="${className}">${this.escapeHtml(m[0])}</mark>`;
+                lastIdx = m.index + m[0].length;
+            });
+
+            html += this.escapeHtml(text.substring(lastIdx));
+            if (text.endsWith('\n')) html += '<br>';
+
+            App.dom.backdrop.innerHTML = html;
+        },
+
+        renderList: function(matches) {
+            document.getElementById('match-count').innerText = `${matches.length} Matches`;
+            
+            if (matches.length === 0) {
+                App.dom.list.innerHTML = '<div class="p-3 text-center text-muted">No matches found</div>';
+                return;
+            }
+
+            // Limit list rendering for performance
+            const displayMatches = matches.slice(0, 100);
+            
+            let html = "";
+            displayMatches.forEach((m, i) => {
+                let groupsHtml = "";
+                if (m.length > 1) {
+                    groupsHtml = `<div class="d-flex flex-wrap gap-2 mt-1">`;
+                    for (let g = 1; g < m.length; g++) {
+                        if(m[g] !== undefined) {
+                            groupsHtml += `<span class="badge bg-dark border border-secondary text-info font-monospace" title="Group ${g}">$${g}: ${this.escapeHtml(m[g])}</span>`;
+                        }
+                    }
+                    groupsHtml += `</div>`;
+                }
+
+                html += `
+                    <li class="match-item" onmouseover="App.ui.focusMatch(${i})" onclick="App.ui.copyText('${this.escapeHtml(m[0]).replace(/'/g, "\\'")}')">
+                        <div class="w-100">
+                            <div class="d-flex justify-content-between">
+                                <div><span class="match-index">#${i + 1}</span> <span class="text-white fw-bold font-monospace">"${this.escapeHtml(m[0])}"</span></div>
+                                <div class="text-muted text-xs font-monospace">${m.index}:${m.index + m[0].length}</div>
+                            </div>
+                            ${groupsHtml}
+                        </div>
+                    </li>
+                `;
+            });
+            
+            if(matches.length > 100) {
+                html += `<li class="match-item text-center text-muted text-xs fst-italic">And ${matches.length - 100} more...</li>`;
+            }
+            
+            App.dom.list.innerHTML = html;
+        },
+
+        syncScroll: function() {
+            App.dom.backdrop.scrollTop = App.dom.text.scrollTop;
+            App.dom.backdrop.scrollLeft = App.dom.text.scrollLeft;
+        },
+
+        escapeHtml: function(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        },
+
+        toggleReplaceMode: function() {
+            const box = document.getElementById('replace-box');
+            box.classList.toggle('d-none');
+            if(!box.classList.contains('d-none')) {
+                document.getElementById('replaceInput').focus();
+            }
+        },
+
+        previewReplace: function() {
+            if(!App.state.regex || document.getElementById('replace-box').classList.contains('d-none')) return;
+            const rep = document.getElementById('replaceInput').value;
+            try {
+                const res = App.state.text.replace(App.state.regex, rep);
+                document.getElementById('replacePreview').innerText = res;
+            } catch(e) {}
+        },
+
+        applyReplace: function() {
+            const preview = document.getElementById('replacePreview').innerText;
+            App.dom.text.value = preview;
+            App.engine.run();
+            App.ui.toast("Replacement Applied");
+        },
+
+        clear: function() {
+            if(confirm("Clear pattern and text?")) {
+                App.dom.input.value = "";
+                App.dom.text.value = "";
+                App.state.matches = [];
+                this.run();
+            }
+        }
+    },
+
+    // EXPANDED REGEX EXPLAINER
+    explainer: {
+        analyze: function(pattern) {
+            const container = App.dom.explainer;
+            if(!pattern) {
+                container.innerHTML = '<div class="text-center text-muted mt-5">Type a pattern...</div>';
+                return;
+            }
+
+            let html = "";
+            let i = 0;
+            
+            // Enhanced tokenizer
+            while (i < pattern.length) {
+                const char = pattern[i];
+                let desc = "";
+                let token = char;
+                let colorClass = "text-white";
+
+                if (char === '\\') {
+                    // Escaped char
+                    if (i + 1 < pattern.length) {
+                        token = pattern.substring(i, i+2);
+                        const next = pattern[i+1];
+                        if (next === 'd') desc = "Digit [0-9]";
+                        else if (next === 'w') desc = "Word Character [a-zA-Z0-9_]";
+                        else if (next === 's') desc = "Whitespace";
+                        else if (next === 'b') desc = "Word Boundary";
+                        else desc = `Escaped character "${next}"`;
+                        i++;
+                    }
+                } else if (char === '^') {
+                    desc = "Start of string/line";
+                    colorClass = "text-success";
+                } else if (char === '$') {
+                    desc = "End of string/line";
+                    colorClass = "text-success";
+                } else if (char === '.') {
+                    desc = "Any character (except newline)";
+                    colorClass = "text-info";
+                } else if (char === '[') {
+                    let end = pattern.indexOf(']', i);
+                    if (end > -1) {
+                        token = pattern.substring(i, end+1);
+                        desc = "One of the characters in the set";
+                        if(token.startsWith('[^')) desc = "Any character NOT in the set";
+                        i = end;
+                        colorClass = "text-warning";
+                    }
+                } else if (char === '(') {
+                    // Check for Non-capturing or Lookahead
+                    if (pattern.substr(i, 3) === '(?=') {
+                        token = '(?='; desc = "Positive Lookahead"; colorClass = "text-success"; i += 2;
+                    } else if (pattern.substr(i, 3) === '(?!') {
+                        token = '(?!'; desc = "Negative Lookahead"; colorClass = "text-danger"; i += 2;
+                    } else if (pattern.substr(i, 3) === '(?:') {
+                        token = '(?:'; desc = "Non-capturing Group"; colorClass = "text-secondary"; i += 2;
+                    } else {
+                        desc = "Start capturing group";
+                        colorClass = "text-danger";
+                    }
+                } else if (char === ')') {
+                    desc = "End group";
+                    colorClass = "text-danger";
+                } else if ("*+?{".includes(char)) {
+                    desc = "Quantifier (how many times)";
+                    if (char === '{') {
+                        let end = pattern.indexOf('}', i);
+                        if(end > -1) {
+                            token = pattern.substring(i, end+1);
+                            i = end;
+                        }
+                    }
+                    colorClass = "text-warning";
+                } else {
+                    desc = `Literal character "${char}"`;
+                }
+
+                html += `
+                    <div class="explain-token">
+                        <div class="explain-char ${colorClass}">${App.engine.escapeHtml(token)}</div>
+                        <div class="explain-text">${desc}</div>
+                    </div>
+                `;
+                i++;
+            }
+            container.innerHTML = html;
+        }
+    },
+
+    // NEW MODULE: I/O (File & Export)
+    io: {
+        initDragDrop: function() {
+            const dz = App.dom.dropZone;
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dz.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dz.addEventListener(eventName, () => dz.classList.add('drag-over'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dz.addEventListener(eventName, () => dz.classList.remove('drag-over'), false);
+            });
+
+            dz.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if(files.length) this.handleFiles(files);
+            }, false);
+        },
+
+        importFile: function(input) {
+            this.handleFiles(input.files);
+        },
+
+        handleFiles: function(files) {
+            const file = files[0];
+            if (file.type && !file.type.startsWith('text/')) {
+                alert('Please upload a text file.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                App.dom.text.value = e.target.result;
+                App.engine.run();
+                App.ui.toast(`Loaded ${file.name}`);
+            };
+            reader.readAsText(file);
+        },
+
+        exportMatches: function(type) {
+            const matches = App.state.matches;
+            if(!matches.length) {
+                alert("No matches to export.");
+                return;
+            }
+
+            let content = "";
+            let mime = "text/plain";
+            let filename = "regex_matches";
+
+            if(type === 'csv') {
+                content = "Match,Index,Group1,Group2,Group3\n";
+                content += matches.map(m => {
+                    // Escape CSV quotes
+                    const clean = t => t ? `"${t.replace(/"/g, '""')}"` : "";
+                    return `${clean(m[0])},${m.index},${clean(m[1])},${clean(m[2])},${clean(m[3])}`;
+                }).join('\n');
+                mime = "text/csv";
+                filename += ".csv";
+            } else if (type === 'json') {
+                const data = matches.map(m => {
+                    return { match: m[0], index: m.index, groups: Array.from(m).slice(1) };
+                });
+                content = JSON.stringify(data, null, 2);
+                mime = "application/json";
+                filename += ".json";
+            }
+
+            const blob = new Blob([content], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            App.ui.toast("Export Complete");
+        }
+    },
+
+    // NEW MODULE: SHARE & STATE
+    share: {
+        generateLink: function() {
+            const state = {
+                p: App.dom.input.value,
+                f: App.state.flags,
+                t: App.dom.text.value
+            };
+            const str = JSON.stringify(state);
+            const b64 = btoa(encodeURIComponent(str)); // Safe encoding
+            window.location.hash = b64;
+            
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                App.ui.toast("Link Copied to Clipboard!");
+            });
+        },
+
+        checkLoad: function() {
+            if(window.location.hash) {
+                try {
+                    const b64 = window.location.hash.substring(1);
+                    const str = decodeURIComponent(atob(b64));
+                    const state = JSON.parse(str);
+                    
+                    if(state.p) App.dom.input.value = state.p;
+                    if(state.t) App.dom.text.value = state.t;
+                    
+                    // Set flags
+                    if(state.f) {
+                        document.querySelectorAll('.flag-btn').forEach(b => {
+                            b.classList.toggle('active', state.f.includes(b.dataset.flag));
+                        });
+                        App.state.flags = state.f;
+                    }
+                    
+                    App.engine.run();
+                    App.ui.toast("Shared State Loaded");
+                } catch(e) {
+                    console.error("Invalid share link", e);
+                }
+            }
+        }
+    },
+
+    ui: {
+        focusMatch: function(idx) {
+            // Remove previous active highlights
+            document.querySelectorAll('mark.current').forEach(el => el.classList.remove('current'));
+            // Add to new
+            const el = document.getElementById(`mark-${idx}`);
+            if(el) {
+                el.classList.add('current');
+            }
+        },
+
+        switchTab: function(tab) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('d-none'));
+            document.querySelectorAll('.sidebar .btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`tab-${tab}`).classList.remove('d-none');
+            document.getElementById(`btn-tab-${tab}`).classList.add('active');
+        },
+
+        loadPreset: function(type) {
+            let p = "";
+            if(type === 'email') p = "[\\w\\.-]+@[\\w\\.-]+\\.\\w+";
+            if(type === 'url') p = "https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&//=]*)";
+            if(type === 'ipv4') p = "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b";
+            if(type === 'date') p = "\\d{4}-\\d{2}-\\d{2}";
+            if(type === 'password') p = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$";
+            if(type === 'slug') p = "^[a-z0-9]+(?:-[a-z0-9]+)*$";
+            
+            App.dom.input.value = p;
+            App.engine.run();
+        },
+
+        toast: function(msg) {
+            const t = document.getElementById('appToast');
+            document.getElementById('toastMsg').innerText = msg;
+            t.style.display = 'flex';
+            setTimeout(() => { t.style.display = 'none'; }, 3000);
+        },
+
+        openCodeModal: function() {
+            const pattern = App.dom.input.value;
+            const flags = App.state.flags;
+
+            // JS
+            const js = `// JavaScript Regex\nconst regex = /${pattern}/${flags};\nconst str = \`${App.state.text.substring(0, 50)}...\`;\n\nlet m;\nwhile ((m = regex.exec(str)) !== null) {\n    // This is necessary to avoid infinite loops with zero-width matches\n    if (m.index === regex.lastIndex) {\n        regex.lastIndex++;\n    }\n    console.log(\`Found \${m[0]} at \${m.index}\`);\n}`;
+            document.getElementById('out-js').innerText = js;
+
+            // Python
+            const pyFlags = [];
+            if(flags.includes('i')) pyFlags.push('re.IGNORECASE');
+            if(flags.includes('m')) pyFlags.push('re.MULTILINE');
+            if(flags.includes('s')) pyFlags.push('re.DOTALL');
+            const pyFlagStr = pyFlags.length ? `, ${pyFlags.join(' | ')}` : '';
+            const py = `# Python Regex\nimport re\n\nregex = r"${pattern}"\ntest_str = "${App.state.text.substring(0, 50)}..."\n\nmatches = re.finditer(regex, test_str${pyFlagStr})\n\nfor match in matches:\n    print(f"Match: {match.group()}")`;
+            document.getElementById('out-py').innerText = py;
+
+            // PHP
+            const php = `<?php\n// PHP Regex\n$re = '/${pattern}/${flags}';\n$str = '${App.state.text.substring(0, 50)}...';\n\npreg_match_all($re, $str, $matches, PREG_SET_ORDER, 0);\n\n// Print the entire match result\nvar_dump($matches);\n?>`;
+            document.getElementById('out-php').innerText = php;
+            
+            // Java
+            const java = `import java.util.regex.Matcher;\nimport java.util.regex.Pattern;\n\npublic class Main {\n    public static void main(String[] args) {\n        final String regex = "${pattern.replace(/\\/g, '\\\\')}";\n        final String string = "${App.state.text.substring(0, 50)}...";\n        \n        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);\n        final Matcher matcher = pattern.matcher(string);\n        \n        while (matcher.find()) {\n            System.out.println("Full match: " + matcher.group(0));\n        }\n    }\n}`;
+            document.getElementById('out-java').innerText = java;
+
+            document.getElementById('codeModal').style.display = 'flex';
+        },
+
+        copyMatches: function() {
+            if(App.state.matches.length === 0) return;
+            const text = App.state.matches.map(m => m[0]).join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                App.ui.toast('Copied matches');
+            });
+        },
+        
+        copyCode: function() {
+            const activePane = document.querySelector('.tab-pane.active pre');
+            if(activePane) {
+                navigator.clipboard.writeText(activePane.innerText);
+                App.ui.toast('Code copied');
+            }
+        },
+
+        copyText: function(txt) {
+             navigator.clipboard.writeText(txt).then(() => App.ui.toast('Copied: ' + txt));
+        },
+
+        renderSaved: function() {
+            const list = document.getElementById('saved-list');
+            if(App.state.saved.length === 0) {
+                list.innerHTML = '<div class="text-muted text-center text-xs">No saved patterns</div>';
+                return;
+            }
+            list.innerHTML = App.state.saved.map((s, i) => `
+                <div class="d-flex justify-content-between align-items-center bg-dark p-2 rounded border border-secondary">
+                    <div class="cursor-pointer overflow-hidden" onclick="App.db.load(${i})">
+                        <div class="fw-bold text-white text-truncate" style="max-width:180px">/${s.pattern}/</div>
+                        <div class="text-xs text-muted">${s.name}</div>
+                    </div>
+                    <i class="fas fa-trash text-danger cursor-pointer" onclick="App.db.remove(${i})"></i>
+                </div>
+            `).join('');
+        }
+    },
+
+    db: {
+        savePattern: function() {
+            const name = prompt("Name this pattern:", "My Regex " + new Date().toLocaleTimeString());
+            if(name) {
+                App.state.saved.push({
+                    name: name,
+                    pattern: App.dom.input.value,
+                    flags: App.state.flags
+                });
+                localStorage.setItem('lasu_regex_saved', JSON.stringify(App.state.saved));
+                App.ui.renderSaved();
+                App.ui.toast("Pattern Saved");
+            }
+        },
+
+        load: function(idx) {
+            const s = App.state.saved[idx];
+            App.dom.input.value = s.pattern;
+            document.querySelectorAll('.flag-btn').forEach(b => {
+                b.classList.toggle('active', s.flags.includes(b.dataset.flag));
+            });
+            App.engine.updateFlags();
+        },
+
+        remove: function(idx) {
+            if(confirm("Delete this pattern?")) {
+                App.state.saved.splice(idx, 1);
+                localStorage.setItem('lasu_regex_saved', JSON.stringify(App.state.saved));
+                App.ui.renderSaved();
+            }
+        }
+    },
+    
+    editor: {
+        insert: function(str) {
+            const input = App.dom.input;
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const val = input.value;
+            input.value = val.substring(0, start) + str + val.substring(end);
+            input.selectionStart = input.selectionEnd = start + str.length;
+            input.focus();
+            App.engine.run();
+        },
+        
+        clearText: function() {
+            App.dom.text.value = '';
+            App.engine.run();
+        },
+        
+        formatJson: function() {
+            try {
+                const txt = App.dom.text.value;
+                const obj = JSON.parse(txt);
+                App.dom.text.value = JSON.stringify(obj, null, 2);
+                App.engine.run();
+                App.ui.toast("JSON Formatted");
+            } catch(e) {
+                alert("Invalid JSON in text area");
+            }
+        }
+    },
+    
+    toggleTheme: function() {
+        const html = document.documentElement;
+        if(html.getAttribute('data-theme') === 'dracula') {
+            html.setAttribute('data-theme', 'light');
+        } else {
+            html.setAttribute('data-theme', 'dracula');
+        }
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => App.init());
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

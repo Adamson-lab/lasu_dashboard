@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Readability Score Engine | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .text-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 1.1rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            transition: all 0.2s;
+            line-height: 1.7;
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 350px;
+        }
+        .text-editor:focus {
+            border-color: var(--math-purple);
+            box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15);
+        }
+
+        /* Semantic Telemetry Bar */
+        .semantic-bar {
+            display: flex;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px 15px;
+            justify-content: space-between;
+        }
+
+        .semantic-item {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .semantic-item span { color: var(--math-blue); font-size: 1.1rem; }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* Score Display Box */
+        .score-box {
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+            transition: border-color 0.3s;
+        }
+
+        .score-label {
+            color: #adb5bd;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .score-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 4.5rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.2);
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+
+        .score-grade {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        .audience-badge {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Meter Bar */
+        .meter-container {
+            width: 100%;
+            height: 10px;
+            background: #2b3035;
+            border-radius: 5px;
+            margin-top: 25px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #dc3545, #fd7e14, #198754);
+            border-radius: 5px;
+            transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* Secondary Cards */
+        .grade-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .grade-card h6 { margin: 0; font-weight: 800; color: #495057; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;}
+        .grade-card span { font-family: 'Fira Code', monospace; font-size: 1.8rem; font-weight: 800; color: var(--math-purple); }
+
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            width: 100%;
+            margin-top: auto;
+        }
+        .btn-clear:hover { background: #5c636a; transform: translateY(-2px); }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .output-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-book-open me-2"></i> Linguistic Analyzer</div>
+            </div>
+
+            <textarea class="text-editor" id="rawInput" placeholder="Paste your essay, article, or document here to mathematically calculate its reading difficulty...
+
+Example: The quick brown fox jumps over the lazy dog." oninput="calculateReadability()"></textarea>
+
+            <div class="semantic-bar">
+                <div class="semantic-item">Words <span id="resWords">0</span></div>
+                <div class="semantic-item">Sentences <span id="resSentences">0</span></div>
+                <div class="semantic-item">Syllables <span id="resSyllables">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="score-box" id="scoreBox">
+            <div class="score-label">Flesch Reading Ease</div>
+            <div class="score-value" id="resFlesch">--</div>
+            <div class="score-grade" id="resGradeText">Awaiting Text</div>
+            <div class="audience-badge" id="resAudience"><i class="fas fa-users me-2"></i> Target Audience</div>
+            
+            <div class="meter-container">
+                <div class="meter-fill" id="meterFill"></div>
+            </div>
+        </div>
+
+        <div class="grade-card mt-2">
+            <div>
+                <h6>Flesch-Kincaid</h6>
+                <div class="text-muted" style="font-size: 0.75rem; font-weight: 700;">US School Grade Level</div>
+            </div>
+            <span id="resKincaid">--</span>
+        </div>
+
+        <button class="btn-clear" onclick="clearAll()">
+            <i class="fas fa-trash-alt me-2"></i> Clear Document
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+    const rawInput = document.getElementById('rawInput');
+    const resWords = document.getElementById('resWords');
+    const resSentences = document.getElementById('resSentences');
+    const resSyllables = document.getElementById('resSyllables');
+    
+    const resFlesch = document.getElementById('resFlesch');
+    const resGradeText = document.getElementById('resGradeText');
+    const resAudience = document.getElementById('resAudience');
+    const scoreBox = document.getElementById('scoreBox');
+    const meterFill = document.getElementById('meterFill');
+    const resKincaid = document.getElementById('resKincaid');
+
+    // Advanced Syllable Counter Algorithm
+    function countSyllables(word) {
+        word = word.toLowerCase();
+        // Return 1 for short words
+        if (word.length <= 3) return 1;
+        
+        // Strip silent 'e' and trailing 'es' / 'ed' (but keep 'le')
+        word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+        // Strip leading 'y'
+        word = word.replace(/^y/, '');
+        
+        // Match vowel groups
+        const syllables = word.match(/[aeiouy]{1,2}/g);
+        return syllables ? syllables.length : 1;
+    }
+
+    function calculateReadability() {
+        const text = rawInput.value.trim();
+        
+        if (!text) {
+            resetStats();
+            return;
+        }
+
+        // 1. Lexical Parsing
+        // Count Sentences: Split by . ! ? followed by space or end of string
+        const sentencesArray = text.split(/[.?!]+(?=\s|$)/).filter(s => s.trim().length > 0);
+        let numSentences = sentencesArray.length;
+        if (numSentences === 0) numSentences = 1; // Fallback if no punctuation
+
+        // Count Words: Split by whitespace
+        const wordsArray = text.split(/\s+/).filter(w => w.replace(/[^a-zA-Z0-9]/g, '').length > 0);
+        let numWords = wordsArray.length;
+
+        if (numWords === 0) {
+            resetStats();
+            return;
+        }
+
+        // Count Syllables
+        let numSyllables = 0;
+        wordsArray.forEach(w => {
+            let cleanWord = w.replace(/[^a-zA-Z]/g, '');
+            if (cleanWord.length > 0) {
+                numSyllables += countSyllables(cleanWord);
+            }
+        });
+
+        // Telemetry Update
+        resWords.innerText = numWords.toLocaleString();
+        resSentences.innerText = numSentences.toLocaleString();
+        resSyllables.innerText = numSyllables.toLocaleString();
+
+        // 2. Flesch Mathematical Algorithms
+        // Reading Ease = 206.835 - 1.015 * (Total Words / Total Sentences) - 84.6 * (Total Syllables / Total Words)
+        let ASL = numWords / numSentences; // Average Sentence Length
+        let ASW = numSyllables / numWords; // Average Syllables per Word
+
+        let fleschScore = 206.835 - (1.015 * ASL) - (84.6 * ASW);
+        fleschScore = Math.max(0, Math.min(100, Math.round(fleschScore))); // Clamp between 0 and 100
+
+        // Kincaid Grade = 0.39 * (Total Words / Total Sentences) + 11.8 * (Total Syllables / Total Words) - 15.59
+        let kincaidGrade = (0.39 * ASL) + (11.8 * ASW) - 15.59;
+        kincaidGrade = Math.max(0, Math.round(kincaidGrade * 10) / 10); // 1 decimal place
+
+        // 3. UI Matrix Updates
+        resFlesch.innerText = fleschScore;
+        resKincaid.innerText = kincaidGrade;
+        meterFill.style.width = `${fleschScore}%`;
+
+        // Classification Engine
+        let color = '';
+        let gradeText = '';
+        let audience = '';
+
+        if (fleschScore >= 90) {
+            color = '#198754'; // Green
+            gradeText = "Very Easy";
+            audience = "5th Grader (10-11 yrs)";
+        } else if (fleschScore >= 80) {
+            color = '#20c997'; // Light Green
+            gradeText = "Easy";
+            audience = "6th Grader (11-12 yrs)";
+        } else if (fleschScore >= 70) {
+            color = '#0dcaf0'; // Cyan
+            gradeText = "Fairly Easy";
+            audience = "7th Grader (12-13 yrs)";
+        } else if (fleschScore >= 60) {
+            color = '#0d6efd'; // Blue
+            gradeText = "Standard";
+            audience = "8th-9th Grader (13-15 yrs)";
+        } else if (fleschScore >= 50) {
+            color = '#fd7e14'; // Orange
+            gradeText = "Fairly Difficult";
+            audience = "10th-12th Grader (15-18 yrs)";
+        } else if (fleschScore >= 30) {
+            color = '#e83e8c'; // Pink
+            gradeText = "Difficult";
+            audience = "College Student";
+        } else {
+            color = '#dc3545'; // Red
+            gradeText = "Very Confusing";
+            audience = "College Graduate / Professional";
+        }
+
+        resFlesch.style.color = color;
+        resFlesch.style.textShadow = `0 0 20px ${color}80`;
+        scoreBox.style.borderColor = `${color}80`;
+        resGradeText.innerText = gradeText;
+        resAudience.innerHTML = `<i class="fas fa-users me-2"></i> ${audience}`;
+    }
+
+    function resetStats() {
+        resWords.innerText = '0';
+        resSentences.innerText = '0';
+        resSyllables.innerText = '0';
+        resFlesch.innerText = '--';
+        resFlesch.style.color = 'white';
+        resFlesch.style.textShadow = 'none';
+        scoreBox.style.borderColor = '#343a40';
+        resGradeText.innerText = 'Awaiting Text';
+        resAudience.innerHTML = `<i class="fas fa-users me-2"></i> Target Audience`;
+        meterFill.style.width = '0%';
+        resKincaid.innerText = '--';
+    }
+
+    function clearAll() {
+        rawInput.value = '';
+        resetStats();
+        rawInput.focus();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

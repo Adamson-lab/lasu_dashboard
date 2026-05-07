@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Picker & Eye Dropper | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 12px 0; 
+        }
+        .back-btn { color: white; text-decoration: none; font-weight: 600; display: flex; align-items: center; }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 2rem;
+        }
+
+        /* LEFT SIDE: CANVAS AREA */
+        .canvas-area {
+            flex: 2;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 500px;
+        }
+
+        .drop-zone {
+            width: 100%;
+            height: 100%;
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: #f8f9fa;
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 10;
+        }
+        .drop-zone:hover, .drop-zone.dragover { border-color: var(--lasu-green); background: #e8f5e9; color: var(--lasu-green); }
+        .drop-zone.hidden { display: none; }
+
+        #imageCanvas {
+            max-width: 100%;
+            max-height: 600px;
+            cursor: crosshair;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* MAGNIFIER LENS */
+        .magnifier {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+            background-repeat: no-repeat;
+            background-color: white; /* Fallback */
+            image-rendering: pixelated; /* Sharp pixels */
+        }
+        /* Crosshair inside magnifier */
+        .magnifier::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 6px; height: 6px;
+            background: rgba(255, 0, 0, 0.5);
+            transform: translate(-50%, -50%);
+            border: 1px solid white;
+        }
+
+        /* RIGHT SIDE: TOOLS */
+        .tools-sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 350px;
+        }
+
+        .color-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+        }
+
+        .current-color-preview {
+            width: 100%;
+            height: 120px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .code-row {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+        }
+        .code-label { width: 50px; font-weight: 700; font-size: 0.8rem; color: #6c757d; }
+        .code-val { flex: 1; font-family: 'Fira Code', monospace; font-size: 0.95rem; color: #212529; font-weight: 600; }
+        .copy-icon { cursor: pointer; color: #adb5bd; transition: color 0.2s; }
+        .copy-icon:hover { color: var(--lasu-green); }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .palette-swatch {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .palette-swatch:hover { transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+
+        .btn-eyedropper {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; font-weight: 600; padding: 12px;
+            width: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: opacity 0.2s;
+        }
+        .btn-eyedropper:hover { opacity: 0.9; color: white; }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .canvas-area { min-height: 300px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">DESIGN TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="canvas-area" id="canvasContainer">
+        
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+            <h5>Click or Drag Image Here</h5>
+            <p class="small text-muted">Supports JPG, PNG, WEBP</p>
+            <input type="file" id="fileInput" accept="image/*" hidden onchange="handleFileSelect(event)">
+        </div>
+
+        <canvas id="imageCanvas"></canvas>
+        
+        <div id="magnifier" class="magnifier"></div>
+
+        <button class="btn btn-sm btn-light border position-absolute top-0 end-0 m-3" onclick="resetCanvas()" id="resetBtn" style="display:none; z-index: 20;">
+            <i class="fas fa-times"></i> Clear
+        </button>
+    </div>
+
+    <div class="tools-sidebar">
+        
+        <div class="color-card pb-3">
+            <button class="btn btn-eyedropper" id="sysEyeDropper" onclick="activateSystemPicker()">
+                <i class="fas fa-eye-dropper"></i> System Eye Dropper
+            </button>
+            <div class="text-muted small text-center mt-2" style="font-size: 0.75rem;">
+                <i class="fas fa-info-circle me-1"></i> Pick colors from ANYWHERE on your screen.
+            </div>
+        </div>
+
+        <div class="color-card">
+            <h6 class="fw-bold text-uppercase text-muted small mb-3">Selected Color</h6>
+            
+            <div class="current-color-preview" id="colorPreview">#FFFFFF</div>
+
+            <div class="code-row">
+                <span class="code-label">HEX</span>
+                <span class="code-val" id="hexVal">#FFFFFF</span>
+                <i class="fas fa-copy copy-icon" onclick="copyToClipboard('hexVal')"></i>
+            </div>
+            <div class="code-row">
+                <span class="code-label">RGB</span>
+                <span class="code-val" id="rgbVal">rgb(255, 255, 255)</span>
+                <i class="fas fa-copy copy-icon" onclick="copyToClipboard('rgbVal')"></i>
+            </div>
+            <div class="code-row mb-0">
+                <span class="code-label">HSL</span>
+                <span class="code-val" id="hslVal">hsl(0, 0%, 100%)</span>
+                <i class="fas fa-copy copy-icon" onclick="copyToClipboard('hslVal')"></i>
+            </div>
+        </div>
+
+        <div class="color-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-uppercase text-muted small mb-0">History</h6>
+                <button class="btn btn-sm text-danger p-0" onclick="clearHistory()" style="font-size: 0.8rem;">Clear</button>
+            </div>
+            <div class="palette-grid" id="paletteGrid">
+                </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage">
+                Copied to clipboard!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const canvas = document.getElementById('imageCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const magnifier = document.getElementById('magnifier');
+    const resetBtn = document.getElementById('resetBtn');
+    
+    const colorPreview = document.getElementById('colorPreview');
+    const hexVal = document.getElementById('hexVal');
+    const rgbVal = document.getElementById('rgbVal');
+    const hslVal = document.getElementById('hslVal');
+    const paletteGrid = document.getElementById('paletteGrid');
+    
+    let history = [];
+    const MAX_HISTORY = 10;
+
+    // Check EyeDropper Support
+    if (!window.EyeDropper) {
+        document.getElementById('sysEyeDropper').disabled = true;
+        document.getElementById('sysEyeDropper').innerHTML = '<i class="fas fa-ban"></i> Browser Not Supported';
+    }
+
+    // --- SYSTEM EYE DROPPER API ---
+    async function activateSystemPicker() {
+        if (!window.EyeDropper) return;
+        const eyeDropper = new EyeDropper();
+        try {
+            const result = await eyeDropper.open();
+            updateColorDisplay(result.sRGBHex);
+            addToHistory(result.sRGBHex);
+        } catch (e) {
+            console.log("User cancelled selection");
+        }
+    }
+
+    // --- FILE HANDLING ---
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) loadFile(file);
+    }
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+
+    function loadFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                // Resize visual display via CSS to fit container, keep internal resolution high
+                if(img.width > 800) canvas.style.width = '100%';
+                else canvas.style.width = 'auto';
+                
+                ctx.drawImage(img, 0, 0);
+                dropZone.classList.add('hidden');
+                resetBtn.style.display = 'block';
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function resetCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        dropZone.classList.remove('hidden');
+        resetBtn.style.display = 'none';
+        canvas.style.width = 'auto';
+        magnifier.style.display = 'none';
+    }
+
+    // --- CANVAS INTERACTION ---
+    canvas.addEventListener('mousemove', function(e) {
+        if (dropZone.classList.contains('hidden') === false) return;
+
+        const rect = canvas.getBoundingClientRect();
+        
+        // Calculate scale factor (CSS size vs Actual size)
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+
+        // Get Pixel Data
+        const pixel = ctx.getImageData(x, y, 1, 1).data;
+        const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+
+        // Update Magnifier
+        magnifier.style.display = 'block';
+        magnifier.style.left = (e.clientX - 50) + 'px'; // Center on mouse (100px width / 2)
+        magnifier.style.top = (e.clientY - 50) + 'px';
+        
+        // Move background image inside magnifier
+        // We set the background to the canvas image
+        magnifier.style.backgroundImage = `url(${canvas.toDataURL()})`;
+        magnifier.style.backgroundRepeat = 'no-repeat';
+        
+        // Zoom calculation (4x zoom)
+        const zoom = 4;
+        magnifier.style.backgroundSize = `${canvas.width * zoom}px ${canvas.height * zoom}px`;
+        magnifier.style.backgroundPosition = `-${x * zoom - 50}px -${y * zoom - 50}px`;
+
+        // Update color preview while hovering
+        colorPreview.style.backgroundColor = hex;
+        colorPreview.innerText = hex;
+        colorPreview.style.color = getContrastYIQ(hex);
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        magnifier.style.display = 'none';
+    });
+
+    canvas.addEventListener('click', function(e) {
+        if (dropZone.classList.contains('hidden') === false) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        const pixel = ctx.getImageData(x, y, 1, 1).data;
+        const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+        
+        updateColorDisplay(hex);
+        addToHistory(hex);
+    });
+
+    // --- COLOR LOGIC ---
+    function updateColorDisplay(hex) {
+        const rgb = hexToRgb(hex);
+        const hsl = hexToHsl(hex);
+
+        colorPreview.style.backgroundColor = hex;
+        colorPreview.innerText = hex;
+        colorPreview.style.color = getContrastYIQ(hex);
+
+        hexVal.innerText = hex.toUpperCase();
+        rgbVal.innerText = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+        hslVal.innerText = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+    }
+
+    function addToHistory(hex) {
+        if (history.includes(hex)) return;
+        history.unshift(hex);
+        if (history.length > MAX_HISTORY) history.pop();
+        renderHistory();
+    }
+
+    function renderHistory() {
+        paletteGrid.innerHTML = '';
+        history.forEach(hex => {
+            const div = document.createElement('div');
+            div.className = 'palette-swatch';
+            div.style.backgroundColor = hex;
+            div.onclick = () => updateColorDisplay(hex);
+            paletteGrid.appendChild(div);
+        });
+    }
+
+    function clearHistory() {
+        history = [];
+        renderHistory();
+    }
+
+    // --- HELPERS ---
+    function rgbToHex(r, g, b) {
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    function hexToRgb(hex) {
+        const bigint = parseInt(hex.substring(1), 16);
+        return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+    }
+
+    function hexToHsl(hex) {
+        let {r, g, b} = hexToRgb(hex);
+        r /= 255; g /= 255; b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+
+        if (max === min) {
+            h = s = 0;
+        } else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+
+    function getContrastYIQ(hexcolor){
+        hexcolor = hexcolor.replace("#", "");
+        var r = parseInt(hexcolor.substr(0,2),16);
+        var g = parseInt(hexcolor.substr(2,2),16);
+        var b = parseInt(hexcolor.substr(4,2),16);
+        var yiq = ((r*299)+(g*587)+(b*114))/1000;
+        return (yiq >= 128) ? '#000000' : '#ffffff';
+    }
+
+    function copyToClipboard(id) {
+        const text = document.getElementById(id).innerText;
+        navigator.clipboard.writeText(text);
+        const toastEl = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastEl);
+        document.getElementById('toastMessage').innerText = `${text} copied!`;
+        toast.show();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

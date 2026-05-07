@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pythagorean Theorem | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .mode-selector {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-label {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-purple); box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1.2rem;
+            color: #495057;
+            width: 100px;
+            text-align: center;
+        }
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .formula-display {
+            background: #212529;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.6rem;
+            text-align: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 120px;
+        }
+        .formula-display span { color: var(--math-orange); font-weight: 800; }
+        .formula-sub { font-size: 0.9rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .result-box.highlight {
+            background: rgba(111, 66, 193, 0.05);
+            border-color: rgba(111, 66, 193, 0.2);
+            grid-column: span 2;
+            flex-direction: row;
+            justify-content: space-around;
+        }
+
+        .res-label {
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .res-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+        }
+        .highlight .res-val { color: var(--math-purple); font-size: 2.5rem; margin: 0; }
+        .highlight .res-label { margin: 0; font-size: 1rem; }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
+            min-height: 400px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+            background-image: radial-gradient(#e9ecef 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+        }
+
+        #triangleCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .result-grid { grid-template-columns: 1fr; }
+            .result-box.highlight { grid-column: span 1; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-drafting-compass"></i> Triangle Solver
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid numbers.
+            </div>
+
+            <div class="mode-selector">
+                <label class="mode-label">I want to find:</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="calcMode" id="modeC" value="c" checked onchange="updateMode()">
+                    <label class="form-check-label fw-bold text-purple" for="modeC">Hypotenuse (c)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="calcMode" id="modeA" value="a" onchange="updateMode()">
+                    <label class="form-check-label fw-bold text-primary" for="modeA">Leg (a)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="calcMode" id="modeB" value="b" onchange="updateMode()">
+                    <label class="form-check-label fw-bold text-danger" for="modeB">Leg (b)</label>
+                </div>
+            </div>
+
+            <div class="input-group-custom" id="group1">
+                <div class="input-label text-primary" id="lbl1">Leg (a)</div>
+                <input type="number" class="num-input" id="val1" value="3" step="any" oninput="solvePythagoras()">
+            </div>
+
+            <div class="input-group-custom" id="group2">
+                <div class="input-label text-danger" id="lbl2">Leg (b)</div>
+                <input type="number" class="num-input" id="val2" value="4" step="any" oninput="solvePythagoras()">
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-auto" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Values
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            
+            <div class="formula-display" id="formulaScreen">
+                c = &radic;[ <span>3²</span> + <span>4²</span> ]
+                <div class="formula-sub">a² + b² = c²</div>
+            </div>
+
+            <div class="result-grid">
+                <div class="result-box highlight">
+                    <div class="res-label" id="resMainLabel">Final Hypotenuse (c)</div>
+                    <div class="res-val" id="resDecimal">5.000</div>
+                </div>
+                
+                <div class="result-box">
+                    <div class="res-label">Exact Radical</div>
+                    <div class="res-val text-primary" id="resRadical">5</div>
+                </div>
+                <div class="result-box">
+                    <div class="res-label">Area (&frac12;ab)</div>
+                    <div class="res-val text-success" id="resArea">6.000</div>
+                </div>
+            </div>
+
+            <div class="pane-header text-dark border-0 mt-4 mb-2 pb-0">
+                <i class="fas fa-vector-square text-primary"></i> Right-Angled Diagram
+            </div>
+
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="triangleCanvas"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const val1In = document.getElementById('val1');
+    const val2In = document.getElementById('val2');
+    const lbl1 = document.getElementById('lbl1');
+    const lbl2 = document.getElementById('lbl2');
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const resDecimal = document.getElementById('resDecimal');
+    const resRadical = document.getElementById('resRadical');
+    const resArea = document.getElementById('resArea');
+    const resMainLabel = document.getElementById('resMainLabel');
+    const formulaScreen = document.getElementById('formulaScreen');
+
+    const canvas = document.getElementById('triangleCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    let mode = 'c'; // 'c', 'a', or 'b'
+
+    function updateMode() {
+        const radios = document.getElementsByName('calcMode');
+        for (let r of radios) {
+            if (r.checked) mode = r.value;
+        }
+
+        if (mode === 'c') {
+            lbl1.innerText = 'Leg (a)';
+            lbl2.innerText = 'Leg (b)';
+            resMainLabel.innerText = 'Final Hypotenuse (c)';
+        } else if (mode === 'a') {
+            lbl1.innerText = 'Hypot (c)';
+            lbl2.innerText = 'Leg (b)';
+            resMainLabel.innerText = 'Final Leg (a)';
+        } else if (mode === 'b') {
+            lbl1.innerText = 'Hypot (c)';
+            lbl2.innerText = 'Leg (a)';
+            resMainLabel.innerText = 'Final Leg (b)';
+        }
+        
+        solvePythagoras();
+    }
+
+    function resizeCanvas() {
+        const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        ctx.scale(dpr, dpr);
+        solvePythagoras();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function roundSafe(num) {
+        return (Math.round(num * 1000) / 1000).toFixed(3);
+    }
+
+    // Mathematical Algorithm to Simplify Radicals
+    function simplifyRadical(n) {
+        if (n < 0) return "Imaginary";
+        if (n === 0) return "0";
+        if (Math.sqrt(n) % 1 === 0) return Math.sqrt(n).toString(); // Perfect square
+
+        let inside = n;
+        let outside = 1;
+        let d = 2;
+
+        while (d * d <= inside) {
+            if (inside % (d * d) === 0) {
+                inside = inside / (d * d);
+                outside = outside * d;
+            } else {
+                d++;
+            }
+        }
+
+        if (outside === 1) return `&radic;${inside}`;
+        return `${outside}&radic;${inside}`;
+    }
+
+    // --- MATH ENGINE ---
+    function solvePythagoras() {
+        const v1 = parseFloat(val1In.value);
+        const v2 = parseFloat(val2In.value);
+
+        if (isNaN(v1) || isNaN(v2) || v1 <= 0 || v2 <= 0) {
+            showError("Values must be greater than zero.");
+            return;
+        }
+
+        let a, b, c;
+        let sqResult;
+
+        if (mode === 'c') {
+            a = v1;
+            b = v2;
+            sqResult = Math.pow(a, 2) + Math.pow(b, 2);
+            c = Math.sqrt(sqResult);
+            formulaScreen.innerHTML = `c = &radic;[ <span>${a}²</span> + <span>${b}²</span> ]<div class="formula-sub">a² + b² = c²</div>`;
+        } else if (mode === 'a') {
+            c = v1;
+            b = v2;
+            if (c <= b) {
+                showError("Hypotenuse (c) must be strictly greater than Leg (b).");
+                return;
+            }
+            sqResult = Math.pow(c, 2) - Math.pow(b, 2);
+            a = Math.sqrt(sqResult);
+            formulaScreen.innerHTML = `a = &radic;[ <span>${c}²</span> - <span>${b}²</span> ]<div class="formula-sub">a = &radic;(c² - b²)</div>`;
+        } else if (mode === 'b') {
+            c = v1;
+            a = v2;
+            if (c <= a) {
+                showError("Hypotenuse (c) must be strictly greater than Leg (a).");
+                return;
+            }
+            sqResult = Math.pow(c, 2) - Math.pow(a, 2);
+            b = Math.sqrt(sqResult);
+            formulaScreen.innerHTML = `b = &radic;[ <span>${c}²</span> - <span>${a}²</span> ]<div class="formula-sub">b = &radic;(c² - a²)</div>`;
+        }
+
+        errorBanner.style.display = 'none';
+
+        // Final Assignment for UI Output
+        const finalVal = mode === 'c' ? c : (mode === 'a' ? a : b);
+        resDecimal.innerText = roundSafe(finalVal);
+        
+        // Exact Radical extraction only for integer inputs to avoid floats breaking logic
+        if (Number.isInteger(v1) && Number.isInteger(v2)) {
+            resRadical.innerHTML = simplifyRadical(sqResult);
+        } else {
+            resRadical.innerHTML = `&radic;${roundSafe(sqResult)}`;
+        }
+
+        // Area = 1/2 * base * height (a * b)
+        const area = 0.5 * a * b;
+        resArea.innerText = roundSafe(area);
+
+        drawTriangle(a, b, c);
+    }
+
+    function showError(msg) {
+        errorBanner.innerText = msg;
+        errorBanner.style.display = 'block';
+        resDecimal.innerText = '--';
+        resRadical.innerHTML = '--';
+        resArea.innerText = '--';
+        formulaScreen.innerHTML = `c² = a² + b²<div class="formula-sub">Awaiting valid input...</div>`;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // --- CANVAS GRAPHICS ENGINE ---
+    function drawTriangle(a, b, c) {
+        const cw = canvas.width / (window.devicePixelRatio || 1);
+        const ch = canvas.height / (window.devicePixelRatio || 1);
+        
+        ctx.clearRect(0, 0, cw, ch);
+
+        const padding = 60;
+        
+        // Determine scale to fit canvas
+        const logicW = b;
+        const logicH = a;
+
+        const drawW = cw - (padding * 2);
+        const drawH = ch - (padding * 2);
+
+        const scale = Math.min(drawW / logicW, drawH / logicH);
+
+        const finalW = logicW * scale;
+        const finalH = logicH * scale;
+
+        // Position bottom-left right angle correctly
+        const offsetX = (cw - finalW) / 2;
+        const offsetY = (ch + finalH) / 2; // Bottom Y coordinate
+
+        const p1 = {x: offsetX, y: offsetY - finalH}; // Top vertex
+        const p2 = {x: offsetX, y: offsetY};          // Bottom Left vertex (Right Angle)
+        const p3 = {x: offsetX + finalW, y: offsetY}; // Bottom Right vertex
+
+        // Draw Triangle
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p3.x, p3.y);
+        ctx.closePath();
+
+        ctx.fillStyle = 'rgba(111, 66, 193, 0.1)';
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#6f42c1';
+        ctx.stroke();
+
+        // Draw Right Angle Box
+        const boxSize = 20;
+        ctx.beginPath();
+        ctx.moveTo(p2.x, p2.y - boxSize);
+        ctx.lineTo(p2.x + boxSize, p2.y - boxSize);
+        ctx.lineTo(p2.x + boxSize, p2.y);
+        ctx.strokeStyle = '#dc3545';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Labels
+        ctx.fillStyle = '#212529';
+        ctx.font = 'bold 16px Arial';
+        
+        // Leg a (left vertical)
+        ctx.fillText(`a = ${roundSafe(a)}`, p2.x - 50, (p1.y + p2.y) / 2);
+        
+        // Leg b (bottom horizontal)
+        ctx.fillText(`b = ${roundSafe(b)}`, (p2.x + p3.x) / 2 - 20, p2.y + 25);
+        
+        // Hypotenuse c (slant)
+        // Rotate text to match hypotenuse slope
+        ctx.save();
+        ctx.translate((p1.x + p3.x) / 2, (p1.y + p3.y) / 2);
+        const angle = Math.atan2(p3.y - p1.y, p3.x - p1.x);
+        ctx.rotate(angle);
+        ctx.fillStyle = '#fd7e14';
+        ctx.fillText(`c = ${roundSafe(c)}`, -30, -10);
+        ctx.restore();
+    }
+
+    function clearInputs() {
+        val1In.value = '';
+        val2In.value = '';
+        val1In.focus();
+        showError("Waiting for input...");
+    }
+
+    // Init
+    setTimeout(() => {
+        resizeCanvas();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

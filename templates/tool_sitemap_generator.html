@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XML Sitemap Generator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        /* Controls Pane */
+        .controls-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-header {
+            font-weight: 700;
+            color: var(--lasu-green);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        /* Dynamic Rules */
+        .url-row {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .url-row:hover { border-color: #adb5bd; background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+
+        .btn-remove-url {
+            color: #dc3545;
+            background: #fff;
+            border: 1px solid #dc3545;
+            transition: all 0.2s;
+            border-radius: 6px;
+        }
+        .btn-remove-url:hover {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        /* Output Pane */
+        .output-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 400px;
+        }
+
+        .pane-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-area {
+            flex-grow: 1;
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            overflow-y: auto;
+            white-space: pre;
+        }
+
+        /* Syntax Highlighting */
+        .hl-bracket { color: #8f8f8f; }
+        .hl-tag { color: #f92672; font-weight: bold; }
+        .hl-attr { color: #a6e22e; }
+        .hl-val { color: #e6db74; }
+        .hl-text { color: #f8f8f2; }
+        .hl-com { color: #75715e; font-style: italic; }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .url-row { flex-wrap: wrap; }
+            .url-row > div { flex: 1 1 45%; }
+            .url-row > div:last-child { flex: 1 1 100%; text-align: right; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">SEO TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-card">
+        <div class="control-header">
+            <span><i class="fas fa-sitemap text-primary me-2"></i> Configure URLs</span>
+            <button class="btn btn-primary btn-sm" onclick="addUrlRow()">
+                <i class="fas fa-plus"></i> Add New Page
+            </button>
+        </div>
+
+        <div class="mb-4 bg-light p-3 border rounded">
+            <label class="form-label text-dark fw-bold">Base Website URL</label>
+            <input type="url" class="form-control border-secondary" id="baseUrl" placeholder="https://example.com" value="https://example.com" oninput="generateSitemap()">
+            <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle"></i> This domain will be prepended to all paths below.</small>
+        </div>
+
+        <div id="urlsContainer">
+            </div>
+
+    </div>
+
+    <div class="output-card">
+        <div class="pane-header">
+            <span class="fw-bold text-dark"><i class="fas fa-file-code me-2 text-secondary"></i> sitemap.xml Output</span>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-primary" onclick="copyCode()">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+                <button class="btn btn-sm btn-outline-dark" onclick="downloadCode()">
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </div>
+        </div>
+        <div class="code-area" id="codeArea">
+            </div>
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    const urlsContainer = document.getElementById('urlsContainer');
+    const baseUrlInput = document.getElementById('baseUrl');
+    const codeArea = document.getElementById('codeArea');
+
+    let rowIdCounter = 0;
+
+    // Get today's date formatted as YYYY-MM-DD for default lastmod
+    function getToday() {
+        return new Date().toISOString().split('T')[0];
+    }
+
+    function addUrlRow(isHome = false) {
+        const rowId = `url-row-${rowIdCounter++}`;
+        const row = document.createElement('div');
+        row.className = 'url-row';
+        row.id = rowId;
+
+        const defaultPath = isHome ? '/' : '/new-page';
+        const defaultPriority = isHome ? '1.0' : '0.8';
+        const defaultFreq = isHome ? 'daily' : 'weekly';
+
+        row.innerHTML = `
+            <div style="flex: 2;">
+                <label class="form-label small mb-1">Page Path</label>
+                <input type="text" class="form-control form-control-sm u-path" placeholder="/about" value="${defaultPath}" oninput="generateSitemap()">
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label small mb-1">Last Modified</label>
+                <input type="date" class="form-control form-control-sm u-date" value="${getToday()}" onchange="generateSitemap()">
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label small mb-1">Change Frequency</label>
+                <select class="form-select form-select-sm u-freq" onchange="generateSitemap()">
+                    <option value="always">Always</option>
+                    <option value="hourly">Hourly</option>
+                    <option value="daily" ${isHome ? 'selected' : ''}>Daily</option>
+                    <option value="weekly" ${!isHome ? 'selected' : ''}>Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="never">Never</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label small mb-1">Priority (0.0 - 1.0)</label>
+                <input type="number" class="form-control form-control-sm u-pri" min="0.0" max="1.0" step="0.1" value="${defaultPriority}" oninput="generateSitemap()">
+            </div>
+            <div>
+                <button class="btn btn-sm btn-remove-url ${isHome ? 'd-none' : ''}" onclick="removeUrlRow('${rowId}')" title="Remove URL">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        
+        urlsContainer.appendChild(row);
+        generateSitemap();
+    }
+
+    function removeUrlRow(rowId) {
+        document.getElementById(rowId).remove();
+        generateSitemap();
+    }
+
+    // Syntax Highlighting helpers
+    function t(name, content) {
+        return `<span class="hl-bracket">&lt;</span><span class="hl-tag">${name}</span><span class="hl-bracket">&gt;</span><span class="hl-text">${content}</span><span class="hl-bracket">&lt;/</span><span class="hl-tag">${name}</span><span class="hl-bracket">&gt;</span>`;
+    }
+
+    function generateSitemap() {
+        let base = baseUrlInput.value.trim().replace(/\/$/, ""); // remove trailing slash
+        if (!base) base = "https://example.com";
+
+        let out = `<span class="hl-bracket">&lt;?</span><span class="hl-tag">xml</span> <span class="hl-attr">version</span><span class="hl-bracket">=</span><span class="hl-val">"1.0"</span> <span class="hl-attr">encoding</span><span class="hl-bracket">=</span><span class="hl-val">"UTF-8"</span><span class="hl-bracket">?&gt;</span>\n`;
+        out += `<span class="hl-bracket">&lt;</span><span class="hl-tag">urlset</span> <span class="hl-attr">xmlns</span><span class="hl-bracket">=</span><span class="hl-val">"http://www.sitemaps.org/schemas/sitemap/0.9"</span><span class="hl-bracket">&gt;</span>\n`;
+
+        const rows = document.querySelectorAll('.url-row');
+        
+        rows.forEach(row => {
+            let path = row.querySelector('.u-path').value.trim();
+            if (!path.startsWith('/')) path = '/' + path; // ensure leading slash
+            
+            // Escape special chars in URL for XML
+            const fullUrl = (base + path).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+            
+            const date = row.querySelector('.u-date').value;
+            const freq = row.querySelector('.u-freq').value;
+            const pri = row.querySelector('.u-pri').value;
+
+            out += `  <span class="hl-bracket">&lt;</span><span class="hl-tag">url</span><span class="hl-bracket">&gt;</span>\n`;
+            out += `    ${t('loc', fullUrl)}\n`;
+            if (date) out += `    ${t('lastmod', date)}\n`;
+            if (freq) out += `    ${t('changefreq', freq)}\n`;
+            if (pri) out += `    ${t('priority', pri)}\n`;
+            out += `  <span class="hl-bracket">&lt;/</span><span class="hl-tag">url</span><span class="hl-bracket">&gt;</span>\n`;
+        });
+
+        out += `<span class="hl-bracket">&lt;/</span><span class="hl-tag">urlset</span><span class="hl-bracket">&gt;</span>`;
+
+        codeArea.innerHTML = out;
+    }
+
+    function getRawText() {
+        // Simple way to extract text ignoring span tags
+        const temp = document.createElement('div');
+        temp.innerHTML = codeArea.innerHTML;
+        return temp.innerText || temp.textContent;
+    }
+
+    function copyCode() {
+        navigator.clipboard.writeText(getRawText()).then(() => {
+            showToast('XML copied to clipboard!', 'success');
+        });
+    }
+
+    function downloadCode() {
+        const text = getRawText();
+        const blob = new Blob([text], {type: 'application/xml'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sitemap.xml';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('sitemap.xml downloaded!', 'info');
+    }
+
+    function showToast(message, type) {
+        const tb = document.getElementById('toastBox');
+        tb.innerText = message;
+        tb.className = `alert shadow-lg border-0 alert-${type}`;
+        tb.style.display = 'block';
+        setTimeout(() => tb.style.display = 'none', 3000);
+    }
+
+    // Initialize with a Home page row and one sub-page
+    addUrlRow(true);
+    addUrlRow(false);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

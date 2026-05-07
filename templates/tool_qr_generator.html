@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        /* Controls Pane */
+        .controls-pane {
+            flex: 0 0 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .control-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 700;
+            color: var(--lasu-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-area {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .input-text {
+            resize: none;
+            font-family: 'Segoe UI', sans-serif;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 12px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+            font-size: 1rem;
+        }
+        .input-text:focus {
+            border-color: var(--lasu-green);
+            box-shadow: 0 0 0 3px rgba(0, 77, 64, 0.1);
+            outline: none;
+        }
+
+        /* Color Pickers */
+        .color-group {
+            display: flex;
+            gap: 15px;
+        }
+        .color-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 100%;
+            height: 45px;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 2px solid #ced4da; border-radius: 8px; }
+
+        /* Output Pane */
+        .output-pane {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 40px;
+            background-image: radial-gradient(#e9ecef 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .qr-wrapper {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 1px solid #dee2e6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 300px;
+            min-height: 300px;
+            transition: transform 0.3s;
+        }
+
+        .qr-wrapper:hover {
+            transform: scale(1.02);
+        }
+
+        #qrCanvas {
+            max-width: 100%;
+            height: auto;
+            image-rendering: crisp-edges;
+        }
+
+        .action-bar {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .btn-download {
+            flex: 1;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 12px;
+        }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .controls-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">DEV TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-pane">
+        <div class="control-header">
+            <i class="fas fa-qrcode"></i> Generator Settings
+        </div>
+
+        <div class="form-area">
+            <div>
+                <label class="form-label text-primary"><i class="fas fa-link me-1"></i> Data / URL / Text</label>
+                <textarea class="input-text w-100" id="textInput" rows="4" placeholder="Enter URL, Wi-Fi details, or text..." oninput="generateQR()">https://lasu.edu.ng</textarea>
+            </div>
+
+            <div class="color-group">
+                <div class="color-box">
+                    <label class="form-label">Foreground</label>
+                    <input type="color" id="fgColor" value="#000000" oninput="generateQR()">
+                </div>
+                <div class="color-box">
+                    <label class="form-label">Background</label>
+                    <input type="color" id="bgColor" value="#ffffff" oninput="generateQR()">
+                </div>
+            </div>
+
+            <div>
+                <label class="form-label">Error Correction (Redundancy)</label>
+                <select class="form-select border-secondary" id="errSelect" onchange="generateQR()">
+                    <option value="L">Low (7% damage recovery)</option>
+                    <option value="M">Medium (15% damage recovery)</option>
+                    <option value="Q">Quartile (25% damage recovery)</option>
+                    <option value="H" selected>High (30% recovery - Best for logos)</option>
+                </select>
+                <div class="small text-muted mt-1" style="font-size: 0.75rem;">Higher levels allow the QR code to still scan even if partially blocked or dirty.</div>
+            </div>
+
+            <div>
+                <label class="form-label">Export Resolution</label>
+                <select class="form-select border-secondary" id="sizeSelect" onchange="generateQR()">
+                    <option value="256">256 x 256 (Standard)</option>
+                    <option value="512" selected>512 x 512 (High Quality)</option>
+                    <option value="1024">1024 x 1024 (Print Quality)</option>
+                </select>
+            </div>
+
+            <hr class="my-2">
+            
+            <div class="alert alert-success py-2 mb-0 small border-0 shadow-sm text-center">
+                <i class="fas fa-microchip me-1"></i> Local Rendering Engine Active
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner-border text-success mb-3" role="status"></div>
+            <h5 class="fw-bold text-dark">Initializing Engine...</h5>
+            <div class="small text-muted" id="loadingStatus">Testing Secure CDN Tunnels...</div>
+        </div>
+
+        <div class="qr-wrapper" id="qrWrapper">
+            <canvas id="qrCanvas"></canvas>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn btn-primary btn-download" onclick="downloadQR('png')">
+                <i class="fas fa-file-image"></i> Save PNG
+            </button>
+            <button class="btn btn-dark btn-download" onclick="downloadQR('jpeg')">
+                <i class="fas fa-file-image"></i> Save JPG
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    // Elements
+    const textInput = document.getElementById('textInput');
+    const fgColor = document.getElementById('fgColor');
+    const bgColor = document.getElementById('bgColor');
+    const errSelect = document.getElementById('errSelect');
+    const sizeSelect = document.getElementById('sizeSelect');
+    const qrCanvas = document.getElementById('qrCanvas');
+    const toastBox = document.getElementById('toastBox');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingStatus = document.getElementById('loadingStatus');
+
+    let qrEngine = null;
+    let typingTimer;
+
+    // --- MULTI-CDN ANTI-FIREWALL SCRIPT INJECTOR ---
+    // This function guarantees the QRious library loads by trying multiple enterprise CDNs.
+    function loadQRLibrary() {
+        const cdns = [
+            "https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js",
+            "https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js",
+            "https://unpkg.com/qrious@4.0.2/dist/qrious.min.js"
+        ];
+        
+        let cdnIndex = 0;
+
+        function tryNextCDN() {
+            if (cdnIndex >= cdns.length) {
+                loadingStatus.innerHTML = "<span class='text-danger'>Critical Error: Network firewall blocked all JS resources.</span>";
+                return;
+            }
+
+            loadingStatus.innerText = `Connecting to Node ${cdnIndex + 1}...`;
+            
+            const script = document.createElement('script');
+            script.src = cdns[cdnIndex];
+            script.async = true;
+            
+            script.onload = () => {
+                // Success! The library is loaded.
+                loadingOverlay.style.display = 'none';
+                initEngine();
+            };
+            
+            script.onerror = () => {
+                console.warn(`CDN ${cdnIndex + 1} blocked. Falling back...`);
+                cdnIndex++;
+                tryNextCDN();
+            };
+
+            document.head.appendChild(script);
+        }
+
+        tryNextCDN();
+    }
+
+    // --- QR ENGINE INITIALIZATION ---
+    function initEngine() {
+        // We use QRious because it renders directly to a secure HTML5 Canvas
+        qrEngine = new QRious({
+            element: qrCanvas,
+            value: textInput.value,
+            size: parseInt(sizeSelect.value),
+            level: errSelect.value,
+            background: bgColor.value,
+            foreground: fgColor.value,
+            padding: 25 // Safe quiet zone padding
+        });
+    }
+
+    // --- GENERATION LOGIC ---
+    function generateQR() {
+        if (!qrEngine) return; // Wait until library loads
+        
+        // Debounce to prevent lag while user is dragging color sliders
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            const val = textInput.value.trim();
+            if (!val) {
+                // Render an empty code if text is deleted
+                qrEngine.value = " "; 
+                return;
+            }
+
+            // Push updates to the engine
+            qrEngine.set({
+                value: val,
+                size: parseInt(sizeSelect.value),
+                level: errSelect.value,
+                background: bgColor.value,
+                foreground: fgColor.value
+            });
+            
+        }, 100); 
+    }
+
+    // --- DOWNLOAD LOGIC ---
+    function downloadQR(format) {
+        if (!qrEngine || !textInput.value.trim()) {
+            showToast("Nothing to download.", "danger");
+            return;
+        }
+
+        // Extract raw image data from the canvas
+        const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+        // 1.0 means max quality for jpeg
+        const dataUrl = qrCanvas.toDataURL(mimeType, 1.0); 
+
+        // Create temporary anchor to force download
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `LASU_QR_Code_${Date.now()}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        showToast(`QR Code saved as ${format.toUpperCase()}`, "success");
+    }
+
+    // --- UI HELPERS ---
+    function showToast(message, type) {
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Boot sequence
+    window.onload = () => {
+        loadQRLibrary();
+    };
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

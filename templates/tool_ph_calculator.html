@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pH Calculator & Visualizer | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .mode-selector {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-label { font-weight: 700; color: #495057; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 10px; display: block; }
+        
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-purple); box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15); }
+        
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ced4da;
+            font-size: 1rem;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .num-input {
+            width: 100%;
+            border: none;
+            padding: 20px;
+            font-size: 1.8rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            color: #212529;
+            outline: none;
+            text-align: center;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* IDENTICAL STAT CARDS TO PREVIOUS TOOLS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+        }
+        
+        /* Dynamic border classes managed by JS */
+        .stat-card.acid { border-color: rgba(220, 53, 69, 0.3); background: rgba(220, 53, 69, 0.02); }
+        .stat-card.neutral { border-color: rgba(25, 135, 84, 0.3); background: rgba(25, 135, 84, 0.02); }
+        .stat-card.base { border-color: rgba(13, 110, 253, 0.3); background: rgba(13, 110, 253, 0.02); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 4px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1.1;
+        }
+        
+        .acid .stat-val { color: var(--math-red); }
+        .neutral .stat-val { color: var(--lasu-accent); }
+        .base .stat-val { color: var(--math-blue); }
+
+        .res-unit { font-size: 0.9rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif;}
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* Advanced Lab Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            min-height: 350px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center center;
+        }
+
+        #phCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .formula-bar span { color: #adb5bd; font-size: 0.8rem; text-transform: uppercase; margin-right: 5px; font-family: 'Segoe UI', sans-serif;}
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; align-items: center; text-align: center; }
+            .formula-bar { flex-direction: column; gap: 5px;}
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-vial"></i> Equilibrium Input
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter a valid chemical number.
+            </div>
+
+            <div class="mode-selector">
+                <label class="mode-label">I want to input:</label>
+                <div class="d-flex gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="calcMode" id="modePH" value="pH" checked onchange="updateMode()">
+                        <label class="form-check-label fw-bold" for="modePH">pH</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="calcMode" id="modeH" value="H" onchange="updateMode()">
+                        <label class="form-check-label fw-bold" for="modeH">[H⁺]</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="calcMode" id="modePOH" value="pOH" onchange="updateMode()">
+                        <label class="form-check-label fw-bold" for="modePOH">pOH</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="calcMode" id="modeOH" value="OH" onchange="updateMode()">
+                        <label class="form-check-label fw-bold" for="modeOH">[OH⁻]</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label">
+                    <span id="inLabel">pH Value</span>
+                    <span class="badge bg-secondary" id="inUnit">0 - 14</span>
+                </div>
+                <input type="number" class="num-input" id="valIn" value="7.0" step="any" oninput="calculatePH()">
+            </div>
+
+            <div class="alert alert-info mt-auto mb-0 border-0" style="background: rgba(111, 66, 193, 0.05); color: var(--math-purple);">
+                <i class="fas fa-info-circle mb-2 fa-lg"></i><br>
+                <strong>Scientific Input:</strong><br>
+                For extremely small concentrations like <code>1.5 &times; 10⁻⁵</code>, simply type <code>1.5e-5</code> into the input box.
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-3" onclick="resetForm()">
+                <i class="fas fa-undo me-2"></i> Reset State
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card" id="card1">
+                    <div class="stat-label" id="lbl1">pOH Value</div>
+                    <div class="stat-val" id="res1">7.00</div>
+                    <div class="stat-sub" id="sub1">14 - pH</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card" id="card2">
+                    <div class="stat-label" id="lbl2">[H⁺] Concentration</div>
+                    <div class="stat-val" id="res2">1.00e-7 <span class="res-unit">M</span></div>
+                    <div class="stat-sub" id="sub2">10^(-pH)</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card" id="card3">
+                    <div class="stat-label" id="lbl3">[OH⁻] Concentration</div>
+                    <div class="stat-val" id="res3">1.00e-7 <span class="res-unit">M</span></div>
+                    <div class="stat-sub" id="sub3">10^(-pOH)</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="simulation-box mt-2">
+            
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="phCanvas"></canvas>
+            </div>
+
+            <div class="telemetry-bar">
+                <div class="formula-bar">
+                    <div><span>Equilibrium:</span> pH + pOH = 14</div>
+                    <div><span>Constant (Kw):</span> [H⁺][OH⁻] = 1&times;10⁻¹⁴</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // IO Elements
+    const valIn = document.getElementById('valIn');
+    const inLabel = document.getElementById('inLabel');
+    const inUnit = document.getElementById('inUnit');
+    const errorBanner = document.getElementById('errorBanner');
+
+    // Card Elements
+    const card1 = document.getElementById('card1'); const lbl1 = document.getElementById('lbl1'); const res1 = document.getElementById('res1'); const sub1 = document.getElementById('sub1');
+    const card2 = document.getElementById('card2'); const lbl2 = document.getElementById('lbl2'); const res2 = document.getElementById('res2'); const sub2 = document.getElementById('sub2');
+    const card3 = document.getElementById('card3'); const lbl3 = document.getElementById('lbl3'); const res3 = document.getElementById('res3'); const sub3 = document.getElementById('sub3');
+
+    // Canvas Elements
+    const canvas = document.getElementById('phCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // State
+    let currentMode = 'pH';
+    let S = { pH: 7, pOH: 7, H: 1e-7, OH: 1e-7 };
+
+    // FLAWLESS CANVAS SCALING ALGORITHM
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
+            
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            drawVisualizer(); 
+        }
+    });
+    resizeObserver.observe(container);
+
+    function updateMode() {
+        const radios = document.getElementsByName('calcMode');
+        for (let r of radios) { if (r.checked) currentMode = r.value; }
+
+        if (currentMode === 'pH') {
+            inLabel.innerHTML = 'pH Value'; inUnit.innerText = '0 - 14'; valIn.value = S.pH.toFixed(2);
+            lbl1.innerText = 'pOH Value'; sub1.innerText = '14 - pH';
+            lbl2.innerHTML = '[H⁺] Concentration'; sub2.innerText = '10^(-pH)';
+            lbl3.innerHTML = '[OH⁻] Concentration'; sub3.innerText = '10^(-pOH)';
+        } else if (currentMode === 'pOH') {
+            inLabel.innerHTML = 'pOH Value'; inUnit.innerText = '0 - 14'; valIn.value = S.pOH.toFixed(2);
+            lbl1.innerText = 'pH Value'; sub1.innerText = '14 - pOH';
+            lbl2.innerHTML = '[H⁺] Concentration'; sub2.innerText = '10^(-pH)';
+            lbl3.innerHTML = '[OH⁻] Concentration'; sub3.innerText = '10^(-pOH)';
+        } else if (currentMode === 'H') {
+            inLabel.innerHTML = '[H⁺] Conc.'; inUnit.innerText = 'Molar (M)'; valIn.value = S.H.toExponential(2);
+            lbl1.innerText = 'pH Value'; sub1.innerText = '-log[H⁺]';
+            lbl2.innerHTML = 'pOH Value'; sub2.innerText = '14 - pH';
+            lbl3.innerHTML = '[OH⁻] Concentration'; sub3.innerText = 'Kw / [H⁺]';
+        } else if (currentMode === 'OH') {
+            inLabel.innerHTML = '[OH⁻] Conc.'; inUnit.innerText = 'Molar (M)'; valIn.value = S.OH.toExponential(2);
+            lbl1.innerText = 'pOH Value'; sub1.innerText = '-log[OH⁻]';
+            lbl2.innerHTML = 'pH Value'; sub2.innerText = '14 - pOH';
+            lbl3.innerHTML = '[H⁺] Concentration'; sub3.innerText = 'Kw / [OH⁻]';
+        }
+        
+        calculatePH(); // re-trigger
+    }
+
+    function formatScientific(num) {
+        if (num === 0) return "0.00";
+        if (num > 0.01 && num < 100) return num.toFixed(4).replace(/\.?0+$/, ''); // Normal numbers
+        
+        // Return beautiful scientific notation
+        let expStr = num.toExponential(2);
+        let parts = expStr.split('e');
+        return `${parts[0]} &times; 10<sup>${parts[1].replace('+','')}</sup> <span class="res-unit">M</span>`;
+    }
+
+    function determineColorClass(ph) {
+        if (ph < 6.5) return 'acid';
+        if (ph > 7.5) return 'base';
+        return 'neutral';
+    }
+
+    function calculatePH() {
+        const val = parseFloat(valIn.value);
+        if (isNaN(val) || val < 0) {
+            errorBanner.style.display = 'block';
+            return;
+        }
+        errorBanner.style.display = 'none';
+
+        // Master Math Engine
+        if (currentMode === 'pH') {
+            S.pH = val;
+            S.pOH = 14 - val;
+            S.H = Math.pow(10, -S.pH);
+            S.OH = Math.pow(10, -S.pOH);
+            
+            res1.innerHTML = S.pOH.toFixed(2);
+            res2.innerHTML = formatScientific(S.H);
+            res3.innerHTML = formatScientific(S.OH);
+        } else if (currentMode === 'pOH') {
+            S.pOH = val;
+            S.pH = 14 - val;
+            S.H = Math.pow(10, -S.pH);
+            S.OH = Math.pow(10, -S.pOH);
+            
+            res1.innerHTML = S.pH.toFixed(2);
+            res2.innerHTML = formatScientific(S.H);
+            res3.innerHTML = formatScientific(S.OH);
+        } else if (currentMode === 'H') {
+            S.H = val;
+            S.pH = -Math.log10(val);
+            S.pOH = 14 - S.pH;
+            S.OH = Math.pow(10, -S.pOH);
+            
+            res1.innerHTML = S.pH.toFixed(2);
+            res2.innerHTML = S.pOH.toFixed(2);
+            res3.innerHTML = formatScientific(S.OH);
+        } else if (currentMode === 'OH') {
+            S.OH = val;
+            S.pOH = -Math.log10(val);
+            S.pH = 14 - S.pOH;
+            S.H = Math.pow(10, -S.pH);
+            
+            res1.innerHTML = S.pOH.toFixed(2);
+            res2.innerHTML = S.pH.toFixed(2);
+            res3.innerHTML = formatScientific(S.H);
+        }
+
+        // Apply visual classes dynamically
+        const cClass = determineColorClass(S.pH);
+        
+        // Reset classes
+        [card1, card2, card3].forEach(c => {
+            c.className = 'card h-100 text-center border-2 p-3 stat-card';
+            c.classList.add(cClass);
+        });
+
+        drawVisualizer();
+    }
+
+    // --- CANVAS ENGINE ---
+    function drawVisualizer() {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        if(cw === 0) return;
+        
+        ctx.clearRect(0, 0, cw, ch);
+
+        const cy = ch / 2;
+        const barWidth = cw * 0.8;
+        const barHeight = 40;
+        const startX = (cw - barWidth) / 2;
+
+        // 1. Draw Full Spectrum Gradient Bar
+        const gradient = ctx.createLinearGradient(startX, 0, startX + barWidth, 0);
+        // Standard Universal Indicator Colors
+        gradient.addColorStop(0, '#dc3545');    // pH 0 (Red)
+        gradient.addColorStop(0.2, '#fd7e14');  // pH 3 (Orange)
+        gradient.addColorStop(0.4, '#ffc107');  // pH 5.5 (Yellow)
+        gradient.addColorStop(0.5, '#198754');  // pH 7 (Green)
+        gradient.addColorStop(0.7, '#0dcaf0');  // pH 10 (Cyan)
+        gradient.addColorStop(1, '#6f42c1');    // pH 14 (Purple)
+
+        ctx.beginPath();
+        ctx.roundRect(startX, cy - (barHeight/2), barWidth, barHeight, 20);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#343a40';
+        ctx.stroke();
+
+        // 2. Draw Ticks
+        ctx.fillStyle = '#adb5bd';
+        ctx.font = 'bold 12px "Fira Code", monospace';
+        ctx.textAlign = 'center';
+        
+        for (let i = 0; i <= 14; i++) {
+            let px = startX + (i / 14) * barWidth;
+            
+            // Tick mark
+            ctx.beginPath();
+            ctx.moveTo(px, cy + (barHeight/2));
+            ctx.lineTo(px, cy + (barHeight/2) + 10);
+            ctx.strokeStyle = '#adb5bd';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Label (only evens and 7 to prevent crowding)
+            if (i % 2 === 0 || i === 7) {
+                ctx.fillText(i, px, cy + (barHeight/2) + 25);
+            }
+        }
+
+        // 3. Draw pH Marker
+        // Clamp pH between 0 and 14 for drawing purposes
+        let safePH = Math.max(0, Math.min(14, S.pH));
+        let markerX = startX + (safePH / 14) * barWidth;
+
+        // Drop shadow for glow
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 15;
+
+        // Marker Head
+        ctx.beginPath();
+        ctx.moveTo(markerX, cy - (barHeight/2) - 5);
+        ctx.lineTo(markerX - 10, cy - (barHeight/2) - 20);
+        ctx.lineTo(markerX + 10, cy - (barHeight/2) - 20);
+        ctx.closePath();
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+
+        // Marker Line down through bar
+        ctx.beginPath();
+        ctx.moveTo(markerX, cy - (barHeight/2) - 5);
+        ctx.lineTo(markerX, cy + (barHeight/2) + 5);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Big pH Text above marker
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px "Segoe UI", sans-serif';
+        ctx.fillText(`pH ${S.pH.toFixed(2)}`, markerX, cy - (barHeight/2) - 35);
+
+        // Classification Text
+        let classification = "NEUTRAL";
+        let cColor = '#198754';
+        if (S.pH < 3) { classification = "STRONGLY ACIDIC"; cColor = '#dc3545'; }
+        else if (S.pH < 6.5) { classification = "WEAKLY ACIDIC"; cColor = '#fd7e14'; }
+        else if (S.pH > 11) { classification = "STRONGLY ALKALINE"; cColor = '#6f42c1'; }
+        else if (S.pH > 7.5) { classification = "WEAKLY ALKALINE"; cColor = '#0dcaf0'; }
+
+        ctx.fillStyle = cColor;
+        ctx.font = 'bold 16px "Fira Code", monospace';
+        ctx.fillText(classification, cw / 2, ch - 20);
+    }
+
+    function resetForm() {
+        S = { pH: 7, pOH: 7, H: 1e-7, OH: 1e-7 };
+        currentMode = 'pH';
+        document.getElementById('modePH').checked = true;
+        updateMode();
+    }
+
+    // INIT
+    setTimeout(() => {
+        updateMode();
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

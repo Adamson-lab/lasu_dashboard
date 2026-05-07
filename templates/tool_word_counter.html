@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Counter & Linguistic Analyzer | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .text-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            transition: all 0.2s;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 300px;
+        }
+        .text-editor:focus {
+            border-color: var(--lasu-accent);
+            box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15);
+        }
+
+        .editor-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-copy { background: var(--math-blue); color: white; }
+        .btn-copy:hover { background: #0b5ed7; transform: translateY(-2px); }
+        
+        .btn-clear { background: #6c757d; color: white; }
+        .btn-clear:hover { background: #5c636a; transform: translateY(-2px); }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 0 0 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 120px; 
+            transition: all 0.3s;
+        }
+        
+        .stat-card.primary { border-color: rgba(25, 135, 84, 0.4); background: rgba(25, 135, 84, 0.05); }
+        .stat-card.secondary { border-color: rgba(13, 110, 253, 0.4); background: rgba(13, 110, 253, 0.05); }
+        .stat-card.warning { border-color: rgba(111, 66, 193, 0.4); background: rgba(111, 66, 193, 0.05); }
+        .stat-card.danger { border-color: rgba(253, 126, 20, 0.4); background: rgba(253, 126, 20, 0.05); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 5px;
+            width: 100%;
+            line-height: 1;
+        }
+        
+        .primary .stat-val { color: var(--lasu-accent); }
+        .secondary .stat-val { color: var(--math-blue); }
+        .warning .stat-val { color: var(--math-purple); }
+        .danger .stat-val { color: var(--math-orange); }
+
+        /* Advanced Linguistic Box */
+        .analysis-box {
+            flex: 1;
+            background: #ffffff; 
+            border-radius: 12px;
+            border: 2px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            padding: 20px;
+        }
+
+        .time-metrics {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .time-metric-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .time-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+        .icon-read { background: rgba(13, 202, 240, 0.1); color: var(--math-blue); }
+        .icon-speak { background: rgba(220, 53, 69, 0.1); color: var(--math-red); }
+
+        .time-data h6 { font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: #6c757d; margin: 0 0 2px 0; }
+        .time-data span { font-family: 'Fira Code', monospace; font-weight: 800; font-size: 1.2rem; color: #212529; }
+
+        .density-header {
+            font-weight: 800;
+            color: #212529;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .density-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .keyword-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .keyword-name {
+            width: 100px;
+            font-weight: 700;
+            color: #495057;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9rem;
+        }
+
+        .keyword-bar-wrapper {
+            flex: 1;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+
+        .keyword-bar {
+            height: 100%;
+            background: var(--math-purple);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .keyword-count {
+            width: 40px;
+            text-align: right;
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            color: var(--math-purple);
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #adb5bd;
+            font-weight: 700;
+            padding: 20px 0;
+            font-style: italic;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .output-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-edit me-2"></i> Document Editor</div>
+                <span class="badge bg-secondary" id="charNoSpaceBadge">0 Chars (No Spaces)</span>
+            </div>
+
+            <textarea class="text-editor" id="textInput" placeholder="Start typing or paste your document here..." oninput="analyzeText()"></textarea>
+
+            <div class="editor-controls">
+                <button class="btn-action btn-copy" onclick="copyText()">
+                    <i class="fas fa-copy"></i> Copy Text
+                </button>
+                <button class="btn-action btn-clear" onclick="clearText()">
+                    <i class="fas fa-trash-alt"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="top-stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-label">Words</div>
+                <div class="stat-val" id="resWords">0</div>
+            </div>
+            <div class="stat-card secondary">
+                <div class="stat-label">Characters</div>
+                <div class="stat-val" id="resChars">0</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-label">Sentences</div>
+                <div class="stat-val" id="resSentences">0</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-label">Paragraphs</div>
+                <div class="stat-val" id="resParagraphs">0</div>
+            </div>
+        </div>
+
+        <div class="analysis-box">
+            
+            <div class="time-metrics">
+                <div class="time-metric-box">
+                    <div class="time-icon icon-read"><i class="fas fa-book-reader"></i></div>
+                    <div class="time-data">
+                        <h6>Reading Time</h6>
+                        <span id="resRead">0m 0s</span>
+                    </div>
+                </div>
+                <div class="time-metric-box">
+                    <div class="time-icon icon-speak"><i class="fas fa-microphone-alt"></i></div>
+                    <div class="time-data">
+                        <h6>Speaking Time</h6>
+                        <span id="resSpeak">0m 0s</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="density-header">
+                <span><i class="fas fa-chart-bar me-2 text-purple"></i> Keyword Density</span>
+                <span class="text-muted" style="text-transform: none; font-weight: 600;">Top 5</span>
+            </div>
+
+            <div class="density-list" id="keywordList">
+                <div class="empty-state">Begin typing to extract keywords...</div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const textInput = document.getElementById('textInput');
+    
+    // UI Targets
+    const resWords = document.getElementById('resWords');
+    const resChars = document.getElementById('resChars');
+    const resSentences = document.getElementById('resSentences');
+    const resParagraphs = document.getElementById('resParagraphs');
+    const charNoSpaceBadge = document.getElementById('charNoSpaceBadge');
+    
+    const resRead = document.getElementById('resRead');
+    const resSpeak = document.getElementById('resSpeak');
+    const keywordList = document.getElementById('keywordList');
+
+    // Standard English Stop Words to ignore in density calc
+    const stopWords = new Set(["a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "which's", "while", "while's", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"]);
+
+    function copyText() {
+        textInput.select();
+        document.execCommand('copy');
+        
+        // Brief visual feedback
+        const copyBtn = document.querySelector('.btn-copy');
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => { copyBtn.innerHTML = originalText; }, 1500);
+    }
+
+    function clearText() {
+        textInput.value = '';
+        analyzeText();
+        textInput.focus();
+    }
+
+    function formatChrono(totalSeconds) {
+        if (totalSeconds < 60) return `${totalSeconds}s`;
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        return `${m}m ${s}s`;
+    }
+
+    function analyzeText() {
+        const text = textInput.value;
+        const trimmed = text.trim();
+
+        // 1. Basic Metrics
+        const charCount = text.length;
+        const charNoSpaceCount = text.replace(/\s/g, '').length;
+        
+        // Word split logic (handles multiple spaces, newlines)
+        const wordsArray = trimmed ? trimmed.split(/\s+/) : [];
+        const wordCount = wordsArray.length;
+
+        // Sentence logic (Split by . ? ! followed by a space or end of string)
+        const sentencesArray = trimmed ? trimmed.split(/[.?!]+(?=\s|$)/).filter(s => s.trim().length > 0) : [];
+        const sentenceCount = sentencesArray.length;
+
+        // Paragraph logic (Split by 1 or more newlines)
+        const paragraphsArray = trimmed ? trimmed.split(/\n+/).filter(p => p.trim().length > 0) : [];
+        const paragraphCount = paragraphsArray.length;
+
+        resWords.innerText = wordCount.toLocaleString();
+        resChars.innerText = charCount.toLocaleString();
+        resSentences.innerText = sentenceCount.toLocaleString();
+        resParagraphs.innerText = paragraphCount.toLocaleString();
+        charNoSpaceBadge.innerText = `${charNoSpaceCount.toLocaleString()} Chars (No Spaces)`;
+
+        // 2. Chrono Metrics
+        // Average adult reading speed: 238 WPM = ~3.96 words per sec
+        const readSeconds = Math.ceil(wordCount / (238 / 60));
+        // Average speaking speed: 183 WPM = ~3.05 words per sec
+        const speakSeconds = Math.ceil(wordCount / (183 / 60));
+
+        resRead.innerText = formatChrono(readSeconds);
+        resSpeak.innerText = formatChrono(speakSeconds);
+
+        // 3. Keyword Extraction Engine
+        if (wordCount === 0) {
+            keywordList.innerHTML = '<div class="empty-state">Begin typing to extract keywords...</div>';
+            return;
+        }
+
+        const wordFreq = {};
+        let maxFreq = 0;
+
+        wordsArray.forEach(word => {
+            // Strip punctuation and make lowercase
+            let cleanWord = word.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            
+            if (cleanWord.length > 2 && !stopWords.has(cleanWord)) {
+                wordFreq[cleanWord] = (wordFreq[cleanWord] || 0) + 1;
+                if (wordFreq[cleanWord] > maxFreq) maxFreq = wordFreq[cleanWord];
+            }
+        });
+
+        // Convert to array and sort
+        const sortedKeywords = Object.keys(wordFreq)
+            .map(key => ({ word: key, count: wordFreq[key] }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5); // Take top 5
+
+        if (sortedKeywords.length === 0) {
+            keywordList.innerHTML = '<div class="empty-state">No significant keywords found yet.</div>';
+            return;
+        }
+
+        // Render UI
+        let html = '';
+        sortedKeywords.forEach(kw => {
+            // Bar width relative to the maximum frequency found
+            let pct = (kw.count / maxFreq) * 100;
+            html += `
+                <div class="keyword-row">
+                    <div class="keyword-name">${kw.word}</div>
+                    <div class="keyword-bar-wrapper">
+                        <div class="keyword-bar" style="width: ${pct}%;"></div>
+                    </div>
+                    <div class="keyword-count">${kw.count}</div>
+                </div>
+            `;
+        });
+        keywordList.innerHTML = html;
+    }
+
+    // INIT
+    analyzeText();
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

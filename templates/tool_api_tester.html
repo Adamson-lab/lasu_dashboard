@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tester | LASU Matrix</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V-INFINITY THEME ENGINE (API MODULE)
+           FULLY EXPANDED AND FORMATTED
+           ========================================== */
+        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700;800;900&display=swap');
+
+        /* LIGHT MODE */
+        [data-theme="light"] {
+            --bg-master: #f8fafc; 
+            --bg-surface: rgba(255, 255, 255, 0.9); 
+            --term-bg: rgba(241, 245, 249, 0.9);
+            --border-core: rgba(148, 163, 184, 0.3); 
+            --border-neon: #3b82f6; 
+            --text-main: #0f172a; 
+            --text-mute: #64748b; 
+            --text-cyber: #2563eb; 
+            --shadow-core: 0 10px 30px rgba(59, 130, 246, 0.1);
+            --alert: #ef4444; 
+            --warn: #f59e0b; 
+            --info: #0ea5e9; 
+            --success: #10b981;
+        }
+
+        /* DARK MODE */
+        [data-theme="dark"] {
+            --bg-master: #020617; 
+            --bg-surface: rgba(15, 23, 42, 0.8); 
+            --term-bg: rgba(5, 10, 20, 0.9);
+            --border-core: rgba(51, 65, 85, 0.5); 
+            --border-neon: #0ea5e9; 
+            --text-main: #f8fafc; 
+            --text-mute: #94a3b8; 
+            --text-cyber: #38bdf8;
+            --shadow-core: 0 10px 30px rgba(14, 165, 233, 0.15);
+            --alert: #ef4444; 
+            --warn: #f59e0b; 
+            --info: #0ea5e9; 
+            --success: #10b981;
+        }
+
+        /* HIGH CONTRAST MODE */
+        [data-theme="god"] {
+            --bg-master: #0a0500; 
+            --bg-surface: rgba(25, 10, 35, 0.85); 
+            --term-bg: rgba(10, 0, 15, 0.9);
+            --border-core: rgba(217, 70, 239, 0.5); 
+            --border-neon: #fbbf24; 
+            --text-main: #fffbeb; 
+            --text-mute: #f472b6; 
+            --text-cyber: #ffd700;
+            --shadow-core: 0 0 40px rgba(217, 70, 239, 0.3);
+            --alert: #ff0000; 
+            --warn: #f59e0b; 
+            --info: #38bdf8; 
+            --success: #34d399;
+        }
+
+        /* DEEP VOID MODE */
+        [data-theme="singularity"] {
+            --bg-master: #000000; 
+            --bg-surface: rgba(0, 5, 15, 0.9); 
+            --term-bg: #000000;
+            --border-core: rgba(0, 255, 204, 0.3); 
+            --border-neon: #00ffcc; 
+            --text-main: #e0ffff; 
+            --text-mute: #8a2be2; 
+            --text-cyber: #00ffcc;
+            --shadow-core: 0 0 50px rgba(0, 255, 204, 0.2), inset 0 0 20px rgba(138, 43, 226, 0.2);
+            --alert: #ff003c; 
+            --warn: #ffea00; 
+            --info: #00f0ff; 
+            --success: #00ffcc;
+        }
+
+        body { 
+            background-color: var(--bg-master); 
+            color: var(--text-main); 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px; 
+            background-attachment: fixed;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Scanlines */
+        [data-theme="dark"] body::before, 
+        [data-theme="god"] body::before, 
+        [data-theme="singularity"] body::before {
+            content: " "; 
+            display: block; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            bottom: 0; 
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%); 
+            z-index: 9999; 
+            background-size: 100% 3px; 
+            pointer-events: none; 
+            opacity: 0.7;
+        }
+
+        [data-theme="singularity"] body::before { 
+            background-size: 100% 2px; 
+            opacity: 0.9; 
+        }
+
+        /* Panels */
+        .cyber-panel { 
+            background: var(--bg-surface); 
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border-core); 
+            border-radius: 16px; 
+            padding: 25px; 
+            box-shadow: var(--shadow-core); 
+            margin-bottom: 20px; 
+            transition: all 0.4s ease; 
+            position: relative;
+        }
+        
+        .panel-header {
+            border-bottom: 1px solid var(--border-core); 
+            padding-bottom: 12px; 
+            margin-bottom: 20px;
+            font-weight: 900; 
+            letter-spacing: 2px; 
+            color: var(--text-main); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            text-transform: uppercase; 
+            font-size: 0.9rem;
+        }
+
+        /* Buttons & Toggles */
+        .btn-theme {
+            background: var(--bg-surface); 
+            color: var(--text-main); 
+            border: 1px solid var(--border-core);
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 1.2rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: var(--shadow-core);
+        }
+
+        .btn-theme:hover { 
+            border-color: var(--border-neon); 
+            color: var(--border-neon); 
+            transform: rotate(90deg) scale(1.15); 
+            box-shadow: 0 0 25px var(--border-neon); 
+        }
+
+        .btn-cyber { 
+            background: linear-gradient(135deg, var(--border-neon), var(--info)); 
+            border: none; 
+            color: #fff; 
+            padding: 15px 30px; 
+            text-transform: uppercase; 
+            font-weight: 900; 
+            font-size: 1.1rem; 
+            letter-spacing: 2px; 
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            cursor: pointer; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); 
+            width: 100%; 
+            position: relative;
+        }
+
+        [data-theme="singularity"] .btn-cyber { 
+            background: linear-gradient(135deg, #00ffcc, #8a2be2); 
+            color: #000; 
+            box-shadow: 0 0 30px rgba(0,255,204,0.4); 
+        }
+
+        .btn-cyber:hover { 
+            transform: translateY(-3px) scale(1.02); 
+            box-shadow: 0 10px 30px var(--border-neon); 
+        }
+
+        /* Inputs & Form Controls */
+        .form-control-cyber {
+            background: var(--term-bg);
+            border: 1px solid var(--border-core);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            padding: 12px 15px;
+            border-radius: 8px;
+            width: 100%;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .form-control-cyber:focus {
+            outline: none;
+            border-color: var(--border-neon);
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);
+            background: var(--bg-master);
+        }
+
+        select.form-control-cyber {
+            cursor: pointer;
+            appearance: none;
+        }
+
+        /* Terminal Window */
+        .terminal { 
+            height: 400px; 
+            overflow-y: auto; 
+            background: var(--term-bg); 
+            border: 1px solid var(--border-core); 
+            border-radius: 8px; 
+            padding: 15px; 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.85rem; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        /* JSON Syntax Highlighting */
+        .json-key { color: var(--info); font-weight: bold; }
+        .json-string { color: var(--success); }
+        .json-number { color: var(--warn); }
+        .json-boolean { color: var(--alert); font-weight: bold; }
+        .json-null { color: var(--text-mute); font-style: italic; }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .bg-200 { background-color: var(--success); }
+        .bg-300 { background-color: var(--info); }
+        .bg-400 { background-color: var(--warn); }
+        .bg-500 { background-color: var(--alert); }
+
+        .header-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Header Grid Alignment Fixes */
+        .header-input {
+            flex: 1;
+        }
+
+        .btn-remove-header {
+            background: transparent;
+            border: 1px solid var(--alert);
+            color: var(--alert);
+            border-radius: 6px;
+            width: 45px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-remove-header:hover {
+            background: var(--alert);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid position-relative" style="max-width: 1600px; z-index: 5;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 cyber-panel" style="padding: 15px 25px;">
+            <div class="d-flex align-items-center gap-4">
+                <h2 class="m-0 fs-3 fw-bold" style="letter-spacing: -1px;">
+                    <i class="fas fa-plug me-2 text-cyber" style="animation: pulse 2s infinite;"></i> 
+                    API <span class="text-mute fw-light">TESTER</span>
+                    <span class="badge ms-3 text-white" style="font-size:0.7rem; vertical-align: middle; background: linear-gradient(90deg, #0ea5e9, #3b82f6); box-shadow: 0 0 15px rgba(14,165,233,0.4); letter-spacing: 2px;">SECURE MATRIX</span>
+                </h2>
+            </div>
+            
+            <div class="d-flex align-items-center gap-4">
+                <div class="text-end border-end pe-4" style="border-color: var(--border-core) !important;">
+                    <div style="font-size: 0.65rem; color: var(--text-mute); font-weight: 900; letter-spacing: 3px;">SYSTEM TIME</div>
+                    <div id="sysTime" class="fw-bold" style="font-size: 1.5rem; color: var(--text-main); font-family: 'JetBrains Mono', monospace;">00:00:00.000</div>
+                </div>
+
+                <button class="btn-theme" onclick="cycleTheme()" title="Change Display Theme">
+                    <i class="fas fa-adjust" id="themeIcon"></i>
+                </button>
+                
+                <button class="btn btn-outline-danger border-2 fw-bold py-2 px-3" onclick="window.history.back()" style="border-radius: 8px; font-size: 1.2rem;">
+                    <i class="fas fa-power-off"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-xl-5 d-flex flex-column gap-4">
+                <div class="cyber-panel m-0 flex-grow-1">
+                    <div class="panel-header">
+                        <i class="fas fa-satellite-dish me-2 text-cyber"></i> ENDPOINT CONFIGURATION
+                    </div>
+                    
+                    <div class="d-flex gap-3 mb-4">
+                        <select id="apiMethod" class="form-control-cyber" style="width: 130px; text-align: left;">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                        <input type="text" id="apiUrl" class="form-control-cyber" placeholder="https://api.example.com/v1/data" style="text-align: left;">
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="fw-bold text-mute small">HTTP HEADERS</label>
+                            <button class="btn btn-sm btn-outline-info" style="font-size: 0.7rem; font-weight: bold; border-color: var(--border-core); color: var(--text-main);" onclick="addHeaderRow()">+ ADD HEADER</button>
+                        </div>
+                        
+                        <div id="headersContainer" class="p-3 rounded" style="background: var(--bg-master); border: 1px solid var(--border-core);">
+                            <div class="header-row">
+                                <input type="text" class="form-control-cyber header-input header-key" placeholder="Content-Type" value="Content-Type" style="text-align: left; padding: 8px 10px; font-size: 0.85rem;">
+                                <input type="text" class="form-control-cyber header-input header-val" placeholder="application/json" value="application/json" style="text-align: left; padding: 8px 10px; font-size: 0.85rem;">
+                                <button class="btn-remove-header" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="fw-bold text-mute small mb-2 d-block">REQUEST BODY (JSON)</label>
+                        <textarea id="apiBody" class="form-control-cyber" rows="6" placeholder='{\n  "key": "value"\n}' style="text-align: left; font-size: 0.85rem; resize: vertical;"></textarea>
+                    </div>
+
+                    <button class="btn-cyber" id="sendBtn" onclick="sendRequest()">
+                        <i class="fas fa-paper-plane me-2"></i> TRANSMIT PAYLOAD
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-xl-7 d-flex flex-column gap-4">
+                <div class="cyber-panel m-0 flex-grow-1 d-flex flex-column">
+                    <div class="panel-header" style="justify-content: space-between;">
+                        <span><i class="fas fa-terminal me-2 text-cyber"></i> SERVER RESPONSE</span>
+                        
+                        <div class="d-flex gap-3 align-items-center">
+                            <div class="text-mute small fw-bold">
+                                <i class="fas fa-stopwatch me-1"></i> <span id="resTime">0 ms</span>
+                            </div>
+                            <div class="text-mute small fw-bold">
+                                <i class="fas fa-database me-1"></i> <span id="resSize">0 B</span>
+                            </div>
+                            <div class="status-badge" id="resStatus" style="background: var(--border-core); color: var(--text-mute);">WAITING</div>
+                        </div>
+                    </div>
+                    
+                    <div class="terminal flex-grow-1" id="responseTerminal">
+                        <div style="color: var(--text-mute); padding: 20px; text-align: center;">
+                            <i class="fas fa-satellite fa-3x mb-3" style="opacity: 0.2;"></i><br>
+                            Awaiting API transmission...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🌌 THEME ENGINE LOGIC
+        // ==========================================
+        const themes = ['light', 'dark', 'god', 'singularity'];
+        let currentThemeIndex = 0;
+
+        function cycleTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            const newTheme = themes[currentThemeIndex];
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('lisa_api_theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'light') { icon.className = 'fas fa-sun text-warning'; } 
+            else if (theme === 'dark') { icon.className = 'fas fa-moon text-info'; } 
+            else if (theme === 'god') { icon.className = 'fas fa-radiation text-danger'; } 
+            else if (theme === 'singularity') { icon.className = 'fas fa-meteor text-cyber'; }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = localStorage.getItem('lisa_api_theme') || 'dark';
+            currentThemeIndex = themes.indexOf(savedTheme) > -1 ? themes.indexOf(savedTheme) : 1;
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        });
+
+        // ==========================================
+        // SYSTEM CLOCK 
+        // ==========================================
+        setInterval(() => {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            const ms = String(now.getMilliseconds()).padStart(3, '0');
+            document.getElementById('sysTime').innerText = `${hh}:${mm}:${ss}.${ms}`;
+        }, 50);
+
+        // ==========================================
+        // API UI LOGIC
+        // ==========================================
+        
+        // Auto-disable body if method is GET/DELETE
+        document.getElementById('apiMethod').addEventListener('change', function() {
+            const method = this.value;
+            const bodyText = document.getElementById('apiBody');
+            if(method === 'GET' || method === 'DELETE') {
+                bodyText.disabled = true;
+                bodyText.style.opacity = '0.3';
+            } else {
+                bodyText.disabled = false;
+                bodyText.style.opacity = '1';
+            }
+        });
+
+        function addHeaderRow() {
+            const container = document.getElementById('headersContainer');
+            const row = document.createElement('div');
+            row.className = 'header-row';
+            row.innerHTML = `
+                <input type="text" class="form-control-cyber header-input header-key" placeholder="Key" style="text-align: left; padding: 8px 10px; font-size: 0.85rem;">
+                <input type="text" class="form-control-cyber header-input header-val" placeholder="Value" style="text-align: left; padding: 8px 10px; font-size: 0.85rem;">
+                <button class="btn-remove-header" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(row);
+        }
+
+        // Beautiful JSON Syntax Highlighter Function
+        function syntaxHighlight(json) {
+            if (typeof json != 'string') {
+                json = JSON.stringify(json, undefined, 2);
+            }
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        // ==========================================
+        // CORE REQUEST ENGINE
+        // ==========================================
+        async function sendRequest() {
+            const url = document.getElementById('apiUrl').value.trim();
+            if(!url) {
+                alert("Please enter a valid target URL.");
+                return;
+            }
+
+            const method = document.getElementById('apiMethod').value;
+            const bodyStr = document.getElementById('apiBody').value.trim();
+            const btn = document.getElementById('sendBtn');
+            const term = document.getElementById('responseTerminal');
+            const statusBadge = document.getElementById('resStatus');
+
+            // Collect Headers
+            const headers = {};
+            const keyInputs = document.querySelectorAll('.header-key');
+            const valInputs = document.querySelectorAll('.header-val');
+            
+            for(let i = 0; i < keyInputs.length; i++) {
+                const key = keyInputs[i].value.trim();
+                const val = valInputs[i].value.trim();
+                if(key) {
+                    headers[key] = val;
+                }
+            }
+
+            // Setup Options
+            const options = {
+                method: method,
+                headers: headers
+            };
+
+            if((method === 'POST' || method === 'PUT' || method === 'PATCH') && bodyStr) {
+                options.body = bodyStr;
+            }
+
+            // UI Loading State
+            btn.innerHTML = '<i class="fas fa-spinner fa-pulse me-2"></i> TRANSMITTING...';
+            btn.disabled = true;
+            term.innerHTML = '<div style="color: var(--text-mute); padding: 20px; text-align: center;"><i class="fas fa-circle-notch fa-spin fa-2x mb-3 text-cyber"></i><br>Awaiting Server Response...</div>';
+            statusBadge.innerText = 'FETCHING';
+            statusBadge.className = 'status-badge';
+            statusBadge.style.background = 'var(--info)';
+
+            const startTime = performance.now();
+
+            try {
+                const response = await fetch(url, options);
+                const endTime = performance.now();
+                const timeTaken = Math.round(endTime - startTime);
+
+                // Handle Status Badge Colors
+                statusBadge.innerText = `${response.status} ${response.statusText}`;
+                statusBadge.className = 'status-badge';
+                if(response.status >= 200 && response.status < 300) statusBadge.classList.add('bg-200');
+                else if(response.status >= 300 && response.status < 400) statusBadge.classList.add('bg-300');
+                else if(response.status >= 400 && response.status < 500) statusBadge.classList.add('bg-400');
+                else statusBadge.classList.add('bg-500');
+
+                document.getElementById('resTime').innerText = `${timeTaken} ms`;
+
+                // Extract Data
+                const textData = await response.text();
+                
+                // Calculate Size
+                const sizeBytes = new Blob([textData]).size;
+                let sizeStr = sizeBytes + " B";
+                if(sizeBytes > 1024) sizeStr = (sizeBytes / 1024).toFixed(2) + " KB";
+                if(sizeBytes > 1048576) sizeStr = (sizeBytes / 1048576).toFixed(2) + " MB";
+                document.getElementById('resSize').innerText = sizeStr;
+
+                // Attempt JSON Parse for syntax highlighting
+                try {
+                    const jsonData = JSON.parse(textData);
+                    const highlighted = syntaxHighlight(jsonData);
+                    term.innerHTML = `<pre style="margin: 0; font-family: 'JetBrains Mono', monospace; white-space: pre-wrap; word-wrap: break-word;">${highlighted}</pre>`;
+                } catch(e) {
+                    // Not JSON, display raw text safely
+                    const safeText = textData.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    term.innerHTML = `<pre style="margin: 0; font-family: 'JetBrains Mono', monospace; white-space: pre-wrap; word-wrap: break-word; color: var(--text-main);">${safeText}</pre>`;
+                }
+
+            } catch (error) {
+                const endTime = performance.now();
+                document.getElementById('resTime').innerText = `${Math.round(endTime - startTime)} ms`;
+                document.getElementById('resSize').innerText = `0 B`;
+                
+                statusBadge.innerText = 'ERROR / CORS';
+                statusBadge.className = 'status-badge bg-500';
+                
+                term.innerHTML = `
+                    <div class="text-danger fw-bold mb-2"><i class="fas fa-exclamation-triangle me-2"></i> NETWORK FAILURE</div>
+                    <div style="color: var(--text-mute);">
+                        The request failed to transmit. This is usually caused by:<br>
+                        1. The target server is down or unreachable.<br>
+                        2. <strong>CORS (Cross-Origin Resource Sharing)</strong> policy blocked the browser from reading the response.<br>
+                        3. The URL is invalid.<br><br>
+                        <i>Detailed Error: ${error.message}</i>
+                    </div>`;
+            }
+
+            // Restore Button
+            btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> TRANSMIT PAYLOAD';
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>

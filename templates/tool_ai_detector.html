@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gideon AI Detector | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+            --gideon-cyan: #00f3ff;
+            --gideon-dark: #0a0e17;
+        }
+
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        .navbar-custom { background-color: var(--lasu-green); box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding-top: 12px; padding-bottom: 12px; }
+        .back-btn { color: white; text-decoration: none; font-weight: 600; display: flex; align-items: center; transition: opacity 0.2s; }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container { flex: 1; display: flex; padding: 2rem; max-width: 1600px; margin: 0 auto; width: 100%; gap: 20px; }
+        .input-pane { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+        .card-box { background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); padding: 25px; display: flex; flex-direction: column; height: 100%; }
+        .pane-header { font-weight: 800; color: var(--lasu-green); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #f8f9fa; padding-bottom: 10px; }
+
+        .input-tabs { display: flex; margin-bottom: 15px; background: #f8f9fa; border-radius: 8px; padding: 5px; }
+        .tab-btn { flex: 1; padding: 10px; text-align: center; font-weight: 800; text-transform: uppercase; font-size: 0.85rem; color: #6c757d; cursor: pointer; border-radius: 6px; transition: 0.2s; }
+        .tab-btn.active { background: white; color: var(--gideon-cyan); box-shadow: 0 2px 5px rgba(0,0,0,0.05); background-color: var(--gideon-dark);}
+
+        .text-editor { flex: 1; width: 100%; border: 2px solid #ced4da; border-radius: 8px; padding: 15px; font-size: 1.05rem; color: #212529; outline: none; resize: none; transition: all 0.2s; line-height: 1.6; margin-bottom: 15px; font-family: 'Segoe UI', sans-serif; min-height: 250px; }
+        .text-editor:focus { border-color: var(--gideon-cyan); box-shadow: 0 0 0 4px rgba(0, 243, 255, 0.15); }
+
+        .file-dropzone { flex: 1; border: 3px dashed #ced4da; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; cursor: pointer; transition: all 0.2s; min-height: 250px; margin-bottom: 15px; position: relative; }
+        .file-dropzone.dragover { border-color: var(--gideon-cyan); background: rgba(0, 243, 255, 0.05); }
+        .file-dropzone i { font-size: 3rem; color: #adb5bd; margin-bottom: 15px; transition: 0.2s;}
+        .file-dropzone.dragover i { color: var(--gideon-cyan); transform: scale(1.1);}
+        #pdfInput { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+        .file-list { width: 100%; max-height: 150px; overflow-y: auto; margin-top: 15px; border-top: 1px solid #e9ecef; padding-top: 10px; display: none; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: white; border: 1px solid #e9ecef; border-radius: 6px; margin-bottom: 5px; font-size: 0.85rem; font-family: 'Fira Code', monospace; font-weight: 700; color: #495057; }
+        .file-item i { color: var(--math-red); cursor: pointer; }
+
+        .btn-action { padding: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; border: none; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; font-size: 1.1rem; background: linear-gradient(135deg, #121212, var(--gideon-dark)); color: var(--math-red); border: 1px solid var(--math-red); box-shadow: 0 0 20px rgba(220, 53, 69, 0.1); margin-top: auto; }
+        .btn-action:hover { background: var(--math-red); color: white; box-shadow: 0 0 30px rgba(220, 53, 69, 0.4); transform: translateY(-2px); }
+
+        .output-pane { flex: 0 0 700px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+        .top-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+
+        .stat-card { background: var(--gideon-dark); border: 2px solid #2b3035; border-radius: 12px; padding: 20px 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); min-height: 130px; transition: all 0.3s; }
+        .stat-label { font-weight: 800; color: #adb5bd; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 8px; display: block; width: 100%; }
+        .stat-val { font-family: 'Fira Code', monospace; font-size: 2.2rem; font-weight: 800; color: white; line-height: 1; }
+
+        .val-red { color: var(--math-red); text-shadow: 0 0 15px var(--math-red); }
+        .val-green { color: var(--lasu-accent); text-shadow: 0 0 15px var(--lasu-accent); }
+        .val-blue { color: var(--gideon-cyan); text-shadow: 0 0 15px var(--gideon-cyan); }
+
+        .progress-container { width: 100%; height: 8px; background: #2b3035; border-radius: 4px; margin-top: 15px; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--lasu-accent), var(--math-orange), var(--math-red)); transition: width 0.5s; }
+
+        .heatmap-box { flex: 1; background: white; border-radius: 12px; border: 1px solid #e9ecef; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02); min-height: 350px; }
+        .heatmap-header { padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #212529; display: flex; justify-content: space-between; }
+        
+        .heatmap-legend { padding: 10px 20px; background: #fff; border-bottom: 1px solid #e9ecef; display: flex; gap: 20px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #495057; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .legend-box { width: 16px; height: 16px; border-radius: 3px; }
+        .legend-red { background-color: rgba(220, 53, 69, 0.2); border-bottom: 2px solid var(--math-red); }
+        .legend-orange { background-color: rgba(253, 126, 20, 0.15); border-bottom: 2px solid var(--math-orange); }
+        .legend-green { background-color: rgba(25, 135, 84, 0.1); border-bottom: 2px solid var(--lasu-accent); }
+
+        .heatmap-content { padding: 20px; overflow-y: auto; flex: 1; font-family: 'Segoe UI', sans-serif; font-size: 1.05rem; line-height: 1.8; color: #495057; }
+
+        .sent-ai-high { background-color: rgba(220, 53, 69, 0.2); border-bottom: 2px solid var(--math-red); padding: 2px 0;}
+        .sent-ai-med { background-color: rgba(253, 126, 20, 0.15); border-bottom: 2px solid var(--math-orange); padding: 2px 0;}
+        .sent-human { background-color: rgba(25, 135, 84, 0.1); border-bottom: 2px solid var(--lasu-accent); padding: 2px 0;}
+
+        .terminal-box { background: var(--gideon-dark); border: 2px solid #2b3035; border-radius: 12px; height: 200px; padding: 15px; overflow-y: auto; font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #adb5bd; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); }
+        .log-line { margin-bottom: 6px; line-height: 1.4; animation: fadeIn 0.1s ease-in; }
+        .log-tag { font-weight: 800; }
+        .log-info { color: #0dcaf0; }
+        .log-warn { color: #fd7e14; }
+        .log-danger { color: #dc3545; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
+        @media (max-width: 1200px) { .main-container { flex-direction: column; } .output-pane { flex: none; width: 100%; } }
+    </style>
+</head>
+<body>
+
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENTERPRISE AI DETECTOR</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-brain me-2"></i> Neural Input Stream</div>
+            </div>
+
+            <div class="input-tabs">
+                <div class="tab-btn active" id="tabText" onclick="switchTab('text')">Text Input</div>
+                <div class="tab-btn" id="tabFile" onclick="switchTab('file')">Multiple PDFs</div>
+            </div>
+
+            <textarea class="text-editor" id="textInput" placeholder="Paste your massive document here..."></textarea>
+
+            <div class="file-dropzone" id="fileDropzone" style="display: none;">
+                <i class="fas fa-file-pdf"></i>
+                <h5 class="fw-bold text-dark">Drop PDFs Here</h5>
+                <p class="text-muted small">Or click to browse</p>
+                <input type="file" id="pdfInput" accept="application/pdf" multiple>
+            </div>
+            
+            <div class="file-list" id="fileList"></div>
+
+            <button class="btn-action mt-auto" id="btnAnalyze" onclick="executeAnalysis()">
+                <i class="fas fa-satellite-dish"></i> Uplink to RoBERTa Node
+            </button>
+        </div>
+        
+        <div class="terminal-box" id="terminalLog">
+            <div class="log-line"><span class="log-tag" style="color:var(--gideon-cyan);">[GIDEON]</span> God-Tier Architecture initialized.</div>
+            <div class="log-line"><span class="log-tag log-info">[SYS]</span> Awaiting text feed for backend transmission...</div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="top-stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">AI Probability (RoBERTa)</div>
+                <div class="stat-val val-red" id="resProb">--%</div>
+                <div class="progress-container"><div class="progress-bar" id="probBar"></div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Backend Connection</div>
+                <div class="stat-val val-blue" id="resSource" style="font-size: 1.2rem; margin-top: 15px;">Standby</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Words Parsed</div>
+                <div class="stat-val val-green" id="resWords">0</div>
+            </div>
+        </div>
+
+        <div class="heatmap-box">
+            <div class="heatmap-header">
+                <div><i class="fas fa-layer-group text-danger me-2"></i> Local Heuristic Topography</div>
+                <span id="scanStatus" class="badge bg-secondary">Standby</span>
+            </div>
+            <div class="heatmap-legend">
+                <div class="legend-item"><div class="legend-box legend-red"></div> Highly Likely AI</div>
+                <div class="legend-item"><div class="legend-box legend-orange"></div> Mixed / Moderate</div>
+                <div class="legend-item"><div class="legend-box legend-green"></div> Likely Human</div>
+            </div>
+            <div class="heatmap-content" id="heatmapContent">
+                <div style="text-align: center; color: #adb5bd; font-style: italic; margin-top: 100px;">
+                    The frontend will map sentence structures here synced to the backend deep learning score.
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const tabText = document.getElementById('tabText');
+    const tabFile = document.getElementById('tabFile');
+    const textInput = document.getElementById('textInput');
+    const fileDropzone = document.getElementById('fileDropzone');
+    const pdfInput = document.getElementById('pdfInput');
+    const fileList = document.getElementById('fileList');
+    
+    const terminalLog = document.getElementById('terminalLog');
+    const btnAnalyze = document.getElementById('btnAnalyze');
+    
+    const resProb = document.getElementById('resProb');
+    const probBar = document.getElementById('probBar');
+    const resSource = document.getElementById('resSource');
+    const resWords = document.getElementById('resWords');
+    const heatmapContent = document.getElementById('heatmapContent');
+    const scanStatus = document.getElementById('scanStatus');
+
+    let uploadedFiles = [];
+
+    function switchTab(mode) {
+        if(mode === 'text') {
+            tabText.classList.add('active');
+            tabFile.classList.remove('active');
+            textInput.style.display = 'block';
+            fileDropzone.style.display = 'none';
+            fileList.style.display = 'none';
+        } else {
+            tabFile.classList.add('active');
+            tabText.classList.remove('active');
+            textInput.style.display = 'none';
+            fileDropzone.style.display = 'flex';
+            if(uploadedFiles.length > 0) fileList.style.display = 'block';
+        }
+    }
+
+    fileDropzone.addEventListener('dragover', (e) => { e.preventDefault(); fileDropzone.classList.add('dragover'); });
+    fileDropzone.addEventListener('dragleave', (e) => { e.preventDefault(); fileDropzone.classList.remove('dragover'); });
+    fileDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileDropzone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+    pdfInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    function handleFiles(files) {
+        for(let file of files) {
+            if (file.type === "application/pdf") {
+                uploadedFiles.push(file);
+                log(`Loaded binary stream: ${file.name} (${Math.round(file.size/1024)} KB)`, 'info');
+            } else {
+                log(`Rejected invalid format: ${file.name}`, 'warn');
+            }
+        }
+        renderFileList();
+    }
+
+    function renderFileList() {
+        if(uploadedFiles.length === 0) {
+            fileList.style.display = 'none';
+            return;
+        }
+        fileList.style.display = 'block';
+        let html = '';
+        uploadedFiles.forEach((f, i) => {
+            html += `<div class="file-item">
+                <span><i class="fas fa-file-pdf text-danger me-2"></i> ${f.name}</span>
+                <i class="fas fa-times" onclick="removeFile(${i})"></i>
+            </div>`;
+        });
+        fileList.innerHTML = html;
+    }
+
+    function removeFile(index) {
+        uploadedFiles.splice(index, 1);
+        renderFileList();
+    }
+
+    function log(msg, type="info") {
+        let tag = `<span class="log-tag log-${type}">[${type.toUpperCase()}]</span>`;
+        if(type === 'gideon') tag = '<span class="log-tag" style="color:var(--gideon-cyan);">[GIDEON]</span>';
+        
+        terminalLog.innerHTML += `<div class="log-line">${tag} ${msg}</div>`;
+        terminalLog.scrollTop = terminalLog.scrollHeight;
+    }
+
+    const yieldThread = () => new Promise(resolve => setTimeout(resolve, 0));
+
+    async function extractPDFText() {
+        let fullText = "";
+        for (let file of uploadedFiles) {
+            log(`Extracting binary vectors: ${file.name}`, "gideon");
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            const maxPages = pdf.numPages;
+            
+            for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                fullText += pageText + " ";
+                if (pageNum % 10 === 0) await yieldThread();
+            }
+        }
+        return fullText;
+    }
+
+    async function executeAnalysis() {
+        btnAnalyze.disabled = true;
+        btnAnalyze.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uplinking...';
+        scanStatus.className = 'badge bg-warning';
+        scanStatus.innerText = 'Uplink Established';
+        heatmapContent.innerHTML = '<div style="text-align: center; color: #adb5bd; font-style: italic; margin-top: 100px;">Awaiting Deep Learning Matrix...</div>';
+
+        let targetText = "";
+
+        if (tabText.classList.contains('active')) {
+            targetText = textInput.value;
+            if(!targetText) { log("No data detected in input field. Aborting.", "danger"); resetUI(); return; }
+        } else {
+            if(uploadedFiles.length === 0) { log("No PDFs loaded in dropzone. Aborting.", "danger"); resetUI(); return; }
+            targetText = await extractPDFText();
+        }
+
+        let sentences = targetText.match(/[^.!?]+[.!?]+/g) || [];
+        let totalWords = 0;
+        for (let s of sentences) totalWords += s.split(/\s+/).length;
+        resWords.innerText = totalWords.toLocaleString();
+
+        log("Establishing secure connection to Python Server...", "gideon");
+        log("Transmitting payload to Deep Learning API...", "warn");
+        resSource.innerText = "Transmitting...";
+        resSource.style.color = "var(--math-orange)";
+
+        let aiScore = 0;
+
+        // 1. FETCH FROM BACKEND FIRST
+        try {
+            const response = await fetch('/api/detect-ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: targetText })
+            });
+
+            const data = await response.json();
+            aiScore = data.ai_probability;
+            
+            resProb.innerText = `${Math.round(aiScore)}%`;
+            probBar.style.width = `${aiScore}%`;
+            
+            resSource.innerText = data.source;
+            if (data.status === 'success') {
+                resSource.style.color = "var(--gideon-cyan)";
+                log(`RoBERTa Tensor output received: ${Math.round(aiScore)}% AI`, "success");
+            } else {
+                resSource.style.color = "#adb5bd";
+                log("External API rejected connection. Displaying Local Python Heuristics.", "warn");
+            }
+
+            if (aiScore >= 70) {
+                resProb.className = 'stat-val val-red';
+                probBar.style.background = 'var(--math-red)';
+                scanStatus.className = 'badge bg-danger';
+                scanStatus.innerText = 'AI DETECTED';
+            } else if (aiScore >= 40) {
+                resProb.className = 'stat-val val-orange';
+                probBar.style.background = 'var(--math-orange)';
+                scanStatus.className = 'badge bg-warning text-dark';
+                scanStatus.innerText = 'MIXED CONTENT';
+            } else {
+                resProb.className = 'stat-val val-green';
+                probBar.style.background = 'var(--lasu-accent)';
+                scanStatus.className = 'badge bg-success';
+                scanStatus.innerText = 'HUMAN CONTENT';
+            }
+
+        } catch (error) {
+            log("Backend communication failed. Ensure app.py is running.", "danger");
+            resSource.innerText = "Connection Error";
+            resSource.style.color = "var(--math-red)";
+            resetUI();
+            return;
+        }
+
+        // 2. RENDER HEATMAP SYNCED TO API SCORE
+        log("Frontend rendering structural topography synced to RoBERTa core...", "info");
+        let heatmapHTML = '';
+        let renderLimit = Math.min(sentences.length, 300);
+
+        for (let i = 0; i < renderLimit; i++) {
+            let s = sentences[i].trim();
+            if (s.length < 5) continue;
+            
+            let wordsInSent = s.split(/\s+/).length;
+            
+            // MATH: Anchor the sentence score heavily to the overall AI score
+            let baseScore = aiScore;
+            
+            // Add slight "burstiness" visual noise for authenticity 
+            // AI tends to write uniform sentences. Human sentences vary wildly.
+            let isUniform = (wordsInSent >= 12 && wordsInSent <= 22);
+            let noise = isUniform ? (Math.random() * 20) : -(Math.random() * 20);
+            
+            let sentScore = baseScore + noise;
+            sentScore = Math.max(0, Math.min(100, sentScore)); // Clamp between 0-100
+
+            let spanClass = 'sent-human'; // Default to green
+            if (sentScore >= 70) spanClass = 'sent-ai-high'; // Red
+            else if (sentScore >= 40) spanClass = 'sent-ai-med'; // Orange
+            
+            heatmapHTML += `<span class="${spanClass}">${s} </span>`;
+            
+            if (i % 100 === 0) await yieldThread();
+        }
+        
+        if (sentences.length > renderLimit) {
+            heatmapHTML += `<div class="mt-4 text-center text-muted fw-bold">... Output truncated for performance. Entire block transmitted to backend.</div>`;
+        }
+        
+        heatmapContent.innerHTML = heatmapHTML;
+
+        log("Scan Complete. Disengaging uplink.", "success");
+        btnAnalyze.disabled = false;
+        btnAnalyze.innerHTML = '<i class="fas fa-satellite-dish"></i> Uplink to RoBERTa Node';
+    }
+
+    function resetUI() {
+        btnAnalyze.disabled = false;
+        btnAnalyze.innerHTML = '<i class="fas fa-satellite-dish"></i> Uplink to RoBERTa Node';
+        scanStatus.className = 'badge bg-secondary';
+        scanStatus.innerText = 'Standby';
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .scroll-btn {
+        position: fixed; right: 20px; width: 50px; height: 50px;
+        border-radius: 50%; background-color: #0066b3; color: white;
+        border: none; font-size: 24px; cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 1000;
+        display: none; align-items: center; justify-content: center; text-decoration: none;
+    }
+    .scroll-btn:hover { background-color: #004d86; transform: scale(1.1); color: white; }
+    #scrollToTop { bottom: 80px; }
+    #scrollToBottom { bottom: 20px; }
+</style>
+
+<div class="container mt-4" id="topMarker">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Student Performance List</h2>
+        
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                + Register
+            </button>
+            
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importCsvModal">
+                📂 Import Students
+            </button>
+            
+            <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#importGradesModal" style="background-color: #6f42c1; border-color: #6f42c1;">
+                📄 Upload Results
+            </button>
+            
+            <a href="{{ url_for('export_csv') }}" class="btn btn-outline-dark">
+                ⬇ Export
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% if "❌" in messages[0] or "⚠️" in messages[0] %}
+                <div class="alert alert-warning alert-dismissible fade show">
+                    {{ messages[0] }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% else %}
+                <div class="alert alert-success alert-dismissible fade show">
+                    {{ messages[0] }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endif %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card p-3 mb-4 bg-light border-0">
+        <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Start typing Name or Matric No to filter..." autocomplete="off">
+        <small class="text-muted ms-1 mt-1">Filtering happens automatically as you type.</small>
+    </div>
+
+    <div class="card p-3 shadow-sm">
+        <table class="table table-hover align-middle" id="studentTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>Matric No</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Attendance</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                {% for student in students %}
+                <tr>
+                    <td class="fw-bold">{{ student.matric_no }}</td>
+                    <td>{{ student.name }}</td>
+                    <td>{{ student.department }}</td>
+                    <td>
+                        {% if student.attendance_pct < 70 %}
+                            <span class="text-danger fw-bold">{{ "%.1f"|format(student.attendance_pct) }}%</span>
+                        {% else %}
+                            <span class="text-success">{{ "%.1f"|format(student.attendance_pct) }}%</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if student.attendance_pct < 70 %}
+                            <span class="badge bg-danger">At Risk</span>
+                        {% else %}
+                            <span class="badge bg-success">Good Standing</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('student_detail', id=student.id) }}" class="btn btn-sm btn-primary">
+                            View Profile
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div id="noResults" class="alert alert-warning text-center mt-3" style="display: none;">
+            No student found matching your search.
+        </div>
+    </div>
+</div>
+
+<div id="bottomMarker"></div> 
+
+<a href="#" id="scrollToTop" class="scroll-btn" title="Go to Top">⬆</a>
+<a href="#" id="scrollToBottom" class="scroll-btn" title="Go to Bottom">⬇</a>
+
+<div class="modal fade" id="addStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Register New Student</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('add_student') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Matric Number</label>
+                        <input type="text" name="matric_no" class="form-control" placeholder="e.g. CSC/2021/9999" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <select name="department" class="form-select" required>
+                            <option value="" disabled selected>-- Select Department --</option>
+                            <option value="Biology">Biology</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Economics">Economics</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Statistics">Statistics</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Register Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importCsvModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Bulk Import Students</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('import_csv_students') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <p>Upload a CSV with 3 columns (Header included):</p>
+                    <div class="alert alert-secondary small p-2">
+                        <strong>Format:</strong> Matric No, Name, Department<br>
+                        <strong>Example:</strong> CSC/2021/001, John Doe, CS
+                    </div>
+                    <input type="file" name="file" class="form-control" accept=".csv" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload & Process</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importGradesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background-color: #6f42c1;">
+                <h5 class="modal-title">Bulk Result Upload</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('import_csv_grades') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <p>Upload a CSV with 3 columns (Header included):</p>
+                    <div class="alert alert-secondary small p-2">
+                        <strong>Format:</strong> Matric No, Course Code, Score<br>
+                        <strong>Example:</strong> CSC/2021/001, CSC 401, 80
+                    </div>
+                    <input type="file" name="file" class="form-control" accept=".csv" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark" style="background-color: #6f42c1; border-color: #6f42c1;">Upload Grades</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#tableBody tr');
+        let hasVisibleRow = false;
+        rows.forEach(row => {
+            let matric = row.cells[0].textContent.toLowerCase();
+            let name = row.cells[1].textContent.toLowerCase();
+            if (matric.includes(filter) || name.includes(filter)) {
+                row.style.display = ''; hasVisibleRow = true;
+            } else { row.style.display = 'none'; }
+        });
+        document.getElementById('noResults').style.display = hasVisibleRow ? 'none' : 'block';
+    });
+    const btnTop = document.getElementById("scrollToTop");
+    const btnBottom = document.getElementById("scrollToBottom");
+    window.onscroll = function() {
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) { btnTop.style.display = "flex"; } else { btnTop.style.display = "none"; }
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) { btnBottom.style.display = "none"; } else { btnBottom.style.display = "flex"; }
+    };
+    btnTop.addEventListener("click", function(e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    btnBottom.addEventListener("click", function(e) { e.preventDefault(); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); });
+</script>
+{% endblock %}

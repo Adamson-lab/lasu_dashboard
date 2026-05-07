@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numerical Analysis Engine | Academic Grid</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;800&family=Segoe+UI:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f6f9; 
+            --cyber-cyan: #006eb3; 
+            --panel-bg: #ffffff; 
+            --panel-border: #dee2e6; 
+            --text-main: #212529; 
+            --text-muted: #6c757d; 
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; color: var(--text-main); }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-light); }
+        ::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 4px; }
+
+        .navbar-custom { background-color: var(--lasu-green); box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding-top: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--lasu-accent); }
+        .back-btn { color: white; text-decoration: none; font-weight: 600; display: flex; align-items: center; transition: opacity 0.2s; }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container { flex: 1; display: flex; padding: 2rem; max-width: 1600px; margin: 0 auto; width: 100%; gap: 25px; height: calc(100vh - 60px);}
+
+        /* Left Pane: Controls */
+        .control-pane { flex: 0 0 450px; display: flex; flex-direction: column; gap: 20px; min-width: 0; height: 100%; overflow-y: auto; padding-right: 10px;}
+        
+        .card-box { background: var(--panel-bg); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--panel-border); padding: 25px; }
+        .pane-header { font-weight: 800; color: var(--cyber-cyan); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--panel-border); padding-bottom: 10px; font-family: 'Fira Code', monospace;}
+
+        .form-label { font-family: 'Fira Code', monospace; font-weight: 700; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;}
+        .custom-input { font-family: 'Fira Code', monospace; border: 1px solid var(--panel-border); border-radius: 6px; padding: 10px; width: 100%; margin-bottom: 15px;}
+        .custom-input:focus { outline: none; border-color: var(--cyber-cyan); box-shadow: 0 0 0 2px rgba(0,110,179,0.2);}
+        
+        .custom-select { font-family: 'Segoe UI', sans-serif; font-weight: 700; border: 1px solid var(--panel-border); border-radius: 6px; padding: 12px; width: 100%; margin-bottom: 20px; cursor: pointer; background: var(--bg-light);}
+
+        /* Matrix Grid Specifics */
+        .matrix-board { display: inline-grid; gap: 5px; padding: 15px; background: var(--bg-light); border-radius: 8px; border: 2px solid var(--panel-border); position: relative; margin-top: 10px; overflow-x: auto;}
+        .matrix-cell { width: 55px; height: 50px; text-align: center; font-family: 'Fira Code', monospace; font-size: 1rem; font-weight: 600; border: 1px solid var(--panel-border); border-radius: 4px; background: var(--panel-bg);}
+        .matrix-cell:focus { outline: none; border-color: var(--cyber-cyan); box-shadow: 0 0 10px rgba(0,110,179,0.2); transform: scale(1.05); z-index: 5;}
+        .matrix-cell.aug { background: #e8f5e9; border-color: var(--lasu-accent);}
+
+        .btn-action { background: transparent; color: var(--cyber-cyan); border: 2px solid var(--cyber-cyan); padding: 12px 20px; border-radius: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem; cursor: pointer; width: 100%;}
+        .btn-action:hover { background: var(--cyber-cyan); color: #fff; box-shadow: 0 5px 15px rgba(0,110,179,0.2); transform: translateY(-2px);}
+
+        /* Right Pane: Console Output */
+        .output-pane { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%;}
+        .console-wrapper { flex: 1; background: #1e1e1e; border-radius: 12px; border: 1px solid #333; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden;}
+        .console-header { background: #2d2d2d; padding: 10px 20px; font-family: 'Fira Code', monospace; color: #858585; font-size: 0.85rem; border-bottom: 1px solid #111; display: flex; justify-content: space-between; align-items: center;}
+        .console-body { flex: 1; padding: 20px; overflow-y: auto; font-family: 'Fira Code', monospace; font-size: 0.95rem;}
+        
+        .c-line { margin-bottom: 8px; line-height: 1.6; word-wrap: break-word;}
+        .c-info { color: #569cd6; }
+        .c-success { color: #4af626; }
+        .c-error { color: #f44747; }
+        .c-math { color: #ce9178; }
+        .c-head { color: #c586c0; font-weight: bold; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px dashed #444; padding-bottom: 3px;}
+
+        /* UI State Management */
+        .module-section { display: none; }
+        .module-section.active { display: block; animation: fadeIn 0.3s ease-in-out;}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 992px) { 
+            .main-container { flex-direction: column; height: auto; } 
+            .control-pane { flex: none; width: 100%; height: auto;} 
+            .console-wrapper { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Hub
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">NUMERICAL ANALYSIS ENGINE</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="control-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-microchip me-2"></i> Mathematical Domain</div>
+            </div>
+            
+            <select class="custom-select" id="domainSelect" onchange="switchModule()">
+                <option value="mod-error">1. Error Analysis</option>
+                <option value="mod-roots">2. Root Finding (Bisection / Newton)</option>
+                <option value="mod-interp">3. Interpolation & Curve Fitting</option>
+                <option value="mod-systems">4. Systems of Linear Equations & Matrices</option>
+                <option value="mod-ode">5. Differential Equations (Euler / RK4)</option>
+            </select>
+
+            <div id="mod-error" class="module-section active">
+                <label class="form-label">True Value (Exact)</label>
+                <input type="number" step="any" id="err-true" class="custom-input" placeholder="e.g. 25.8">
+                
+                <label class="form-label">Approximate Value</label>
+                <input type="number" step="any" id="err-approx" class="custom-input" placeholder="e.g. 25.5">
+                
+                <button class="btn-action mt-3" onclick="solveError()"><i class="fas fa-play"></i> Compute Errors</button>
+            </div>
+
+            <div id="mod-roots" class="module-section">
+                <label class="form-label">Function f(x) = 0</label>
+                <input type="text" id="root-func" class="custom-input" placeholder="e.g. x^3 - x - 1" value="x^3 - x - 1">
+                
+                <label class="form-label">Method</label>
+                <select id="root-method" class="custom-input">
+                    <option value="bisection">Bisection Method</option>
+                    <option value="newton">Newton-Raphson Method</option>
+                </select>
+
+                <div id="bisection-inputs">
+                    <label class="form-label">Interval [a, b]</label>
+                    <div class="d-flex gap-2 mb-3">
+                        <input type="number" step="any" id="root-a" class="custom-input mb-0" placeholder="a (e.g. 1)" value="1">
+                        <input type="number" step="any" id="root-b" class="custom-input mb-0" placeholder="b (e.g. 2)" value="2">
+                    </div>
+                </div>
+
+                <div id="newton-inputs" style="display: none;">
+                    <label class="form-label">Initial Guess (x0)</label>
+                    <input type="number" step="any" id="root-x0" class="custom-input" placeholder="e.g. 1.5">
+                </div>
+
+                <label class="form-label">Iterations</label>
+                <input type="number" id="root-iter" class="custom-input" placeholder="e.g. 3" value="3">
+
+                <button class="btn-action mt-2" onclick="solveRoots()"><i class="fas fa-play"></i> Find Roots</button>
+            </div>
+
+            <div id="mod-interp" class="module-section">
+                <label class="form-label">Method</label>
+                <select id="interp-method" class="custom-input">
+                    <option value="lagrange">Lagrange Interpolation</option>
+                    <option value="linear">Linear Interpolation</option>
+                </select>
+
+                <label class="form-label">Data Points (x,y)</label>
+                <textarea id="interp-points" class="custom-input" rows="3" placeholder="e.g. 0,1 | 1,3 | 2,9"></textarea>
+                <small class="text-muted d-block mb-3" style="margin-top: -10px;">Format: x1,y1 | x2,y2 | x3,y3</small>
+                
+                <label class="form-label">Target X Value to Evaluate</label>
+                <input type="number" step="any" id="interp-target" class="custom-input" placeholder="e.g. 1.5">
+
+                <button class="btn-action mt-2" onclick="solveInterpolation()"><i class="fas fa-play"></i> Interpolate</button>
+            </div>
+
+            <div id="mod-systems" class="module-section">
+                <label class="form-label">Method</label>
+                <select id="sys-method" class="custom-input">
+                    <option value="gauss">Gaussian Elimination</option>
+                    <option value="gauss-jordan">Gauss-Jordan Elimination</option>
+                    <option value="cramer">Cramer's Rule (Determinants)</option>
+                    <option value="inverse">Inverse Method (A^-1)</option>
+                    <option value="lu">LU Decomposition (No Pivoting)</option>
+                    <option value="jacobi">Jacobi Method (Iterative)</option>
+                    <option value="seidel">Gauss-Seidel Method (Iterative)</option>
+                    <option value="eigen">Eigenvalues (Matrix A only)</option>
+                </select>
+
+                <div class="d-flex justify-content-between align-items-end mb-2">
+                    <label class="form-label mb-0">Matrix Dimensions (NxN)</label>
+                    <input type="number" id="sys-dim" class="custom-input mb-0" style="width: 80px; padding: 5px;" value="3" min="2" max="5" onchange="buildSystemGrid()">
+                </div>
+                
+                <div id="systemContainer" class="matrix-board w-100 mb-3">
+                    </div>
+
+                <div id="iterative-inputs" style="display: none;">
+                    <label class="form-label">Iterations (for Jacobi/Seidel)</label>
+                    <input type="number" id="sys-iter" class="custom-input" value="3">
+                </div>
+
+                <button class="btn-action mt-2" onclick="solveSystem()"><i class="fas fa-play"></i> Execute Matrix</button>
+            </div>
+
+            <div id="mod-ode" class="module-section">
+                <label class="form-label">Differential Equation dy/dx = f(x,y)</label>
+                <input type="text" id="ode-func" class="custom-input" placeholder="e.g. x + y" value="x + y">
+                
+                <label class="form-label">Method</label>
+                <select id="ode-method" class="custom-input">
+                    <option value="euler">Euler's Method</option>
+                    <option value="rk4">Runge-Kutta 4th Order (RK4)</option>
+                </select>
+
+                <div class="d-flex gap-2 mb-3">
+                    <div class="w-50">
+                        <label class="form-label">x0</label>
+                        <input type="number" step="any" id="ode-x0" class="custom-input mb-0" value="0">
+                    </div>
+                    <div class="w-50">
+                        <label class="form-label">y0</label>
+                        <input type="number" step="any" id="ode-y0" class="custom-input mb-0" value="1">
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mb-3">
+                    <div class="w-50">
+                        <label class="form-label">Step Size (h)</label>
+                        <input type="number" step="any" id="ode-h" class="custom-input mb-0" value="0.1">
+                    </div>
+                    <div class="w-50">
+                        <label class="form-label">Target x</label>
+                        <input type="number" step="any" id="ode-target" class="custom-input mb-0" value="0.3">
+                    </div>
+                </div>
+
+                <button class="btn-action mt-2" onclick="solveODE()"><i class="fas fa-play"></i> Integrate ODE</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="console-wrapper">
+            <div class="console-header">
+                <span><i class="fas fa-terminal me-2"></i> STDOUT_TERMINAL</span>
+                <i class="fas fa-trash-alt" style="cursor:pointer; color: #f44747;" onclick="clearConsole()" title="Clear Terminal"></i>
+            </div>
+            <div class="console-body" id="consoleOutput">
+                <div class="c-line c-info">Gideon Numerical Engine v1.0 initialized...</div>
+                <div class="c-line c-info">Mathematical parser loaded. Ready for payload.</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- UI STATE MANAGEMENT ---
+    const terminal = document.getElementById('consoleOutput');
+    let sysDim = 3;
+
+    function switchModule() {
+        document.querySelectorAll('.module-section').forEach(el => el.classList.remove('active'));
+        document.getElementById(document.getElementById('domainSelect').value).classList.add('active');
+    }
+
+    document.getElementById('root-method').addEventListener('change', (e) => {
+        document.getElementById('bisection-inputs').style.display = e.target.value === 'bisection' ? 'block' : 'none';
+        document.getElementById('newton-inputs').style.display = e.target.value === 'newton' ? 'block' : 'none';
+    });
+
+    document.getElementById('sys-method').addEventListener('change', (e) => {
+        const val = e.target.value;
+        document.getElementById('iterative-inputs').style.display = (val === 'jacobi' || val === 'seidel') ? 'block' : 'none';
+        buildSystemGrid(); // Rebuild grid in case 'eigen' is selected (hides augmented column)
+    });
+
+    // --- CONSOLE ENGINE ---
+    function logC(msg, type = 'info') {
+        const line = document.createElement('div');
+        line.className = `c-line c-${type}`;
+        line.innerHTML = msg;
+        terminal.appendChild(line);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+    function clearConsole() {
+        terminal.innerHTML = '<div class="c-line c-info">Terminal cleared.</div>';
+    }
+    function printMatrix(matrix, title = "Matrix") {
+        logC(title, 'head');
+        matrix.forEach(row => {
+            const formatted = row.map(v => Number(v).toFixed(4).padStart(10, ' ')).join(' | ');
+            logC(`[ ${formatted} ]`, 'math');
+        });
+    }
+
+    // ==========================================
+    // MODULE 1: ERROR ANALYSIS
+    // ==========================================
+    function solveError() {
+        const t = parseFloat(document.getElementById('err-true').value);
+        const a = parseFloat(document.getElementById('err-approx').value);
+        if(isNaN(t) || isNaN(a)) { logC("Error: Invalid inputs for True/Approx values.", "error"); return; }
+        
+        logC("EXEC: Error Analysis Module", "head");
+        const absErr = Math.abs(t - a);
+        const relErr = absErr / Math.abs(t);
+        const pctErr = relErr * 100;
+
+        logC(`True Value (T): ${t}`, "info");
+        logC(`Approx Value (A): ${a}`, "info");
+        logC(`Absolute Error (|T - A|): <span class="c-success">${absErr}</span>`, "math");
+        logC(`Relative Error (Abs / |T|): <span class="c-success">${relErr.toExponential(4)}</span>`, "math");
+        logC(`Percentage Error (Rel * 100): <span class="c-success">${pctErr.toFixed(4)}%</span>`, "math");
+    }
+
+    // ==========================================
+    // MODULE 2: ROOT FINDING
+    // ==========================================
+    function solveRoots() {
+        const funcStr = document.getElementById('root-func').value;
+        const method = document.getElementById('root-method').value;
+        const iters = parseInt(document.getElementById('root-iter').value);
+        
+        logC(`EXEC: ${method.toUpperCase()} ROOT FINDING for f(x) = ${funcStr}`, "head");
+
+        try {
+            const f = math.compile(funcStr);
+            if(method === 'bisection') {
+                let a = parseFloat(document.getElementById('root-a').value);
+                let b = parseFloat(document.getElementById('root-b').value);
+                
+                let fa = f.evaluate({x: a});
+                let fb = f.evaluate({x: b});
+                
+                if (fa * fb > 0) {
+                    logC(`Warning: f(a)=${fa.toFixed(4)} and f(b)=${fb.toFixed(4)} have same signs. Root may not be bounded.`, "error");
+                    return;
+                }
+
+                for(let i=1; i<=iters; i++) {
+                    let c = (a + b) / 2;
+                    let fc = f.evaluate({x: c});
+                    logC(`Iter ${i}: a=${a.toFixed(4)}, b=${b.toFixed(4)}, mid c=<span class="c-success">${c.toFixed(6)}</span>, f(c)=${fc.toFixed(6)}`, "math");
+                    if (fa * fc < 0) { b = c; fb = fc; } 
+                    else { a = c; fa = fc; }
+                }
+            } 
+            else if (method === 'newton') {
+                let x0 = parseFloat(document.getElementById('root-x0').value);
+                const dfStr = math.derivative(funcStr, 'x').toString();
+                const df = math.compile(dfStr);
+                logC(`Derived f'(x) = ${dfStr}`, "info");
+
+                for(let i=1; i<=iters; i++) {
+                    let fx0 = f.evaluate({x: x0});
+                    let dfx0 = df.evaluate({x: x0});
+                    if(dfx0 === 0) { logC("Derivative is zero. Newton-Raphson fails.", "error"); break; }
+                    let x1 = x0 - (fx0 / dfx0);
+                    logC(`Iter ${i}: x0=${x0.toFixed(6)}, f(x0)=${fx0.toFixed(6)}, x1=<span class="c-success">${x1.toFixed(6)}</span>`, "math");
+                    x0 = x1;
+                }
+            }
+        } catch(err) {
+            logC(`Syntax Error in function parsing: ${err.message}`, "error");
+        }
+    }
+
+    // ==========================================
+    // MODULE 3: INTERPOLATION
+    // ==========================================
+    function solveInterpolation() {
+        const method = document.getElementById('interp-method').value;
+        const rawPoints = document.getElementById('interp-points').value;
+        const targetX = parseFloat(document.getElementById('interp-target').value);
+        
+        logC(`EXEC: ${method.toUpperCase()} INTERPOLATION for x = ${targetX}`, "head");
+
+        // Parse points
+        let points = [];
+        try {
+            rawPoints.split('|').forEach(pair => {
+                let coords = pair.split(',');
+                points.push({x: parseFloat(coords[0].trim()), y: parseFloat(coords[1].trim())});
+            });
+        } catch(e) { logC("Error formatting points. Use x,y | x,y format.", "error"); return; }
+
+        if(method === 'lagrange') {
+            let result = 0;
+            let n = points.length;
+            for(let i=0; i<n; i++) {
+                let term = points[i].y;
+                let numStr = "", denStr = "";
+                for(let j=0; j<n; j++) {
+                    if(i !== j) {
+                        term = term * (targetX - points[j].x) / (points[i].x - points[j].x);
+                    }
+                }
+                result += term;
+                logC(`L_${i}(x) term evaluated.`, "info");
+            }
+            logC(`Interpolated f(${targetX}) = <span class="c-success">${result.toFixed(6)}</span>`, "math");
+        } 
+        else if (method === 'linear') {
+            if(points.length < 2) { logC("Need at least 2 points for linear.", "error"); return; }
+            // Grab first two points
+            let p1 = points[0], p2 = points[1];
+            let result = p1.y + (targetX - p1.x) * ((p2.y - p1.y) / (p2.x - p1.x));
+            logC(`Linear interpolation between (${p1.x},${p1.y}) and (${p2.x},${p2.y})`, "info");
+            logC(`Interpolated f(${targetX}) = <span class="c-success">${result.toFixed(6)}</span>`, "math");
+        }
+    }
+
+    // ==========================================
+    // MODULE 4: LINEAR SYSTEMS
+    // ==========================================
+    function buildSystemGrid() {
+        const container = document.getElementById('systemContainer');
+        const dim = parseInt(document.getElementById('sys-dim').value);
+        const method = document.getElementById('sys-method').value;
+        sysDim = dim;
+        
+        // Eigenvalues only need NxN, others need Nx(N+1) augmented
+        const cols = (method === 'eigen') ? dim : dim + 1;
+        container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        container.innerHTML = '';
+
+        for (let i = 0; i < dim; i++) {
+            for (let j = 0; j < cols; j++) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = j === dim ? 'matrix-cell aug' : 'matrix-cell';
+                input.id = `sys-${i}-${j}`;
+                input.value = 0;
+                input.step = "any";
+                container.appendChild(input);
+            }
+        }
+    }
+
+    function getSystemData() {
+        const method = document.getElementById('sys-method').value;
+        const cols = (method === 'eigen') ? sysDim : sysDim + 1;
+        let A = [], B = [];
+        for (let i = 0; i < sysDim; i++) {
+            let row = [];
+            for (let j = 0; j < cols; j++) {
+                let val = parseFloat(document.getElementById(`sys-${i}-${j}`).value) || 0;
+                if(j < sysDim) row.push(val);
+                else B.push(val);
+            }
+            A.push(row);
+        }
+        return {A, B};
+    }
+
+    function solveSystem() {
+        const method = document.getElementById('sys-method').value;
+        const {A, B} = getSystemData();
+        logC(`EXEC: ${method.toUpperCase()} MATRIX ALGORITHM`, "head");
+
+        if(method === 'gauss' || method === 'gauss-jordan') {
+            // Augmented matrix copy
+            let M = A.map((row, i) => [...row, B[i]]);
+            const n = sysDim;
+
+            for(let i=0; i<n; i++) {
+                // Pivot
+                let maxEl = Math.abs(M[i][i]), maxRow = i;
+                for(let k=i+1; k<n; k++) {
+                    if(Math.abs(M[k][i]) > maxEl) { maxEl = Math.abs(M[k][i]); maxRow = k; }
+                }
+                if(maxRow !== i) {
+                    let temp = M[i]; M[i] = M[maxRow]; M[maxRow] = temp;
+                    logC(`Pivoted Row ${i+1} with Row ${maxRow+1}`, "info");
+                }
+                
+                // Eliminate
+                for(let k=i+1; k<n; k++) {
+                    let c = -M[k][i] / M[i][i];
+                    for(let j=i; j<=n; j++) M[k][j] += c * M[i][j];
+                }
+            }
+            printMatrix(M, "Row Echelon Form (Forward Elimination):");
+
+            if(method === 'gauss-jordan') {
+                for(let i=n-1; i>=0; i--) {
+                    let c = M[i][i];
+                    for(let j=0; j<=n; j++) M[i][j] /= c; // Normalize
+                    for(let k=i-1; k>=0; k--) {
+                        let factor = M[k][i];
+                        for(let j=0; j<=n; j++) M[k][j] -= factor * M[i][j];
+                    }
+                }
+                printMatrix(M, "Reduced Row Echelon Form:");
+                logC("Solutions:", "info");
+                for(let i=0; i<n; i++) logC(`x${i+1} = <span class="c-success">${M[i][n].toFixed(4)}</span>`, "math");
+            } else {
+                // Back substitution for basic Gauss
+                let x = new Array(n).fill(0);
+                for(let i=n-1; i>=0; i--) {
+                    x[i] = M[i][n];
+                    for(let j=i+1; j<n; j++) x[i] -= M[i][j] * x[j];
+                    x[i] /= M[i][i];
+                }
+                logC("Solutions (Back Substitution):", "info");
+                for(let i=0; i<n; i++) logC(`x${i+1} = <span class="c-success">${x[i].toFixed(4)}</span>`, "math");
+            }
+        }
+        else if (method === 'cramer') {
+            try {
+                let detA = math.det(A);
+                logC(`Det(A) = ${detA.toFixed(4)}`, "info");
+                if(detA === 0) { logC("Determinant is 0. Cramer's Rule fails.", "error"); return; }
+                
+                for(let i=0; i<sysDim; i++) {
+                    let Ai = A.map(row => [...row]); // Deep copy
+                    for(let j=0; j<sysDim; j++) Ai[j][i] = B[j]; // Swap column
+                    let detAi = math.det(Ai);
+                    logC(`Det(A${i+1}) = ${detAi.toFixed(4)}`, "info");
+                    logC(`x${i+1} = ${detAi.toFixed(4)} / ${detA.toFixed(4)} = <span class="c-success">${(detAi/detA).toFixed(4)}</span>`, "math");
+                }
+            } catch(e) { logC("MathJS Error: " + e, "error"); }
+        }
+        else if (method === 'inverse') {
+            try {
+                let invA = math.inv(A);
+                printMatrix(invA, "Inverse Matrix A^-1:");
+                let X = math.multiply(invA, B);
+                logC("Solutions (A^-1 * B):", "info");
+                for(let i=0; i<sysDim; i++) logC(`x${i+1} = <span class="c-success">${X[i].toFixed(4)}</span>`, "math");
+            } catch(e) { logC("Matrix is singular or error occurred.", "error"); }
+        }
+        else if (method === 'jacobi' || method === 'seidel') {
+            let iters = parseInt(document.getElementById('sys-iter').value);
+            let x = new Array(sysDim).fill(0);
+            
+            for(let step=1; step<=iters; step++) {
+                let x_new = [...x];
+                for(let i=0; i<sysDim; i++) {
+                    let sum = B[i];
+                    for(let j=0; j<sysDim; j++) {
+                        if(j !== i) {
+                            if(method === 'jacobi') sum -= A[i][j] * x[j];
+                            if(method === 'seidel') sum -= A[i][j] * x_new[j]; // Use updated instantly
+                        }
+                    }
+                    x_new[i] = sum / A[i][i];
+                }
+                x = [...x_new];
+                logC(`Iter ${step}: [${x.map(v => v.toFixed(4)).join(', ')}]`, "math");
+            }
+        }
+        else if (method === 'lu') {
+            try {
+                // Using MathJS LUP decomposition
+                const res = math.lup(A);
+                printMatrix(res.L, "Lower Triangular Matrix (L):");
+                printMatrix(res.U, "Upper Triangular Matrix (U):");
+                printMatrix(res.p, "Permutation Matrix (P) [Pivoting applied automatically]:");
+            } catch(e) { logC("Decomposition failed: " + e, "error"); }
+        }
+        else if (method === 'eigen') {
+            logC("Note: Client-side Eigenvalue computation can be complex for arbitrary asymmetric matrices. Showing standard numeric approximation.", "info");
+            try {
+                const res = math.eigs(A);
+                logC("Eigenvalues (λ):", "head");
+                res.values.forEach((val, i) => {
+                    logC(`λ${i+1} = <span class="c-success">${typeof val === 'number' ? val.toFixed(4) : math.format(val, 4)}</span>`, "math");
+                });
+            } catch(e) { logC("MathJS cannot find eigenvalues for this specific matrix configuration locally.", "error"); }
+        }
+    }
+
+    // ==========================================
+    // MODULE 5: ODEs (EULER & RK4)
+    // ==========================================
+    function solveODE() {
+        const funcStr = document.getElementById('ode-func').value;
+        const method = document.getElementById('ode-method').value;
+        let x0 = parseFloat(document.getElementById('ode-x0').value);
+        let y0 = parseFloat(document.getElementById('ode-y0').value);
+        let h = parseFloat(document.getElementById('ode-h').value);
+        let targetX = parseFloat(document.getElementById('ode-target').value);
+        
+        logC(`EXEC: ${method.toUpperCase()} for dy/dx = ${funcStr}`, "head");
+
+        try {
+            const f = math.compile(funcStr);
+            let steps = Math.round((targetX - x0) / h);
+            
+            for(let i=1; i<=steps; i++) {
+                if(method === 'euler') {
+                    let slope = f.evaluate({x: x0, y: y0});
+                    let y1 = y0 + h * slope;
+                    logC(`Step ${i}: x=${(x0+h).toFixed(4)}, y = ${y0.toFixed(4)} + ${h}*(${slope.toFixed(4)}) = <span class="c-success">${y1.toFixed(6)}</span>`, "math");
+                    x0 = x0 + h;
+                    y0 = y1;
+                } 
+                else if (method === 'rk4') {
+                    let k1 = h * f.evaluate({x: x0, y: y0});
+                    let k2 = h * f.evaluate({x: x0 + h/2, y: y0 + k1/2});
+                    let k3 = h * f.evaluate({x: x0 + h/2, y: y0 + k2/2});
+                    let k4 = h * f.evaluate({x: x0 + h, y: y0 + k3});
+                    
+                    let y1 = y0 + (k1 + 2*k2 + 2*k3 + k4) / 6;
+                    
+                    logC(`Step ${i} (x=${(x0+h).toFixed(4)}):`, "info");
+                    logC(`  k1=${k1.toFixed(6)}, k2=${k2.toFixed(6)}, k3=${k3.toFixed(6)}, k4=${k4.toFixed(6)}`, "info");
+                    logC(`  y = <span class="c-success">${y1.toFixed(6)}</span>`, "math");
+                    
+                    x0 = x0 + h;
+                    y0 = y1;
+                }
+            }
+        } catch(err) {
+            logC(`Syntax Error in ODE function parsing: ${err.message}`, "error");
+        }
+    }
+
+    // Init defaults
+    buildSystemGrid();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

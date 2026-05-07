@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Account Settings</h2>
+    <hr>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} border-0 shadow-sm mb-4">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Change Password</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="update_password" value="1">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Old Password</label>
+                            <input type="password" name="old_password" class="form-control" placeholder="Enter current password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">New Password</label>
+                            <input type="password" name="new_password" class="form-control" placeholder="Minimum 6 characters" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Confirm New Password</label>
+                            <input type="password" name="confirm_password" class="form-control" placeholder="Repeat new password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Update Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            
+            {% if session.role == 'lecturer' %}
+            <div class="card shadow-sm mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Edit Profile Info</h5>
+                </div>
+                <div class="card-body bg-light">
+                    <form method="POST">
+                        <input type="hidden" name="update_profile" value="1">
+                        <div class="row">
+                            <div class="col-4 mb-3">
+                                <label class="form-label fw-bold small">Title</label>
+                                <input type="text" name="title" class="form-control" value="{{ account.title }}" required>
+                            </div>
+                            <div class="col-8 mb-3">
+                                <label class="form-label fw-bold small">Full Name</label>
+                                <input type="text" name="name" class="form-control" value="{{ account.name }}" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 fw-bold">Update Profile</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card shadow-sm bg-light">
+                <div class="card-body">
+                    <h5 class="fw-bold"><i class="fas fa-shield-alt"></i> Security Tips</h5>
+                    <ul class="text-muted small">
+                        <li>Use a mix of uppercase, lowercase, and numbers.</li>
+                        <li>Do not share your login credentials with anyone.</li>
+                        <li>Log out when using public or shared computers.</li>
+                    </ul>
+                    <hr>
+                    <div class="alert alert-info bg-white border-0 shadow-sm mb-0">
+                        <strong class="text-primary">Current User:</strong> {{ session.user_name }}<br>
+                        <strong class="text-primary">System Role:</strong> <span class="text-capitalize">{{ session.role }}</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

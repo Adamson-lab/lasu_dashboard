@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Periodic Table | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            
+            /* Element Category Colors */
+            --cat-alkali: #ff8a65;
+            --cat-alkaline: #ffb74d;
+            --cat-transition: #ffd54f;
+            --cat-post-transition: #aed581;
+            --cat-metalloid: #81c784;
+            --cat-nonmetal: #4dd0e1;
+            --cat-halogen: #4fc3f7;
+            --cat-noble: #64b5f6;
+            --cat-lanthanide: #ba68c8;
+            --cat-actinide: #f06292;
+            --cat-unknown: #e0e0e0;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        .hero-panel {
+            background: #212529;
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            gap: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--cat-nonmetal);
+            transition: border-color 0.3s;
+            min-height: 200px;
+            align-items: center;
+        }
+
+        .element-display {
+            background: white;
+            border-radius: 8px;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+            border: 2px solid var(--cat-nonmetal);
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .ed-top { display: flex; justify-content: space-between; font-weight: 800; font-size: 1rem; color: #495057; }
+        .ed-symbol { font-size: 4.5rem; font-weight: 800; line-height: 1; text-align: center; color: #212529; font-family: 'Fira Code', monospace; margin-top: -10px;}
+        .ed-name { text-align: center; font-weight: 700; font-size: 0.9rem; color: #495057; text-transform: uppercase; letter-spacing: 1px; }
+
+        .element-details {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* Expanded to 5 columns to fit 10 items perfectly */
+            gap: 15px;
+            align-content: center;
+        }
+
+        .detail-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .detail-label { color: #adb5bd; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 700; }
+        .detail-val { color: white; font-family: 'Fira Code', monospace; font-size: 1.15rem; font-weight: 800; word-break: break-all; line-height: 1.2; }
+
+        /* Wikipedia Button Styling */
+        .wiki-btn {
+            background: rgba(255,255,255,0.05);
+            color: #f8f9fa;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            height: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .wiki-btn:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* --- PERIODIC TABLE GRID --- */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            overflow-x: auto; 
+        }
+
+        .periodic-grid {
+            display: grid;
+            grid-template-columns: repeat(18, minmax(45px, 1fr));
+            gap: 4px;
+            min-width: 1000px; 
+        }
+
+        .element-btn {
+            aspect-ratio: 1;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            background-color: white;
+            padding: 2px;
+            text-align: center;
+        }
+
+        .element-btn:hover {
+            transform: scale(1.15);
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .el-num { font-size: 0.6rem; color: rgba(0,0,0,0.6); align-self: flex-start; margin-left: 2px; font-weight: 700; line-height: 1;}
+        .el-sym { font-size: 1.2rem; font-weight: 800; color: #212529; line-height: 1; margin-top: 2px;}
+        .el-mass { font-size: 0.55rem; color: rgba(0,0,0,0.6); margin-top: auto;}
+
+        /* Category Coloring */
+        .alkali { background-color: var(--cat-alkali); }
+        .alkaline { background-color: var(--cat-alkaline); }
+        .transition { background-color: var(--cat-transition); }
+        .post-transition { background-color: var(--cat-post-transition); }
+        .metalloid { background-color: var(--cat-metalloid); }
+        .nonmetal { background-color: var(--cat-nonmetal); }
+        .halogen { background-color: var(--cat-halogen); }
+        .noble { background-color: var(--cat-noble); }
+        .lanthanide { background-color: var(--cat-lanthanide); }
+        .actinide { background-color: var(--cat-actinide); }
+        .unknown { background-color: var(--cat-unknown); }
+
+        .legend-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f8f9fa;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #495057;
+            text-transform: uppercase;
+        }
+        .legend-color { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
+
+        @media (max-width: 1400px) {
+            .element-details { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 1200px) {
+            .hero-panel { flex-direction: column; text-align: center; }
+            .element-details { grid-template-columns: repeat(3, 1fr); width: 100%; }
+        }
+        @media (max-width: 768px) {
+            .element-details { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="hero-panel" id="heroPanel">
+        
+        <div class="element-display" id="heroElement">
+            <div class="ed-top">
+                <span id="heroNum">1</span>
+                <span id="heroMass" style="font-size: 0.75rem; margin-top: 2px;">1.008</span>
+            </div>
+            <div class="ed-symbol" id="heroSym">H</div>
+            <div class="ed-name" id="heroName">Hydrogen</div>
+        </div>
+
+        <div class="element-details">
+            <div class="detail-box">
+                <div class="detail-label">Category</div>
+                <div class="detail-val" id="detCat" style="font-family: 'Segoe UI', sans-serif; text-transform: capitalize;">Reactive Nonmetal</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Standard State (20&deg;C)</div>
+                <div class="detail-val" id="detState" style="font-family: 'Segoe UI', sans-serif;">Gas</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Electron Configuration</div>
+                <div class="detail-val" id="detConfig" style="font-size: 1.05rem;">1s&sup1;</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Electronegativity (Pauling)</div>
+                <div class="detail-val" id="detElectro">2.20</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Periodic Block</div>
+                <div class="detail-val" id="detBlock" style="font-family: 'Segoe UI', sans-serif;">Group 1, s-block</div>
+            </div>
+            
+            <div class="detail-box">
+                <div class="detail-label">Melting Point (K)</div>
+                <div class="detail-val" id="detMelt">13.99</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Boiling Point (K)</div>
+                <div class="detail-val" id="detBoil">20.27</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Discovered By</div>
+                <div class="detail-val" id="detDisc" style="font-family: 'Segoe UI', sans-serif; font-size: 1rem;">Henry Cavendish</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Year Discovered</div>
+                <div class="detail-val" id="detYear" style="font-family: 'Segoe UI', sans-serif;">1766</div>
+            </div>
+            
+            <a href="https://en.wikipedia.org/wiki/Hydrogen" target="_blank" id="detWiki" class="wiki-btn">
+                <i class="fab fa-wikipedia-w fa-lg"></i> Wikipedia
+            </a>
+        </div>
+
+    </div>
+
+    <div class="table-container">
+        <div class="periodic-grid" id="ptable">
+            </div>
+
+        <div class="legend-container">
+            <div class="legend-item"><div class="legend-color" style="background: var(--cat-alkali);"></div> Alkali Metal</div>
+            <div class="legend-item"><div class="legend-color" style="background: var(--cat-alkaline);"></div> Alkaline Earth</div>
+            <div class="legend-item"><div class="legend-color" style="background: var(--cat-transition);"></div> Transition Metal</div>
+            <div class="legend-item"><div class="legend-color" style="background: var(--cat-post-transition);"></div> Post-Transition</div>
+            <div class="legend-item"><div class="legend-color" style="background: var(--cat-metalloid);"></div> Metalloid</div>
+            <div class="legend-item"><div class="legend-color" style="background: var(--cat-nonmetal);"></div> Reactive Nonmetal</div>
+            <div class="legend-item"><div class="legend-color" style="background: var(--cat-halogen);"></div> Halogen</div>
+            <div class="legend-item"><div class="legend-color" style="background: var(--cat-noble);"></div> Noble Gas</div>
+            <div class="legend-item"><div class="legend-color" style="background: var(--cat-lanthanide);"></div> Lanthanide</div>
+            <div class="legend-item"><div class="legend-color" style="background: var(--cat-actinide);"></div> Actinide</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Robust Periodic Table Dataset including Blocks
+    const elements = [
+        { n: 1, sym: 'H', name: 'Hydrogen', m: '1.008', c: 'nonmetal', col: 1, row: 1, state: 'Gas', conf: '1s¹', en: '2.20', melt: '13.99', boil: '20.27', disc: 'Henry Cavendish', year: '1766', block: 's-block' },
+        { n: 2, sym: 'He', name: 'Helium', m: '4.0026', c: 'noble', col: 18, row: 1, state: 'Gas', conf: '1s²', en: 'N/A', melt: '0.95', boil: '4.22', disc: 'Janssen / Lockyer', year: '1868', block: 's-block' },
+        { n: 3, sym: 'Li', name: 'Lithium', m: '6.94', c: 'alkali', col: 1, row: 2, state: 'Solid', conf: '[He] 2s¹', en: '0.98', melt: '453.65', boil: '1603', disc: 'Johan August Arfwedson', year: '1817', block: 's-block' },
+        { n: 4, sym: 'Be', name: 'Beryllium', m: '9.0122', c: 'alkaline', col: 2, row: 2, state: 'Solid', conf: '[He] 2s²', en: '1.57', melt: '1560', boil: '2742', disc: 'Louis Nicolas Vauquelin', year: '1798', block: 's-block' },
+        { n: 5, sym: 'B', name: 'Boron', m: '10.81', c: 'metalloid', col: 13, row: 2, state: 'Solid', conf: '[He] 2s² 2p¹', en: '2.04', melt: '2349', boil: '4200', disc: 'Joseph Louis Gay-Lussac', year: '1808', block: 'p-block' },
+        { n: 6, sym: 'C', name: 'Carbon', m: '12.011', c: 'nonmetal', col: 14, row: 2, state: 'Solid', conf: '[He] 2s² 2p²', en: '2.55', melt: '3800', boil: '4300', disc: 'Ancient', year: 'Ancient', block: 'p-block' },
+        { n: 7, sym: 'N', name: 'Nitrogen', m: '14.007', c: 'nonmetal', col: 15, row: 2, state: 'Gas', conf: '[He] 2s² 2p³', en: '3.04', melt: '63.15', boil: '77.36', disc: 'Daniel Rutherford', year: '1772', block: 'p-block' },
+        { n: 8, sym: 'O', name: 'Oxygen', m: '15.999', c: 'nonmetal', col: 16, row: 2, state: 'Gas', conf: '[He] 2s² 2p⁴', en: '3.44', melt: '54.36', boil: '90.188', disc: 'Carl Wilhelm Scheele', year: '1771', block: 'p-block' },
+        { n: 9, sym: 'F', name: 'Fluorine', m: '18.998', c: 'halogen', col: 17, row: 2, state: 'Gas', conf: '[He] 2s² 2p⁵', en: '3.98', melt: '53.48', boil: '85.03', disc: 'André-Marie Ampère', year: '1810', block: 'p-block' },
+        { n: 10, sym: 'Ne', name: 'Neon', m: '20.180', c: 'noble', col: 18, row: 2, state: 'Gas', conf: '[He] 2s² 2p⁶', en: 'N/A', melt: '24.56', boil: '27.104', disc: 'Ramsay / Travers', year: '1898', block: 'p-block' },
+        { n: 11, sym: 'Na', name: 'Sodium', m: '22.990', c: 'alkali', col: 1, row: 3, state: 'Solid', conf: '[Ne] 3s¹', en: '0.93', melt: '370.944', boil: '1156.09', disc: 'Humphry Davy', year: '1807', block: 's-block' },
+        { n: 12, sym: 'Mg', name: 'Magnesium', m: '24.305', c: 'alkaline', col: 2, row: 3, state: 'Solid', conf: '[Ne] 3s²', en: '1.31', melt: '923', boil: '1363', disc: 'Joseph Black', year: '1755', block: 's-block' },
+        { n: 13, sym: 'Al', name: 'Aluminum', m: '26.982', c: 'post-transition', col: 13, row: 3, state: 'Solid', conf: '[Ne] 3s² 3p¹', en: '1.61', melt: '933.47', boil: '2743', disc: 'Hans Christian Ørsted', year: '1825', block: 'p-block' },
+        { n: 14, sym: 'Si', name: 'Silicon', m: '28.085', c: 'metalloid', col: 14, row: 3, state: 'Solid', conf: '[Ne] 3s² 3p²', en: '1.90', melt: '1687', boil: '3538', disc: 'Jöns Jacob Berzelius', year: '1823', block: 'p-block' },
+        { n: 15, sym: 'P', name: 'Phosphorus', m: '30.974', c: 'nonmetal', col: 15, row: 3, state: 'Solid', conf: '[Ne] 3s² 3p³', en: '2.19', melt: '317.3', boil: '553.7', disc: 'Hennig Brand', year: '1669', block: 'p-block' },
+        { n: 16, sym: 'S', name: 'Sulfur', m: '32.06', c: 'nonmetal', col: 16, row: 3, state: 'Solid', conf: '[Ne] 3s² 3p⁴', en: '2.58', melt: '388.36', boil: '717.8', disc: 'Ancient', year: 'Ancient', block: 'p-block' },
+        { n: 17, sym: 'Cl', name: 'Chlorine', m: '35.45', c: 'halogen', col: 17, row: 3, state: 'Gas', conf: '[Ne] 3s² 3p⁵', en: '3.16', melt: '171.6', boil: '239.11', disc: 'Carl Wilhelm Scheele', year: '1774', block: 'p-block' },
+        { n: 18, sym: 'Ar', name: 'Argon', m: '39.95', c: 'noble', col: 18, row: 3, state: 'Gas', conf: '[Ne] 3s² 3p⁶', en: 'N/A', melt: '83.81', boil: '87.302', disc: 'Rayleigh / Ramsay', year: '1894', block: 'p-block' },
+        { n: 19, sym: 'K', name: 'Potassium', m: '39.098', c: 'alkali', col: 1, row: 4, state: 'Solid', conf: '[Ar] 4s¹', en: '0.82', melt: '336.53', boil: '1032', disc: 'Humphry Davy', year: '1807', block: 's-block' },
+        { n: 20, sym: 'Ca', name: 'Calcium', m: '40.078', c: 'alkaline', col: 2, row: 4, state: 'Solid', conf: '[Ar] 4s²', en: '1.00', melt: '1115', boil: '1757', disc: 'Humphry Davy', year: '1808', block: 's-block' },
+        { n: 21, sym: 'Sc', name: 'Scandium', m: '44.956', c: 'transition', col: 3, row: 4, state: 'Solid', conf: '[Ar] 3d¹ 4s²', en: '1.36', melt: '1814', boil: '3109', disc: 'Lars Fredrik Nilson', year: '1879', block: 'd-block' },
+        { n: 22, sym: 'Ti', name: 'Titanium', m: '47.867', c: 'transition', col: 4, row: 4, state: 'Solid', conf: '[Ar] 3d² 4s²', en: '1.54', melt: '1941', boil: '3560', disc: 'William Gregor', year: '1791', block: 'd-block' },
+        { n: 23, sym: 'V', name: 'Vanadium', m: '50.942', c: 'transition', col: 5, row: 4, state: 'Solid', conf: '[Ar] 3d³ 4s²', en: '1.63', melt: '2183', boil: '3680', disc: 'Andrés Manuel del Río', year: '1801', block: 'd-block' },
+        { n: 24, sym: 'Cr', name: 'Chromium', m: '51.996', c: 'transition', col: 6, row: 4, state: 'Solid', conf: '[Ar] 3d⁵ 4s¹', en: '1.66', melt: '2180', boil: '2944', disc: 'Louis Nicolas Vauquelin', year: '1797', block: 'd-block' },
+        { n: 25, sym: 'Mn', name: 'Manganese', m: '54.938', c: 'transition', col: 7, row: 4, state: 'Solid', conf: '[Ar] 3d⁵ 4s²', en: '1.55', melt: '1519', boil: '2334', disc: 'Carl Wilhelm Scheele', year: '1774', block: 'd-block' },
+        { n: 26, sym: 'Fe', name: 'Iron', m: '55.845', c: 'transition', col: 8, row: 4, state: 'Solid', conf: '[Ar] 3d⁶ 4s²', en: '1.83', melt: '1811', boil: '3134', disc: 'Ancient', year: 'Ancient', block: 'd-block' },
+        { n: 27, sym: 'Co', name: 'Cobalt', m: '58.933', c: 'transition', col: 9, row: 4, state: 'Solid', conf: '[Ar] 3d⁷ 4s²', en: '1.88', melt: '1768', boil: '3200', disc: 'Georg Brandt', year: '1735', block: 'd-block' },
+        { n: 28, sym: 'Ni', name: 'Nickel', m: '58.693', c: 'transition', col: 10, row: 4, state: 'Solid', conf: '[Ar] 3d⁸ 4s²', en: '1.91', melt: '1728', boil: '3003', disc: 'Axel Fredrik Cronstedt', year: '1751', block: 'd-block' },
+        { n: 29, sym: 'Cu', name: 'Copper', m: '63.546', c: 'transition', col: 11, row: 4, state: 'Solid', conf: '[Ar] 3d¹⁰ 4s¹', en: '1.90', melt: '1357.77', boil: '2835', disc: 'Ancient', year: 'Ancient', block: 'd-block' },
+        { n: 30, sym: 'Zn', name: 'Zinc', m: '65.38', c: 'transition', col: 12, row: 4, state: 'Solid', conf: '[Ar] 3d¹⁰ 4s²', en: '1.65', melt: '692.68', boil: '1180', disc: 'India/China', year: 'Ancient', block: 'd-block' },
+        { n: 31, sym: 'Ga', name: 'Gallium', m: '69.723', c: 'post-transition', col: 13, row: 4, state: 'Solid', conf: '[Ar] 3d¹⁰ 4s² 4p¹', en: '1.81', melt: '302.91', boil: '2477', disc: 'Lecoq de Boisbaudran', year: '1875', block: 'p-block' },
+        { n: 32, sym: 'Ge', name: 'Germanium', m: '72.630', c: 'metalloid', col: 14, row: 4, state: 'Solid', conf: '[Ar] 3d¹⁰ 4s² 4p²', en: '2.01', melt: '1211.40', boil: '3106', disc: 'Clemens Winkler', year: '1886', block: 'p-block' },
+        { n: 33, sym: 'As', name: 'Arsenic', m: '74.922', c: 'metalloid', col: 15, row: 4, state: 'Solid', conf: '[Ar] 3d¹⁰ 4s² 4p³', en: '2.18', melt: '1090', boil: '887', disc: 'Albertus Magnus', year: '1250', block: 'p-block' },
+        { n: 34, sym: 'Se', name: 'Selenium', m: '78.971', c: 'nonmetal', col: 16, row: 4, state: 'Solid', conf: '[Ar] 3d¹⁰ 4s² 4p⁴', en: '2.55', melt: '494', boil: '958', disc: 'Jöns Jacob Berzelius', year: '1817', block: 'p-block' },
+        { n: 35, sym: 'Br', name: 'Bromine', m: '79.904', c: 'halogen', col: 17, row: 4, state: 'Liquid', conf: '[Ar] 3d¹⁰ 4s² 4p⁵', en: '2.96', melt: '265.8', boil: '332.0', disc: 'Antoine Jérôme Balard', year: '1826', block: 'p-block' },
+        { n: 36, sym: 'Kr', name: 'Krypton', m: '83.798', c: 'noble', col: 18, row: 4, state: 'Gas', conf: '[Ar] 3d¹⁰ 4s² 4p⁶', en: '3.00', melt: '115.78', boil: '119.93', disc: 'Ramsay / Travers', year: '1898', block: 'p-block' },
+        { n: 37, sym: 'Rb', name: 'Rubidium', m: '85.468', c: 'alkali', col: 1, row: 5, state: 'Solid', conf: '[Kr] 5s¹', en: '0.82', melt: '312.45', boil: '961', disc: 'Bunsen / Kirchhoff', year: '1861', block: 's-block' },
+        { n: 38, sym: 'Sr', name: 'Strontium', m: '87.62', c: 'alkaline', col: 2, row: 5, state: 'Solid', conf: '[Kr] 5s²', en: '0.95', melt: '1050', boil: '1650', disc: 'William Cruickshank', year: '1790', block: 's-block' },
+        { n: 39, sym: 'Y', name: 'Yttrium', m: '88.906', c: 'transition', col: 3, row: 5, state: 'Solid', conf: '[Kr] 4d¹ 5s²', en: '1.22', melt: '1799', boil: '3203', disc: 'Johan Gadolin', year: '1794', block: 'd-block' },
+        { n: 40, sym: 'Zr', name: 'Zirconium', m: '91.224', c: 'transition', col: 4, row: 5, state: 'Solid', conf: '[Kr] 4d² 5s²', en: '1.33', melt: '2128', boil: '4682', disc: 'Martin Heinrich Klaproth', year: '1789', block: 'd-block' },
+        { n: 41, sym: 'Nb', name: 'Niobium', m: '92.906', c: 'transition', col: 5, row: 5, state: 'Solid', conf: '[Kr] 4d⁴ 5s¹', en: '1.6', melt: '2750', boil: '5017', disc: 'Charles Hatchett', year: '1801', block: 'd-block' },
+        { n: 42, sym: 'Mo', name: 'Molybdenum', m: '95.95', c: 'transition', col: 6, row: 5, state: 'Solid', conf: '[Kr] 4d⁵ 5s¹', en: '2.16', melt: '2896', boil: '4912', disc: 'Carl Wilhelm Scheele', year: '1778', block: 'd-block' },
+        { n: 43, sym: 'Tc', name: 'Technetium', m: '[98]', c: 'transition', col: 7, row: 5, state: 'Solid', conf: '[Kr] 4d⁵ 5s²', en: '1.9', melt: '2430', boil: '4538', disc: 'Perrier / Segrè', year: '1937', block: 'd-block' },
+        { n: 44, sym: 'Ru', name: 'Ruthenium', m: '101.07', c: 'transition', col: 8, row: 5, state: 'Solid', conf: '[Kr] 4d⁷ 5s¹', en: '2.2', melt: '2607', boil: '4423', disc: 'Karl Ernst Claus', year: '1844', block: 'd-block' },
+        { n: 45, sym: 'Rh', name: 'Rhodium', m: '102.91', c: 'transition', col: 9, row: 5, state: 'Solid', conf: '[Kr] 4d⁸ 5s¹', en: '2.28', melt: '2237', boil: '3968', disc: 'William Hyde Wollaston', year: '1803', block: 'd-block' },
+        { n: 46, sym: 'Pd', name: 'Palladium', m: '106.42', c: 'transition', col: 10, row: 5, state: 'Solid', conf: '[Kr] 4d¹⁰', en: '2.20', melt: '1828.05', boil: '3236', disc: 'William Hyde Wollaston', year: '1803', block: 'd-block' },
+        { n: 47, sym: 'Ag', name: 'Silver', m: '107.87', c: 'transition', col: 11, row: 5, state: 'Solid', conf: '[Kr] 4d¹⁰ 5s¹', en: '1.93', melt: '1234.93', boil: '2435', disc: 'Ancient', year: 'Ancient', block: 'd-block' },
+        { n: 48, sym: 'Cd', name: 'Cadmium', m: '112.41', c: 'transition', col: 12, row: 5, state: 'Solid', conf: '[Kr] 4d¹⁰ 5s²', en: '1.69', melt: '594.22', boil: '1040', disc: 'Karl Samuel Leberecht Hermann', year: '1817', block: 'd-block' },
+        { n: 49, sym: 'In', name: 'Indium', m: '114.82', c: 'post-transition', col: 13, row: 5, state: 'Solid', conf: '[Kr] 4d¹⁰ 5s² 5p¹', en: '1.78', melt: '429.7485', boil: '2345', disc: 'Reich / Richter', year: '1863', block: 'p-block' },
+        { n: 50, sym: 'Sn', name: 'Tin', m: '118.71', c: 'post-transition', col: 14, row: 5, state: 'Solid', conf: '[Kr] 4d¹⁰ 5s² 5p²', en: '1.96', melt: '505.08', boil: '2875', disc: 'Ancient', year: 'Ancient', block: 'p-block' },
+        { n: 51, sym: 'Sb', name: 'Antimony', m: '121.76', c: 'metalloid', col: 15, row: 5, state: 'Solid', conf: '[Kr] 4d¹⁰ 5s² 5p³', en: '2.05', melt: '903.78', boil: '1908', disc: 'Ancient', year: 'Ancient', block: 'p-block' },
+        { n: 52, sym: 'Te', name: 'Tellurium', m: '127.60', c: 'metalloid', col: 16, row: 5, state: 'Solid', conf: '[Kr] 4d¹⁰ 5s² 5p⁴', en: '2.1', melt: '722.66', boil: '1261', disc: 'Franz-Joseph Müller', year: '1782', block: 'p-block' },
+        { n: 53, sym: 'I', name: 'Iodine', m: '126.90', c: 'halogen', col: 17, row: 5, state: 'Solid', conf: '[Kr] 4d¹⁰ 5s² 5p⁵', en: '2.66', melt: '386.85', boil: '457.4', disc: 'Bernard Courtois', year: '1811', block: 'p-block' },
+        { n: 54, sym: 'Xe', name: 'Xenon', m: '131.29', c: 'noble', col: 18, row: 5, state: 'Gas', conf: '[Kr] 4d¹⁰ 5s² 5p⁶', en: '2.60', melt: '161.4', boil: '165.05', disc: 'Ramsay / Travers', year: '1898', block: 'p-block' },
+        { n: 55, sym: 'Cs', name: 'Cesium', m: '132.91', c: 'alkali', col: 1, row: 6, state: 'Solid', conf: '[Xe] 6s¹', en: '0.79', melt: '301.7', boil: '944', disc: 'Bunsen / Kirchhoff', year: '1860', block: 's-block' },
+        { n: 56, sym: 'Ba', name: 'Barium', m: '137.33', c: 'alkaline', col: 2, row: 6, state: 'Solid', conf: '[Xe] 6s²', en: '0.89', melt: '1000', boil: '2170', disc: 'Carl Wilhelm Scheele', year: '1772', block: 's-block' },
+        // Lanthanides (Row 8 block)
+        { n: 57, sym: 'La', name: 'Lanthanum', m: '138.91', c: 'lanthanide', col: 3, row: 8, state: 'Solid', conf: '[Xe] 5d¹ 6s²', en: '1.1', melt: '1193', boil: '3737', disc: 'Carl Gustaf Mosander', year: '1839', block: 'f-block' },
+        { n: 58, sym: 'Ce', name: 'Cerium', m: '140.12', c: 'lanthanide', col: 4, row: 8, state: 'Solid', conf: '[Xe] 4f¹ 5d¹ 6s²', en: '1.12', melt: '1068', boil: '3716', disc: 'Klaproth / Berzelius', year: '1803', block: 'f-block' },
+        { n: 59, sym: 'Pr', name: 'Praseodymium', m: '140.91', c: 'lanthanide', col: 5, row: 8, state: 'Solid', conf: '[Xe] 4f³ 6s²', en: '1.13', melt: '1208', boil: '3403', disc: 'Carl Auer von Welsbach', year: '1885', block: 'f-block' },
+        { n: 60, sym: 'Nd', name: 'Neodymium', m: '144.24', c: 'lanthanide', col: 6, row: 8, state: 'Solid', conf: '[Xe] 4f⁴ 6s²', en: '1.14', melt: '1297', boil: '3347', disc: 'Carl Auer von Welsbach', year: '1885', block: 'f-block' },
+        { n: 61, sym: 'Pm', name: 'Promethium', m: '[145]', c: 'lanthanide', col: 7, row: 8, state: 'Solid', conf: '[Xe] 4f⁵ 6s²', en: '1.13', melt: '1315', boil: '3273', disc: 'Marinsky / Glendenin', year: '1945', block: 'f-block' },
+        { n: 62, sym: 'Sm', name: 'Samarium', m: '150.36', c: 'lanthanide', col: 8, row: 8, state: 'Solid', conf: '[Xe] 4f⁶ 6s²', en: '1.17', melt: '1345', boil: '2173', disc: 'Lecoq de Boisbaudran', year: '1879', block: 'f-block' },
+        { n: 63, sym: 'Eu', name: 'Europium', m: '151.96', c: 'lanthanide', col: 9, row: 8, state: 'Solid', conf: '[Xe] 4f⁷ 6s²', en: '1.2', melt: '1099', boil: '1802', disc: 'Eugène-Anatole Demarçay', year: '1896', block: 'f-block' },
+        { n: 64, sym: 'Gd', name: 'Gadolinium', m: '157.25', c: 'lanthanide', col: 10, row: 8, state: 'Solid', conf: '[Xe] 4f⁷ 5d¹ 6s²', en: '1.2', melt: '1585', boil: '3273', disc: 'Jean Charles Galissard', year: '1880', block: 'f-block' },
+        { n: 65, sym: 'Tb', name: 'Terbium', m: '158.93', c: 'lanthanide', col: 11, row: 8, state: 'Solid', conf: '[Xe] 4f⁹ 6s²', en: '1.1', melt: '1629', boil: '3396', disc: 'Carl Gustaf Mosander', year: '1843', block: 'f-block' },
+        { n: 66, sym: 'Dy', name: 'Dysprosium', m: '162.50', c: 'lanthanide', col: 12, row: 8, state: 'Solid', conf: '[Xe] 4f¹⁰ 6s²', en: '1.22', melt: '1680', boil: '2840', disc: 'Lecoq de Boisbaudran', year: '1886', block: 'f-block' },
+        { n: 67, sym: 'Ho', name: 'Holmium', m: '164.93', c: 'lanthanide', col: 13, row: 8, state: 'Solid', conf: '[Xe] 4f¹¹ 6s²', en: '1.23', melt: '1734', boil: '2873', disc: 'Jacques-Louis Soret', year: '1878', block: 'f-block' },
+        { n: 68, sym: 'Er', name: 'Erbium', m: '167.26', c: 'lanthanide', col: 14, row: 8, state: 'Solid', conf: '[Xe] 4f¹² 6s²', en: '1.24', melt: '1802', boil: '3141', disc: 'Carl Gustaf Mosander', year: '1843', block: 'f-block' },
+        { n: 69, sym: 'Tm', name: 'Thulium', m: '168.93', c: 'lanthanide', col: 15, row: 8, state: 'Solid', conf: '[Xe] 4f¹³ 6s²', en: '1.25', melt: '1818', boil: '2223', disc: 'Per Teodor Cleve', year: '1879', block: 'f-block' },
+        { n: 70, sym: 'Yb', name: 'Ytterbium', m: '173.05', c: 'lanthanide', col: 16, row: 8, state: 'Solid', conf: '[Xe] 4f¹⁴ 6s²', en: '1.1', melt: '1097', boil: '1469', disc: 'Jean Charles Galissard', year: '1878', block: 'f-block' },
+        { n: 71, sym: 'Lu', name: 'Lutetium', m: '174.97', c: 'lanthanide', col: 17, row: 8, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d¹ 6s²', en: '1.27', melt: '1925', boil: '3675', disc: 'Georges Urbain', year: '1907', block: 'd-block' },
+        // Back to Row 6 Transition
+        { n: 72, sym: 'Hf', name: 'Hafnium', m: '178.49', c: 'transition', col: 4, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d² 6s²', en: '1.3', melt: '2506', boil: '4876', disc: 'Coster / Hevesy', year: '1923', block: 'd-block' },
+        { n: 73, sym: 'Ta', name: 'Tantalum', m: '180.95', c: 'transition', col: 5, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d³ 6s²', en: '1.5', melt: '3290', boil: '5731', disc: 'Anders Gustaf Ekeberg', year: '1802', block: 'd-block' },
+        { n: 74, sym: 'W', name: 'Tungsten', m: '183.84', c: 'transition', col: 6, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d⁴ 6s²', en: '2.36', melt: '3695', boil: '5828', disc: 'Juan José Elhuyar', year: '1783', block: 'd-block' },
+        { n: 75, sym: 'Re', name: 'Rhenium', m: '186.21', c: 'transition', col: 7, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d⁵ 6s²', en: '1.9', melt: '3459', boil: '5869', disc: 'Noddack / Tacke / Berg', year: '1925', block: 'd-block' },
+        { n: 76, sym: 'Os', name: 'Osmium', m: '190.23', c: 'transition', col: 8, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d⁶ 6s²', en: '2.2', melt: '3306', boil: '5285', disc: 'Smithson Tennant', year: '1803', block: 'd-block' },
+        { n: 77, sym: 'Ir', name: 'Iridium', m: '192.22', c: 'transition', col: 9, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d⁷ 6s²', en: '2.20', melt: '2719', boil: '4701', disc: 'Smithson Tennant', year: '1803', block: 'd-block' },
+        { n: 78, sym: 'Pt', name: 'Platinum', m: '195.08', c: 'transition', col: 10, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d⁹ 6s¹', en: '2.28', melt: '2041.4', boil: '4098', disc: 'Antonio de Ulloa', year: '1735', block: 'd-block' },
+        { n: 79, sym: 'Au', name: 'Gold', m: '196.97', c: 'transition', col: 11, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d¹⁰ 6s¹', en: '2.54', melt: '1337.33', boil: '3129', disc: 'Ancient', year: 'Ancient', block: 'd-block' },
+        { n: 80, sym: 'Hg', name: 'Mercury', m: '200.59', c: 'transition', col: 12, row: 6, state: 'Liquid', conf: '[Xe] 4f¹⁴ 5d¹⁰ 6s²', en: '2.00', melt: '234.32', boil: '629.88', disc: 'Ancient', year: 'Ancient', block: 'd-block' },
+        { n: 81, sym: 'Tl', name: 'Thallium', m: '204.38', c: 'post-transition', col: 13, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p¹', en: '1.62', melt: '577', boil: '1746', disc: 'William Crookes', year: '1861', block: 'p-block' },
+        { n: 82, sym: 'Pb', name: 'Lead', m: '207.2', c: 'post-transition', col: 14, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²', en: '1.87', melt: '600.61', boil: '2022', disc: 'Ancient', year: 'Ancient', block: 'p-block' },
+        { n: 83, sym: 'Bi', name: 'Bismuth', m: '208.98', c: 'post-transition', col: 15, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p³', en: '2.02', melt: '544.7', boil: '1837', disc: 'Claude François Geoffroy', year: '1753', block: 'p-block' },
+        { n: 84, sym: 'Po', name: 'Polonium', m: '[209]', c: 'post-transition', col: 16, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁴', en: '2.0', melt: '527', boil: '1235', disc: 'Pierre and Marie Curie', year: '1898', block: 'p-block' },
+        { n: 85, sym: 'At', name: 'Astatine', m: '[210]', c: 'halogen', col: 17, row: 6, state: 'Solid', conf: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁵', en: '2.2', melt: '575', boil: '610', disc: 'Corson / MacKenzie', year: '1940', block: 'p-block' },
+        { n: 86, sym: 'Rn', name: 'Radon', m: '[222]', c: 'noble', col: 18, row: 6, state: 'Gas', conf: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁶', en: '2.2', melt: '202', boil: '211.5', disc: 'Friedrich Ernst Dorn', year: '1898', block: 'p-block' },
+        { n: 87, sym: 'Fr', name: 'Francium', m: '[223]', c: 'alkali', col: 1, row: 7, state: 'Solid', conf: '[Rn] 7s¹', en: '0.7', melt: '300', boil: '950', disc: 'Marguerite Perey', year: '1939', block: 's-block' },
+        { n: 88, sym: 'Ra', name: 'Radium', m: '[226]', c: 'alkaline', col: 2, row: 7, state: 'Solid', conf: '[Rn] 7s²', en: '0.9', melt: '973', boil: '2010', disc: 'Pierre and Marie Curie', year: '1898', block: 's-block' },
+        // Actinides (Row 9 block)
+        { n: 89, sym: 'Ac', name: 'Actinium', m: '[227]', c: 'actinide', col: 3, row: 9, state: 'Solid', conf: '[Rn] 6d¹ 7s²', en: '1.1', melt: '1323', boil: '3471', disc: 'Friedrich Oskar Giesel', year: '1899', block: 'f-block' },
+        { n: 90, sym: 'Th', name: 'Thorium', m: '232.04', c: 'actinide', col: 4, row: 9, state: 'Solid', conf: '[Rn] 6d² 7s²', en: '1.3', melt: '2023', boil: '5061', disc: 'Jöns Jacob Berzelius', year: '1829', block: 'f-block' },
+        { n: 91, sym: 'Pa', name: 'Protactinium', m: '231.04', c: 'actinide', col: 5, row: 9, state: 'Solid', conf: '[Rn] 5f² 6d¹ 7s²', en: '1.5', melt: '1841', boil: '4300', disc: 'Fajans / Göhring', year: '1913', block: 'f-block' },
+        { n: 92, sym: 'U', name: 'Uranium', m: '238.03', c: 'actinide', col: 6, row: 9, state: 'Solid', conf: '[Rn] 5f³ 6d¹ 7s²', en: '1.38', melt: '1405.3', boil: '4404', disc: 'Martin Heinrich Klaproth', year: '1789', block: 'f-block' },
+        { n: 93, sym: 'Np', name: 'Neptunium', m: '[237]', c: 'actinide', col: 7, row: 9, state: 'Solid', conf: '[Rn] 5f⁴ 6d¹ 7s²', en: '1.36', melt: '912', boil: '4174', disc: 'McMillan / Abelson', year: '1940', block: 'f-block' },
+        { n: 94, sym: 'Pu', name: 'Plutonium', m: '[244]', c: 'actinide', col: 8, row: 9, state: 'Solid', conf: '[Rn] 5f⁶ 7s²', en: '1.28', melt: '912.5', boil: '3505', disc: 'Seaborg / Wahl', year: '1940', block: 'f-block' },
+        { n: 95, sym: 'Am', name: 'Americium', m: '[243]', c: 'actinide', col: 9, row: 9, state: 'Solid', conf: '[Rn] 5f⁷ 7s²', en: '1.13', melt: '1449', boil: '2880', disc: 'Seaborg / James', year: '1944', block: 'f-block' },
+        { n: 96, sym: 'Cm', name: 'Curium', m: '[247]', c: 'actinide', col: 10, row: 9, state: 'Solid', conf: '[Rn] 5f⁷ 6d¹ 7s²', en: '1.28', melt: '1613', boil: '3383', disc: 'Seaborg / James', year: '1944', block: 'f-block' },
+        { n: 97, sym: 'Bk', name: 'Berkelium', m: '[247]', c: 'actinide', col: 11, row: 9, state: 'Solid', conf: '[Rn] 5f⁹ 7s²', en: '1.3', melt: '1259', boil: '2900', disc: 'Thompson / Ghiorso', year: '1949', block: 'f-block' },
+        { n: 98, sym: 'Cf', name: 'Californium', m: '[251]', c: 'actinide', col: 12, row: 9, state: 'Solid', conf: '[Rn] 5f¹⁰ 7s²', en: '1.3', melt: '1173', boil: '1743', disc: 'Thompson / Ghiorso', year: '1950', block: 'f-block' },
+        { n: 99, sym: 'Es', name: 'Einsteinium', m: '[252]', c: 'actinide', col: 13, row: 9, state: 'Solid', conf: '[Rn] 5f¹¹ 7s²', en: '1.3', melt: '1133', boil: '1269', disc: 'Ghiorso et al.', year: '1952', block: 'f-block' },
+        { n: 100, sym: 'Fm', name: 'Fermium', m: '[257]', c: 'actinide', col: 14, row: 9, state: 'Unknown', conf: '[Rn] 5f¹² 7s²', en: '1.3', melt: '1800', boil: 'Unknown', disc: 'Ghiorso et al.', year: '1952', block: 'f-block' },
+        { n: 101, sym: 'Md', name: 'Mendelevium', m: '[258]', c: 'actinide', col: 15, row: 9, state: 'Unknown', conf: '[Rn] 5f¹³ 7s²', en: '1.3', melt: '1100', boil: 'Unknown', disc: 'Ghiorso et al.', year: '1955', block: 'f-block' },
+        { n: 102, sym: 'No', name: 'Nobelium', m: '[259]', c: 'actinide', col: 16, row: 9, state: 'Unknown', conf: '[Rn] 5f¹⁴ 7s²', en: '1.3', melt: '1100', boil: 'Unknown', disc: 'Ghiorso et al.', year: '1958', block: 'f-block' },
+        { n: 103, sym: 'Lr', name: 'Lawrencium', m: '[266]', c: 'actinide', col: 17, row: 9, state: 'Unknown', conf: '[Rn] 5f¹⁴ 7s² 7p¹', en: '1.3', melt: '1900', boil: 'Unknown', disc: 'Ghiorso et al.', year: '1961', block: 'd-block' },
+        // Back to Row 7 Transition
+        { n: 104, sym: 'Rf', name: 'Rutherfordium', m: '[267]', c: 'transition', col: 4, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d² 7s²', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Flerov et al.', year: '1964', block: 'd-block' },
+        { n: 105, sym: 'Db', name: 'Dubnium', m: '[268]', c: 'transition', col: 5, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d³ 7s²', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Flerov et al.', year: '1967', block: 'd-block' },
+        { n: 106, sym: 'Sg', name: 'Seaborgium', m: '[269]', c: 'transition', col: 6, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d⁴ 7s²', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Ghiorso et al.', year: '1974', block: 'd-block' },
+        { n: 107, sym: 'Bh', name: 'Bohrium', m: '[270]', c: 'transition', col: 7, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d⁵ 7s²', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Oganessian et al.', year: '1976', block: 'd-block' },
+        { n: 108, sym: 'Hs', name: 'Hassium', m: '[277]', c: 'transition', col: 8, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d⁶ 7s²', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Münzenberg et al.', year: '1984', block: 'd-block' },
+        { n: 109, sym: 'Mt', name: 'Meitnerium', m: '[278]', c: 'unknown', col: 9, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d⁷ 7s²', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Münzenberg et al.', year: '1982', block: 'd-block' },
+        { n: 110, sym: 'Ds', name: 'Darmstadtium', m: '[281]', c: 'unknown', col: 10, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d⁸ 7s²', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Hofmann et al.', year: '1994', block: 'd-block' },
+        { n: 111, sym: 'Rg', name: 'Roentgenium', m: '[282]', c: 'unknown', col: 11, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d⁹ 7s²', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Hofmann et al.', year: '1994', block: 'd-block' },
+        { n: 112, sym: 'Cn', name: 'Copernicium', m: '[285]', c: 'transition', col: 12, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d¹⁰ 7s²', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Hofmann et al.', year: '1996', block: 'd-block' },
+        { n: 113, sym: 'Nh', name: 'Nihonium', m: '[286]', c: 'unknown', col: 13, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p¹', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Morita et al.', year: '2003', block: 'p-block' },
+        { n: 114, sym: 'Fl', name: 'Flerovium', m: '[289]', c: 'unknown', col: 14, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p²', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Oganessian et al.', year: '1998', block: 'p-block' },
+        { n: 115, sym: 'Mc', name: 'Moscovium', m: '[290]', c: 'unknown', col: 15, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p³', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Oganessian et al.', year: '2003', block: 'p-block' },
+        { n: 116, sym: 'Lv', name: 'Livermorium', m: '[293]', c: 'unknown', col: 16, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁴', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Oganessian et al.', year: '2000', block: 'p-block' },
+        { n: 117, sym: 'Ts', name: 'Tennessine', m: '[294]', c: 'unknown', col: 17, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁵', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Oganessian et al.', year: '2010', block: 'p-block' },
+        { n: 118, sym: 'Og', name: 'Oganesson', m: '[294]', c: 'unknown', col: 18, row: 7, state: 'Unknown', conf: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁶', en: 'Unknown', melt: 'Unknown', boil: 'Unknown', disc: 'Oganessian et al.', year: '2002', block: 'p-block' }
+    ];
+
+    const ptable = document.getElementById('ptable');
+    
+    // UI Elements
+    const heroPanel = document.getElementById('heroPanel');
+    const heroElement = document.getElementById('heroElement');
+    const heroNum = document.getElementById('heroNum');
+    const heroMass = document.getElementById('heroMass');
+    const heroSym = document.getElementById('heroSym');
+    const heroName = document.getElementById('heroName');
+    
+    const detCat = document.getElementById('detCat');
+    const detState = document.getElementById('detState');
+    const detConfig = document.getElementById('detConfig');
+    const detElectro = document.getElementById('detElectro');
+    const detMelt = document.getElementById('detMelt');
+    const detBoil = document.getElementById('detBoil');
+    const detDisc = document.getElementById('detDisc');
+    const detYear = document.getElementById('detYear');
+    
+    // NEW UI Elements added
+    const detBlock = document.getElementById('detBlock');
+    const detWiki = document.getElementById('detWiki');
+
+    function getCategoryGroupText(col, block) {
+        if (col >= 1 && col <= 18) return `Group ${col}, ${block}`;
+        return `Lanthanide/Actinide, ${block}`;
+    }
+
+    // Must be assigned to window to work cleanly with stringified onclick HTML injection
+    window.selectElement = function(elStr) {
+        const el = JSON.parse(decodeURIComponent(elStr));
+
+        // Update Hero Visuals
+        heroNum.innerText = el.n;
+        heroMass.innerText = el.m.toString().replace('[','').replace(']',''); // Clean bracketed masses
+        heroSym.innerText = el.sym;
+        heroName.innerText = el.name;
+        
+        // Match Hero Border to Category Color
+        const catVar = `var(--cat-${el.c.replace(' ', '-')})`;
+        heroPanel.style.borderBottomColor = `var(--cat-${el.c})`;
+        heroElement.style.borderColor = `var(--cat-${el.c})`;
+
+        // Update Details Grid
+        detCat.innerText = el.c.replace('-', ' ');
+        detCat.style.color = `var(--cat-${el.c})`;
+        detState.innerText = el.state;
+        
+        // Beautiful exponent formatting for Electron Config
+        detConfig.innerHTML = el.conf.replace(/(\d[spdf])(\d+)/g, "$1<sup>$2</sup>"); 
+        
+        detElectro.innerText = el.en;
+        detMelt.innerText = el.melt === 'Unknown' ? 'Unknown' : `${el.melt} K`;
+        detBoil.innerText = el.boil === 'Unknown' ? 'Unknown' : `${el.boil} K`;
+        detDisc.innerText = el.disc;
+        detYear.innerText = el.year;
+        
+        // New Injected Attributes
+        detBlock.innerText = getCategoryGroupText(el.col, el.block);
+        detWiki.href = `https://en.wikipedia.org/wiki/${el.name}`;
+    }
+
+    // Build the grid
+    let gridHTML = '';
+    elements.forEach(el => {
+        const elString = encodeURIComponent(JSON.stringify(el));
+        gridHTML += `
+            <div class="element-btn ${el.c}" 
+                 style="grid-column: ${el.col}; grid-row: ${el.row};" 
+                 onclick="selectElement('${elString}')">
+                <span class="el-num">${el.n}</span>
+                <span class="el-sym">${el.sym}</span>
+                <span class="el-mass">${el.m.toString().replace('[','').replace(']','')}</span>
+            </div>
+        `;
+    });
+    
+    // Add Lanthanide/Actinide row markers
+    gridHTML += `<div style="grid-column: 3; grid-row: 6; font-size:0.7rem; font-weight:bold; display:flex; align-items:center; justify-content:center;">57-71</div>`;
+    gridHTML += `<div style="grid-column: 3; grid-row: 7; font-size:0.7rem; font-weight:bold; display:flex; align-items:center; justify-content:center;">89-103</div>`;
+
+    ptable.innerHTML = gridHTML;
+
+    // Init with Hydrogen on load
+    const firstElStr = encodeURIComponent(JSON.stringify(elements[0]));
+    selectElement(firstElStr);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

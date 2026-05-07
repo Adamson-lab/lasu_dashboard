@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reference Letter - {{ student.matric_no }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    
+    <style>
+        body { background: #555; font-family: 'Times New Roman', Times, serif; }
+        .page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 10mm auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .header { text-align: center; border-bottom: 2px solid #004d40; padding-bottom: 10px; margin-bottom: 30px; }
+        
+        /* Fixed Logo Size */
+        .logo { width: 100px; height: auto; }
+        
+        .uni-name { font-size: 24pt; font-weight: bold; text-transform: uppercase; color: #004d40; margin: 10px 0 0 0; }
+        .uni-address { font-size: 10pt; color: #555; }
+        
+        .content { font-size: 12pt; line-height: 1.6; text-align: justify; }
+        .ref-title { text-align: center; font-weight: bold; text-decoration: underline; text-transform: uppercase; margin: 30px 0; font-size: 14pt; }
+        
+        /* DIGITAL SIGNATURE STYLING */
+        .signature-section { margin-top: 50px; }
+        .digital-signature {
+            font-family: 'Great Vibes', cursive;
+            font-size: 3rem; 
+            color: #004d40;   /* Green ink */
+            margin-bottom: -15px; /* Pulls the line up closer to the name */
+            transform: rotate(-3deg); 
+            display: inline-block;
+        }
+        .sign-line { border-top: 2px solid black; width: 250px; margin-top: 5px; }
+        
+        /* WATERMARK STYLING */
+        .watermark {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px; opacity: 0.08; pointer-events: none; /* Slightly increased opacity */
+        }
+
+        /* PRINT SETTINGS */
+        @media print {
+            body { background: white; }
+            .page { margin: 0; box-shadow: none; border: none; width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container text-center no-print py-3">
+    <a href="{{ url_for('student_portal') }}" class="btn btn-light">Back to Portal</a>
+    <button onclick="window.print()" class="btn btn-success fw-bold">🖨️ Print / Save as PDF</button>
+</div>
+
+<div class="page">
+    <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" class="watermark" alt="LASU Watermark">
+
+    <div class="header">
+        <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" class="logo mb-2" alt="LASU Logo">
+        
+        <h1 class="uni-name">Lagos State University</h1>
+        <p class="uni-address">Badagry Expressway, Ojo, P.M.B. 0001, LASU Post Office, Lagos, Nigeria.<br>
+        <strong>Student Affairs Division</strong></p>
+    </div>
+
+    <div class="content">
+        <p><strong>Date:</strong> {{ date }}</p>
+        <p><strong>Ref:</strong> LASU/SA/REF/{{ student.id }}/2026</p>
+
+        <br>
+        <p><strong>TO WHOM IT MAY CONCERN</strong></p>
+
+        <h3 class="ref-title">LETTER OF ATTESTATION / RECOMMENDATION</h3>
+
+        <p>This is to certify that <strong>{{ student.name.upper() }}</strong> with Matriculation Number <strong>{{ student.matric_no }}</strong> is a bona fide student of Lagos State University.</p>
+
+        <p>The above-named student is currently enrolled in the <strong>Department of {{ student.department }}</strong> and is in <strong>{{ student.level }} Level</strong>.</p>
+
+        <p>Records in our custody indicate that the student is of good moral standing and has maintained a satisfactory academic performance with a current <strong>Cumulative Grade Point Average (CGPA) of {{ cgpa }}</strong>.</p>
+
+        <p>This letter is issued upon the student's request to support applications for internship, scholarship, or other academic pursuits. We recommend {{ 'him' if 'Mr' in student.name else 'her/him' }} to you and would appreciate any assistance rendered to {{ 'him' if 'Mr' in student.name else 'the student' }}.</p>
+
+        <p>Please do not hesitate to contact the Student Affairs Division should you require further verification of this studentship.</p>
+        
+        <br>
+        <p>Yours faithfully,</p>
+
+        <div class="signature-section">
+            <div class="digital-signature">Dr. A. O. Admin</div>
+            <div class="sign-line"></div>
+            <p style="margin-top: 10px;"><strong>Dr. A. O. Admin</strong><br>
+            Dean, Student Affairs<br>
+            Lagos State University</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

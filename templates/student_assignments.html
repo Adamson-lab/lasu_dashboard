@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Assignments</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-success mb-4 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ url_for('student_portal') }}">← Back to Portal</a>
+        <span class="navbar-text text-white">Homework Submission Portal</span>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold py-3">
+                    <i class="fas fa-tasks me-2 text-success"></i> Pending & Submitted Tasks
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for item in assignments %}
+                        <div class="list-group-item p-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-8 mb-3 mb-md-0">
+                                    <h5 class="fw-bold mb-1">{{ item.task.title }}</h5>
+                                    <p class="mb-1 text-primary small fw-bold">{{ item.task.course.code }} - {{ item.task.course.title }}</p>
+                                    <p class="mb-2 text-muted">{{ item.task.instruction }}</p>
+                                    
+                                    {% if item.task.due_date < now %}
+                                        <span class="badge bg-danger">⛔ Deadline Passed: {{ item.task.due_date.strftime('%d %b, %I:%M %p') }}</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">⏳ Due: {{ item.task.due_date.strftime('%d %b, %I:%M %p') }}</span>
+                                    {% endif %}
+                                    
+                                    <span class="badge bg-secondary ms-1">{{ item.task.points }} Marks</span>
+                                </div>
+
+                                <div class="col-md-4">
+                                    {% if item.submission %}
+                                        <div class="text-md-end">
+                                            <span class="badge bg-success mb-2 p-2"><i class="fas fa-check-circle"></i> Submitted</span>
+                                            {% if item.submission.score is not none %}
+                                                <div class="fs-5 fw-bold text-success">{{ item.submission.score }} / {{ item.task.points }}</div>
+                                                <small class="text-muted d-block fst-italic">"{{ item.submission.lecturer_comment }}"</small>
+                                            {% else %}
+                                                <div class="text-muted small">Grading Pending</div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        {% if item.task.due_date < now %}
+                                            <button class="btn btn-secondary w-100 disabled" disabled>
+                                                <i class="fas fa-lock"></i> Submission Locked
+                                            </button>
+                                        {% else %}
+                                            <form action="{{ url_for('submit_assignment', id=item.task.id) }}" method="POST" enctype="multipart/form-data">
+                                                <input type="file" name="file" class="form-control form-control-sm mb-2" required>
+                                                <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
+                                                    <i class="fas fa-cloud-upload-alt me-1"></i> Upload Work
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-glass-cheers fa-3x mb-3 text-secondary"></i><br>
+                            Hooray! No pending assignments.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Appeals{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold"><i class="fas fa-gavel text-warning me-2"></i>Appeals Console</h2>
+            <p class="text-muted mb-0">Manage student retake requests across all courses.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Student</th>
+                            <th>Assessment</th>
+                            <th>Date Requested</th>
+                            <th>Defense Preview</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if appeals %}
+                            {% for appeal in appeals %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        
+                                        {% if appeal.student.image_file == 'default.jpg' %}
+                                            <div class="avatar-initials me-3 shadow-sm" style="background-color: #198754; width: 40px; height: 40px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                                {% set names = appeal.student.name.split() %}
+                                                {{ names[0][0] }}{{ names[-1][0] if names|length > 1 else '' }}
+                                            </div>
+                                        {% else %}
+                                            <img src="{{ url_for('static', filename='profile_pics/' + appeal.student.image_file) }}" 
+                                                 class="rounded-circle shadow-sm me-3" 
+                                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                                 onerror="this.src='https://ui-avatars.com/api/?name={{ appeal.student.name }}&background=198754&color=fff'">
+                                        {% endif %}
+
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">{{ appeal.student.name }}</h6>
+                                            <small class="text-muted">{{ appeal.student.matric_no }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">
+                                        {{ appeal.quiz_result.quiz.title }}
+                                    </span>
+                                </td>
+
+                                <td class="text-muted small">
+                                    {{ appeal.date_submitted.strftime('%d %b, %H:%M') }}
+                                </td>
+
+                                <td class="text-muted fst-italic text-truncate" style="max-width: 200px;">
+                                    "{{ appeal.message | striptags }}"
+                                </td>
+
+                                <td class="text-center">
+                                    <button class="btn btn-warning btn-sm fw-bold shadow-sm animate__animated animate__pulse animate__infinite"
+                                        onclick="openGlobalReview(
+                                            '{{ appeal.id }}',
+                                            '{{ appeal.student.name }}',
+                                            '{{ appeal.student.matric_no }}',
+                                            '{{ appeal.message|replace('\n', ' ')|replace("'", "&#39;")|escape }}',
+                                            '{{ appeal.quiz_result.quiz.title }}',
+                                            '{{ url_for('static', filename='profile_pics/' + appeal.student.image_file) }}'
+                                        )">
+                                        <i class="fas fa-search me-1"></i> Review
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <i class="fas fa-check-circle fa-3x mb-3 text-success opacity-25"></i>
+                                        <h5 class="fw-bold">All Caught Up!</h5>
+                                        <p class="mb-0">There are no pending appeals at this moment.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="globalReviewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold"><i class="fas fa-balance-scale me-2"></i>Review Appeal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body p-0">
+                <div class="p-4 bg-light border-bottom text-center">
+                    <img id="grImg" src="" class="rounded-circle border border-3 border-white shadow-sm mb-2" 
+                         style="width: 80px; height: 80px; object-fit: cover;">
+                    <h5 class="fw-bold mb-0" id="grName">Student Name</h5>
+                    <p class="text-muted small mb-0">ID: <span id="grMatric">...</span></p>
+                    <span class="badge bg-danger mt-2">Requesting Retake</span>
+                </div>
+
+                <div class="p-4">
+                    <div class="alert alert-secondary border-start border-4 border-dark mb-0">
+                        <strong class="text-uppercase small text-muted d-block mb-1">Defense Statement:</strong>
+                        <p class="mb-0 fst-italic fs-6" id="grMessage">...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer justify-content-between bg-white">
+                <form id="grRejectForm" method="POST">
+                    <button type="submit" class="btn btn-outline-danger fw-bold px-4">
+                        <i class="fas fa-times me-1"></i> Reject
+                    </button>
+                </form>
+                
+                <form id="grApproveForm" method="POST">
+                    <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm">
+                        <i class="fas fa-check me-1"></i> Grant Retake
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openGlobalReview(id, name, matric, message, quizTitle, imgSrc) {
+        document.getElementById('grName').innerText = name;
+        document.getElementById('grMatric').innerText = matric;
+        document.getElementById('grMessage').innerHTML = message;
+
+        // 🟢 Handle Avatar inside Modal (Uses UI-Avatars if it is default.jpg)
+        let imgEl = document.getElementById('grImg');
+        let fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=198754&color=fff&size=128&bold=true`;
+        
+        if (imgSrc.includes('default.jpg') || !imgSrc) {
+            imgEl.src = fallback;
+        } else {
+            imgEl.src = imgSrc;
+            imgEl.onerror = function() { this.src = fallback; };
+        }
+
+        // Set Form Actions
+        document.getElementById('grApproveForm').action = `/cbt/appeal/${id}/approve`;
+        document.getElementById('grRejectForm').action = `/cbt/appeal/${id}/reject`;
+
+        new bootstrap.Modal(document.getElementById('globalReviewModal')).show();
+    }
+</script>
+{% endblock %}

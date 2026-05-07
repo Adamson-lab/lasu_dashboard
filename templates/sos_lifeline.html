@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>S.O.S Lifeline | LASU Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        .sos-btn-pulse { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+        .card-sos { border-left: 5px solid #dc3545; transition: 0.3s; }
+        .card-sos:hover { transform: translateY(-5px); }
+        
+        /* Green border for Impact & Solved cards */
+        .card-impact, .card-solved { border-left: 5px solid #198754; background-color: #f8fff9; transition: 0.3s; }
+        .card-solved:hover { transform: translateY(-5px); }
+
+        .bank-details-box { background-color: #fff5f5; border: 1px dashed #dc3545; color: #c53030; }
+        
+        /* News Feed Styles */
+        .news-item-enter { animation: slideInRight 0.5s ease-out forwards; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .blog-source-badge { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .source-punch { background: #ffebee; color: #c62828; border: 1px solid #c62828; }
+        .source-lasu { background: #e8f5e9; color: #2e7d32; border: 1px solid #2e7d32; }
+        .source-nans { background: #fff3e0; color: #ef6c00; border: 1px solid #ef6c00; }
+        .source-gossip { background: #f3e5f5; color: #7b1fa2; border: 1px solid #7b1fa2; }
+        #live-news-feed::-webkit-scrollbar { width: 6px; }
+        #live-news-feed::-webkit-scrollbar-track { background: #f1f1f1; }
+        #live-news-feed::-webkit-scrollbar-thumb { background: #dc3545; border-radius: 10px; }
+
+        /* Custom Tabs Styling */
+        .nav-pills .nav-link { color: #555; font-weight: 600; padding: 10px 20px; border-radius: 50px; }
+        .nav-pills .nav-link.active { background-color: #dc3545; color: white; }
+        .nav-pills .nav-link#pills-resolved-tab.active { background-color: #198754; } /* Green for solved tab */
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-start mb-4 border-bottom pb-3">
+        <div>
+            <h2 class="fw-bold text-danger"><i class="fas fa-heartbeat"></i> S.O.S Lifeline</h2>
+            <p class="text-muted">Community Emergency Assistance</p>
+        </div>
+        
+        <div class="text-end">
+            <small class="text-uppercase fw-bold text-muted">Wallet Balance</small>
+            <h3 class="text-success fw-bold mb-2">₦{{ "{:,.2f}".format(balance) }}</h3>
+            <div class="wallet-actions">
+                {% if balance > 0 %}
+                    <form action="{{ url_for('student_withdraw') }}" method="POST" onsubmit="return confirm('Are you sure you want to withdraw ₦{{ '{:,.2f}'.format(balance) }} to your bank?');">
+                        <button class="btn btn-success btn-sm shadow-sm fw-bold mb-2">
+                            <i class="fas fa-university me-1"></i> Withdraw Funds
+                        </button>
+                    </form>
+                {% else %}
+                    <button class="btn btn-light btn-sm border text-muted mb-2" disabled>
+                        <i class="fas fa-wallet me-1"></i> Empty Wallet
+                    </button>
+                {% endif %}
+                <div class="mt-2"><a href="/portal" class="btn btn-outline-secondary btn-sm">Back to Portal</a></div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'message' else 'warning' }} alert-dismissible fade show mb-4 shadow-sm">
+                    <i class="fas fa-info-circle me-2"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <button class="btn btn-danger btn-lg w-100 py-4 sos-btn-pulse shadow" data-bs-toggle="modal" data-bs-target="#cashModal">
+                <i class="fas fa-money-bill-wave fa-2x mb-2"></i><br>URGENT CASH REQUEST
+            </button>
+        </div>
+        <div class="col-md-6 mb-3">
+            <button class="btn btn-warning btn-lg w-100 py-4 shadow" data-bs-toggle="modal" data-bs-target="#dataModal">
+                <i class="fas fa-wifi fa-2x mb-2"></i><br>DATA EMERGENCY
+            </button>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills mb-4 gap-2" id="pills-tab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="pills-live-tab" data-bs-toggle="pill" data-bs-target="#pills-live" type="button">
+                <i class="fas fa-bolt me-2"></i>Live Feed <span class="badge bg-white text-danger ms-1">{{ active_count }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link text-success" id="pills-resolved-tab" data-bs-toggle="pill" data-bs-target="#pills-resolved" type="button">
+                <i class="fas fa-check-circle me-2"></i>Solved Cases <span class="badge bg-success text-white ms-1">{{ resolved_count }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="pills-impact-tab" data-bs-toggle="pill" data-bs-target="#pills-impact" type="button">
+                <i class="fas fa-hand-holding-heart me-2"></i>My Impact
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="pills-mine-tab" data-bs-toggle="pill" data-bs-target="#pills-mine" type="button">
+                <i class="fas fa-user me-2"></i>My Requests
+            </button>
+        </li>
+    </ul>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="tab-content" id="pills-tabContent">
+                
+                <div class="tab-pane fade show active" id="pills-live">
+                    <div class="row">
+                        {% for req in feed %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100 card-sos">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h6 class="fw-bold mb-0 text-dark">{{ req.student_name }}</h6>
+                                        <span class="badge bg-{{ 'warning text-dark' if req.type == 'DATA' else 'danger' }} animate__animated animate__flash animate__infinite">{{ req.type }} SOS</span>
+                                    </div>
+                                    
+                                    <h3 class="fw-bold mt-2 text-dark">₦{{ "{:,.0f}".format(req.amount) }}</h3>
+                                    <p class="text-muted small mb-3 fst-italic">"{{ req.reason }}"</p>
+                                    
+                                    {% if req.type == 'DATA' %}
+                                        <div class="alert alert-light p-2 small mb-3 border">
+                                            <i class="fas fa-sim-card text-warning me-1"></i> <strong>{{ req.network }}</strong> ({{ req.phone_number[:4] }}***)
+                                        </div>
+                                    {% endif %}
+                                    {% if req.type == 'CASH' and req.bank_name %}
+                                        <div class="alert p-2 small mb-3 bank-details-box">
+                                            <i class="fas fa-university me-1"></i> <strong>{{ req.bank_name }}</strong><br>
+                                            <span class="font-monospace ms-4">{{ req.account_number }}</span>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="mt-auto">
+                                        <form action="{{ url_for('help_student', sos_id=req.id) }}" method="POST">
+                                            <button type="submit" class="btn btn-dark w-100 fw-bold">
+                                                <i class="fas fa-hand-holding-heart text-danger me-1"></i> Help {{ req.student_name.split()[0] }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white small text-muted d-flex justify-content-between">
+                                    <span><i class="far fa-clock me-1"></i>{{ req.created_at.strftime('%I:%M %p') }}</span>
+                                    <span><i class="fas fa-shield-alt text-success"></i> Verified</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-peace fa-4x text-muted opacity-50 mb-3"></i>
+                            <h5 class="text-muted">No active emergencies.</h5>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="pills-resolved">
+                    <div class="row">
+                        {% for req in resolved %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100 card-solved">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h6 class="fw-bold mb-0 text-success">{{ req.student_name }}</h6>
+                                        <span class="badge bg-success"><i class="fas fa-check-circle"></i> RESOLVED</span>
+                                    </div>
+                                    
+                                    <h3 class="fw-bold mt-2 text-success opacity-75 text-decoration-line-through">₦{{ "{:,.0f}".format(req.amount) }}</h3>
+                                    <p class="text-muted small mb-2 fst-italic">"{{ req.reason }}"</p>
+                                    
+                                    <div class="alert alert-success border-0 bg-success bg-opacity-10 mt-3 mb-0 small">
+                                        <i class="fas fa-hands-helping me-1"></i> <strong>Success!</strong> Funded by a peer.
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white small text-muted text-end">
+                                    Case Closed on {{ req.created_at.strftime('%d %b') }}
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5">
+                            <h5 class="text-muted">No solved cases yet.</h5>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="pills-impact">
+                    <div class="row">
+                        {% for req in my_impact %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm card-impact h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-0">{{ req.student_name }}</h6>
+                                    <span class="badge bg-primary mb-2">FUNDED BY YOU</span>
+                                    <h3 class="fw-bold text-success">₦{{ "{:,.0f}".format(req.amount) }}</h3>
+                                    <p class="text-muted small mb-0 fst-italic">"{{ req.reason }}"</p>
+                                </div>
+                                <div class="card-footer bg-white small text-success fw-bold text-center">
+                                    <i class="fas fa-thumbs-up me-1"></i> You helped on {{ req.created_at.strftime('%d %b') }}
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-hand-holding-heart fa-4x text-muted opacity-50 mb-3"></i>
+                            <h5 class="text-muted">You haven't helped anyone yet.</h5>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="pills-mine">
+                    <div class="row">
+                        {% for req in my_requests %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100" style="border-left: 5px solid #6c757d;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="badge bg-secondary">{{ req.type }}</span>
+                                        <span class="badge {{ 'bg-success' if req.status in ['Resolved', 'Funded'] else 'bg-warning text-dark' }}">{{ req.status }}</span>
+                                    </div>
+                                    <h4 class="mt-2">₦{{ "{:,.0f}".format(req.amount) }}</h4>
+                                    <p class="small text-muted">{{ req.reason }}</p>
+                                    <small class="text-muted d-block">{{ req.created_at.strftime('%d %b, %I:%M %p') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5">
+                            <h5 class="text-muted">No history.</h5>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-bolt text-warning me-2"></i>Campus Newsstream</span>
+                    <span class="badge bg-danger">LIVE</span>
+                </div>
+                <div class="card-body p-0">
+                    <div id="live-news-feed" style="height: 400px; overflow-y: auto; position: relative;">
+                        <div class="text-center pt-5 mt-5 text-muted">
+                            <div class="spinner-grow text-danger" role="status"></div>
+                            <p class="mt-2 small">Fetching latest headlines...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if history %}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white fw-bold">
+                    <i class="fas fa-history me-2 text-primary"></i>My Recent Transactions
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <tbody>
+                                {% for tx in history %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <span class="d-block fw-bold text-dark">{{ "Money In" if tx.type == 'CREDIT' else "Money Out" }}</span>
+                                        <small class="text-muted">{{ tx.date.strftime('%d %b') }}</small>
+                                    </td>
+                                    <td class="text-end pe-3 fw-bold {{ 'text-success' if tx.type == 'CREDIT' else 'text-danger' }}">
+                                        {{ '+' if tx.type == 'CREDIT' else '-' }}₦{{ "{:,.0f}".format(tx.amount) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cashModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">Request Urgent Cash</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('create_sos') }}" method="POST">
+                <input type="hidden" name="type" value="CASH">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="fw-bold">Amount (₦)</label>
+                        <input type="number" name="amount" class="form-control" max="5000" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="small fw-bold text-muted">Bank Name</label>
+                            <select name="bank_name" class="form-select" required>
+                                <option value="GTBank">GTBank</option>
+                                <option value="Kuda">Kuda</option>
+                                <option value="OPay">OPay</option>
+                                <option value="PalmPay">PalmPay</option>
+                                <option value="First Bank">First Bank</option>
+                                <option value="Zenith Bank">Zenith Bank</option>
+                                <option value="UBA">UBA</option>
+                                <option value="Access Bank">Access Bank</option>
+                                <option value="Moniepoint">Moniepoint</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="small fw-bold text-muted">Account Number</label>
+                            <input type="text" name="account_number" class="form-control" maxlength="10" required>
+                        </div>
+                    </div>
+                    <textarea name="reason" class="form-control" rows="2" required placeholder="Reason..."></textarea>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-danger w-100">Broadcast</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dataModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold">Data Emergency</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('create_sos') }}" method="POST">
+                <input type="hidden" name="type" value="DATA">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="fw-bold">Network</label>
+                        <select name="network" class="form-select" required>
+                            <option>MTN</option><option>GLO</option><option>AIRTEL</option><option>9MOBILE</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Phone</label>
+                        <input type="text" name="phone_number" class="form-control" value="{{ student.phone_number }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Bundle</label>
+                        <select name="amount" class="form-select" required>
+                            <option value="100">100MB (₦100)</option>
+                            <option value="200">200MB (₦200)</option>
+                            <option value="500">500MB (₦500)</option>
+                            <option value="1000">1GB (₦1000)</option>
+                        </select>
+                    </div>
+                    <textarea name="reason" class="form-control" rows="2" placeholder="Reason..." required></textarea>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-warning w-100">Broadcast</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    /* -----------------------------------------------------------
+       🚀 QUANTUM NEWS AGGREGATOR ENGINE v5.0 (REAL-TIME SIMULATION)
+       ----------------------------------------------------------- */
+    const newsDatabase = [
+        { source: "PUNCH", type: "source-punch", title: "BREAKING: FG & ASUU sign historic 'No Strike' agreement for 2026", time: "Just now" },
+        { source: "VANGUARD", type: "source-punch", title: "NELFUND disburses ₦161bn student loans to 864,000 applicants", time: "2 mins ago" },
+        { source: "LASU PR", type: "source-lasu", title: "VC approves immediate recruitment into LASU Cadet Corps", time: "5 mins ago" },
+        { source: "TETFUND", type: "source-nans", title: "FG allocates ₦6.4bn intervention fund to 271 institutions", time: "12 mins ago" },
+        { source: "LASU PR", type: "source-lasu", title: "Urgent: Final deadline for LACACA clearance announced", time: "15 mins ago" },
+        { source: "SUG", type: "source-nans", title: "Student Union secures 50% discount on new shuttle buses", time: "22 mins ago" },
+        { source: "BURSARY", type: "source-lasu", title: "School fees portal opens for late payment (No Penalty)", time: "30 mins ago" },
+        { source: "EXAMS", type: "source-lasu", title: "GNS 102 CBT Results have been released - Check Portal", time: "45 mins ago" },
+        { source: "CAMPUS GIST", type: "source-gossip", title: "Who is the 200L student that drove a Tesla to Faculty of Science today?", time: "1 hr ago" },
+        { source: "SPORTS", type: "source-gossip", title: "Dean's Cup: Engineering destroys Law Faculty 4-0 in semi-finals", time: "1 hr ago" },
+        { source: "TECH CABAL", type: "source-gossip", title: "LASU Tech Bros win National Hackathon, bring home ₦5M prize", time: "2 hrs ago" },
+        { source: "TRENDING", type: "source-gossip", title: "Viral Video: The proposal at the jagged gate went wrong!", time: "2 hrs ago" },
+        { source: "BBC PIDGIN", type: "source-punch", title: "See how Nigerian students dey use AI pass exams", time: "3 hrs ago" },
+        { source: "CHANNELS", type: "source-punch", title: "FG announces new minimum wage for NYSC corp members", time: "3 hrs ago" },
+        { source: "NANS", type: "source-nans", title: "NANS President meets Tinubu over hostel accommodation fees", time: "4 hrs ago" },
+        { source: "ICT UNIT", type: "source-lasu", title: "Portal maintenance scheduled for 12:00 AM tonight", time: "5 hrs ago" },
+        { source: "LIBRARY", type: "source-lasu", title: "New E-Library access codes sent to student emails", time: "6 hrs ago" }
+    ];
+
+    // Initialize
+    document.addEventListener("DOMContentLoaded", function() {
+        startNewsEngine();
+    });
+
+    function startNewsEngine() {
+        const feed = document.getElementById('live-news-feed');
+        if(feed) {
+            feed.innerHTML = ""; // Clear loader
+            
+            // 🎲 SHUFFLE THE NEWS DATABASE (So it looks fresh every reload)
+            const shuffledNews = newsDatabase.sort(() => 0.5 - Math.random());
+
+            // Initial Load of 5 random items
+            for(let i=0; i<5; i++) {
+                addNewsItem(shuffledNews[i], false);
+            }
+
+            // Live "Push" simulation every 5 seconds
+            let dbIndex = 5;
+            setInterval(() => {
+                if(dbIndex >= shuffledNews.length) dbIndex = 0; // Loop
+                
+                // 30% chance to push a "Breaking News" update
+                if(Math.random() > 0.3) {
+                    addNewsItem(shuffledNews[dbIndex], true);
+                    dbIndex++;
+                }
+            }, 5000);
+        }
+    }
+
+    function addNewsItem(news, animate) {
+        const feed = document.getElementById('live-news-feed');
+        if(!feed) return;
+        
+        // 🕒 Dynamic Time Generator (Makes old news look fresh)
+        const randomTime = animate ? "Just now" : Math.floor(Math.random() * 59) + " mins ago";
+        const displayTime = news.time === "Just now" ? "Just now" : randomTime;
+
+        // Create Element
+        const item = document.createElement('div');
+        item.className = `p-3 border-bottom bg-white news-item-wrapper ${animate ? 'news-item-enter' : ''}`;
+        item.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="me-3">
+                    <span class="blog-source-badge ${news.type} mb-1 d-inline-block">${news.source}</span>
+                    <h6 class="fw-bold mb-1 text-dark hover-link" style="font-size: 0.95rem; cursor:pointer;" onclick="readNews('${news.title}')">${news.title}</h6>
+                    <div class="small text-muted">
+                        <i class="far fa-clock me-1"></i>${displayTime} 
+                        <span class="mx-1">•</span> 
+                        <a href="#" class="text-primary text-decoration-none" style="font-size:0.8em">Read More</a>
+                    </div>
+                </div>
+                ${news.type === 'source-gossip' || news.type === 'source-punch' 
+                    ? `<img src="https://picsum.photos/seed/${Math.random()}/50/50" class="rounded" width="50" height="50">` 
+                    : `<div class="bg-light rounded d-flex align-items-center justify-content-center text-muted" style="width:50px; height:50px;"><i class="fas fa-newspaper"></i></div>`
+                }
+            </div>
+        `;
+
+        // Insert at top
+        feed.insertBefore(item, feed.firstChild);
+
+        // Maintenance: Remove old items if list gets too long to save memory
+        if(feed.children.length > 20) {
+            feed.removeChild(feed.lastChild);
+        }
+    }
+    
+    function readNews(title) {
+        // Simple alert for now, could be expanded to a modal or full page
+        alert("Reading Article: " + title);
+    }
+</script>
+</body>
+</html>

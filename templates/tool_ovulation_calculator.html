@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ovulation Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0dcaf0; 
+            --math-purple: #6f42c1;
+            --math-pink: #e83e8c;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-purple); box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            line-height: 1.2;
+        }
+
+        .data-input {
+            width: 100%;
+            border: none;
+            padding: 15px;
+            font-size: 1.4rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+            transition: all 0.3s;
+        }
+        
+        .stat-card.primary { border-color: rgba(111, 66, 193, 0.4); background: rgba(111, 66, 193, 0.05); }
+        .stat-card.cyan { border-color: rgba(13, 202, 240, 0.4); background: rgba(13, 202, 240, 0.05); }
+        .stat-card.danger { border-color: rgba(220, 53, 69, 0.3); background: rgba(220, 53, 69, 0.02); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+        
+        .primary .stat-val { color: var(--math-purple); font-size: 1.7rem; }
+        .cyan .stat-val { color: #0aaaaa; }
+        .danger .stat-val { color: var(--math-red); }
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* Advanced Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            min-height: 400px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center center;
+        }
+
+        #cycleCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .formula-bar span { color: #adb5bd; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; text-transform: uppercase; margin-right: 8px;}
+
+        .legend {
+            display: flex;
+            gap: 15px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #adb5bd;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; text-align: center; }
+            .legend { flex-wrap: wrap; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-calendar-alt"></i> Cycle Data
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter a valid past date.
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label">First Day of Last Period (LMP)</div>
+                <input type="date" class="data-input" id="valDate" onchange="calculateOvulation()">
+            </div>
+
+            <div class="input-group-custom mb-0">
+                <div class="input-label">Average Cycle Length <small>(Days)</small></div>
+                <div class="d-flex align-items-center bg-white">
+                    <input type="range" class="form-range flex-grow-1 mx-3" id="valCycleSlider" min="21" max="35" value="28" oninput="syncSlider()">
+                    <input type="number" class="data-input border-start" id="valCycleNum" value="28" min="21" max="45" style="width: 90px; padding: 15px 10px;" oninput="syncNum()">
+                </div>
+            </div>
+
+            <button class="btn btn-outline-primary w-100 fw-bold mt-4" onclick="setTodayLMP()">
+                <i class="fas fa-clock me-2"></i> Set LMP to 14 Days Ago
+            </button>
+
+            <div class="alert alert-info mt-auto mb-0 border-0" style="background: rgba(111, 66, 193, 0.05); color: var(--math-purple);">
+                <i class="fas fa-microscope mb-2 fa-lg"></i><br>
+                <strong>Biological Standard:</strong><br>
+                Regardless of cycle length, the <i>luteal phase</i> (from ovulation to the next period) is almost exactly 14 days for most women. Peak fertility occurs in the 5 days leading up to ovulation.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card primary">
+                    <div class="stat-label">Estimated Ovulation</div>
+                    <div class="stat-val">
+                        <span id="resOvulation">--</span>
+                    </div>
+                    <div class="stat-sub">Peak Fertility Day</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card cyan">
+                    <div class="stat-label">Fertile Window</div>
+                    <div class="stat-val" style="font-size: 1.3rem;">
+                        <span id="resWindowStart">--</span>
+                        <span style="font-size: 0.9rem; color: #6c757d;">to</span>
+                        <span id="resWindowEnd">--</span>
+                    </div>
+                    <div class="stat-sub">Highest chance of conception</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card danger">
+                    <div class="stat-label">Next Period Date</div>
+                    <div class="stat-val">
+                        <span id="resNext">--</span>
+                    </div>
+                    <div class="stat-sub" id="subNextDays">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="simulation-box mt-2">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="cycleCanvas"></canvas>
+            </div>
+            <div class="telemetry-bar">
+                <div class="legend">
+                    <div class="legend-item"><div class="dot" style="background:#dc3545;"></div> Period</div>
+                    <div class="legend-item"><div class="dot" style="background:#0dcaf0;"></div> Fertile</div>
+                    <div class="legend-item"><div class="dot" style="background:#6f42c1;"></div> Ovulation</div>
+                    <div class="legend-item"><div class="dot" style="background:#ffffff; border: 2px solid #212529;"></div> Today</div>
+                </div>
+                <div class="formula-bar">
+                    <span>Engine:</span> Luteal Phase = 14 Days
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valDate = document.getElementById('valDate');
+    const valCycleSlider = document.getElementById('valCycleSlider');
+    const valCycleNum = document.getElementById('valCycleNum');
+    const errorBanner = document.getElementById('errorBanner');
+
+    const resOvulation = document.getElementById('resOvulation');
+    const resWindowStart = document.getElementById('resWindowStart');
+    const resWindowEnd = document.getElementById('resWindowEnd');
+    const resNext = document.getElementById('resNext');
+    const subNextDays = document.getElementById('subNextDays');
+
+    const canvas = document.getElementById('cycleCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // State
+    let S = {
+        cycleLength: 28,
+        daysSinceLMP: 0,
+        ovulationDay: 14,
+        fertileStart: 9,
+        fertileEnd: 15,
+        isValid: false
+    };
+
+    function setTodayLMP() {
+        const today = new Date();
+        today.setDate(today.getDate() - 14); // Set to 14 days ago so today = ovulation
+        valDate.value = today.toISOString().split('T')[0];
+        calculateOvulation();
+    }
+
+    function syncSlider() {
+        valCycleNum.value = valCycleSlider.value;
+        calculateOvulation();
+    }
+
+    function syncNum() {
+        let val = parseInt(valCycleNum.value);
+        if (val >= 21 && val <= 35) valCycleSlider.value = val;
+        calculateOvulation();
+    }
+
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
+            
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            drawCycle(); 
+        }
+    });
+    resizeObserver.observe(container);
+
+    function calculateOvulation() {
+        if (!valDate.value) return;
+
+        const inputDate = new Date(valDate.value);
+        const today = new Date();
+        
+        inputDate.setHours(0,0,0,0);
+        today.setHours(0,0,0,0);
+
+        if (inputDate > today) {
+            errorBanner.style.display = 'block';
+            S.isValid = false;
+            resetUI();
+            return;
+        }
+        errorBanner.style.display = 'none';
+        S.isValid = true;
+
+        S.cycleLength = parseInt(valCycleNum.value);
+        if (isNaN(S.cycleLength)) S.cycleLength = 28;
+
+        const msPerDay = 1000 * 60 * 60 * 24;
+        S.daysSinceLMP = Math.floor((today - inputDate) / msPerDay);
+
+        // Core Bio-Math: Luteal phase is strictly 14 days prior to next period.
+        S.ovulationDay = S.cycleLength - 14;
+        S.fertileStart = S.ovulationDay - 5;
+        S.fertileEnd = S.ovulationDay + 1; // Ovum lives 12-24 hours after ovulation
+
+        // Calculate Dates
+        const nextPeriodDate = new Date(inputDate.getTime());
+        nextPeriodDate.setDate(nextPeriodDate.getDate() + S.cycleLength);
+
+        const ovulationDate = new Date(inputDate.getTime());
+        ovulationDate.setDate(ovulationDate.getDate() + S.ovulationDay);
+
+        const fStartDate = new Date(inputDate.getTime());
+        fStartDate.setDate(fStartDate.getDate() + S.fertileStart);
+
+        const fEndDate = new Date(inputDate.getTime());
+        fEndDate.setDate(fEndDate.getDate() + S.fertileEnd);
+
+        // Format
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+        
+        resOvulation.innerText = ovulationDate.toLocaleDateString('en-US', options);
+        resWindowStart.innerText = fStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        resWindowEnd.innerText = fEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        resNext.innerText = nextPeriodDate.toLocaleDateString('en-US', options);
+
+        let daysToNext = Math.floor((nextPeriodDate - today) / msPerDay);
+        if (daysToNext > 0) {
+            subNextDays.innerText = `In ${daysToNext} Days`;
+        } else if (daysToNext === 0) {
+            subNextDays.innerText = `Today!`;
+            subNextDays.style.color = 'var(--math-red)';
+        } else {
+            subNextDays.innerText = `Late by ${Math.abs(daysToNext)} Days`;
+            subNextDays.style.color = 'var(--math-red)';
+        }
+
+        drawCycle();
+    }
+
+    function resetUI() {
+        resOvulation.innerText = '--';
+        resWindowStart.innerText = '--';
+        resWindowEnd.innerText = '--';
+        resNext.innerText = '--';
+        subNextDays.innerText = '--';
+        subNextDays.style.color = '#6c757d';
+        drawCycle();
+    }
+
+    // --- CIRCULAR CANVAS VISUALIZER ---
+    function drawCycle() {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        if(cw === 0) return;
+        ctx.clearRect(0, 0, cw, ch);
+
+        if (!S.isValid) return;
+
+        const cx = cw / 2;
+        const cy = ch / 2;
+        const radius = Math.min(cw * 0.35, ch * 0.35);
+        ctx.lineWidth = 25; // Track thickness
+
+        // Angle math: Top (-Math.PI/2) is Day 0. Goes clockwise to Math.PI*1.5.
+        // Full circle = Math.PI * 2. 
+        const anglePerDay = (Math.PI * 2) / S.cycleLength;
+        const startOffset = -Math.PI / 2;
+
+        const getAngle = (day) => startOffset + (day * anglePerDay);
+
+        // 1. Draw Ghost Track (Luteal Phase default color)
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        ctx.stroke();
+
+        // 2. Draw Menstruation (Days 0 to 5)
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, getAngle(0), getAngle(5));
+        ctx.strokeStyle = '#dc3545'; // Red
+        ctx.stroke();
+
+        // 3. Draw Fertile Window (Cyan)
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, getAngle(S.fertileStart), getAngle(S.fertileEnd));
+        ctx.strokeStyle = '#0dcaf0'; // Cyan
+        ctx.shadowColor = '#0dcaf0';
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+        ctx.shadowBlur = 0; // reset
+
+        // 4. Draw Ovulation Node (Purple)
+        let ovAngle = getAngle(S.ovulationDay);
+        let ovX = cx + Math.cos(ovAngle) * radius;
+        let ovY = cy + Math.sin(ovAngle) * radius;
+
+        ctx.beginPath();
+        ctx.arc(ovX, ovY, 15, 0, Math.PI * 2);
+        ctx.fillStyle = '#6f42c1';
+        ctx.shadowColor = '#6f42c1';
+        ctx.shadowBlur = 20;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('OV', ovX, ovY);
+
+        // 5. Draw Ticks around the circle
+        ctx.fillStyle = '#adb5bd';
+        ctx.font = 'bold 12px "Fira Code", monospace';
+        for (let i = 0; i < S.cycleLength; i += 2) { // Every 2 days
+            let ang = getAngle(i);
+            let innerR = radius - 20;
+            let outerR = radius - 15;
+
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(ang) * innerR, cy + Math.sin(ang) * innerR);
+            ctx.lineTo(cx + Math.cos(ang) * outerR, cy + Math.sin(ang) * outerR);
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Text
+            let textR = radius - 35;
+            if (i % 4 === 0 || i === 0) {
+                ctx.fillText(i, cx + Math.cos(ang) * textR, cy + Math.sin(ang) * textR);
+            }
+        }
+
+        // 6. Draw "TODAY" Marker
+        // Where is the user relative to their cycle right now?
+        let currentCycleDay = S.daysSinceLMP % S.cycleLength;
+        // If daysSinceLMP is negative, they entered a future date (prevented by validation)
+        if (currentCycleDay < 0) currentCycleDay = 0; 
+        
+        let curAngle = getAngle(currentCycleDay);
+        let curX = cx + Math.cos(curAngle) * radius;
+        let curY = cy + Math.sin(curAngle) * radius;
+
+        ctx.beginPath();
+        ctx.arc(curX, curY, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#212529';
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Label Today outside the circle
+        let todayTextR = radius + 30;
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 16px "Segoe UI", sans-serif';
+        ctx.fillText('TODAY', cx + Math.cos(curAngle) * todayTextR, cy + Math.sin(curAngle) * todayTextR);
+
+        // Center Data
+        ctx.fillStyle = '#adb5bd';
+        ctx.font = 'bold 14px "Segoe UI", sans-serif';
+        ctx.fillText('Current Day', cx, cy - 15);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 42px "Fira Code", monospace';
+        ctx.fillText(currentCycleDay, cx, cy + 25);
+    }
+
+    // INIT
+    setTimeout(() => { setTodayLMP(); }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

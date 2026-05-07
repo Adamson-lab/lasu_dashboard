@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V210 Orbital Alignment Matrix | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           V210 MASTER THEME ENGINE
+           ========================================== */
+        [data-theme="dark"] {
+            --bg-master: #020617;
+            --bg-surface: #0f172a;
+            --border-core: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --grid-line: rgba(255, 255, 255, 0.02);
+            --panel-bg: #050b14;
+            --input-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] {
+            --bg-master: #f8fafc;
+            --bg-surface: #ffffff;
+            --border-core: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --grid-line: rgba(0, 0, 0, 0.04);
+            --panel-bg: #f1f5f9;
+            --input-bg: #ffffff;
+        }
+
+        :root {
+            --neon-blue: #0ea5e9;
+            --neon-green: #10b981;
+            --neon-red: #f43f5e;
+            --neon-amber: #f59e0b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-master);
+            color: var(--text-main);
+            padding: 40px 20px;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .tool-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8);
+            border: 1px solid var(--border-core);
+        }
+
+        .btn-theme {
+            background: var(--bg-surface); 
+            color: var(--text-main);
+            border: 1px solid var(--border-core); 
+            padding: 8px 15px;
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-theme:hover { 
+            border-color: var(--neon-amber); 
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); 
+        }
+
+        /* ==========================================
+           INPUT PANEL
+           ========================================== */
+        .vector-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-core);
+            border-radius: 10px;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .input-label {
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .year-input {
+            width: 100%; 
+            background: var(--input-bg); 
+            border: 2px solid var(--border-core);
+            color: var(--neon-amber); 
+            padding: 20px; 
+            font-size: 3rem;
+            font-family: 'Courier New', monospace; 
+            font-weight: 900;
+            text-align: center;
+            border-radius: 8px; 
+            outline: none; 
+            transition: all 0.3s;
+            letter-spacing: 5px;
+        }
+
+        .year-input:focus {
+            border-color: var(--neon-amber);
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.2);
+        }
+
+        .btn-execute {
+            background: transparent; 
+            color: var(--neon-amber);
+            border: 2px solid var(--neon-amber); 
+            padding: 15px;
+            border-radius: 6px; 
+            font-size: 1.1rem; 
+            font-weight: 900;
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            cursor: pointer;
+            transition: all 0.2s; 
+            margin-top: 20px;
+        }
+        .btn-execute:hover { 
+            background: var(--neon-amber); 
+            color: #000; 
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.5); 
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-preset {
+            background: var(--bg-surface);
+            border: 1px dashed var(--border-core);
+            color: var(--text-muted);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-preset:hover {
+            border-color: var(--neon-amber);
+            color: var(--neon-amber);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        /* ==========================================
+           OUTPUT MATRIX
+           ========================================== */
+        .output-panel {
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            height: 100%;
+        }
+
+        .hero-status {
+            background: linear-gradient(135deg, var(--panel-bg) 0%, #1a1005 100%);
+            border: 1px solid var(--border-core); 
+            border-radius: 12px; 
+            padding: 40px;
+            text-align: center; 
+            border-bottom: 4px solid var(--border-core); 
+            transition: all 0.4s ease;
+        }
+        
+        .hero-status.is-leap {
+            border-bottom-color: var(--neon-green);
+            background: linear-gradient(135deg, var(--panel-bg) 0%, #061a10 100%);
+        }
+
+        .hero-status.not-leap {
+            border-bottom-color: var(--neon-red);
+            background: linear-gradient(135deg, var(--panel-bg) 0%, #1a0606 100%);
+        }
+
+        .status-title {
+            font-size: 1rem; 
+            font-weight: 900; 
+            color: var(--text-muted);
+            text-transform: uppercase; 
+            letter-spacing: 3px; 
+            margin-bottom: 10px;
+        }
+
+        .status-value {
+            font-family: 'Courier New', monospace; 
+            font-size: 3.5rem; 
+            font-weight: 900;
+            color: var(--text-main); 
+            line-height: 1.1; 
+            margin-bottom: 10px;
+        }
+
+        .hero-status.is-leap .status-value { color: var(--neon-green); text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        .hero-status.not-leap .status-value { color: var(--neon-red); text-shadow: 0 0 20px rgba(244, 63, 94, 0.4); }
+
+        /* Logic Gates Breakdown */
+        .logic-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .logic-box {
+            background: var(--panel-bg); 
+            border: 1px solid var(--border-core);
+            border-radius: 8px; 
+            padding: 20px; 
+            text-align: center; 
+            position: relative;
+        }
+
+        .logic-lbl {
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            margin-bottom: 10px;
+        }
+
+        .logic-val {
+            font-family: 'Courier New', monospace; 
+            font-size: 1.5rem; 
+            font-weight: 900; 
+            color: var(--text-main); 
+        }
+
+        .gate-pass { border-color: var(--neon-green); background: rgba(16, 185, 129, 0.05); }
+        .gate-pass .logic-val { color: var(--neon-green); }
+        
+        .gate-fail { border-color: var(--neon-red); background: rgba(244, 63, 94, 0.05); }
+        .gate-fail .logic-val { color: var(--neon-red); }
+
+        /* Temporal Horizon (Future/Past Leap Years) */
+        .horizon-container {
+            background: var(--panel-bg); 
+            border: 1px solid var(--border-core);
+            border-radius: 8px; 
+            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .horizon-col {
+            width: 45%;
+        }
+
+        .horizon-header {
+            font-size: 0.8rem; 
+            font-weight: 900; 
+            color: var(--neon-amber); 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-core);
+            padding-bottom: 10px;
+        }
+
+        .horizon-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .horizon-list li {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            padding: 5px 0;
+        }
+
+        .insights-panel {
+            background: var(--panel-bg); 
+            border-left: 4px solid var(--neon-amber);
+            padding: 20px; 
+            border-radius: 0 8px 8px 0; 
+            font-size: 0.95rem; 
+            font-weight: 600;
+            color: var(--text-main); 
+            border-top: 1px solid var(--border-core);
+            border-right: 1px solid var(--border-core); 
+            border-bottom: 1px solid var(--border-core);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--border-core);">
+            <h2 class="fw-bold m-0" style="color: var(--text-main);">
+                <i class="fas fa-globe-americas me-2" style="color: var(--neon-amber);"></i> GREGORIAN ORBITAL MATRIX
+                <span class="badge ms-2" style="background: var(--text-main); color: var(--bg-master); font-size: 0.75rem; vertical-align: middle; letter-spacing: 1px;">V210 PROTOCOL</span>
+            </h2>
+            <div class="d-flex gap-2">
+                <button class="btn-theme" id="themeToggleBtn" onclick="toggleMasterTheme()" title="Toggle Environment">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary fw-bold border-0" style="color: var(--text-main); background: var(--panel-bg);">
+                    <i class="fas fa-arrow-left me-1"></i> Terminate
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                <div class="vector-panel">
+                    
+                    <div>
+                        <div class="input-label">Target Orbital Year</div>
+                        <input type="number" id="inputYear" class="year-input" placeholder="YYYY">
+                    </div>
+
+                    <button class="btn-execute" onclick="executeOrbitalAudit()">Audit Alignment</button>
+
+                    <div style="margin-top: 30px;">
+                        <div class="input-label">Tactical Injections</div>
+                        <div class="preset-grid">
+                            <button class="btn-preset" onclick="injectYear(new Date().getFullYear())">Current Year</button>
+                            <button class="btn-preset" onclick="injectYear(2000)">Year 2000 (Y2K)</button>
+                            <button class="btn-preset" onclick="injectYear(1900)">Year 1900</button>
+                            <button class="btn-preset" onclick="injectYear(2100)">Year 2100</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="output-panel">
+                    
+                    <div class="hero-status" id="heroStatusBox">
+                        <div class="status-title">Orbital Resonance Status</div>
+                        <div class="status-value" id="displayMainResult">AWAITING VECTOR</div>
+                        <div style="font-size: 1.1rem; color: var(--text-muted); font-weight: 700;" id="displayDaysText">
+                            Input a year to calculate days in February.
+                        </div>
+                    </div>
+
+                    <div class="logic-grid">
+                        <div class="logic-box" id="gate4">
+                            <div class="logic-lbl">Gate 1: Divisible by 4?</div>
+                            <div class="logic-val" id="valGate4">--</div>
+                        </div>
+                        <div class="logic-box" id="gate100">
+                            <div class="logic-lbl">Gate 2: Century (100)?</div>
+                            <div class="logic-val" id="valGate100">--</div>
+                        </div>
+                        <div class="logic-box" id="gate400">
+                            <div class="logic-lbl">Gate 3: 400-Year Rule?</div>
+                            <div class="logic-val" id="valGate400">--</div>
+                        </div>
+                    </div>
+
+                    <div class="horizon-container">
+                        <div class="horizon-col">
+                            <div class="horizon-header"><i class="fas fa-history me-2"></i>Previous Anomalies</div>
+                            <ul class="horizon-list" id="listPast">
+                                <li>----</li>
+                                <li>----</li>
+                                <li>----</li>
+                                <li>----</li>
+                                <li>----</li>
+                            </ul>
+                        </div>
+                        <div class="horizon-col">
+                            <div class="horizon-header" style="color: var(--neon-blue);"><i class="fas fa-fast-forward me-2"></i>Future Anomalies</div>
+                            <ul class="horizon-list" id="listFuture">
+                                <li>----</li>
+                                <li>----</li>
+                                <li>----</li>
+                                <li>----</li>
+                                <li>----</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="insights-panel" id="aiInsightsBox">
+                        <i class="fas fa-satellite-dish me-2"></i> 
+                        <span id="aiInsightsText">System online. Ready to analyze Gregorian orbital alignment.</span>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // THEME ENGINE
+        // ==========================================
+        function toggleMasterTheme() {
+            let htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let newTheme;
+            
+            if (currentTheme === 'dark') {
+                newTheme = 'light';
+            } else {
+                newTheme = 'dark';
+            }
+
+            htmlElement.setAttribute('data-theme', newTheme);
+            
+            let themeIconElement = document.getElementById('themeIcon');
+            if (newTheme === 'light') {
+                themeIconElement.className = 'fas fa-moon';
+            } else {
+                themeIconElement.className = 'fas fa-sun';
+            }
+
+            localStorage.setItem('lisa_v210_theme_leap', newTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedTheme = localStorage.getItem('lisa_v210_theme_leap');
+            
+            if (savedTheme !== null) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                let themeIconElement = document.getElementById('themeIcon');
+                
+                if (savedTheme === 'light') {
+                    themeIconElement.className = 'fas fa-moon';
+                } else {
+                    themeIconElement.className = 'fas fa-sun';
+                }
+            }
+
+            // Inject current year automatically on load
+            let currentYear = new Date().getFullYear();
+            document.getElementById('inputYear').value = currentYear;
+            executeOrbitalAudit();
+        });
+
+        // ==========================================
+        // TACTICAL INJECTOR
+        // ==========================================
+        function injectYear(yearValue) {
+            document.getElementById('inputYear').value = yearValue;
+            executeOrbitalAudit();
+        }
+
+        // ==========================================
+        // V210 FULLY EXPANDED LOGIC MATHEMATICS
+        // ==========================================
+        function determineLeapYearLogic(targetYear) {
+            let isDivisibleBy4 = false;
+            let isDivisibleBy100 = false;
+            let isDivisibleBy400 = false;
+            let isUltimatelyLeapYear = false;
+
+            // Explicit mathematical checks
+            if (targetYear % 4 === 0) {
+                isDivisibleBy4 = true;
+            }
+
+            if (targetYear % 100 === 0) {
+                isDivisibleBy100 = true;
+            }
+
+            if (targetYear % 400 === 0) {
+                isDivisibleBy400 = true;
+            }
+
+            // The Gregorian Algorithmic Logic Tree
+            if (isDivisibleBy4 === true) {
+                if (isDivisibleBy100 === true) {
+                    if (isDivisibleBy400 === true) {
+                        isUltimatelyLeapYear = true;
+                    } else {
+                        isUltimatelyLeapYear = false;
+                    }
+                } else {
+                    isUltimatelyLeapYear = true;
+                }
+            } else {
+                isUltimatelyLeapYear = false;
+            }
+
+            // Return full diagnostic data
+            let diagnosticData = {
+                isLeap: isUltimatelyLeapYear,
+                div4: isDivisibleBy4,
+                div100: isDivisibleBy100,
+                div400: isDivisibleBy400
+            };
+
+            return diagnosticData;
+        }
+
+        function findHistoricalAnomalies(startYear, lookBackward) {
+            let anomalousYears = [];
+            let currentCheckYear = startYear;
+
+            // Search loop
+            while (anomalousYears.length < 5) {
+                if (lookBackward === true) {
+                    currentCheckYear = currentCheckYear - 1;
+                } else {
+                    currentCheckYear = currentCheckYear + 1;
+                }
+
+                let diagnosticCheck = determineLeapYearLogic(currentCheckYear);
+
+                if (diagnosticCheck.isLeap === true) {
+                    anomalousYears.push(currentCheckYear);
+                }
+            }
+
+            return anomalousYears;
+        }
+
+        // ==========================================
+        // V210 MASTER CONTROLLER
+        // ==========================================
+        function executeOrbitalAudit() {
+            let inputElement = document.getElementById('inputYear');
+            let rawValue = inputElement.value;
+
+            if (rawValue === "") {
+                alert("Critical System Error: A valid target year is required.");
+                return;
+            }
+
+            let targetYear = parseInt(rawValue);
+
+            // 1. Run Mathematical Diagnostics
+            let diagnostics = determineLeapYearLogic(targetYear);
+
+            // 2. Update Hero UI
+            let heroBox = document.getElementById('heroStatusBox');
+            let mainDisplay = document.getElementById('displayMainResult');
+            let daysTextDisplay = document.getElementById('displayDaysText');
+
+            if (diagnostics.isLeap === true) {
+                heroBox.className = "hero-status is-leap";
+                mainDisplay.innerText = "ORBITAL ANOMALY: LEAP YEAR";
+                daysTextDisplay.innerText = "February contains exactly 29 days. Year contains 366 days.";
+            } else {
+                heroBox.className = "hero-status not-leap";
+                mainDisplay.innerText = "STANDARD YEAR ALIGNMENT";
+                daysTextDisplay.innerText = "February contains exactly 28 days. Year contains 365 days.";
+            }
+
+            // 3. Update Logic Gates UI
+            let gate4Box = document.getElementById('gate4');
+            let gate100Box = document.getElementById('gate100');
+            let gate400Box = document.getElementById('gate400');
+
+            let val4 = document.getElementById('valGate4');
+            let val100 = document.getElementById('valGate100');
+            let val400 = document.getElementById('valGate400');
+
+            // Gate 1
+            if (diagnostics.div4 === true) {
+                gate4Box.className = "logic-box gate-pass";
+                val4.innerText = "TRUE";
+            } else {
+                gate4Box.className = "logic-box gate-fail";
+                val4.innerText = "FALSE";
+            }
+
+            // Gate 2
+            if (diagnostics.div100 === true) {
+                gate100Box.className = "logic-box gate-fail"; // Century years are usually bad (unless 400 passes)
+                val100.innerText = "TRUE (CENTURY)";
+            } else {
+                gate100Box.className = "logic-box gate-pass";
+                val100.innerText = "FALSE";
+            }
+
+            // Gate 3
+            if (diagnostics.div400 === true) {
+                gate400Box.className = "logic-box gate-pass";
+                val400.innerText = "TRUE";
+            } else {
+                if (diagnostics.div100 === true) {
+                    gate400Box.className = "logic-box gate-fail";
+                    val400.innerText = "FALSE";
+                } else {
+                    gate400Box.className = "logic-box";
+                    val400.innerText = "N/A";
+                }
+            }
+
+            // 4. Update Temporal Horizon
+            let pastList = findHistoricalAnomalies(targetYear, true);
+            let futureList = findHistoricalAnomalies(targetYear, false);
+
+            let pastHtmlString = "";
+            for (let i = 0; i < pastList.length; i = i + 1) {
+                pastHtmlString = pastHtmlString + "<li>" + String(pastList[i]) + "</li>";
+            }
+            document.getElementById('listPast').innerHTML = pastHtmlString;
+
+            let futureHtmlString = "";
+            for (let j = 0; j < futureList.length; j = j + 1) {
+                futureHtmlString = futureHtmlString + "<li>" + String(futureList[j]) + "</li>";
+            }
+            document.getElementById('listFuture').innerHTML = futureHtmlString;
+
+            // 5. Update L.I.S.A Insights
+            let aiTextElement = document.getElementById('aiInsightsText');
+
+            if (diagnostics.div100 === true && diagnostics.div400 === true) {
+                aiTextElement.innerText = "Quadricentennial Event: " + String(targetYear) + " is a century year, but passes the 400-year rule. Orbital correction applied.";
+            } else if (diagnostics.div100 === true && diagnostics.div400 === false) {
+                aiTextElement.innerText = "Century Exception Triggered: " + String(targetYear) + " is divisible by 4, but fails the 400-year rule. It is NOT a leap year.";
+            } else if (diagnostics.isLeap === true) {
+                aiTextElement.innerText = "Standard Quadrennial Correction: " + String(targetYear) + " successfully offsets the 365.24219-day Earth orbital cycle.";
+            } else {
+                aiTextElement.innerText = "Standard Orbital Year. No temporal corrections required.";
+            }
+        }
+    </script>
+</body>
+</html>

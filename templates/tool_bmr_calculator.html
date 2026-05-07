@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMR & TDEE Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .system-toggle {
+            display: flex;
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            color: #6c757d;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .toggle-btn.active {
+            background: white;
+            color: var(--lasu-green);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--lasu-green); box-shadow: 0 0 0 4px rgba(0, 77, 64, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            width: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-label {
+            background: #f8f9fa;
+            border-left: 1px solid #ced4da;
+            padding: 0 15px;
+            font-weight: 800;
+            color: var(--lasu-green);
+            display: flex;
+            align-items: center;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            width: 70px;
+            justify-content: center;
+        }
+
+        .gender-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .gender-btn {
+            flex: 1;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            font-weight: 700;
+            cursor: pointer;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+        .gender-btn.active.male { border-color: var(--math-blue); background: rgba(13, 110, 253, 0.1); color: var(--math-blue); }
+        .gender-btn.active.female { border-color: var(--math-purple); background: rgba(111, 66, 193, 0.1); color: var(--math-purple); }
+
+        .activity-select {
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 12px;
+            font-weight: 700;
+            color: #495057;
+            outline: none;
+            transition: 0.2s;
+            margin-bottom: 15px;
+        }
+        .activity-select:focus { border-color: var(--lasu-green); }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+        }
+        
+        .stat-card.secondary { border-color: rgba(108, 117, 125, 0.3); background: rgba(108, 117, 125, 0.02); }
+        .stat-card.primary { border-color: rgba(25, 135, 84, 0.3); background: rgba(25, 135, 84, 0.02); } /* Main is green */
+        .stat-card.warning { border-color: rgba(253, 126, 20, 0.3); background: rgba(253, 126, 20, 0.02); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .secondary .stat-val { color: #6c757d; }
+        .primary .stat-val { color: var(--lasu-accent); font-size: 2.5rem; }
+        .warning .stat-val { color: var(--math-orange); }
+
+        .res-unit { font-size: 1rem; color: #adb5bd; margin-left: 2px; }
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* Advanced Simulation Box */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            min-height: 400px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center bottom;
+        }
+
+        #bmrCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #1a1d20;
+            padding: 15px 25px;
+            border-top: 1px solid #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .formula-bar span { color: #adb5bd; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; text-transform: uppercase; margin-right: 8px;}
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-fire-alt"></i> Metabolic Metrics
+            </div>
+
+            <div class="system-toggle">
+                <div class="toggle-btn active" id="btnMetric" onclick="setSystem('metric')">Metric (kg/cm)</div>
+                <div class="toggle-btn" id="btnImperial" onclick="setSystem('imperial')">Imperial (lbs/ft)</div>
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid positive numbers.
+            </div>
+
+            <div class="gender-selector">
+                <div class="gender-btn male active" id="btnMale" onclick="setGender('male')"><i class="fas fa-mars me-2"></i>Male</div>
+                <div class="gender-btn female" id="btnFemale" onclick="setGender('female')"><i class="fas fa-venus me-2"></i>Female</div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label">Age</div>
+                <input type="number" class="num-input" id="valAge" value="25" step="1" oninput="calculateBMR()">
+                <div class="unit-label">yrs</div>
+            </div>
+
+            <div id="metricInputs">
+                <div class="input-group-custom">
+                    <div class="input-label">Weight</div>
+                    <input type="number" class="num-input" id="valWeightKg" value="70" step="any" oninput="calculateBMR()">
+                    <div class="unit-label">kg</div>
+                </div>
+                <div class="input-group-custom">
+                    <div class="input-label">Height</div>
+                    <input type="number" class="num-input" id="valHeightCm" value="175" step="any" oninput="calculateBMR()">
+                    <div class="unit-label">cm</div>
+                </div>
+            </div>
+
+            <div id="imperialInputs" style="display: none;">
+                <div class="input-group-custom">
+                    <div class="input-label">Weight</div>
+                    <input type="number" class="num-input" id="valWeightLbs" value="154" step="any" oninput="calculateBMR()">
+                    <div class="unit-label">lbs</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <div class="input-group-custom w-50">
+                        <div class="input-label" style="width: 70px;">Height</div>
+                        <input type="number" class="num-input" id="valHeightFt" value="5" step="1" oninput="calculateBMR()">
+                        <div class="unit-label" style="width: 40px; padding: 0;">ft</div>
+                    </div>
+                    <div class="input-group-custom w-50">
+                        <input type="number" class="num-input" id="valHeightIn" value="9" step="any" oninput="calculateBMR()">
+                        <div class="unit-label" style="width: 40px; padding: 0;">in</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pane-header border-0 mb-2 pb-0 mt-2" style="font-size: 0.9rem; color: #495057;">
+                <i class="fas fa-running"></i> Activity Level
+            </div>
+            
+            <select class="activity-select" id="valActivity" onchange="calculateBMR()">
+                <option value="1.2">Sedentary (Little or no exercise)</option>
+                <option value="1.375">Lightly Active (Exercise 1-3 days/week)</option>
+                <option value="1.55" selected>Moderately Active (Exercise 3-5 days/week)</option>
+                <option value="1.725">Very Active (Exercise 6-7 days/week)</option>
+                <option value="1.9">Extra Active (Very hard exercise/physical job)</option>
+            </select>
+
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card secondary" id="cardBMR">
+                    <div class="stat-label">Basal Metabolic Rate</div>
+                    <div class="stat-val">
+                        <span id="resBMR">1680</span>
+                        <span class="res-unit">kcal</span>
+                    </div>
+                    <div class="stat-sub">Calories burned resting</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card primary" id="cardTDEE">
+                    <div class="stat-label">Total Daily Energy (TDEE)</div>
+                    <div class="stat-val">
+                        <span id="resTDEE">2604</span>
+                        <span class="res-unit">kcal</span>
+                    </div>
+                    <div class="stat-sub">To MAINTAIN weight</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-2 p-3 stat-card warning" id="cardCut">
+                    <div class="stat-label">Mild Weight Loss</div>
+                    <div class="stat-val">
+                        <span id="resCut">2104</span>
+                        <span class="res-unit">kcal</span>
+                    </div>
+                    <div class="stat-sub">-500 kcal/day (1 lb/week)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="simulation-box mt-2">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="bmrCanvas"></canvas>
+            </div>
+            <div class="telemetry-bar">
+                <div class="formula-bar">
+                    <span>Engine:</span> Mifflin-St Jeor Equation
+                </div>
+                <div class="text-muted fw-bold small text-uppercase"><i class="fas fa-chart-bar me-1"></i> Caloric Target Breakdown</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    let isMetric = true;
+    let gender = 'male';
+    
+    // Inputs
+    const btnMetric = document.getElementById('btnMetric');
+    const btnImperial = document.getElementById('btnImperial');
+    const metricInputs = document.getElementById('metricInputs');
+    const imperialInputs = document.getElementById('imperialInputs');
+    
+    const btnMale = document.getElementById('btnMale');
+    const btnFemale = document.getElementById('btnFemale');
+
+    const valAge = document.getElementById('valAge');
+    const valWeightKg = document.getElementById('valWeightKg');
+    const valHeightCm = document.getElementById('valHeightCm');
+    const valWeightLbs = document.getElementById('valWeightLbs');
+    const valHeightFt = document.getElementById('valHeightFt');
+    const valHeightIn = document.getElementById('valHeightIn');
+    const valActivity = document.getElementById('valActivity');
+
+    const errorBanner = document.getElementById('errorBanner');
+
+    // Outputs
+    const resBMR = document.getElementById('resBMR');
+    const resTDEE = document.getElementById('resTDEE');
+    const resCut = document.getElementById('resCut');
+
+    // Canvas
+    const canvas = document.getElementById('bmrCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // State
+    let BMR = 0;
+    let TDEE = 0;
+    let targetAnimTDEE = 0;
+    let currentAnimTDEE = 0;
+    let animationFrameId = null;
+
+    function setSystem(system) {
+        if (system === 'metric') {
+            isMetric = true;
+            btnMetric.classList.add('active');
+            btnImperial.classList.remove('active');
+            metricInputs.style.display = 'block';
+            imperialInputs.style.display = 'none';
+        } else {
+            isMetric = false;
+            btnMetric.classList.remove('active');
+            btnImperial.classList.add('active');
+            metricInputs.style.display = 'none';
+            imperialInputs.style.display = 'block';
+        }
+        calculateBMR();
+    }
+
+    function setGender(g) {
+        gender = g;
+        if (g === 'male') {
+            btnMale.classList.add('active');
+            btnFemale.classList.remove('active');
+        } else {
+            btnFemale.classList.add('active');
+            btnMale.classList.remove('active');
+        }
+        calculateBMR();
+    }
+
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            drawChart(); 
+        }
+    });
+    resizeObserver.observe(container);
+
+    function calculateBMR() {
+        const age = parseFloat(valAge.value);
+        const activity = parseFloat(valActivity.value);
+        let weightKG, heightCM;
+
+        if (isMetric) {
+            weightKG = parseFloat(valWeightKg.value);
+            heightCM = parseFloat(valHeightCm.value);
+        } else {
+            const lbs = parseFloat(valWeightLbs.value);
+            const ft = parseFloat(valHeightFt.value) || 0;
+            const ins = parseFloat(valHeightIn.value) || 0;
+            weightKG = lbs * 0.453592;
+            heightCM = ((ft * 12) + ins) * 2.54;
+        }
+
+        if (isNaN(age) || isNaN(weightKG) || isNaN(heightCM) || age <= 0 || weightKG <= 0 || heightCM <= 0) {
+            errorBanner.style.display = 'block';
+            resBMR.innerText = '--'; resTDEE.innerText = '--'; resCut.innerText = '--';
+            targetAnimTDEE = 0;
+            return;
+        }
+        
+        errorBanner.style.display = 'none';
+
+        // Mifflin-St Jeor Equation
+        if (gender === 'male') {
+            BMR = (10 * weightKG) + (6.25 * heightCM) - (5 * age) + 5;
+        } else {
+            BMR = (10 * weightKG) + (6.25 * heightCM) - (5 * age) - 161;
+        }
+
+        TDEE = BMR * activity;
+        targetAnimTDEE = TDEE;
+
+        // Update UI
+        resBMR.innerText = Math.round(BMR).toLocaleString();
+        resTDEE.innerText = Math.round(TDEE).toLocaleString();
+        resCut.innerText = Math.round(TDEE - 500).toLocaleString();
+
+        startAnimation();
+    }
+
+    // --- BAR CHART VISUALIZER ---
+    function drawChart() {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        if(cw === 0) return;
+        ctx.clearRect(0, 0, cw, ch);
+
+        if (currentAnimTDEE === 0) return;
+
+        const maxScaleVal = currentAnimTDEE + 1200; // Leave room for bulking bar
+        const paddingBottom = 60;
+        const paddingTop = 40;
+        const usableH = ch - paddingBottom - paddingTop;
+        
+        const bars = [
+            { label: 'Extreme Cut', val: currentAnimTDEE - 1000, color: '#dc3545', sub: '-1000 kcal' },
+            { label: 'Cut (Loss)', val: currentAnimTDEE - 500, color: '#fd7e14', sub: '-500 kcal' },
+            { label: 'MAINTENANCE', val: currentAnimTDEE, color: '#198754', sub: 'TDEE' },
+            { label: 'Bulk (Gain)', val: currentAnimTDEE + 500, color: '#0d6efd', sub: '+500 kcal' }
+        ];
+
+        const barWidth = Math.min((cw / bars.length) * 0.6, 120);
+        const spacing = (cw - (barWidth * bars.length)) / (bars.length + 1);
+
+        bars.forEach((bar, index) => {
+            // Prevent negative heights if TDEE is extremely low
+            const safeVal = Math.max(0, bar.val); 
+            
+            const barH = (safeVal / maxScaleVal) * usableH;
+            const px = spacing + (index * (barWidth + spacing));
+            const py = ch - paddingBottom - barH;
+
+            // Draw Bar
+            ctx.fillStyle = bar.color;
+            ctx.shadowColor = bar.color;
+            ctx.shadowBlur = index === 2 ? 20 : 5; // Maintenance bar glows more
+            
+            // Rounded top corners
+            ctx.beginPath();
+            ctx.moveTo(px, ch - paddingBottom);
+            ctx.lineTo(px, py + 10);
+            ctx.quadraticCurveTo(px, py, px + 10, py);
+            ctx.lineTo(px + barWidth - 10, py);
+            ctx.quadraticCurveTo(px + barWidth, py, px + barWidth, py + 10);
+            ctx.lineTo(px + barWidth, ch - paddingBottom);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+
+            // Draw Value on Top
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 20px "Fira Code", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(Math.round(safeVal).toLocaleString(), px + barWidth/2, py - 15);
+
+            // Draw Labels on Bottom
+            ctx.fillStyle = '#adb5bd';
+            ctx.font = 'bold 13px "Segoe UI", sans-serif';
+            ctx.fillText(bar.label.toUpperCase(), px + barWidth/2, ch - paddingBottom + 25);
+            
+            ctx.fillStyle = bar.color;
+            ctx.font = 'bold 12px "Fira Code", monospace';
+            ctx.fillText(bar.sub, px + barWidth/2, ch - paddingBottom + 45);
+        });
+
+        // Draw BMR Baseline line
+        const bmrY = ch - paddingBottom - ((BMR / maxScaleVal) * usableH);
+        ctx.beginPath();
+        ctx.moveTo(0, bmrY);
+        ctx.lineTo(cw, bmrY);
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.setLineDash([10, 10]);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = 'bold 12px "Fira Code", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Base (BMR): ${Math.round(BMR)}`, 10, bmrY - 10);
+    }
+
+    // Smooth Animation
+    function animate() {
+        if (Math.abs(currentAnimTDEE - targetAnimTDEE) < 5) {
+            currentAnimTDEE = targetAnimTDEE;
+            drawChart();
+            return;
+        }
+        currentAnimTDEE += (targetAnimTDEE - currentAnimTDEE) * 0.15;
+        drawChart();
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function startAnimation() {
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        animate();
+    }
+
+    // INIT
+    setTimeout(() => { calculateBMR(); }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

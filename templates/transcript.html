@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Official Transcript - {{ student.matric_no }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: white; color: black; font-family: 'Times New Roman', serif; }
+        .header-logo { width: 80px; height: 80px; background: #0066b3; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px; }
+        .signature-line { border-top: 1px solid black; width: 200px; margin-top: 50px; }
+        @media print { .no-print { display: none; } .container { width: 100%; max-width: 100%; } }
+    </style>
+</head>
+<body class="p-5">
+
+    <div class="container">
+        <div class="text-center mb-5">
+            <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" alt="LASU Logo" class="mb-2" style="width: 120px; height: auto; display: block; margin: 0 auto;">
+            
+            <h3 class="fw-bold">LAGOS STATE UNIVERSITY</h3>
+            <p class="mb-0">FACULTY OF SCIENCE</p>
+            <p>DEPARTMENT OF COMPUTER SCIENCE</p>
+            <hr class="border-dark border-3 opacity-100">
+            <h4 class="mt-4 text-decoration-underline">OFFICIAL ACADEMIC TRANSCRIPT</h4>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-6">
+                <p><strong>Name:</strong> {{ student.name }}</p>
+                <p><strong>Matric Number:</strong> {{ student.matric_no }}</p>
+            </div>
+            <div class="col-6 text-end">
+                <p><strong>Department:</strong> {{ student.department }}</p>
+                <p><strong>Session:</strong> 2024/2025</p>
+            </div>
+        </div>
+
+        <table class="table table-bordered border-dark mb-4">
+            <thead class="table-light">
+                <tr>
+                    <th>Course Code</th>
+                    <th>Units</th>
+                    <th>Score</th>
+                    <th>Grade</th>
+                    <th>Points</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for grade in student.grades %}
+                    {# LOOK UP COURSE UNITS DYNAMICALLY #}
+                    {% set course = Course.query.filter_by(code=grade.course_code).first() %}
+                    {% set units = course.units if course else 3 %}
+                    
+                    {# CALCULATE POINTS #}
+                    {% if grade.score >= 70 %} {% set point = 5 %} {% set letter = 'A' %}
+                    {% elif grade.score >= 60 %} {% set point = 4 %} {% set letter = 'B' %}
+                    {% elif grade.score >= 50 %} {% set point = 3 %} {% set letter = 'C' %}
+                    {% elif grade.score >= 45 %} {% set point = 2 %} {% set letter = 'D' %}
+                    {% elif grade.score >= 40 %} {% set point = 1 %} {% set letter = 'E' %}
+                    {% else %} {% set point = 0 %} {% set letter = 'F' %}
+                    {% endif %}
+                <tr>
+                    <td>{{ grade.course_code }}</td>
+                    <td>{{ units }}</td>
+                    <td>{{ grade.score }}</td>
+                    <td>{{ letter }}</td>
+                    <td>{{ point }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+                <tr>
+                    <td colspan="4" class="text-end fw-bold">CUMULATIVE GRADE POINT AVERAGE (CGPA):</td>
+                    <td class="fw-bold fs-5">{{ "%.2f"|format(cgpa) }}</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="text-end fw-bold">CLASS OF DEGREE:</td>
+                    <td class="fw-bold">{{ remark.upper() }}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="row mt-5 pt-5">
+            <div class="col-6">
+                <div class="signature-line"></div>
+                <p>H.O.D Signature & Date</p>
+            </div>
+            <div class="col-6 text-end">
+                <div class="signature-line ms-auto"></div>
+                <p>Registrar Signature & Stamp</p>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 no-print">
+            <button onclick="window.print()" class="btn btn-primary btn-lg">🖨️ Print Transcript</button>
+            
+            <a href="{{ url_for('student_portal') }}" class="btn btn-secondary btn-lg">Close</a>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employment Offer | {{ opp.company }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        body { background: #525659; font-family: 'Georgia', serif; padding: 40px; }
+        .letter-page {
+            background: white; width: 210mm; min-height: 297mm; margin: 0 auto;
+            padding: 25mm; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .header { border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
+        .company-logo { font-family: 'Helvetica', sans-serif; font-weight: bold; font-size: 28px; letter-spacing: -1px; }
+        .company-logo span { color: #0d6efd; } 
+        .content { line-height: 1.6; font-size: 14px; color: #333; }
+        .signature-box { margin-top: 50px; }
+        .stamp {
+            position: absolute; bottom: 100px; right: 80px;
+            border: 4px double #d32f2f; color: #d32f2f;
+            font-weight: bold; padding: 10px 20px;
+            transform: rotate(-15deg); font-family: 'Courier New', monospace;
+            font-size: 20px; opacity: 0.8;
+        }
+        .btn-print { position: fixed; bottom: 20px; right: 20px; }
+        
+        /* Digital Signature Style */
+        .signature-text { 
+            font-family: 'Herr Von Muellerhoff', cursive; 
+            font-size: 60px; 
+            color: #000080; /* Blue Ink */
+            line-height: 1;
+            margin-bottom: 10px;
+            transform: rotate(-5deg);
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="letter-page animate__animated animate__fadeIn">
+    
+    <div class="header d-flex justify-content-between align-items-end">
+        <div class="company-logo">
+            {{ opp.company|upper }} <span>RECRUITING</span>
+        </div>
+        <div class="text-end text-muted small">
+            Ref: ATAS-{{ student.id }}-{{ opp.id }}<br>
+            Date: {{ today }}
+        </div>
+    </div>
+
+    <div class="content">
+        <p><strong>PRIVATE & CONFIDENTIAL</strong></p>
+        <p>
+            To: <strong>{{ student.first_name or 'Candidate' }} {{ student.last_name or '' }}</strong><br>
+            Matriculation: {{ student.matric_no }}<br>
+            Department: {{ student.department or 'Computer Science' }}
+        </p>
+
+        <br>
+
+        <h4 class="text-center fw-bold my-4">OFFER OF EMPLOYMENT</h4>
+
+        <p>Dear {{ student.first_name or 'Candidate' }},</p>
+
+        <p>We have been monitoring your performance via the <strong>Academic Time Authority System (ATAS)</strong>. Your academic trajectory has flagged you as a high-value target for our organization.</p>
+
+        <p>
+            Specifically, your <strong>CGPA of {{ "%.2f"|format(cgpa) }}</strong>
+            {% if certs %}
+                and your verified proficiency in <strong>{{ certs }}</strong>
+            {% endif %}
+            have placed you in the top 1% of our candidate pool. We are pleased to offer you the position of <strong>{{ opp.title }}</strong> at <strong>{{ opp.company }}</strong>.
+        </p>
+
+        <p><strong>Terms of Engagement:</strong></p>
+        <ul>
+            <li><strong>Role:</strong> {{ opp.title }}</li>
+            <li><strong>Start Date:</strong> Immediate Effect</li>
+            <li><strong>Compensation:</strong> {{ salary }} / Month (Net)</li>
+            <li><strong>Additional Perks:</strong> {{ perks|join(', ') }}</li>
+            <li><strong>Location:</strong> Lagos HQ (Hybrid)</li>
+        </ul>
+
+        <p>This offer is contingent upon maintaining your current momentum. Welcome to the elite.</p>
+
+        <br>
+
+        <div class="signature-box">
+            <p>Sincerely,</p>
+            
+            <div class="signature-text">Dr. A. I. Smith</div>
+            
+            <p><strong>Dr. A. I. Smith</strong><br>Global Head of Talent Acquisition<br>{{ opp.company }} West Africa</p>
+        </div>
+    </div>
+
+    <div class="stamp">OFFICIAL<br>ACCEPTED</div>
+
+</div>
+
+<button onclick="window.print()" class="btn btn-primary btn-lg btn-print shadow-lg">
+    <i class="fas fa-print me-2"></i> PRINT OFFER
+</button>
+
+</body>
+</html>

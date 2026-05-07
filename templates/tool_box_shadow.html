@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Box Shadow Generator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .card-custom {
+            background: white; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Controls Section */
+        .controls-panel {
+            padding: 30px;
+            background: #ffffff;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .control-group { margin-bottom: 1.2rem; }
+        .control-label {
+            font-weight: 600; color: #495057;
+            font-size: 0.9rem; margin-bottom: 8px;
+            display: flex; justify-content: space-between;
+        }
+
+        .val-badge {
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: var(--lasu-green);
+        }
+
+        input[type=range] { width: 100%; accent-color: var(--lasu-green); }
+        
+        .color-picker-group {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f8f9fa; padding: 10px 15px; border-radius: 8px; border: 1px solid #dee2e6;
+        }
+        input[type=color] {
+            border: none; width: 40px; height: 40px; border-radius: 4px; cursor: pointer;
+            padding: 0; background: transparent;
+        }
+
+        /* Playground Section */
+        .playground-panel {
+            padding: 40px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .preview-area {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 350px;
+            background-color: #ffffff; /* Default background */
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+        }
+
+        .box-preview {
+            width: 250px;
+            height: 250px;
+            background-color: var(--lasu-green);
+            border-radius: 16px;
+            transition: box-shadow 0.1s ease, background-color 0.3s;
+        }
+
+        /* Code Output Section */
+        .code-output {
+            background: #272822; /* Monokai dark */
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .code-output pre {
+            margin: 0; color: #f8f8f2;
+            font-family: 'Fira Code', monospace; font-size: 1rem;
+            white-space: pre-wrap;
+        }
+        .prop-key { color: #66d9ef; } /* Blue */
+        .prop-val { color: #a6e22e; } /* Green */
+
+        .copy-btn { position: absolute; top: 15px; right: 15px; }
+
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .card-custom { flex-direction: column; }
+            .controls-panel { border-right: none; border-bottom: 1px solid #dee2e6; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">CSS TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="row h-100 g-0 card-custom flex-row overflow-hidden shadow-lg">
+        
+        <div class="col-lg-4 controls-panel">
+            <h5 class="fw-bold mb-4"><i class="fas fa-sliders-h me-2 text-success"></i> Shadow Settings</h5>
+
+            <div class="control-group">
+                <label class="control-label">Horizontal Offset <span class="val-badge" id="valH">0px</span></label>
+                <input type="range" id="hOffset" min="-50" max="50" value="10" oninput="updateShadow()">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Vertical Offset <span class="val-badge" id="valV">0px</span></label>
+                <input type="range" id="vOffset" min="-50" max="50" value="15" oninput="updateShadow()">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Blur Radius <span class="val-badge" id="valBlur">0px</span></label>
+                <input type="range" id="blurRadius" min="0" max="100" value="30" oninput="updateShadow()">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Spread Radius <span class="val-badge" id="valSpread">0px</span></label>
+                <input type="range" id="spreadRadius" min="-50" max="50" value="0" oninput="updateShadow()">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Shadow Opacity <span class="val-badge" id="valOpacity">0.2</span></label>
+                <input type="range" id="shadowOpacity" min="0" max="1" step="0.05" value="0.15" oninput="updateShadow()">
+            </div>
+
+            <hr class="my-4">
+
+            <div class="control-group color-picker-group">
+                <label class="mb-0 fw-bold text-muted">Shadow Color</label>
+                <input type="color" id="shadowColor" value="#000000" oninput="updateShadow()">
+            </div>
+
+            <div class="control-group color-picker-group mt-3">
+                <label class="mb-0 fw-bold text-muted">Box Color</label>
+                <input type="color" id="boxColor" value="#ffffff" oninput="updateBox()">
+            </div>
+
+            <div class="control-group color-picker-group mt-3">
+                <label class="mb-0 fw-bold text-muted">Background</label>
+                <input type="color" id="bgColor" value="#f4f7f6" oninput="updateBg()">
+            </div>
+
+            <div class="form-check form-switch mt-4 fs-5">
+                <input class="form-check-input" type="checkbox" id="insetToggle" onchange="updateShadow()">
+                <label class="form-check-label fw-bold text-dark" for="insetToggle">Inset (Inner Shadow)</label>
+            </div>
+        </div>
+
+        <div class="col-lg-8 playground-panel">
+            
+            <div class="preview-area" id="previewArea">
+                <div class="box-preview" id="boxPreview"></div>
+            </div>
+
+            <div class="code-output">
+                <button class="btn btn-sm btn-outline-light copy-btn" onclick="copyCSS()"><i class="fas fa-copy"></i> Copy CSS</button>
+                <pre id="cssOutput"></pre>
+            </div>
+            
+        </div>
+
+    </div>
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    // Elements
+    const hOffset = document.getElementById('hOffset');
+    const vOffset = document.getElementById('vOffset');
+    const blurRadius = document.getElementById('blurRadius');
+    const spreadRadius = document.getElementById('spreadRadius');
+    const shadowOpacity = document.getElementById('shadowOpacity');
+    const shadowColor = document.getElementById('shadowColor');
+    const insetToggle = document.getElementById('insetToggle');
+    
+    const boxColor = document.getElementById('boxColor');
+    const bgColor = document.getElementById('bgColor');
+    
+    const boxPreview = document.getElementById('boxPreview');
+    const previewArea = document.getElementById('previewArea');
+    const cssOutput = document.getElementById('cssOutput');
+
+    // Badges
+    const valH = document.getElementById('valH');
+    const valV = document.getElementById('valV');
+    const valBlur = document.getElementById('valBlur');
+    const valSpread = document.getElementById('valSpread');
+    const valOpacity = document.getElementById('valOpacity');
+
+    // Helper: Convert HEX to RGBA
+    function hexToRgba(hex, alpha) {
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function updateBox() {
+        boxPreview.style.backgroundColor = boxColor.value;
+    }
+
+    function updateBg() {
+        previewArea.style.backgroundColor = bgColor.value;
+    }
+
+    function updateShadow() {
+        // Update Labels
+        valH.innerText = `${hOffset.value}px`;
+        valV.innerText = `${vOffset.value}px`;
+        valBlur.innerText = `${blurRadius.value}px`;
+        valSpread.innerText = `${spreadRadius.value}px`;
+        valOpacity.innerText = shadowOpacity.value;
+
+        // Construct CSS Value
+        const h = `${hOffset.value}px`;
+        const v = `${vOffset.value}px`;
+        const blur = `${blurRadius.value}px`;
+        const spread = `${spreadRadius.value}px`;
+        const color = hexToRgba(shadowColor.value, shadowOpacity.value);
+        const inset = insetToggle.checked ? "inset " : "";
+
+        const shadowString = `${inset}${h} ${v} ${blur} ${spread} ${color}`;
+
+        // Apply to Box
+        boxPreview.style.boxShadow = shadowString;
+
+        // Generate Code Text (HTML formatted for highlight)
+        let cssStr = `<span class="prop-key">box-shadow</span>: <span class="prop-val">${shadowString}</span>;\n`;
+        cssStr += `<span class="prop-key">-webkit-box-shadow</span>: <span class="prop-val">${shadowString}</span>;\n`;
+        cssStr += `<span class="prop-key">-moz-box-shadow</span>: <span class="prop-val">${shadowString}</span>;`;
+        
+        cssOutput.innerHTML = cssStr;
+    }
+
+    function copyCSS() {
+        // Extract raw text for clipboard (without span tags)
+        const rawText = cssOutput.innerText;
+        navigator.clipboard.writeText(rawText).then(() => {
+            showToast('CSS copied to clipboard!', 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        const toastBox = document.getElementById('toastBox');
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Initialize
+    updateBox();
+    updateBg();
+    updateShadow();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

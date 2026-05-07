@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plagiarism Checker | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1500px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Input Panes --- */
+        .input-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .text-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            transition: all 0.2s;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 250px;
+        }
+        .text-editor:focus {
+            border-color: var(--math-red);
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15);
+        }
+
+        .btn-action {
+            padding: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            font-size: 1.1rem;
+            background: var(--math-red);
+            color: white;
+        }
+        .btn-action:hover {
+            background: #b02a37;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 0 0 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .score-box {
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+            transition: border-color 0.3s;
+        }
+
+        .score-label {
+            color: #adb5bd;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .score-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 4.5rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1;
+            margin-bottom: 5px;
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+
+        .score-grade {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        .meter-container {
+            width: 100%;
+            height: 12px;
+            background: #2b3035;
+            border-radius: 6px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--lasu-accent);
+            border-radius: 6px;
+            transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.5s;
+        }
+
+        /* Match Log */
+        .match-log-box {
+            flex: 1;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .match-log-header {
+            font-weight: 800;
+            color: #212529;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+
+        .match-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .match-item {
+            background: white;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            border-left: 4px solid var(--math-red);
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            font-family: 'Segoe UI', sans-serif;
+            color: #495057;
+            animation: slideIn 0.2s ease-out;
+        }
+        .match-item strong { color: var(--math-red); }
+
+        .empty-state {
+            text-align: center;
+            color: #adb5bd;
+            font-weight: 700;
+            padding: 20px 0;
+            font-style: italic;
+        }
+
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: 700;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #ced4da;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .output-pane { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-database me-2"></i> Original Source Text</div>
+            </div>
+            <textarea class="text-editor" id="sourceText" placeholder="Paste the original source material here..."></textarea>
+        </div>
+    </div>
+
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header" style="color: var(--math-red);">
+                <div><i class="fas fa-user-secret me-2"></i> Suspect Document</div>
+            </div>
+            <textarea class="text-editor" id="suspectText" placeholder="Paste the document you want to check for plagiarism here..." style="border-color: rgba(220,53,69,0.3);"></textarea>
+
+            <button class="btn-action mt-auto" onclick="runAnalysis()">
+                <i class="fas fa-fingerprint"></i> Run N-Gram Analysis
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="score-box" id="scoreBox">
+            <div class="score-label">Jaccard Similarity Index</div>
+            <div class="score-value" id="resScore">0%</div>
+            <div class="score-grade" id="resGrade">Awaiting Scan</div>
+            
+            <div class="meter-container">
+                <div class="meter-fill" id="meterFill"></div>
+            </div>
+        </div>
+
+        <div class="match-log-box">
+            <div class="match-log-header">
+                <span><i class="fas fa-flag text-danger me-2"></i> Flagged N-Grams</span>
+                <span id="matchCount">0</span>
+            </div>
+            
+            <ul class="match-list" id="matchList">
+                <div class="empty-state">Run analysis to view localized plagiarism overlaps.</div>
+            </ul>
+
+            <div class="telemetry-row">
+                <span>Engine: Trigram Shingling</span>
+                <span id="calcTime">0ms</span>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const sourceText = document.getElementById('sourceText');
+    const suspectText = document.getElementById('suspectText');
+    
+    const resScore = document.getElementById('resScore');
+    const resGrade = document.getElementById('resGrade');
+    const scoreBox = document.getElementById('scoreBox');
+    const meterFill = document.getElementById('meterFill');
+    
+    const matchList = document.getElementById('matchList');
+    const matchCount = document.getElementById('matchCount');
+    const calcTime = document.getElementById('calcTime');
+
+    // N-Gram Engine (Trigrams: 3 words)
+    const N = 3;
+
+    function sanitize(text) {
+        return text.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+    }
+
+    function getNGrams(wordsArray, n) {
+        let ngrams = new Set();
+        for (let i = 0; i <= wordsArray.length - n; i++) {
+            ngrams.add(wordsArray.slice(i, i + n).join(' '));
+        }
+        return ngrams;
+    }
+
+    function runAnalysis() {
+        const startMs = performance.now();
+        
+        const src = sourceText.value;
+        const sus = suspectText.value;
+
+        if (!src || !sus) {
+            alert("Please provide text in both panels to run the comparison.");
+            return;
+        }
+
+        const srcClean = sanitize(src).split(' ');
+        const susClean = sanitize(sus).split(' ');
+
+        if (srcClean.length < N || susClean.length < N) {
+            alert(`Both texts must contain at least ${N} words to run the N-Gram matrix.`);
+            return;
+        }
+
+        // Generate Shingles
+        const srcNgrams = getNGrams(srcClean, N);
+        const susNgrams = getNGrams(susClean, N);
+
+        // Mathematical Intersection (Matches)
+        let intersection = new Set();
+        for (let ngram of susNgrams) {
+            if (srcNgrams.has(ngram)) {
+                intersection.add(ngram);
+            }
+        }
+
+        // Mathematical Union
+        let union = new Set([...srcNgrams, ...susNgrams]);
+
+        // Jaccard Similarity Coefficient
+        let jaccardIndex = intersection.size / union.size;
+        
+        // For standard "Plagiarism" metrics, users usually want to know "What % of my paper is copied?"
+        // So we also calculate Containment: Intersection / Suspect Total
+        let containment = intersection.size / susNgrams.size;
+        
+        let finalScore = Math.round(containment * 100);
+
+        // Update UI
+        resScore.innerText = `${finalScore}%`;
+        meterFill.style.width = `${finalScore}%`;
+        matchCount.innerText = intersection.size;
+
+        let color = '';
+        let grade = '';
+
+        if (finalScore >= 80) {
+            color = '#dc3545'; // Red
+            grade = "Critical: Direct Copy";
+        } else if (finalScore >= 40) {
+            color = '#fd7e14'; // Orange
+            grade = "High Probability of Plagiarism";
+        } else if (finalScore >= 15) {
+            color = '#ffc107'; // Yellow
+            grade = "Moderate Paraphrasing Detected";
+        } else {
+            color = '#198754'; // Green
+            grade = "Safe: Original Content";
+        }
+
+        resScore.style.color = color;
+        resScore.style.textShadow = `0 0 20px ${color}80`;
+        scoreBox.style.borderColor = `${color}80`;
+        resGrade.innerText = grade;
+        resGrade.style.color = color;
+        meterFill.style.backgroundColor = color;
+
+        // Render Match Log
+        let html = '';
+        if (intersection.size === 0) {
+            html = '<div class="empty-state">No matching phrases detected.</div>';
+        } else {
+            // Convert to array and take top 50 to prevent DOM lag on massive docs
+            let arr = Array.from(intersection).slice(0, 50);
+            arr.forEach(phrase => {
+                html += `<li class="match-item">"<strong>${phrase}</strong>"</li>`;
+            });
+            if (intersection.size > 50) {
+                html += `<li class="match-item text-center">...and ${intersection.size - 50} more.</li>`;
+            }
+        }
+        matchList.innerHTML = html;
+
+        const endMs = performance.now();
+        calcTime.innerText = `${Math.round(endMs - startMs)}ms`;
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

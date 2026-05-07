@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polyphonic Piano Synthesizer | Tool</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --accent: #2563eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .app-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header { margin-bottom: 2rem; }
+        .back-link { color: var(--accent); text-decoration: none; font-weight: 600; display: inline-block; margin-bottom: 0.5rem; transition: 0.2s; }
+        .back-link:hover { opacity: 0.8; }
+
+        .synth-chassis {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+            border-bottom: 8px solid #0f172a;
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f172a;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            color: #f8fafc;
+            border: 1px solid #334155;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            font-weight: bold;
+        }
+
+        select, input[type="range"] {
+            background: #1e293b;
+            color: white;
+            border: 1px solid #334155;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* Keyboard Architecture */
+        .keyboard {
+            display: flex;
+            position: relative;
+            height: 250px;
+            justify-content: center;
+        }
+
+        .key {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 1rem;
+            font-weight: bold;
+            border-radius: 0 0 6px 6px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .key-label {
+            pointer-events: none;
+            font-size: 0.85rem;
+            font-family: monospace;
+        }
+
+        .white-key {
+            width: 60px;
+            height: 100%;
+            background: linear-gradient(to bottom, #ffffff 0%, #f1f5f9 100%);
+            border: 1px solid #cbd5e1;
+            border-top: none;
+            z-index: 1;
+            color: #94a3b8;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .white-key.active {
+            background: #e2e8f0;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.2);
+            transform: scaleY(0.98);
+            transform-origin: top;
+        }
+
+        .black-key {
+            width: 40px;
+            height: 65%;
+            background: linear-gradient(to bottom, #1e293b 0%, #0f172a 100%);
+            z-index: 2;
+            margin-left: -20px;
+            margin-right: -20px;
+            color: rgba(255,255,255,0.5);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border: 1px solid #000;
+        }
+
+        .black-key.active {
+            background: #000;
+            box-shadow: inset 0 4px 6px rgba(255,255,255,0.1);
+            transform: scaleY(0.98);
+            transform-origin: top;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #10b981;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        
+        .pulse-dot {
+            width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <a href="{{ url_for('student_portal') }}" class="back-link">← Back To Dashboard</a>
+        <h1>Polyphonic Synthesizer</h1>
+        <p style="color: var(--text-muted);">Real-time waveform generation. Play using your mouse or computer keyboard.</p>
+    </div>
+
+    <div class="synth-chassis">
+        <div class="control-panel">
+            
+            <div class="control-group">
+                <span class="control-label">Oscillator Waveform</span>
+                <select id="waveformSelect">
+                    <option value="sine">Sine (Soft/Flute)</option>
+                    <option value="square">Square (Retro 8-bit)</option>
+                    <option value="sawtooth">Sawtooth (Brass/Synth)</option>
+                    <option value="triangle" selected>Triangle (Warm Pad)</option>
+                </select>
+            </div>
+
+            <div class="control-group" style="width: 200px;">
+                <span class="control-label">Master Volume</span>
+                <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="0.3">
+            </div>
+
+            <div class="status-indicator">
+                <div class="pulse-dot"></div> ENGINE ONLINE
+            </div>
+        </div>
+
+        <div class="keyboard" id="keyboard">
+            <div class="key white-key" data-note="261.63" data-key="a"><span class="key-label">A</span></div>
+            <div class="key black-key" data-note="277.18" data-key="w"><span class="key-label">W</span></div>
+            <div class="key white-key" data-note="293.66" data-key="s"><span class="key-label">S</span></div>
+            <div class="key black-key" data-note="311.13" data-key="e"><span class="key-label">E</span></div>
+            <div class="key white-key" data-note="329.63" data-key="d"><span class="key-label">D</span></div>
+            <div class="key white-key" data-note="349.23" data-key="f"><span class="key-label">F</span></div>
+            <div class="key black-key" data-note="369.99" data-key="t"><span class="key-label">T</span></div>
+            <div class="key white-key" data-note="392.00" data-key="g"><span class="key-label">G</span></div>
+            <div class="key black-key" data-note="415.30" data-key="y"><span class="key-label">Y</span></div>
+            <div class="key white-key" data-note="440.00" data-key="h"><span class="key-label">H</span></div>
+            <div class="key black-key" data-note="466.16" data-key="u"><span class="key-label">U</span></div>
+            <div class="key white-key" data-note="493.88" data-key="j"><span class="key-label">J</span></div>
+            
+            <div class="key white-key" data-note="523.25" data-key="k"><span class="key-label">K</span></div>
+            <div class="key black-key" data-note="554.37" data-key="o"><span class="key-label">O</span></div>
+            <div class="key white-key" data-note="587.33" data-key="l"><span class="key-label">L</span></div>
+            <div class="key black-key" data-note="622.25" data-key="p"><span class="key-label">P</span></div>
+            <div class="key white-key" data-note="659.25" data-key=";"><span class="key-label">;</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Polyphonic Synth Architecture
+     */
+    class SynthEngine {
+        constructor() {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.audioCtx.createGain();
+            this.masterGain.connect(this.audioCtx.destination);
+            
+            // Default settings
+            this.masterGain.gain.value = 0.3;
+            this.waveform = 'triangle';
+            
+            // Track currently playing notes to allow polyphony (chords)
+            this.activeOscillators = {};
+
+            this.initUI();
+            this.initKeyboard();
+        }
+
+        initUI() {
+            const volSlider = document.getElementById('masterVolume');
+            volSlider.addEventListener('input', (e) => {
+                this.masterGain.gain.value = e.target.value;
+            });
+
+            const waveSelect = document.getElementById('waveformSelect');
+            waveSelect.addEventListener('change', (e) => {
+                this.waveform = e.target.value;
+            });
+        }
+
+        initKeyboard() {
+            const keys = document.querySelectorAll('.key');
+            
+            // Mouse Interaction
+            keys.forEach(key => {
+                key.addEventListener('mousedown', (e) => {
+                    if(this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                    const note = parseFloat(key.dataset.note);
+                    this.playNote(note, key.dataset.key);
+                    key.classList.add('active');
+                });
+
+                key.addEventListener('mouseup', () => {
+                    this.stopNote(key.dataset.key);
+                    key.classList.remove('active');
+                });
+                
+                key.addEventListener('mouseleave', () => {
+                    this.stopNote(key.dataset.key);
+                    key.classList.remove('active');
+                });
+            });
+
+            // Computer Keyboard Interaction
+            window.addEventListener('keydown', (e) => {
+                if(e.repeat) return; // Prevent rapid firing if key is held down
+                if(this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                
+                const keyElement = document.querySelector(`.key[data-key="${e.key.toLowerCase()}"]`);
+                if (keyElement) {
+                    const note = parseFloat(keyElement.dataset.note);
+                    this.playNote(note, e.key.toLowerCase());
+                    keyElement.classList.add('active');
+                }
+            });
+
+            window.addEventListener('keyup', (e) => {
+                const keyElement = document.querySelector(`.key[data-key="${e.key.toLowerCase()}"]`);
+                if (keyElement) {
+                    this.stopNote(e.key.toLowerCase());
+                    keyElement.classList.remove('active');
+                }
+            });
+        }
+
+        playNote(frequency, id) {
+            // If note is already playing, don't trigger again
+            if (this.activeOscillators[id]) return;
+
+            const osc = this.audioCtx.createOscillator();
+            const gainNode = this.audioCtx.createGain();
+
+            osc.type = this.waveform;
+            osc.frequency.setValueAtTime(frequency, this.audioCtx.currentTime);
+
+            // ADSR Envelope: Attack & Decay for a realistic piano-like strike
+            gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(1, this.audioCtx.currentTime + 0.05); // Attack
+            gainNode.gain.exponentialRampToValueAtTime(0.3, this.audioCtx.currentTime + 0.3); // Decay to Sustain
+
+            osc.connect(gainNode);
+            gainNode.connect(this.masterGain);
+
+            osc.start();
+
+            // Store references so we can stop them later
+            this.activeOscillators[id] = { osc, gainNode };
+        }
+
+        stopNote(id) {
+            if (this.activeOscillators[id]) {
+                const { osc, gainNode } = this.activeOscillators[id];
+                
+                // Release Phase: Fade out gracefully to prevent clicking audio pops
+                gainNode.gain.cancelScheduledValues(this.audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(gainNode.gain.value, this.audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.3); // Release
+                
+                osc.stop(this.audioCtx.currentTime + 0.3);
+                
+                delete this.activeOscillators[id];
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => new SynthEngine());
+</script>
+
+</body>
+</html>

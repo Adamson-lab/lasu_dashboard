@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vector Calculator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .vector-block {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .vector-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vector-a-title { color: var(--math-blue); }
+        .vector-b-title { color: var(--math-red); }
+
+        .coord-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .coord-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .coord-input:focus-within {
+            border-color: var(--lasu-accent);
+            box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.15);
+        }
+
+        .coord-label {
+            width: 100%;
+            text-align: center;
+            background: #f8f9fa;
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 0.9rem;
+        }
+
+        .num-input {
+            width: 100%;
+            border: none;
+            padding: 10px;
+            text-align: center;
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            outline: none;
+            color: #212529;
+            -moz-appearance: textfield;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .op-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .btn-op {
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+        }
+        .btn-op:hover { background: #f8f9fa; border-color: #ced4da; }
+        .btn-op.active {
+            background: var(--lasu-green);
+            color: white;
+            border-color: var(--lasu-green);
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .formula-display {
+            background: #212529;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.3rem;
+            text-align: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 120px;
+        }
+        .formula-display span { color: var(--math-orange); font-weight: 800; }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-box.highlight {
+            background: rgba(13, 110, 253, 0.05);
+            border-color: rgba(13, 110, 253, 0.2);
+        }
+
+        .res-label {
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .res-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #212529;
+        }
+        .highlight .res-val { color: var(--math-blue); }
+
+        .secondary-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .secondary-stats { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">MATHEMATICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <div><i class="fas fa-location-arrow me-2"></i> Vectors</div>
+                <div class="form-check form-switch m-0">
+                    <input class="form-check-input" type="checkbox" id="mode3D" checked onchange="toggle3D()">
+                    <label class="form-check-label fw-bold small text-uppercase" for="mode3D">3D Mode</label>
+                </div>
+            </div>
+
+            <div class="vector-block">
+                <div class="vector-title vector-a-title">Vector A</div>
+                <div class="coord-grid">
+                    <div class="coord-input">
+                        <div class="coord-label text-danger">X₁</div>
+                        <input type="number" class="num-input" id="ax" value="3" step="any" oninput="calculate()">
+                    </div>
+                    <div class="coord-input">
+                        <div class="coord-label text-success">Y₁</div>
+                        <input type="number" class="num-input" id="ay" value="-2" step="any" oninput="calculate()">
+                    </div>
+                    <div class="coord-input z-coord">
+                        <div class="coord-label text-primary">Z₁</div>
+                        <input type="number" class="num-input" id="az" value="5" step="any" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="vector-block">
+                <div class="vector-title vector-b-title">Vector B</div>
+                <div class="coord-grid">
+                    <div class="coord-input">
+                        <div class="coord-label text-danger">X₂</div>
+                        <input type="number" class="num-input" id="bx" value="4" step="any" oninput="calculate()">
+                    </div>
+                    <div class="coord-input">
+                        <div class="coord-label text-success">Y₂</div>
+                        <input type="number" class="num-input" id="by" value="1" step="any" oninput="calculate()">
+                    </div>
+                    <div class="coord-input z-coord">
+                        <div class="coord-label text-primary">Z₂</div>
+                        <input type="number" class="num-input" id="bz" value="-3" step="any" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="pane-header mt-2 mb-3 border-0 pb-0">
+                <i class="fas fa-bolt"></i> Operations
+            </div>
+            <div class="op-grid">
+                <button class="btn-op active" id="op_add" onclick="setOp('add')">A + B</button>
+                <button class="btn-op" id="op_sub" onclick="setOp('sub')">A - B</button>
+                <button class="btn-op" id="op_dot" onclick="setOp('dot')">A &bull; B (Dot)</button>
+                <button class="btn-op" id="op_cross" onclick="setOp('cross')">A &times; B (Cross)</button>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-4" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Values
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            
+            <div class="formula-display" id="formulaScreen">
+                A + B = <span>&lang;</span> 7, -1, 2 <span>&rang;</span>
+            </div>
+
+            <div class="result-grid">
+                <div class="result-box highlight">
+                    <div class="res-label" id="mainResLabel">Result Vector</div>
+                    <div class="res-val" id="mainResVal">&lang; 7, -1, 2 &rang;</div>
+                </div>
+            </div>
+
+            <h6 class="fw-bold text-muted text-uppercase small mt-4 mb-2 border-bottom pb-2"><i class="fas fa-info-circle me-1"></i> Vector Properties</h6>
+            
+            <div class="secondary-stats">
+                <div class="stat-card">
+                    <div class="res-label text-primary mb-2">Magnitude |A|</div>
+                    <div class="res-val" id="magA" style="font-size: 1.4rem;">6.164</div>
+                </div>
+                <div class="stat-card">
+                    <div class="res-label text-danger mb-2">Magnitude |B|</div>
+                    <div class="res-val" id="magB" style="font-size: 1.4rem;">5.099</div>
+                </div>
+                <div class="stat-card" style="grid-column: span 2;">
+                    <div class="res-label text-success mb-2">Angle Between A & B (&theta;)</div>
+                    <div class="d-flex justify-content-center gap-4">
+                        <div class="res-val" id="angleDeg" style="font-size: 1.5rem;">101.5°</div>
+                        <div class="res-val text-muted" id="angleRad" style="font-size: 1.5rem;">1.77 rad</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    let currentOp = 'add';
+    let is3D = true;
+
+    function toggle3D() {
+        is3D = document.getElementById('mode3D').checked;
+        const zCoords = document.querySelectorAll('.z-coord');
+        const crossBtn = document.getElementById('op_cross');
+
+        if (is3D) {
+            zCoords.forEach(el => el.style.display = 'flex');
+            crossBtn.disabled = false;
+        } else {
+            zCoords.forEach(el => el.style.display = 'none');
+            // Cross product is typically 3D. In 2D, it results in a scalar (magnitude in Z).
+            if (currentOp === 'cross') setOp('add');
+        }
+        calculate();
+    }
+
+    function setOp(op) {
+        document.querySelectorAll('.btn-op').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`op_${op}`).classList.add('active');
+        currentOp = op;
+        calculate();
+    }
+
+    function roundSafe(num) {
+        return Math.round(num * 1000) / 1000;
+    }
+
+    function getVecA() {
+        return {
+            x: parseFloat(document.getElementById('ax').value) || 0,
+            y: parseFloat(document.getElementById('ay').value) || 0,
+            z: is3D ? (parseFloat(document.getElementById('az').value) || 0) : 0
+        };
+    }
+
+    function getVecB() {
+        return {
+            x: parseFloat(document.getElementById('bx').value) || 0,
+            y: parseFloat(document.getElementById('by').value) || 0,
+            z: is3D ? (parseFloat(document.getElementById('bz').value) || 0) : 0
+        };
+    }
+
+    function formatVec(v) {
+        if (is3D) return `<span>&lang;</span> ${roundSafe(v.x)}, ${roundSafe(v.y)}, ${roundSafe(v.z)} <span>&rang;</span>`;
+        return `<span>&lang;</span> ${roundSafe(v.x)}, ${roundSafe(v.y)} <span>&rang;</span>`;
+    }
+
+    function calculate() {
+        const A = getVecA();
+        const B = getVecB();
+        
+        const formulaScreen = document.getElementById('formulaScreen');
+        const mainResLabel = document.getElementById('mainResLabel');
+        const mainResVal = document.getElementById('mainResVal');
+
+        // Magnitudes
+        const magA = Math.sqrt(A.x*A.x + A.y*A.y + A.z*A.z);
+        const magB = Math.sqrt(B.x*B.x + B.y*B.y + B.z*B.z);
+        document.getElementById('magA').innerText = roundSafe(magA);
+        document.getElementById('magB').innerText = roundSafe(magB);
+
+        // Dot Product (needed for angle)
+        const dot = (A.x * B.x) + (A.y * B.y) + (A.z * B.z);
+
+        // Angle
+        let angleRad = 0;
+        let angleDeg = 0;
+        if (magA > 0 && magB > 0) {
+            let cosTheta = dot / (magA * magB);
+            // Floating point safety clamp
+            if (cosTheta > 1) cosTheta = 1;
+            if (cosTheta < -1) cosTheta = -1;
+            angleRad = Math.acos(cosTheta);
+            angleDeg = angleRad * (180 / Math.PI);
+        }
+        document.getElementById('angleDeg').innerText = `${roundSafe(angleDeg)}°`;
+        document.getElementById('angleRad').innerText = `${roundSafe(angleRad)} rad`;
+
+        // Operations
+        if (currentOp === 'add') {
+            const res = { x: A.x + B.x, y: A.y + B.y, z: A.z + B.z };
+            formulaScreen.innerHTML = `A + B = ${formatVec(res)}`;
+            mainResLabel.innerText = "Resulting Vector";
+            mainResVal.innerHTML = formatVec(res);
+        } 
+        else if (currentOp === 'sub') {
+            const res = { x: A.x - B.x, y: A.y - B.y, z: A.z - B.z };
+            formulaScreen.innerHTML = `A - B = ${formatVec(res)}`;
+            mainResLabel.innerText = "Resulting Vector";
+            mainResVal.innerHTML = formatVec(res);
+        }
+        else if (currentOp === 'dot') {
+            formulaScreen.innerHTML = `A &bull; B = (A<sub>x</sub>B<sub>x</sub>) + (A<sub>y</sub>B<sub>y</sub>) + (A<sub>z</sub>B<sub>z</sub>) <br> = ${roundSafe(dot)}`;
+            mainResLabel.innerText = "Scalar Result";
+            mainResVal.innerHTML = roundSafe(dot);
+        }
+        else if (currentOp === 'cross') {
+            const res = {
+                x: (A.y * B.z) - (A.z * B.y),
+                y: (A.z * B.x) - (A.x * B.z),
+                z: (A.x * B.y) - (A.y * B.x)
+            };
+            // If in 2D mode, cross product is conventionally just the scalar Z magnitude
+            if (!is3D) {
+                formulaScreen.innerHTML = `A &times; B (2D) = (A<sub>x</sub>B<sub>y</sub>) - (A<sub>y</sub>B<sub>x</sub>) <br> = ${roundSafe(res.z)}`;
+                mainResLabel.innerText = "Scalar Z-Magnitude";
+                mainResVal.innerHTML = roundSafe(res.z);
+            } else {
+                formulaScreen.innerHTML = `A &times; B = ${formatVec(res)}`;
+                mainResLabel.innerText = "Orthogonal Vector";
+                mainResVal.innerHTML = formatVec(res);
+            }
+        }
+    }
+
+    function clearInputs() {
+        document.querySelectorAll('.num-input').forEach(inp => inp.value = 0);
+        calculate();
+    }
+
+    window.onload = () => {
+        calculate();
+    };
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

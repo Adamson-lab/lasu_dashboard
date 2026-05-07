@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech to Text Dictation | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Controls --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        /* Microphone Button UI */
+        .mic-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #ced4da;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-mic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--math-blue);
+            color: white;
+            font-size: 3rem;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.3);
+            position: relative;
+        }
+        .btn-mic:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(13, 110, 253, 0.4); }
+        
+        .btn-mic.listening {
+            background: var(--math-red);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            animation: pulse-red 1.5s infinite;
+        }
+
+        .mic-status {
+            margin-top: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #6c757d;
+        }
+        .mic-status.listening { color: var(--math-red); }
+
+        .control-group { margin-bottom: 15px; }
+        .control-label { font-weight: 800; color: #495057; text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem; margin-bottom: 8px; display: block; }
+        .form-select-custom { width: 100%; padding: 12px 15px; border-radius: 8px; border: 2px solid #ced4da; font-size: 1rem; color: #212529; font-weight: 600; outline: none; cursor: pointer; }
+        .form-select-custom:focus { border-color: var(--math-blue); }
+
+        /* --- Right Pane: Text Editor --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .editor-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            transition: all 0.2s;
+            line-height: 1.8;
+            font-family: 'Segoe UI', sans-serif;
+            background: #ffffff;
+        }
+        .text-editor:focus { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        /* Interim Text Display */
+        .interim-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(248, 249, 250, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--math-orange);
+            font-style: italic;
+            color: #6c757d;
+            font-size: 1.1rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+        }
+        .interim-overlay.active { opacity: 1; }
+
+        .editor-controls { display: flex; gap: 10px; margin-top: 15px; }
+
+        .btn-action {
+            flex: 1;
+            padding: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+        }
+        .btn-copy { background: var(--math-blue); color: white; flex: 2;}
+        .btn-copy:hover { background: #0b5ed7; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);}
+        
+        .btn-clear { background: #6c757d; color: white; flex: 1;}
+        .btn-clear:hover { background: #5c636a; transform: translateY(-2px); }
+
+        .telemetry-bar { background: #212529; padding: 15px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; color: white; font-family: 'Fira Code', monospace; font-size: 0.9rem; font-weight: 800; margin-bottom: 15px;}
+        .telemetry-bar span { color: var(--math-blue); }
+
+        #errorAlert { display: none; }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(220, 53, 69, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        @media (max-width: 992px) { .main-container { flex-direction: column; } .input-pane { flex: none; width: 100%; } }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-microphone-alt me-2"></i> Audio Interface</div>
+            </div>
+
+            <div class="alert alert-danger" id="errorAlert">
+                <i class="fas fa-exclamation-triangle me-2"></i> <span id="errorText">Microphone access denied.</span>
+            </div>
+
+            <div class="mic-container" id="micContainer">
+                <button class="btn-mic" id="btnMic" onclick="toggleDictation()">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <div class="mic-status" id="micStatus">Standby</div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Acoustic Model (Language)</label>
+                <select class="form-select-custom" id="langSelect" onchange="updateLanguage()">
+                    <option value="en-NG">English (Nigeria)</option>
+                    <option value="en-US" selected>English (United States)</option>
+                    <option value="en-GB">English (United Kingdom)</option>
+                    <option value="fr-FR">French (France)</option>
+                    <option value="es-ES">Spanish (Spain)</option>
+                    <option value="de-DE">German (Germany)</option>
+                    <option value="zh-CN">Chinese (Mandarin)</option>
+                    <option value="ar-SA">Arabic (Saudi Arabia)</option>
+                </select>
+            </div>
+            
+            <div class="alert alert-info border-0 mb-0 mt-auto" style="background: rgba(13, 110, 253, 0.05); color: var(--math-blue); font-size: 0.85rem;">
+                <i class="fas fa-info-circle me-1"></i> The neural engine automatically pauses when you stop speaking. Click the mic again to stop the session entirely.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-file-alt me-2 text-primary"></i> Transcribed Document</div>
+            </div>
+
+            <div class="telemetry-bar">
+                <div>Words Transcribed: <span id="wordCount">0</span></div>
+                <div>Connection: <span id="connStatus">Offline</span></div>
+            </div>
+
+            <div class="editor-container">
+                <textarea class="text-editor" id="textEditor" placeholder="Click the microphone and start speaking. Your text will appear here..."></textarea>
+                <div class="interim-overlay" id="interimText">Listening...</div>
+            </div>
+
+            <div class="editor-controls">
+                <button class="btn-action btn-copy" onclick="copyOutput()" id="copyBtn">
+                    <i class="fas fa-copy"></i> Copy Text
+                </button>
+                <button class="btn-action btn-clear" onclick="clearText()">
+                    <i class="fas fa-eraser"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const btnMic = document.getElementById('btnMic');
+    const micStatus = document.getElementById('micStatus');
+    const micContainer = document.getElementById('micContainer');
+    const textEditor = document.getElementById('textEditor');
+    const interimText = document.getElementById('interimText');
+    const langSelect = document.getElementById('langSelect');
+    const wordCount = document.getElementById('wordCount');
+    const connStatus = document.getElementById('connStatus');
+    const copyBtn = document.getElementById('copyBtn');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorText = document.getElementById('errorText');
+
+    let recognition;
+    let isListening = false;
+    let finalTranscript = '';
+
+    // Initialize Web Speech API
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = langSelect.value;
+
+        recognition.onstart = function() {
+            isListening = true;
+            btnMic.classList.add('listening');
+            micStatus.classList.add('listening');
+            micStatus.innerText = "Recording Live";
+            micContainer.style.borderColor = "var(--math-red)";
+            connStatus.innerText = "Active";
+            connStatus.style.color = "var(--radar-green)";
+            errorAlert.style.display = 'none';
+        };
+
+        recognition.onresult = function(event) {
+            let interim = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript + ' ';
+                } else {
+                    interim += event.results[i][0].transcript;
+                }
+            }
+
+            // Sync with whatever the user might have manually typed in the box
+            let currentText = textEditor.value;
+            // If the user manually edited the text, we need to respect that.
+            // For simplicity, we just append to the end.
+            
+            if (finalTranscript !== '') {
+                // Determine if we need a space
+                if (currentText.length > 0 && !currentText.endsWith(' ') && !currentText.endsWith('\n')) {
+                    textEditor.value = currentText + ' ' + finalTranscript;
+                } else {
+                    textEditor.value = currentText + finalTranscript;
+                }
+                finalTranscript = ''; // Reset buffer after dumping to editor
+                updateWordCount();
+                
+                // Auto-scroll to bottom
+                textEditor.scrollTop = textEditor.scrollHeight;
+            }
+
+            if (interim !== '') {
+                interimText.innerText = interim;
+                interimText.classList.add('active');
+            } else {
+                interimText.classList.remove('active');
+            }
+        };
+
+        recognition.onerror = function(event) {
+            console.error(event.error);
+            if (event.error === 'not-allowed') {
+                errorText.innerText = "Microphone access blocked. Please allow permissions in your browser.";
+                errorAlert.style.display = 'block';
+                stopDictation();
+            }
+        };
+
+        recognition.onend = function() {
+            // Infinite listen hack: if we didn't manually stop it, restart it.
+            if (isListening) {
+                try { recognition.start(); } catch(e) {}
+            } else {
+                btnMic.classList.remove('listening');
+                micStatus.classList.remove('listening');
+                micStatus.innerText = "Standby";
+                micContainer.style.borderColor = "#ced4da";
+                interimText.classList.remove('active');
+                connStatus.innerText = "Offline";
+                connStatus.style.color = "var(--math-blue)";
+            }
+        };
+
+    } else {
+        btnMic.disabled = true;
+        btnMic.style.background = "#6c757d";
+        micStatus.innerText = "Browser Unsupported";
+        errorText.innerText = "Your browser does not support the Web Speech API. Please use Google Chrome or Microsoft Edge.";
+        errorAlert.style.display = 'block';
+    }
+
+    function toggleDictation() {
+        if (!recognition) return;
+        
+        if (isListening) {
+            stopDictation();
+        } else {
+            // Read from textarea to sync our internal buffer
+            finalTranscript = '';
+            try {
+                recognition.start();
+            } catch(e) {
+                // If it's already started somehow, catch the error
+            }
+        }
+    }
+
+    function stopDictation() {
+        isListening = false;
+        recognition.stop();
+    }
+
+    function updateLanguage() {
+        if (recognition) {
+            let wasListening = isListening;
+            if (wasListening) stopDictation();
+            recognition.lang = langSelect.value;
+            if (wasListening) setTimeout(() => toggleDictation(), 500); // Restart with new lang
+        }
+    }
+
+    function updateWordCount() {
+        const text = textEditor.value.trim();
+        const words = text === '' ? 0 : text.split(/\s+/).length;
+        wordCount.innerText = words.toLocaleString();
+    }
+
+    textEditor.addEventListener('input', updateWordCount);
+
+    function copyOutput() {
+        if (!textEditor.value) return;
+        textEditor.select();
+        document.execCommand('copy');
+        
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.style.backgroundColor = '#198754';
+        
+        setTimeout(() => { 
+            copyBtn.innerHTML = originalText; 
+            copyBtn.style.backgroundColor = 'var(--math-blue)';
+        }, 1500);
+    }
+
+    function clearText() {
+        textEditor.value = '';
+        finalTranscript = '';
+        updateWordCount();
+        textEditor.focus();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

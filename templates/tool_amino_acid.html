@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amino Acid Converter | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1500px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-preset {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .btn-preset:hover { background: #f8f9fa; border-color: var(--lasu-accent); color: var(--lasu-accent); }
+
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--lasu-accent); box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15); }
+        
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .seq-input {
+            width: 100%;
+            border: none;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            color: #212529;
+            outline: none;
+            resize: vertical;
+            min-height: 150px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1.5;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* FLAWLESS BOOTSTRAP GRID CARDS */
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 140px; 
+        }
+        
+        .stat-card.primary { border-color: rgba(13, 110, 253, 0.3); background: rgba(13, 110, 253, 0.02); }
+        .stat-card.success { border-color: rgba(25, 135, 84, 0.3); background: rgba(25, 135, 84, 0.02); }
+        .stat-card.warning { border-color: rgba(253, 126, 20, 0.3); background: rgba(253, 126, 20, 0.02); }
+
+        .stat-label {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+            width: 100%;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 6px;
+            width: 100%;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .primary .stat-val { color: var(--math-blue); }
+        .success .stat-val { color: var(--lasu-accent); }
+        .warning .stat-val { color: var(--math-orange); }
+
+        .res-unit { font-size: 1.1rem; color: #adb5bd; margin-left: 2px;}
+
+        .stat-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+        }
+
+        /* --- Sequence Visualizer Box --- */
+        .simulation-box {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 2px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            min-height: 400px;
+        }
+
+        .seq-section {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .seq-section:last-child { border-bottom: none; }
+        
+        .seq-title {
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .base-sequence {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #212529;
+            word-wrap: break-word;
+            letter-spacing: 4px;
+            line-height: 1.8;
+        }
+
+        .codon-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .codon-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f8f9fa;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 8px 12px;
+            min-width: 70px;
+        }
+        .codon-badge .rna { font-family: 'Fira Code', monospace; font-size: 0.9rem; font-weight: 800; color: #6c757d; margin-bottom: 4px;}
+        .codon-badge .aa { font-weight: 800; font-size: 1.1rem; color: #212529; }
+        
+        .codon-start { border-color: #198754; background: rgba(25, 135, 84, 0.1); }
+        .codon-start .aa { color: #198754; }
+        
+        .codon-stop { border-color: #dc3545; background: rgba(220, 53, 69, 0.1); }
+        .codon-stop .aa { color: #dc3545; }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">BIO / CHEM & HEALTH</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-dna"></i> Sequence Input
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Invalid characters found. Use A, T, C, G, or U.
+            </div>
+
+            <div class="preset-grid">
+                <button class="btn-preset" onclick="setPreset('ATGCGTACGTTAGCTAGCTAA')">
+                    Standard Gene
+                </button>
+                <button class="btn-preset" onclick="setPreset('AUGGCCAUGGCGCCCAGAACUGAGAUCAAUAGUACCCGUAUUAACGGGUGA')">
+                    mRNA Transcript
+                </button>
+            </div>
+
+            <div class="input-group-custom flex-grow-1">
+                <div class="input-label">
+                    <span>Nucleotide Sequence</span>
+                    <span class="badge bg-primary" id="inputTypeBadge">Auto-Detect</span>
+                </div>
+                <textarea class="seq-input" id="valSeq" placeholder="Paste DNA or RNA here... e.g. ATGC..." oninput="processSequence()"></textarea>
+            </div>
+
+            <div class="alert alert-info mb-3 border-0" style="background: rgba(25, 135, 84, 0.05); color: var(--lasu-accent); font-size: 0.85rem;">
+                <i class="fas fa-info-circle mb-1"></i><br>
+                Engine automatically transcribes DNA to mRNA, splits into codons, and translates to standard Amino Acids.
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Sequence
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-primary bg-primary bg-opacity-10 p-3 stat-card primary" style="border-width: 2px; border-radius: 12px; box-shadow: none;">
+                    <div class="stat-label">Total Nucleotides</div>
+                    <div class="stat-val">
+                        <span id="resNuc">0</span>
+                    </div>
+                    <div class="stat-sub">Base pairs length</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-warning bg-warning bg-opacity-10 p-3 stat-card warning" style="border-width: 2px; border-radius: 12px; box-shadow: none;">
+                    <div class="stat-label">Total Codons</div>
+                    <div class="stat-val">
+                        <span id="resCodons">0</span>
+                    </div>
+                    <div class="stat-sub">Nucleotides &div; 3</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center border-success bg-success bg-opacity-10 p-3 stat-card success" style="border-width: 2px; border-radius: 12px; box-shadow: none;">
+                    <div class="stat-label">Amino Acids</div>
+                    <div class="stat-val">
+                        <span id="resAA">0</span>
+                    </div>
+                    <div class="stat-sub">Polypeptide length</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="simulation-box mt-2">
+            
+            <div class="seq-section" style="background: #f8f9fa;">
+                <div class="seq-title"><i class="fas fa-link text-primary"></i> 1. Transcribed mRNA Sequence</div>
+                <div class="base-sequence" id="dispMRNA">Waiting for input...</div>
+            </div>
+
+            <div class="seq-section flex-grow-1">
+                <div class="seq-title"><i class="fas fa-project-diagram text-success"></i> 2. Translated Polypeptide Chain</div>
+                <div class="codon-grid" id="dispProtein">
+                    </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Standard Genetic Code Dictionary
+    const codonTable = {
+        'AUA':'Ile', 'AUC':'Ile', 'AUU':'Ile', 'AUG':'Met',
+        'ACA':'Thr', 'ACC':'Thr', 'ACG':'Thr', 'ACU':'Thr',
+        'AAC':'Asn', 'AAU':'Asn', 'AAA':'Lys', 'AAG':'Lys',
+        'AGC':'Ser', 'AGU':'Ser', 'AGA':'Arg', 'AGG':'Arg',
+        'CUA':'Leu', 'CUC':'Leu', 'CUG':'Leu', 'CUU':'Leu',
+        'CCA':'Pro', 'CCC':'Pro', 'CCG':'Pro', 'CCU':'Pro',
+        'CAC':'His', 'CAU':'His', 'CAA':'Gln', 'CAG':'Gln',
+        'CGA':'Arg', 'CGC':'Arg', 'CGG':'Arg', 'CGU':'Arg',
+        'GUA':'Val', 'GUC':'Val', 'GUG':'Val', 'GUU':'Val',
+        'GCA':'Ala', 'GCC':'Ala', 'GCG':'Ala', 'GCU':'Ala',
+        'GAC':'Asp', 'GAU':'Asp', 'GAA':'Glu', 'GAG':'Glu',
+        'GGA':'Gly', 'GGC':'Gly', 'GGG':'Gly', 'GGU':'Gly',
+        'UCA':'Ser', 'UCC':'Ser', 'UCG':'Ser', 'UCU':'Ser',
+        'UUC':'Phe', 'UUU':'Phe', 'UUA':'Leu', 'UUG':'Leu',
+        'UAC':'Tyr', 'UAU':'Tyr', 'UAA':'STOP', 'UAG':'STOP',
+        'UGC':'Cys', 'UGU':'Cys', 'UGA':'STOP', 'UGG':'Trp'
+    };
+
+    const valSeq = document.getElementById('valSeq');
+    const inputTypeBadge = document.getElementById('inputTypeBadge');
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const resNuc = document.getElementById('resNuc');
+    const resCodons = document.getElementById('resCodons');
+    const resAA = document.getElementById('resAA');
+    
+    const dispMRNA = document.getElementById('dispMRNA');
+    const dispProtein = document.getElementById('dispProtein');
+
+    function setPreset(seq) {
+        valSeq.value = seq;
+        processSequence();
+    }
+
+    function colorizeNucleotides(sequence) {
+        let html = '';
+        for (let i=0; i<sequence.length; i++) {
+            let char = sequence[i];
+            let color = '#212529'; // default
+            if (char === 'A') color = '#198754';
+            else if (char === 'U' || char === 'T') color = '#dc3545';
+            else if (char === 'G') color = '#fd7e14';
+            else if (char === 'C') color = '#0d6efd';
+            
+            // Add slight spacing every 3 letters to visually group codons
+            let margin = (i % 3 === 2) ? 'margin-right: 8px;' : '';
+            html += `<span style="color: ${color}; ${margin}">${char}</span>`;
+        }
+        return html;
+    }
+
+    function processSequence() {
+        // 1. Sanitize Input
+        let raw = valSeq.value.toUpperCase().replace(/[^ATCGU]/g, '');
+        
+        if (raw.length !== valSeq.value.replace(/\s/g, '').length && valSeq.value.length > 0) {
+            errorBanner.style.display = 'block';
+        } else {
+            errorBanner.style.display = 'none';
+        }
+
+        if (raw.length === 0) {
+            resNuc.innerText = '0';
+            resCodons.innerText = '0';
+            resAA.innerText = '0';
+            dispMRNA.innerHTML = 'Waiting for input...';
+            dispProtein.innerHTML = '';
+            inputTypeBadge.innerText = 'Auto-Detect';
+            inputTypeBadge.className = 'badge bg-secondary';
+            return;
+        }
+
+        // 2. Auto-Detect DNA vs RNA
+        let isRNA = raw.includes('U');
+        if (isRNA) {
+            inputTypeBadge.innerText = 'RNA Sequence';
+            inputTypeBadge.className = 'badge bg-success';
+        } else {
+            inputTypeBadge.innerText = 'Coding DNA';
+            inputTypeBadge.className = 'badge bg-primary';
+        }
+
+        // 3. Transcription (Coding DNA to mRNA)
+        // If it's Coding DNA, we just replace T with U to get mRNA.
+        let mRNA = raw.replace(/T/g, 'U');
+
+        // 4. Update Sequence Visualizer
+        dispMRNA.innerHTML = colorizeNucleotides(mRNA);
+
+        // 5. Translation Engine
+        let codons = [];
+        let proteinHTML = '';
+        let aaCount = 0;
+
+        for (let i = 0; i < mRNA.length; i += 3) {
+            let triplet = mRNA.substring(i, i + 3);
+            if (triplet.length === 3) {
+                codons.push(triplet);
+                
+                let aminoAcid = codonTable[triplet] || '???';
+                let styleClass = 'codon-badge';
+                
+                if (aminoAcid === 'Met') styleClass += ' codon-start';
+                if (aminoAcid === 'STOP') styleClass += ' codon-stop';
+                
+                if (aminoAcid !== 'STOP') aaCount++;
+
+                proteinHTML += `
+                    <div class="${styleClass}">
+                        <span class="rna">${triplet}</span>
+                        <span class="aa">${aminoAcid}</span>
+                    </div>
+                `;
+            }
+        }
+
+        // 6. Update Top Stats
+        resNuc.innerText = raw.length;
+        resCodons.innerText = codons.length;
+        resAA.innerText = aaCount;
+
+        dispProtein.innerHTML = proteinHTML;
+    }
+
+    function clearInputs() {
+        valSeq.value = '';
+        processSequence();
+        valSeq.focus();
+    }
+
+    // INIT
+    setTimeout(() => {
+        setPreset('ATGCGTACGTTAGCTAGCTAA');
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

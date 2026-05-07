@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>🤖 AI Exam Scheduler</h2>
+    </div>
+    
+    <div class="card shadow-sm mb-4 border-primary">
+        <div class="card-body bg-light">
+            <h5 class="fw-bold text-primary">Generate Conflict-Free Timetable</h5>
+            <p class="text-muted small">
+                The "MIGHTY" algorithm will analyze every student's registered courses and generate a schedule where 
+                <strong>no single student has two exams at the same time</strong>.
+            </p>
+            <form action="{{ url_for('generate_exam_timetable') }}" method="POST" class="row align-items-end g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Exam Start Date</label>
+                    <input type="date" name="start_date" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary fw-bold w-100">⚡ Auto-Generate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Generated Master Schedule</span>
+            <div class="d-flex gap-2">
+                <span class="badge bg-light text-dark align-self-center me-2">{{ exams|length }} Exams</span>
+                <a href="{{ url_for('print_exam_timetable') }}" target="_blank" class="btn btn-outline-light btn-sm fw-bold">🖨️ Print / PDF</a>
+                <a href="{{ url_for('export_exams_csv') }}" class="btn btn-success btn-sm fw-bold">📊 Export CSV</a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped mb-0 table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Time Slot</th>
+                        <th>Course Code</th>
+                        <th>Course Title</th>
+                        <th>Venue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in exams %}
+                    <tr>
+                        <td class="fw-bold">{{ exam.exam_date.strftime('%a, %d %b %Y') }}</td>
+                        <td>
+                            <span class="badge bg-warning text-dark border border-dark">
+                                {{ exam.start_time }} - {{ exam.end_time }}
+                            </span>
+                        </td>
+                        <td class="text-primary fw-bold">{{ exam.course.code }}</td>
+                        <td>{{ exam.course.title }}</td>
+                        <td><span class="badge bg-secondary">{{ exam.venue }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <h4>No timetable generated yet.</h4>
+                            <p>Select a start date above to run the algorithm.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

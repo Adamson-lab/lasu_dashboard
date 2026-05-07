@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>e-Clearance | LASU Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        .clearance-header {
+            background: linear-gradient(135deg, #0d6efd 0%, #0099ff 100%);
+            color: white; padding: 40px 0; border-radius: 0 0 30px 30px; margin-bottom: 30px;
+        }
+        .unit-card {
+            border: none; border-radius: 15px; background: white; transition: 0.3s;
+            position: relative; overflow: hidden; height: 100%;
+        }
+        .unit-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+        .status-icon {
+            width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 15px;
+        }
+        .status-Pending { background: #e9ecef; color: #6c757d; }
+        .status-Processing { background: #fff3cd; color: #ffc107; animation: pulse 2s infinite; }
+        .status-Cleared { background: #d1e7dd; color: #198754; }
+        .status-Rejected { background: #f8d7da; color: #dc3545; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        
+        .progress { height: 25px; border-radius: 15px; background: #e9ecef; }
+        .progress-bar { background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="clearance-header text-center">
+    <div class="container">
+        <div class="text-start mb-2">
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                <i class="fas fa-arrow-left me-2"></i>Back to Portal
+            </a>
+        </div>
+        <h1 class="fw-bold"><i class="fas fa-stamp me-2"></i>Graduation Clearance</h1>
+        <p class="opacity-75">Track your final clearance process digitally.</p>
+        
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <div class="progress shadow-sm">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{ progress }}%">
+                        {{ progress }}% COMPLETE
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show mb-4 shadow-sm" role="alert">
+                    <i class="fas fa-info-circle me-2"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card unit-card p-4 text-center shadow-sm">
+                <div class="mx-auto status-icon status-{{ cl.bursary_status }}">
+                    <i class="fas {{ 'fa-check' if cl.bursary_status == 'Cleared' else 'fa-file-invoice-dollar' }}"></i>
+                </div>
+                <h5 class="fw-bold">Bursary Unit</h5>
+                <p class="text-muted small">Verification of School Fees</p>
+                <span class="badge mb-3 bg-{{ 'success' if cl.bursary_status == 'Cleared' else 'secondary' }}">
+                    {{ cl.bursary_status }}
+                </span>
+                
+                {% if cl.bursary_status != 'Cleared' %}
+                <a href="{{ url_for('force_request_clearance', unit='bursary') }}" class="btn btn-outline-primary w-100 btn-sm">Request Clearance</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card unit-card p-4 text-center shadow-sm">
+                <div class="mx-auto status-icon status-{{ cl.library_status }}">
+                    <i class="fas {{ 'fa-check' if cl.library_status == 'Cleared' else 'fa-book' }}"></i>
+                </div>
+                <h5 class="fw-bold">University Library</h5>
+                <p class="text-muted small">Return of borrowed books</p>
+                <span class="badge mb-3 bg-{{ 'success' if cl.library_status == 'Cleared' else 'secondary' }}">
+                    {{ cl.library_status }}
+                </span>
+                
+                {% if cl.library_status != 'Cleared' %}
+                <a href="{{ url_for('force_request_clearance', unit='library') }}" class="btn btn-outline-primary w-100 btn-sm">Request Clearance</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card unit-card p-4 text-center shadow-sm">
+                <div class="mx-auto status-icon status-{{ cl.department_status }}">
+                    <i class="fas {{ 'fa-check' if cl.department_status == 'Cleared' else 'fa-building' }}"></i>
+                </div>
+                <h5 class="fw-bold">Department</h5>
+                <p class="text-muted small">File review by H.O.D</p>
+                <span class="badge mb-3 bg-{{ 'success' if cl.department_status == 'Cleared' else 'secondary' }}">
+                    {{ cl.department_status }}
+                </span>
+                
+                {% if cl.department_status != 'Cleared' %}
+                <a href="{{ url_for('force_request_clearance', unit='department') }}" class="btn btn-outline-primary w-100 btn-sm">Request Clearance</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card unit-card p-4 text-center shadow-sm">
+                <div class="mx-auto status-icon status-{{ cl.sports_status }}">
+                    <i class="fas {{ 'fa-check' if cl.sports_status == 'Cleared' else 'fa-running' }}"></i>
+                </div>
+                <h5 class="fw-bold">Sports Center</h5>
+                <p class="text-muted small">Equipment return verification</p>
+                <span class="badge mb-3 bg-{{ 'success' if cl.sports_status == 'Cleared' else 'secondary' }}">
+                    {{ cl.sports_status }}
+                </span>
+                
+                {% if cl.sports_status != 'Cleared' %}
+                <a href="{{ url_for('force_request_clearance', unit='sports') }}" class="btn btn-outline-primary w-100 btn-sm">Request Clearance</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card unit-card p-4 text-center shadow-sm">
+                <div class="mx-auto status-icon status-{{ cl.health_center_status }}">
+                    <i class="fas {{ 'fa-check' if cl.health_center_status == 'Cleared' else 'fa-user-md' }}"></i>
+                </div>
+                <h5 class="fw-bold">Health Center</h5>
+                <p class="text-muted small">Medical file closure</p>
+                <span class="badge mb-3 bg-{{ 'success' if cl.health_center_status == 'Cleared' else 'secondary' }}">
+                    {{ cl.health_center_status }}
+                </span>
+                
+                {% if cl.health_center_status != 'Cleared' %}
+                <a href="{{ url_for('force_request_clearance', unit='health') }}" class="btn btn-outline-primary w-100 btn-sm">Request Clearance</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card unit-card p-4 text-center shadow-sm border-2 {{ 'border-success' if progress == 100 else 'border-light' }}">
+                <div class="mx-auto status-icon" style="background: {{ '#d1e7dd' if progress == 100 else '#f8f9fa' }}; color: {{ '#198754' if progress == 100 else '#ccc' }};">
+                    <i class="fas fa-print"></i>
+                </div>
+                <h5 class="fw-bold">Final Certificate</h5>
+                <p class="text-muted small">Download Clearance Form</p>
+                
+                {% if progress == 100 %}
+                <a href="{{ url_for('print_clearance') }}" class="btn btn-success w-100 fw-bold animate__animated animate__pulse animate__infinite">
+                    <i class="fas fa-download me-2"></i> DOWNLOAD PDF
+                </a>
+                {% else %}
+                <button class="btn btn-secondary w-100" disabled>Complete All Units First</button>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

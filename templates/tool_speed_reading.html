@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Reading RSVP | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+            --gideon-dark: #0a0e17;
+        }
+
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        .navbar-custom { background-color: var(--lasu-green); box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding-top: 12px; padding-bottom: 12px; }
+        .back-btn { color: white; text-decoration: none; font-weight: 600; display: flex; align-items: center; transition: opacity 0.2s; }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container { flex: 1; display: flex; padding: 2rem; max-width: 1400px; margin: 0 auto; width: 100%; gap: 20px; }
+        
+        .input-pane { flex: 0 0 450px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+        .output-pane { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+        .card-box { background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); padding: 25px; display: flex; flex-direction: column; height: 100%; }
+        .pane-header { font-weight: 800; color: var(--lasu-green); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #f8f9fa; padding-bottom: 10px; }
+
+        /* Input Controls */
+        .text-editor { flex: 1; width: 100%; border: 2px solid #ced4da; border-radius: 8px; padding: 15px; font-size: 1.1rem; color: #212529; outline: none; resize: none; transition: all 0.3s; line-height: 1.6; margin-bottom: 20px; font-family: 'Segoe UI', sans-serif; min-height: 200px; }
+        .text-editor:focus { border-color: var(--math-orange); box-shadow: 0 0 0 4px rgba(253, 126, 20, 0.15); }
+
+        .control-group { margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
+        .control-label { font-weight: 800; color: #495057; text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .range-slider { width: 100%; cursor: pointer; accent-color: var(--math-orange); }
+        .stat-badge { color: var(--math-orange); font-family: 'Fira Code', monospace; font-size: 1rem; }
+
+        .btn-load { background: var(--gideon-dark); color: var(--math-orange); padding: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border-radius: 8px; border: 1px solid var(--math-orange); transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; margin-top: auto; }
+        .btn-load:hover { background: var(--math-orange); color: #fff; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(253, 126, 20, 0.3); }
+
+        /* RSVP Reader Display */
+        .reader-stage { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--gideon-dark); border-radius: 12px; position: relative; border: 2px solid #2b3035; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); min-height: 350px; overflow: hidden; margin-bottom: 15px;}
+        
+        /* Guide lines for eye focus */
+        .reader-stage::before { content: ''; position: absolute; top: 20%; bottom: 20%; left: 50%; width: 2px; background: rgba(255,255,255,0.05); transform: translateX(-50%); z-index: 1;}
+        .reader-stage::after { content: ''; position: absolute; top: 50%; left: 10%; right: 10%; height: 2px; background: rgba(255,255,255,0.05); transform: translateY(-50%); z-index: 1;}
+
+        .word-display { font-family: 'Fira Code', monospace; font-size: 4.5rem; font-weight: 700; color: #fff; z-index: 2; position: relative; display: flex; letter-spacing: 2px;}
+        .word-display .orp { color: var(--math-orange); text-shadow: 0 0 20px var(--math-orange); } /* Optimal Recognition Point */
+        
+        /* Progress & Controls */
+        .progress-container { width: 100%; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
+        .progress-bar { height: 100%; width: 0%; background: var(--math-orange); transition: width 0.1s linear; }
+
+        .telemetry-bar { display: flex; justify-content: space-between; font-family: 'Fira Code', monospace; font-size: 0.9rem; font-weight: 800; color: #6c757d; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;}
+        .telemetry-bar span { color: var(--gideon-dark); }
+
+        .playback-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        
+        .btn-play { background: var(--lasu-accent); color: white; padding: 15px; border: none; border-radius: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; grid-column: span 2;}
+        .btn-play:hover { background: #146c43; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3); }
+        .btn-play.active { background: var(--math-red); box-shadow: 0 0 20px rgba(220, 53, 69, 0.4); }
+
+        .btn-secondary { background: #6c757d; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: 800; text-transform: uppercase; transition: all 0.2s; display: flex; justify-content: center; align-items: center; }
+        .btn-secondary:hover { background: #5c636a; transform: translateY(-2px); }
+        .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        @media (max-width: 992px) { .main-container { flex-direction: column; } .input-pane { flex: none; width: 100%; } .word-display { font-size: 3rem; } }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-bolt me-2"></i> RSVP Matrix</div>
+            </div>
+
+            <textarea class="text-editor" id="rawInput" placeholder="Paste the text you want to speed read here..."></textarea>
+
+            <div class="control-group pb-4">
+                <div class="control-label">
+                    <span>Reading Speed (WPM)</span>
+                    <span class="stat-badge" id="wpmVal">300 WPM</span>
+                </div>
+                <input type="range" class="range-slider" id="wpmSlider" min="100" max="1000" value="300" step="25">
+            </div>
+
+            <div class="control-group pb-4">
+                <div class="control-label">
+                    <span>Font Size</span>
+                    <span class="stat-badge" id="fontVal">4.5rem</span>
+                </div>
+                <input type="range" class="range-slider" id="fontSlider" min="2" max="8" value="4.5" step="0.5">
+            </div>
+
+            <button class="btn-load" onclick="loadText()">
+                <i class="fas fa-upload"></i> Load Matrix
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div style="color: var(--math-orange);"><i class="fas fa-eye me-2"></i> Neural Display</div>
+            </div>
+
+            <div class="reader-stage" id="readerStage">
+                <div class="word-display" id="wordDisplay">READY</div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="telemetry-bar">
+                <div>Position: <span id="posText">0 / 0</span></div>
+                <div>Est. Time: <span id="timeText">0m 0s</span></div>
+            </div>
+
+            <div class="playback-controls">
+                <button class="btn-secondary" id="btnRewind" onclick="rewind()" disabled><i class="fas fa-backward"></i></button>
+                <button class="btn-play" id="btnPlay" onclick="togglePlay()" disabled>
+                    <i class="fas fa-play me-2"></i> <span id="playText">Play</span>
+                </button>
+                <button class="btn-secondary" id="btnReset" onclick="resetReader()" disabled><i class="fas fa-redo"></i></button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const rawInput = document.getElementById('rawInput');
+    const wpmSlider = document.getElementById('wpmSlider');
+    const fontSlider = document.getElementById('fontSlider');
+    const wpmVal = document.getElementById('wpmVal');
+    const fontVal = document.getElementById('fontVal');
+    
+    const wordDisplay = document.getElementById('wordDisplay');
+    const progressBar = document.getElementById('progressBar');
+    const posText = document.getElementById('posText');
+    const timeText = document.getElementById('timeText');
+    
+    const btnPlay = document.getElementById('btnPlay');
+    const btnRewind = document.getElementById('btnRewind');
+    const btnReset = document.getElementById('btnReset');
+    const playText = document.getElementById('playText');
+
+    let words = [];
+    let currentIndex = 0;
+    let isPlaying = false;
+    let loopTimeout = null;
+
+    // Sliders
+    wpmSlider.addEventListener('input', () => {
+        wpmVal.innerText = `${wpmSlider.value} WPM`;
+        updateEstTime();
+    });
+    
+    fontSlider.addEventListener('input', () => {
+        const size = `${fontSlider.value}rem`;
+        fontVal.innerText = size;
+        wordDisplay.style.fontSize = size;
+    });
+
+    function loadText() {
+        const text = rawInput.value.trim();
+        if (!text) { alert("Please paste some text to read."); return; }
+
+        // Clean and split text into an array of words
+        words = text.replace(/\n/g, ' ').split(/\s+/).filter(w => w.length > 0);
+        
+        currentIndex = 0;
+        isPlaying = false;
+        
+        btnPlay.disabled = false;
+        btnRewind.disabled = false;
+        btnReset.disabled = false;
+        
+        updateUI();
+        updateEstTime();
+    }
+
+    function togglePlay() {
+        if (words.length === 0) return;
+
+        if (isPlaying) {
+            pauseReader();
+        } else {
+            if (currentIndex >= words.length) currentIndex = 0; // Restart if at end
+            startReader();
+        }
+    }
+
+    function startReader() {
+        isPlaying = true;
+        btnPlay.classList.add('active');
+        playText.innerText = "Pause";
+        btnPlay.innerHTML = '<i class="fas fa-pause me-2"></i> Pause';
+        runRSVPLoop();
+    }
+
+    function pauseReader() {
+        isPlaying = false;
+        clearTimeout(loopTimeout);
+        btnPlay.classList.remove('active');
+        playText.innerText = "Play";
+        btnPlay.innerHTML = '<i class="fas fa-play me-2"></i> Play';
+    }
+
+    function resetReader() {
+        pauseReader();
+        currentIndex = 0;
+        updateUI();
+    }
+
+    function rewind() {
+        pauseReader();
+        currentIndex = Math.max(0, currentIndex - 15); // Rewind ~15 words
+        updateUI();
+    }
+
+    // THE RSVP NEURAL ENGINE
+    function runRSVPLoop() {
+        if (!isPlaying) return;
+        if (currentIndex >= words.length) {
+            pauseReader();
+            return;
+        }
+
+        updateUI(); // Renders the current word
+
+        // Calculate timing
+        const wpm = parseInt(wpmSlider.value);
+        let msPerWord = 60000 / wpm;
+        
+        const currentWord = words[currentIndex];
+        
+        // Algorithmic Pacing: Slow down slightly for punctuation to mimic comprehension
+        if (currentWord.endsWith('.') || currentWord.endsWith('!') || currentWord.endsWith('?')) {
+            msPerWord *= 2.0; // 100% slower at end of sentence
+        } else if (currentWord.endsWith(',') || currentWord.endsWith(';') || currentWord.endsWith(':')) {
+            msPerWord *= 1.5; // 50% slower at commas
+        } else if (currentWord.length > 8) {
+            msPerWord *= 1.2; // 20% slower for very long complex words
+        }
+
+        currentIndex++;
+
+        loopTimeout = setTimeout(() => {
+            requestAnimationFrame(runRSVPLoop);
+        }, msPerWord);
+    }
+
+    function updateUI() {
+        if (words.length === 0) return;
+        
+        const safeIndex = Math.min(currentIndex, words.length - 1);
+        const word = words[safeIndex];
+        
+        // Calculate Optimal Recognition Point (ORP)
+        // Usually the center, slightly shifted left
+        let orpIndex = Math.floor((word.length - 1) / 2);
+        
+        // Split word to inject the red span
+        const prefix = word.substring(0, orpIndex);
+        const orpChar = word.charAt(orpIndex);
+        const suffix = word.substring(orpIndex + 1);
+
+        wordDisplay.innerHTML = `${prefix}<span class="orp">${orpChar}</span>${suffix}`;
+
+        // Telemetry
+        const pct = ((safeIndex + 1) / words.length) * 100;
+        progressBar.style.width = `${pct}%`;
+        posText.innerText = `${safeIndex + 1} / ${words.length}`;
+    }
+
+    function updateEstTime() {
+        if (words.length === 0) return;
+        const remainingWords = words.length - currentIndex;
+        const wpm = parseInt(wpmSlider.value);
+        const minutes = remainingWords / wpm;
+        
+        const m = Math.floor(minutes);
+        const s = Math.floor((minutes - m) * 60);
+        timeText.innerText = `${m}m ${s}s`;
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

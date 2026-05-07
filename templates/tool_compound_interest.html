@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compound Interest Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-finance: #6f42c1; /* Investment Purple */
+            --brand-finance-light: rgba(111, 66, 193, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-finance);
+            box-shadow: 0 0 0 3px var(--brand-finance-light);
+        }
+        .result-card {
+            background: linear-gradient(135deg, #6f42c1 0%, #46198f 100%);
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(111, 66, 193, 0.2);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-card::after {
+            content: '\f200'; /* FA Pie Chart */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -10px;
+            bottom: -20px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        .result-value {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 10px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+        .color-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-chart-pie me-2" style="color: var(--brand-finance);"></i> Compound Interest</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="input-panel">
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Initial Investment</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" id="principal" class="form-control" value="10000" min="0" oninput="calculateCompoundInterest()">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Monthly Contribution</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" id="monthlyContribution" class="form-control" value="500" min="0" oninput="calculateCompoundInterest()">
+                        </div>
+                        <small class="text-muted" style="font-size: 0.75rem;">Added at the end of each month</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Estimated Interest Rate</label>
+                        <div class="input-group">
+                            <input type="number" id="interestRate" class="form-control" value="8" min="0" step="0.1" oninput="calculateCompoundInterest()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Years to Grow</label>
+                        <input type="number" id="years" class="form-control" value="20" min="1" max="100" oninput="calculateCompoundInterest()">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Compound Frequency</label>
+                        <select id="compoundFrequency" class="form-select" onchange="calculateCompoundInterest()">
+                            <option value="1">Annually (1/yr)</option>
+                            <option value="12" selected>Monthly (12/yr)</option>
+                            <option value="365">Daily (365/yr)</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="result-card h-100 mb-0">
+                            <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.85;">Total Future Value</div>
+                            <div class="result-value" id="futureValueDisplay">$0.00</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-panel d-flex flex-column justify-content-center h-100">
+                            <div class="breakdown-row">
+                                <div><span class="color-dot" style="background: #198754;"></span> <span class="text-muted">Total Principal Input</span></div>
+                                <span class="fw-bold" id="totalPrincipalDisplay">$0.00</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <div><span class="color-dot" style="background: #6f42c1;"></span> <span class="text-muted">Total Interest Earned</span></div>
+                                <span class="fw-bold text-success" id="totalInterestDisplay">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let growthChartInstance = null;
+
+        const currencyFormatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            calculateCompoundInterest();
+        });
+
+        function calculateCompoundInterest() {
+            // Fetch inputs
+            const principal = parseFloat(document.getElementById('principal').value) || 0;
+            const monthlyContribution = parseFloat(document.getElementById('monthlyContribution').value) || 0;
+            const rate = parseFloat(document.getElementById('interestRate').value) || 0;
+            const years = parseInt(document.getElementById('years').value) || 0;
+            const compoundFreq = parseInt(document.getElementById('compoundFrequency').value) || 12;
+
+            if (years <= 0) {
+                updateUI(principal, principal, 0, [], [], []);
+                return;
+            }
+
+            const decimalRate = rate / 100;
+            
+            // Arrays for Charting temporal data
+            let labels = [];
+            let principalData = [];
+            let interestData = [];
+
+            // Granular iteration year by year to build the chart dataset
+            let currentBalance = principal;
+            let currentPrincipal = principal;
+
+            for (let y = 1; y <= years; y++) {
+                // Calculate this specific year's growth based on compound frequency
+                // To keep it simple but accurate enough for an annual chart plot, we compound step-by-step
+                for (let m = 1; m <= 12; m++) {
+                    // Add interest for the month
+                    if (compoundFreq === 12) {
+                        currentBalance += currentBalance * (decimalRate / 12);
+                    } else if (compoundFreq === 365) {
+                        // Approximate daily compounding for the month
+                        currentBalance = currentBalance * Math.pow(1 + (decimalRate / 365), 365/12);
+                    } else if (compoundFreq === 1 && m === 12) {
+                        // Annual compounding happens at the end of the year
+                        currentBalance += currentBalance * decimalRate;
+                    }
+                    
+                    // Add contribution at end of month
+                    currentBalance += monthlyContribution;
+                    currentPrincipal += monthlyContribution;
+                }
+
+                // Log data for the chart at the end of the year
+                labels.push(`Year ${y}`);
+                principalData.push(Math.round(currentPrincipal));
+                interestData.push(Math.round(currentBalance - currentPrincipal));
+            }
+
+            const totalInterest = currentBalance - currentPrincipal;
+
+            updateUI(currentBalance, currentPrincipal, totalInterest, labels, principalData, interestData);
+        }
+
+        function updateUI(futureValue, totalPrincipal, totalInterest, labels, principalData, interestData) {
+            document.getElementById('futureValueDisplay').innerText = currencyFormatter.format(futureValue);
+            document.getElementById('totalPrincipalDisplay').innerText = currencyFormatter.format(totalPrincipal);
+            document.getElementById('totalInterestDisplay').innerText = `+ ${currencyFormatter.format(totalInterest)}`;
+
+            renderChart(labels, principalData, interestData);
+        }
+
+        function renderChart(labels, principalData, interestData) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            
+            if (growthChartInstance) {
+                growthChartInstance.destroy();
+            }
+
+            if (labels.length === 0) return;
+
+            growthChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Principal',
+                            data: principalData,
+                            backgroundColor: '#198754', // Green
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Total Interest',
+                            data: interestData,
+                            backgroundColor: '#6f42c1', // Brand Purple
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false }
+                        },
+                        y: {
+                            stacked: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+                                    if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'k';
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${currencyFormatter.format(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

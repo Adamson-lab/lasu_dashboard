@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-danger">📉 Outstanding Fees Report</h2>
+        <div class="btn-group">
+            <a href="{{ url_for('bursary_dashboard') }}" class="btn btn-secondary">← Back</a>
+            <button onclick="window.print()" class="btn btn-dark">🖨️ Print List</button>
+        </div>
+    </div>
+
+    <div class="row mb-4 d-print-none">
+        <div class="col-md-8 mx-auto">
+            <div class="input-group shadow-sm" style="border-radius: 50px;">
+                <span class="input-group-text bg-white border-danger border-end-0" style="border-top-left-radius: 50px; border-bottom-left-radius: 50px;">
+                    🔍
+                </span>
+                <input type="text" id="liveSearchInput" class="form-control border-danger border-start-0" placeholder="Live Search: Type Name, Matric Number, Dept, or Level..." style="border-top-right-radius: 50px; border-bottom-right-radius: 50px; padding: 12px 20px; box-shadow: none;">
+            </div>
+        </div>
+    </div>
+    <div class="card shadow-sm border-danger">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0" id="debtorsTable">
+                <thead class="table-danger">
+                    <tr>
+                        <th>S/N</th>
+                        <th>Student Name</th>
+                        <th>Matric Number</th>
+                        <th>Department</th>
+                        <th>Level</th>
+                        <th>Status</th>
+                        <th class="d-print-none">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in debtors %}
+                    <tr class="searchable-row">
+                        <td>{{ loop.index }}</td>
+                        <td class="fw-bold student-name">{{ student.name }}</td>
+                        <td class="student-matric">{{ student.matric_no }}</td>
+                        <td class="student-dept">{{ student.department }}</td>
+                        <td class="student-level">{{ student.level }}</td>
+                        <td><span class="badge bg-danger">OWING</span></td>
+                        <td class="d-print-none">
+                            <form action="{{ url_for('toggle_fees', id=student.id) }}" method="POST" onsubmit="return confirm('Manually mark {{ student.name }} as PAID?');">
+                                <button class="btn btn-sm btn-outline-success">Mark Paid</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr id="noDataRow"><td colspan="7" class="text-center py-5 fw-bold text-success">🎉 Amazing! No debtors found. Everyone has paid.</td></tr>
+                    {% endfor %}
+                    
+                    <tr id="noSearchResults" style="display: none;">
+                        <td colspan="7" class="text-center py-4 fw-bold text-muted">No matching student found in the registry.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="d-print-none" style="position: fixed; bottom: 30px; right: 30px; z-index: 1050; display: flex; flex-direction: column; gap: 10px;">
+    <button id="scrollUpBtn" class="btn btn-danger rounded-circle shadow" 
+            style="width: 50px; height: 50px; display: none; align-items: center; justify-content: center; opacity: 0.8; transition: all 0.3s; border: 2px solid white;" 
+            onmouseover="this.style.opacity='1'; this.style.transform='scale(1.1)';" 
+            onmouseout="this.style.opacity='0.8'; this.style.transform='scale(1)';"
+            onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Scroll to Top">
+        <i class="fas fa-arrow-up" style="font-size: 1.2rem;"></i>
+    </button>
+
+    <button id="scrollDownBtn" class="btn btn-dark rounded-circle shadow" 
+            style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; opacity: 0.8; transition: all 0.3s; border: 2px solid white;" 
+            onmouseover="this.style.opacity='1'; this.style.transform='scale(1.1)';" 
+            onmouseout="this.style.opacity='0.8'; this.style.transform='scale(1)';"
+            onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" title="Scroll to Bottom">
+        <i class="fas fa-arrow-down" style="font-size: 1.2rem;"></i>
+    </button>
+</div>
+<script>
+    // --- LIVE SEARCH ENGINE ---
+    document.getElementById('liveSearchInput').addEventListener('input', function() {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll('.searchable-row');
+        let hasResults = false;
+
+        rows.forEach(row => {
+            let name = row.querySelector('.student-name').innerText.toLowerCase();
+            let matric = row.querySelector('.student-matric').innerText.toLowerCase();
+            let dept = row.querySelector('.student-dept').innerText.toLowerCase();
+            let level = row.querySelector('.student-level').innerText.toLowerCase();
+
+            if (name.includes(filter) || matric.includes(filter) || dept.includes(filter) || level.includes(filter)) {
+                row.style.display = '';
+                hasResults = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        let noResultsRow = document.getElementById('noSearchResults');
+        let noDataRow = document.getElementById('noDataRow');
+        
+        if (noResultsRow) {
+            if (!hasResults && !noDataRow && filter !== '') {
+                noResultsRow.style.display = '';
+            } else {
+                noResultsRow.style.display = 'none';
+            }
+        }
+    });
+
+    // --- SCROLL ARROWS ENGINE ---
+    window.addEventListener('scroll', function() {
+        let upBtn = document.getElementById('scrollUpBtn');
+        let downBtn = document.getElementById('scrollDownBtn');
+        
+        // Show/Hide Up Arrow based on scroll position
+        if (window.scrollY > 200) {
+            upBtn.style.display = 'flex';
+        } else {
+            upBtn.style.display = 'none';
+        }
+
+        // Show/Hide Down Arrow based on how close to the bottom we are
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
+            downBtn.style.display = 'none';
+        } else {
+            downBtn.style.display = 'flex';
+        }
+    });
+</script>
+{% endblock %}

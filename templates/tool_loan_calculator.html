@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-finance: #198754; /* Enterprise Green */
+            --brand-finance-light: rgba(25, 135, 84, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .form-control:focus {
+            border-color: var(--brand-finance);
+            box-shadow: 0 0 0 3px var(--brand-finance-light);
+        }
+        .result-card {
+            background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(25, 135, 84, 0.2);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-card::after {
+            content: '\f153'; /* FA Euro/Dollar icon silhouette */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -20px;
+            bottom: -30px;
+            font-size: 8rem;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        .result-value {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 10px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+        .breakdown-row:last-child {
+            border-bottom: none;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+        .chart-container {
+            position: relative;
+            height: 220px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-money-check-alt me-2" style="color: var(--brand-finance);"></i> Simple Loan Calculator</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="input-panel">
+                    <div class="mb-4">
+                        <label class="form-label">Loan Amount (Principal)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" id="loanAmount" class="form-control" value="15000" min="1" step="500" oninput="calculateLoan()">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Annual Interest Rate</label>
+                        <div class="input-group">
+                            <input type="number" id="interestRate" class="form-control" value="6.5" min="0" step="0.1" oninput="calculateLoan()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Loan Term (Duration)</label>
+                        <div class="input-group">
+                            <input type="number" id="loanTerm" class="form-control" value="5" min="1" step="1" oninput="calculateLoan()">
+                            <select id="termType" class="form-select" style="max-width: 130px;" onchange="calculateLoan()">
+                                <option value="years" selected>Years</option>
+                                <option value="months">Months</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-outline-success w-100 mt-2 fw-bold" onclick="resetCalculator()"><i class="fas fa-redo-alt me-2"></i>Reset Defaults</button>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="result-card">
+                    <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.85;">Estimated Monthly Payment</div>
+                    <div class="result-value" id="monthlyPaymentDisplay">$0.00</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Includes Principal & Interest</div>
+                </div>
+
+                <div class="row align-items-center">
+                    <div class="col-md-5">
+                        <div class="chart-container">
+                            <canvas id="loanChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="breakdown-row">
+                            <span class="text-muted">Total Principal:</span>
+                            <span class="text-dark" id="totalPrincipalDisplay">$0.00</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="text-muted">Total Interest:</span>
+                            <span class="text-danger" id="totalInterestDisplay">$0.00</span>
+                        </div>
+                        <div class="breakdown-row mt-2">
+                            <span class="text-dark">Total Cost of Loan:</span>
+                            <span class="text-success" id="totalPaymentDisplay">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let loanChartInstance = null;
+
+        // Enterprise Currency Formatter
+        const currencyFormatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+        });
+
+        // Initialize tool on load
+        document.addEventListener("DOMContentLoaded", () => {
+            calculateLoan();
+        });
+
+        function calculateLoan() {
+            // Fetch live inputs
+            const principal = parseFloat(document.getElementById('loanAmount').value) || 0;
+            const annualRate = parseFloat(document.getElementById('interestRate').value) || 0;
+            let timeTerm = parseFloat(document.getElementById('loanTerm').value) || 0;
+            const termType = document.getElementById('termType').value;
+
+            // Safe fallback for empty/zero inputs
+            if (principal <= 0 || timeTerm <= 0) {
+                updateUI(0, principal, 0, principal);
+                return;
+            }
+
+            // Standardize time strictly to months for the formula
+            const numberOfMonths = termType === 'years' ? timeTerm * 12 : timeTerm;
+            
+            // Core Financial Engine (Amortization Formula: M = P[r(1+r)^n] / [(1+r)^n - 1])
+            let monthlyPayment = 0;
+            let totalPayment = 0;
+            let totalInterest = 0;
+
+            if (annualRate > 0) {
+                const monthlyRate = annualRate / 100 / 12;
+                const compoundFactor = Math.pow(1 + monthlyRate, numberOfMonths);
+                monthlyPayment = (principal * monthlyRate * compoundFactor) / (compoundFactor - 1);
+                totalPayment = monthlyPayment * numberOfMonths;
+                totalInterest = totalPayment - principal;
+            } else {
+                // Edge Case: 0% interest loan (Prevents Divide-By-Zero NaN errors)
+                monthlyPayment = principal / numberOfMonths;
+                totalPayment = principal;
+                totalInterest = 0;
+            }
+
+            updateUI(monthlyPayment, principal, totalInterest, totalPayment);
+        }
+
+        function updateUI(monthly, principal, interest, total) {
+            // Map formatted strings to the DOM
+            document.getElementById('monthlyPaymentDisplay').innerText = currencyFormatter.format(monthly);
+            document.getElementById('totalPrincipalDisplay').innerText = currencyFormatter.format(principal);
+            document.getElementById('totalInterestDisplay').innerText = currencyFormatter.format(interest);
+            document.getElementById('totalPaymentDisplay').innerText = currencyFormatter.format(total);
+
+            renderChart(principal, interest);
+        }
+
+        function renderChart(principal, interest) {
+            const ctx = document.getElementById('loanChart').getContext('2d');
+            
+            // Wipe existing chart instance to prevent memory leaks and "ghost" hover states
+            if (loanChartInstance) {
+                loanChartInstance.destroy();
+            }
+
+            // Do not render empty donuts
+            if (principal === 0 && interest === 0) return;
+
+            loanChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Principal', 'Total Interest'],
+                    datasets: [{
+                        data: [principal, interest],
+                        backgroundColor: [
+                            '#198754', // Green for Principal (Good)
+                            '#dc3545'  // Red for Interest (Cost)
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%', // Sleek modern ring
+                    animation: {
+                        duration: 400 // Fast, kinetic animation
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) label += ': ';
+                                    label += currencyFormatter.format(context.raw);
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function resetCalculator() {
+            document.getElementById('loanAmount').value = 15000;
+            document.getElementById('interestRate').value = 6.5;
+            document.getElementById('loanTerm').value = 5;
+            document.getElementById('termType').value = 'years';
+            calculateLoan();
+        }
+    </script>
+</body>
+</html>

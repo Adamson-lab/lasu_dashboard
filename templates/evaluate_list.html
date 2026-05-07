@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Course Evaluations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-success mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="#">LASU Portal</a>
+        <a href="{{ url_for('student_portal') }}" class="btn btn-outline-light btn-sm">Back to Dashboard</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">⭐ Course & Lecturer Evaluation</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Please provide honest feedback for your registered courses. Your identity will remain anonymous to the lecturer.</p>
+            
+            <div class="list-group">
+                {% for item in courses %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 fw-bold">{{ item.course.code }} - {{ item.course.title }}</h6>
+                        <small class="text-muted">{{ item.course.units }} Units</small>
+                    </div>
+                    
+                    {% if item.evaluated %}
+                        <span class="badge bg-success">✅ Rated</span>
+                    {% else %}
+                        <a href="{{ url_for('evaluate_course', course_id=item.course.id) }}" class="btn btn-primary btn-sm">Rate Now</a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="text-center py-3 text-muted">No registered courses found.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

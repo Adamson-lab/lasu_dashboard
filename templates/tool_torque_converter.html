@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torque Converter & Visualizer | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-purple); box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15); }
+        
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ced4da;
+            font-size: 0.95rem;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .num-input {
+            width: 100%;
+            border: none;
+            padding: 20px;
+            font-size: 2rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            color: #212529;
+            outline: none;
+            text-align: center;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-select {
+            border: none;
+            background: transparent;
+            font-weight: 700;
+            color: var(--math-purple);
+            outline: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* Flawless Grid & Card Layout */
+        .conversions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .conv-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            min-height: 120px;
+            transition: all 0.2s;
+        }
+
+        .conv-card.highlight {
+            background: rgba(111, 66, 193, 0.05);
+            border-color: rgba(111, 66, 193, 0.3);
+        }
+
+        .conv-label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .conv-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 6px;
+            width: 100%;
+        }
+        
+        .highlight .conv-val { color: var(--math-purple); }
+        .conv-unit { font-size: 1rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #adb5bd;
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 0;
+            font-size: 1.1rem;
+        }
+        .copy-btn:hover { color: var(--math-purple); transform: scale(1.1); }
+        .highlight .copy-btn { color: var(--math-purple); }
+
+        /* Simulation Canvas */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            min-height: 350px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        #torqueCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #212529;
+            padding: 15px 25px;
+            border-top: 1px solid #495057;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .formula-bar {
+            font-family: 'Fira Code', monospace;
+            color: #00ff00;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        #toastBox { position: fixed; bottom: 30px; right: 30px; z-index: 1050; display: none; min-width: 250px; }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; } 
+            .input-pane { flex: none; width: 100%; } 
+            .conversions-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-sync-alt"></i> Torque Converter
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter a valid number.
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label">
+                    <span>Input Torque (&tau;)</span>
+                    <select class="unit-select" id="unitSelect" onchange="convertTorque()">
+                        <option value="Nm" selected>Nm (Newton-meter)</option>
+                        <option value="lbft">lbf·ft (Pound-foot)</option>
+                        <option value="lbin">lbf·in (Pound-inch)</option>
+                        <option value="kgm">kgf·m (Kilogram-meter)</option>
+                    </select>
+                </div>
+                <input type="number" class="num-input" id="inVal" value="100" step="any" oninput="convertTorque()">
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 fw-bold mt-2" onclick="clearInputs()">
+                <i class="fas fa-eraser me-2"></i> Clear Field
+            </button>
+
+            <div class="alert alert-info mt-auto mb-0 border-0" style="background: rgba(111, 66, 193, 0.05); color: var(--math-purple);">
+                <i class="fas fa-wrench mb-2 fa-lg"></i><br>
+                <strong>Physics Principle:</strong><br>
+                Torque (&tau;) is the rotational equivalent of linear force. It is calculated as <strong>&tau; = r &times; F</strong>, where 'r' is the radius (wrench length) and 'F' is the applied force.
+            </div>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="conversions-grid" id="gridContainer">
+            </div>
+
+        <div class="simulation-box">
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="torqueCanvas"></canvas>
+            </div>
+            
+            <div class="telemetry-bar">
+                <div class="formula-bar" id="formulaBar">&tau; = r &times; F</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0 text-center text-white bg-success" role="alert"></div>
+
+<script>
+    // Universal Conversion Factors (Base is Nm)
+    const units = {
+        'Nm': { name: 'Newton-meter', factor: 1 },
+        'lbft': { name: 'Pound-foot', factor: 0.7375621 },
+        'lbin': { name: 'Pound-inch', factor: 8.850746 },
+        'kgm': { name: 'Kilogram-meter', factor: 0.1019716 }
+    };
+
+    const inVal = document.getElementById('inVal');
+    const unitSelect = document.getElementById('unitSelect');
+    const errorBanner = document.getElementById('errorBanner');
+    const gridContainer = document.getElementById('gridContainer');
+    const toastBox = document.getElementById('toastBox');
+    
+    const canvas = document.getElementById('torqueCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+    
+    let currentNm = 100; // Base physics logic runs strictly on Nm
+
+    // Bulletproof Canvas Sizing
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const rect = entry.contentRect;
+            if (rect.width === 0 || rect.height === 0) continue;
+            
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
+            
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            drawVisualizer(); 
+        }
+    });
+    resizeObserver.observe(container);
+
+    function formatNum(num) {
+        if (num === 0) return "0";
+        if (Math.abs(num) >= 1e6 || Math.abs(num) <= 1e-3) return num.toExponential(4);
+        return (Math.round(num * 1000) / 1000).toLocaleString(undefined, { maximumFractionDigits: 3 });
+    }
+
+    // --- MATH ENGINE ---
+    function convertTorque() {
+        const val = parseFloat(inVal.value);
+        if (isNaN(val)) {
+            errorBanner.style.display = 'block';
+            gridContainer.innerHTML = '';
+            currentNm = 0;
+            drawVisualizer();
+            return;
+        }
+        errorBanner.style.display = 'none';
+
+        const selectedUnit = unitSelect.value;
+        currentNm = val / units[selectedUnit].factor; // Convert everything to base Nm
+
+        let gridHtml = '';
+        for (let symbol in units) {
+            const targetVal = currentNm * units[symbol].factor;
+            const isHighlight = symbol === selectedUnit;
+            const highlightClass = isHighlight ? 'highlight' : '';
+            const btnColor = isHighlight ? 'var(--math-purple)' : '#adb5bd';
+            
+            gridHtml += `
+                <div class="conv-card ${highlightClass}">
+                    <div class="conv-label">
+                        <span>${units[symbol].name}</span>
+                        <button class="copy-btn" style="color: ${btnColor};" onclick="copyVal('res_${symbol}')"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="conv-val">
+                        <span id="res_${symbol}">${formatNum(targetVal)}</span>
+                        <span class="conv-unit">${symbol}</span>
+                    </div>
+                </div>
+            `;
+        }
+        gridContainer.innerHTML = gridHtml;
+        drawVisualizer();
+    }
+
+    // --- CANVAS VISUALIZER ENGINE ---
+    function drawVisualizer() {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        if(cw === 0) return;
+        
+        ctx.clearRect(0, 0, cw, ch);
+
+        const cx = cw * 0.3; // Bolt center is offset to the left
+        const cy = ch / 2;
+        
+        // Physics logic mapping for visuals
+        // Max visual Nm is ~1000 for color scaling/glow intensity
+        let intensity = Math.min(Math.abs(currentNm) / 1000, 1); 
+        
+        // 1. Draw Hexagonal Bolt
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            let angle = i * (Math.PI / 3);
+            ctx.lineTo(cx + Math.cos(angle) * 20, cy + Math.sin(angle) * 20);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#adb5bd';
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#495057';
+        ctx.stroke();
+        
+        // Inner circle of bolt
+        ctx.beginPath(); 
+        ctx.arc(cx, cy, 10, 0, Math.PI*2); 
+        ctx.fillStyle = '#212529'; 
+        ctx.fill();
+
+        // 2. Draw Wrench
+        // Bound the wrench length to fit perfectly on the screen
+        const wrenchLen = Math.min(cw * 0.5, cw - cx - 60); 
+        
+        ctx.save();
+        ctx.translate(cx, cy);
+        
+        // If negative torque, flip wrench handle visually
+        if (currentNm < 0) ctx.scale(1, -1);
+
+        // Wrench Body Gradient
+        let wGrad = ctx.createLinearGradient(0, -15, 0, 15);
+        wGrad.addColorStop(0, '#6c757d');
+        wGrad.addColorStop(1, '#343a40');
+        
+        ctx.beginPath();
+        ctx.roundRect(0, -12, wrenchLen, 24, 10);
+        ctx.fillStyle = wGrad;
+        
+        // Heat glow based on Torque magnitude
+        if (intensity > 0) {
+            ctx.shadowColor = '#00ff00';
+            ctx.shadowBlur = intensity * 40;
+            ctx.fillStyle = `rgba(0, 255, 0, ${intensity * 0.8})`;
+        }
+        
+        ctx.fill();
+        ctx.shadowBlur = 0; // reset
+        ctx.strokeStyle = '#212529';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.restore();
+
+        // 3. Draw Force Arrow
+        if (currentNm !== 0) {
+            const isNegative = currentNm < 0;
+            const arrowX = cx + wrenchLen - 20;
+            const arrowStartY = isNegative ? cy + 70 : cy - 70;
+            const arrowEndY = isNegative ? cy + 20 : cy - 20;
+
+            ctx.strokeStyle = '#fd7e14';
+            ctx.fillStyle = '#fd7e14';
+            ctx.lineWidth = 6;
+            
+            // Tail
+            ctx.beginPath();
+            ctx.moveTo(arrowX, arrowStartY);
+            ctx.lineTo(arrowX, arrowEndY);
+            ctx.stroke();
+
+            // Head
+            ctx.beginPath();
+            ctx.moveTo(arrowX, arrowEndY);
+            ctx.lineTo(arrowX - 10, arrowEndY + (isNegative ? 15 : -15));
+            ctx.lineTo(arrowX + 10, arrowEndY + (isNegative ? 15 : -15));
+            ctx.fill();
+
+            // Label Force
+            ctx.font = 'bold 18px "Fira Code", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('Force (F)', arrowX, arrowStartY + (isNegative ? 25 : -15));
+        }
+
+        // 4. Draw Radius Dimension Line (r)
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + 45);
+        ctx.lineTo(cx + wrenchLen - 20, cy + 45);
+        ctx.strokeStyle = '#0d6efd';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5,5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = '#0d6efd';
+        ctx.font = 'bold 16px "Fira Code", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('Radius (r)', cx + (wrenchLen/2), cy + 65);
+
+        // 5. Circular Torque Rotation Arc Indicator
+        if (currentNm !== 0) {
+            ctx.beginPath();
+            // Math.PI*2 is right, Math.PI is left, Math.PI*1.5 is top, Math.PI*0.5 is bot
+            const startAng = currentNm < 0 ? Math.PI : Math.PI*2;
+            const endAng = currentNm < 0 ? Math.PI*1.5 : Math.PI*1.5;
+            
+            // Draw Arc
+            ctx.arc(cx, cy, 40, startAng, endAng, currentNm < 0);
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            // Arc Arrow Head
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.beginPath();
+            if (currentNm < 0) {
+                // Pointing up/right
+                ctx.moveTo(cx, cy - 40);
+                ctx.lineTo(cx + 12, cy - 45);
+                ctx.lineTo(cx + 8, cy - 30);
+            } else {
+                // Pointing up/left
+                ctx.moveTo(cx, cy - 40);
+                ctx.lineTo(cx - 12, cy - 45);
+                ctx.lineTo(cx - 8, cy - 30);
+            }
+            ctx.fill();
+        }
+    }
+
+    function clearInputs() { 
+        inVal.value = ''; 
+        currentNm = 0; 
+        convertTorque(); 
+        inVal.focus();
+    }
+
+    function copyVal(id) {
+        const text = document.getElementById(id).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            toastBox.innerText = `Copied: ${text}`; 
+            toastBox.style.display = 'block';
+            setTimeout(() => toastBox.style.display = 'none', 2500);
+        });
+    }
+
+    // INIT
+    setTimeout(() => { convertTorque(); }, 100);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

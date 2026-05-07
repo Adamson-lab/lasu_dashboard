@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NATO Phonetic Translator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-purple: #6f42c1;
+            --math-red: #dc3545;
+            --math-orange: #fd7e14;
+            --military-drab: #4b5320;
+            --radar-green: #00ff00;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Input & Output Panes --- */
+        .input-pane, .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .text-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.2rem;
+            color: #212529;
+            outline: none;
+            resize: none;
+            transition: all 0.2s;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 250px;
+            text-transform: uppercase;
+        }
+        .text-editor:focus {
+            border-color: var(--military-drab);
+            box-shadow: 0 0 0 4px rgba(75, 83, 32, 0.15);
+        }
+
+        /* Radar Themed Output */
+        .output-editor {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #212529;
+            background-color: #121212;
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 1.3rem;
+            color: var(--radar-green);
+            outline: none;
+            resize: none;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-family: 'Fira Code', monospace;
+            min-height: 250px;
+            font-weight: 700;
+            box-shadow: inset 0 0 20px rgba(0,255,0,0.1);
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+        }
+        
+        .btn-copy { background: var(--math-blue); color: white; }
+        .btn-copy:hover { background: #0b5ed7; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);}
+        
+        .btn-speak { background: var(--military-drab); color: white; }
+        .btn-speak:hover { background: #3a4019; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(75, 83, 32, 0.3);}
+        .btn-speak.speaking { background: var(--math-red); animation: pulse 1.5s infinite; }
+
+        .btn-clear { background: #6c757d; color: white; flex: none; width: 100%; padding: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border-radius: 8px; border: none; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-clear:hover { background: #5c636a; transform: translateY(-2px); }
+
+        .editor-controls { display: flex; gap: 10px; margin-top: auto; }
+
+        .telemetry-bar { background: #212529; padding: 15px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; color: white; font-family: 'Fira Code', monospace; font-size: 0.9rem; font-weight: 800; }
+        .telemetry-bar span { color: var(--radar-green); }
+
+        @keyframes pulse {
+            0% { opacity: 1; box-shadow: 0 0 0px var(--math-red); }
+            50% { opacity: 0.8; box-shadow: 0 0 15px var(--math-red); }
+            100% { opacity: 1; box-shadow: 0 0 0px var(--math-red); }
+        }
+
+        @media (max-width: 992px) { .main-container { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">TEXT & PRODUCTIVITY</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div><i class="fas fa-keyboard me-2"></i> Plain Text Input</div>
+            </div>
+
+            <textarea class="text-editor" id="rawInput" placeholder="Type letters, words, or numbers here...
+Example: LASU" oninput="executeTranslate()"></textarea>
+
+            <button class="btn-clear" onclick="clearText()">
+                <i class="fas fa-trash-alt"></i> Clear Comm Link
+            </button>
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="card-box">
+            <div class="pane-header">
+                <div style="color: var(--military-drab);"><i class="fas fa-satellite-dish me-2"></i> Phonetic Output</div>
+            </div>
+
+            <textarea class="output-editor" id="outputRes" readonly placeholder="NATO PHONETIC ALPHABET WILL APPEAR HERE..."></textarea>
+
+            <div class="telemetry-bar mb-3">
+                <div>Words: <span id="wordCount">0</span></div>
+                <div>Status: <span id="statusText">AWAITING COMM</span></div>
+            </div>
+
+            <div class="editor-controls">
+                <button class="btn-action btn-copy" onclick="copyOutput()" id="copyBtn">
+                    <i class="fas fa-copy"></i> Copy Text
+                </button>
+                <button class="btn-action btn-speak" onclick="toggleSpeech()" id="speakBtn">
+                    <i class="fas fa-headset"></i> Transmit Audio
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const rawInput = document.getElementById('rawInput');
+    const outputRes = document.getElementById('outputRes');
+    const wordCount = document.getElementById('wordCount');
+    const statusText = document.getElementById('statusText');
+    const copyBtn = document.getElementById('copyBtn');
+    const speakBtn = document.getElementById('speakBtn');
+
+    // Official ICAO / NATO Phonetic Alphabet
+    const natoDict = {
+        'A': 'Alpha', 'B': 'Bravo', 'C': 'Charlie', 'D': 'Delta', 'E': 'Echo', 
+        'F': 'Foxtrot', 'G': 'Golf', 'H': 'Hotel', 'I': 'India', 'J': 'Juliett', 
+        'K': 'Kilo', 'L': 'Lima', 'M': 'Mike', 'N': 'November', 'O': 'Oscar', 
+        'P': 'Papa', 'Q': 'Quebec', 'R': 'Romeo', 'S': 'Sierra', 'T': 'Tango', 
+        'U': 'Uniform', 'V': 'Victor', 'W': 'Whiskey', 'X': 'X-ray', 'Y': 'Yankee', 'Z': 'Zulu',
+        '0': 'Zero', '1': 'One', '2': 'Two', '3': 'Three', '4': 'Four', 
+        '5': 'Five', '6': 'Six', '7': 'Seven', '8': 'Eight', '9': 'Niner'
+    };
+
+    let synth = window.speechSynthesis;
+    let isSpeaking = false;
+
+    function executeTranslate() {
+        const text = rawInput.value.toUpperCase();
+        
+        if (!text) {
+            outputRes.value = '';
+            wordCount.innerText = '0';
+            statusText.innerText = "AWAITING COMM";
+            return;
+        }
+
+        let result = [];
+        let count = 0;
+
+        for (let i = 0; i < text.length; i++) {
+            let char = text[i];
+            if (natoDict[char]) {
+                result.push(natoDict[char]);
+                count++;
+            } else if (char === ' ') {
+                result.push('\n'); // Line break for spaces between words
+            } else if (char === '\n') {
+                result.push('\n\n'); // Double line break for actual newlines
+            } else {
+                result.push(char); // Keep punctuation as is
+            }
+        }
+
+        outputRes.value = result.join(' ').replace(/ \n /g, '\n').replace(/\n /g, '\n');
+        wordCount.innerText = count.toLocaleString();
+        statusText.innerText = "TRANSLATED";
+    }
+
+    function copyOutput() {
+        if (!outputRes.value) return;
+        outputRes.select();
+        document.execCommand('copy');
+        
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> COPIED!';
+        copyBtn.style.backgroundColor = '#198754';
+        
+        setTimeout(() => { 
+            copyBtn.innerHTML = originalText; 
+            copyBtn.style.backgroundColor = 'var(--math-blue)';
+        }, 1500);
+    }
+
+    function toggleSpeech() {
+        if (isSpeaking) {
+            synth.cancel();
+            resetSpeechUI();
+            return;
+        }
+
+        const textToSpeak = outputRes.value.replace(/\n/g, ' '); // Clean newlines for speech
+        if (!textToSpeak) return;
+
+        isSpeaking = true;
+        speakBtn.innerHTML = '<i class="fas fa-stop"></i> HALT COMM';
+        speakBtn.classList.add('speaking');
+        statusText.innerText = "TRANSMITTING AUDIO...";
+        statusText.style.color = "var(--math-red)";
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        
+        // Try to find an English voice, preferably male/authoritative for military feel
+        let voices = synth.getVoices();
+        let enVoice = voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en-US'));
+        if (enVoice) utterance.voice = enVoice;
+        
+        utterance.rate = 0.85; // Slightly slower for clarity
+        utterance.pitch = 0.9;
+
+        utterance.onend = () => {
+            resetSpeechUI();
+        };
+
+        synth.speak(utterance);
+    }
+
+    function resetSpeechUI() {
+        isSpeaking = false;
+        speakBtn.innerHTML = '<i class="fas fa-headset"></i> Transmit Audio';
+        speakBtn.classList.remove('speaking');
+        statusText.innerText = "TRANSLATED";
+        statusText.style.color = "var(--radar-green)";
+    }
+
+    function clearText() {
+        if (isSpeaking) {
+            synth.cancel();
+            resetSpeechUI();
+        }
+        rawInput.value = '';
+        executeTranslate();
+        rawInput.focus();
+    }
+    
+    // Load voices proactively
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = () => synth.getVoices();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inflation Calculator | L.I.S.A. Utilities</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-danger: #dc3545; /* Inflation Red */
+            --brand-danger-light: rgba(220, 53, 69, 0.1);
+            --bg-main: #f4f7f6;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+        }
+        .tool-container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .input-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group-text {
+            background: var(--bg-surface);
+            border-color: #cbd5e1;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .form-control {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+        }
+        .form-control:focus {
+            border-color: var(--brand-danger);
+            box-shadow: 0 0 0 3px var(--brand-danger-light);
+        }
+        .result-card {
+            background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+            color: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.2);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-card::after {
+            content: '\f0e7'; /* FA Bolt/Flash icon silhouette */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            left: -10px;
+            bottom: -20px;
+            font-size: 9rem;
+            opacity: 0.1;
+            pointer-events: none;
+            transform: rotate(15deg);
+        }
+        .result-value {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 10px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .insight-box {
+            background: var(--brand-danger-light);
+            border-left: 4px solid var(--brand-danger);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #a71d2a;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-arrow-trend-up me-2" style="color: var(--brand-danger);"></i> Inflation Calculator</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="input-panel">
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Base Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" id="baseAmount" class="form-control" value="100" min="1" oninput="calculateInflation()">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label class="form-label">Starting Year</label>
+                            <input type="number" id="startYear" class="form-control" value="2000" min="1900" max="2100" oninput="calculateInflation()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Target Year</label>
+                            <input type="number" id="targetYear" class="form-control" value="2026" min="1900" max="2100" oninput="calculateInflation()">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Average Annual Inflation Rate</label>
+                        <div class="input-group">
+                            <input type="number" id="inflationRate" class="form-control" value="3.2" step="0.1" oninput="calculateInflation()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">
+                            <i class="fas fa-info-circle"></i> Historical average is roughly 3.2%. You can change this to forecast future conditions.
+                        </small>
+                    </div>
+
+                    <button class="btn btn-outline-danger w-100 fw-bold mt-2" onclick="swapYears()"><i class="fas fa-exchange-alt me-2"></i>Swap Years</button>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="result-card">
+                    <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.85;" id="resultTitle">Equivalent Buying Power</div>
+                    <div class="result-value" id="targetValueDisplay">$0.00</div>
+                    <div style="font-size: 0.95rem; opacity: 0.9;" id="subtitleDisplay">in the year 2026</div>
+                </div>
+
+                <div class="insight-box" id="insightDisplay">
+                    </div>
+
+                <div class="chart-container">
+                    <canvas id="inflationChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let inflationChartInstance = null;
+
+        const currencyFormatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 2
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Pre-fill target year with current year automatically
+            const currentYear = new Date().getFullYear();
+            document.getElementById('targetYear').value = currentYear;
+            calculateInflation();
+        });
+
+        function swapYears() {
+            const startInput = document.getElementById('startYear');
+            const targetInput = document.getElementById('targetYear');
+            const temp = startInput.value;
+            startInput.value = targetInput.value;
+            targetInput.value = temp;
+            calculateInflation();
+        }
+
+        function calculateInflation() {
+            const amount = parseFloat(document.getElementById('baseAmount').value) || 0;
+            const startYear = parseInt(document.getElementById('startYear').value) || 2000;
+            const targetYear = parseInt(document.getElementById('targetYear').value) || new Date().getFullYear();
+            const rate = parseFloat(document.getElementById('inflationRate').value) || 0;
+
+            if (amount <= 0 || startYear === targetYear) {
+                updateUI(amount, amount, startYear, targetYear, rate, [startYear], [amount]);
+                return;
+            }
+
+            // Determine chronological direction
+            const isForward = targetYear > startYear;
+            const decimalRate = rate / 100;
+            
+            let labels = [];
+            let data = [];
+            let currentValue = amount;
+
+            // Core Financial Math
+            if (isForward) {
+                // Compounding Forward: FV = PV * (1 + r)^n
+                for (let y = startYear; y <= targetYear; y++) {
+                    labels.push(y);
+                    data.push(currentValue);
+                    if (y < targetYear) currentValue += (currentValue * decimalRate);
+                }
+            } else {
+                // Discounting Backwards: PV = FV / (1 + r)^n
+                for (let y = startYear; y >= targetYear; y--) {
+                    labels.push(y);
+                    data.push(currentValue);
+                    if (y > targetYear) currentValue = currentValue / (1 + decimalRate);
+                }
+            }
+
+            const finalValue = data[data.length - 1];
+            updateUI(finalValue, amount, startYear, targetYear, rate, labels, data);
+        }
+
+        function updateUI(finalValue, initialAmount, startYear, targetYear, rate, labels, data) {
+            // Update Title Context
+            document.getElementById('subtitleDisplay').innerText = `in the year ${targetYear}`;
+            
+            // Format Numbers
+            const formattedFinal = currencyFormatter.format(finalValue);
+            const formattedInitial = currencyFormatter.format(initialAmount);
+            
+            document.getElementById('targetValueDisplay').innerText = formattedFinal;
+
+            // Generate Dynamic Insight Text
+            let insightText = "";
+            const isForward = targetYear > startYear;
+            
+            if (startYear === targetYear) {
+                insightText = "The starting year and target year are the same.";
+            } else if (isForward) {
+                const increase = ((finalValue - initialAmount) / initialAmount * 100).toFixed(1);
+                insightText = `<i class="fas fa-chart-line me-2"></i> To have the same purchasing power as <b>${formattedInitial}</b> in ${startYear}, you would need <b>${formattedFinal}</b> in ${targetYear}. That is a cumulative price increase of <b>${increase}%</b>.`;
+            } else {
+                const decrease = ((initialAmount - finalValue) / initialAmount * 100).toFixed(1);
+                insightText = `<i class="fas fa-history me-2"></i> What costs <b>${formattedInitial}</b> in ${startYear} would have only cost <b>${formattedFinal}</b> back in ${targetYear}. That is a price difference of <b>${decrease}%</b>.`;
+            }
+            
+            document.getElementById('insightDisplay').innerHTML = insightText;
+
+            renderChart(labels, data, startYear, targetYear);
+        }
+
+        function renderChart(labels, data, startYear, targetYear) {
+            const ctx = document.getElementById('inflationChart').getContext('2d');
+            
+            if (inflationChartInstance) {
+                inflationChartInstance.destroy();
+            }
+
+            if (labels.length === 0) return;
+
+            // Aesthetic handling based on time direction
+            const isForward = targetYear > startYear;
+            const lineColor = '#dc3545'; // Danger Red
+            const fillGradient = ctx.createLinearGradient(0, 0, 0, 250);
+            fillGradient.addColorStop(0, 'rgba(220, 53, 69, 0.3)');
+            fillGradient.addColorStop(1, 'rgba(220, 53, 69, 0.0)');
+
+            inflationChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Equivalent Purchasing Power',
+                        data: data,
+                        borderColor: lineColor,
+                        backgroundColor: fillGradient,
+                        borderWidth: 3,
+                        pointRadius: labels.length > 30 ? 0 : 4, // Hide points if timeline is huge to stay clean
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: lineColor,
+                        pointBorderWidth: 2,
+                        fill: true,
+                        tension: 0.3 // Smooth curves
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { display: false, drawBorder: false }
+                        },
+                        y: {
+                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000) return '$' + (value / 1000).toFixed(1) + 'k';
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { size: 13 },
+                            bodyFont: { size: 14, weight: 'bold' },
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Value: ${currencyFormatter.format(context.raw)}`;
+                                },
+                                title: function(context) {
+                                    return `Year: ${context[0].label}`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

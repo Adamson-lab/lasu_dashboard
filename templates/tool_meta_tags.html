@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Tag Generator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        /* Controls Pane */
+        .controls-pane {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .control-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 700;
+            color: var(--lasu-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-area {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .section-title:first-child { margin-top: 0; }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        /* Output Pane */
+        .output-pane {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .code-area {
+            flex-grow: 1;
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .tag-bracket { color: #8f8f8f; }
+        .tag-name { color: #f92672; }
+        .tag-attr { color: #a6e22e; }
+        .tag-string { color: #e6db74; }
+
+        /* Toast */
+        #toastBox {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1050;
+            display: none; min-width: 250px;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .form-area { max-height: none; }
+            .output-pane { min-height: 50vh; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">SEO TOOLS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="controls-pane">
+        <div class="control-header">
+            <i class="fas fa-tags text-primary"></i> Tag Configuration
+        </div>
+
+        <div class="form-area">
+            
+            <div class="section-title">Standard SEO Tags</div>
+            
+            <div class="mb-3">
+                <label class="form-label">Site Title</label>
+                <input type="text" class="form-control" id="siteTitle" placeholder="My Awesome Website" oninput="generateTags()">
+                <div class="text-end small text-muted mt-1"><span id="titleCount">0</span>/60 chars recommended</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Site Description</label>
+                <textarea class="form-control" id="siteDesc" rows="2" placeholder="A brief description of what your site is about..." oninput="generateTags()"></textarea>
+                <div class="text-end small text-muted mt-1"><span id="descCount">0</span>/160 chars recommended</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Keywords</label>
+                <input type="text" class="form-control" id="siteKeywords" placeholder="seo, web dev, html, css" oninput="generateTags()">
+                <small class="text-muted">Comma separated. (Note: Google largely ignores this nowadays).</small>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Author</label>
+                    <input type="text" class="form-control" id="siteAuthor" placeholder="John Doe" oninput="generateTags()">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Search Engine Robots</label>
+                    <select class="form-select" id="siteRobots" onchange="generateTags()">
+                        <option value="index, follow">Index, Follow</option>
+                        <option value="noindex, follow">No Index, Follow</option>
+                        <option value="index, nofollow">Index, No Follow</option>
+                        <option value="noindex, nofollow">No Index, No Follow</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section-title">Social Media (Open Graph & Twitter)</div>
+
+            <div class="mb-3">
+                <label class="form-label">Primary Image URL</label>
+                <input type="url" class="form-control" id="socialImage" placeholder="https://example.com/image.jpg" oninput="generateTags()">
+                <small class="text-muted">Used when link is shared on Facebook/Twitter. Recommended size: 1200x630px.</small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Site Page URL</label>
+                <input type="url" class="form-control" id="siteUrl" placeholder="https://example.com" oninput="generateTags()">
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Content Type</label>
+                    <select class="form-select" id="ogType" onchange="generateTags()">
+                        <option value="website">Website</option>
+                        <option value="article">Article</option>
+                        <option value="profile">Profile</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Twitter Handle</label>
+                    <input type="text" class="form-control" id="twitterHandle" placeholder="@yourhandle" oninput="generateTags()">
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <button class="btn btn-outline-danger btn-sm" onclick="clearForm()">Clear All Fields</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="output-pane">
+        <div class="control-header justify-content-between">
+            <span><i class="fas fa-code text-secondary"></i> Generated HTML</span>
+            <button class="btn btn-sm btn-primary" onclick="copyCode()">
+                <i class="fas fa-copy"></i> Copy Tags
+            </button>
+        </div>
+        <div class="code-area" id="codeArea">
+            </div>
+    </div>
+
+</div>
+
+<div id="toastBox" class="alert shadow-lg border-0" role="alert"></div>
+
+<script>
+    // Elements
+    const siteTitle = document.getElementById('siteTitle');
+    const siteDesc = document.getElementById('siteDesc');
+    const siteKeywords = document.getElementById('siteKeywords');
+    const siteAuthor = document.getElementById('siteAuthor');
+    const siteRobots = document.getElementById('siteRobots');
+    const socialImage = document.getElementById('socialImage');
+    const siteUrl = document.getElementById('siteUrl');
+    const ogType = document.getElementById('ogType');
+    const twitterHandle = document.getElementById('twitterHandle');
+    
+    const titleCount = document.getElementById('titleCount');
+    const descCount = document.getElementById('descCount');
+    const codeArea = document.getElementById('codeArea');
+
+    function escapeAttr(str) {
+        if(!str) return "";
+        return str.replace(/"/g, '&quot;');
+    }
+
+    function formatTag(tag, attr1, val1, attr2, val2) {
+        let html = `<span class="tag-bracket">&lt;</span><span class="tag-name">${tag}</span> `;
+        
+        if (attr1 && val1) {
+            html += `<span class="tag-attr">${attr1}</span><span class="tag-bracket">=</span><span class="tag-string">"${escapeAttr(val1)}"</span>`;
+        }
+        
+        if (attr2 && val2) {
+            html += ` <span class="tag-attr">${attr2}</span><span class="tag-bracket">=</span><span class="tag-string">"${escapeAttr(val2)}"</span>`;
+        }
+        
+        html += `<span class="tag-bracket">&gt;</span>\n`;
+        return html;
+    }
+
+    function formatTitle(title) {
+        return `<span class="tag-bracket">&lt;</span><span class="tag-name">title</span><span class="tag-bracket">&gt;</span>${escapeAttr(title)}<span class="tag-bracket">&lt;/</span><span class="tag-name">title</span><span class="tag-bracket">&gt;</span>\n`;
+    }
+
+    function generateTags() {
+        // Update counts
+        const tLen = siteTitle.value.length;
+        const dLen = siteDesc.value.length;
+        titleCount.innerText = tLen;
+        descCount.innerText = dLen;
+
+        titleCount.className = tLen > 60 ? 'text-danger fw-bold' : 'text-success';
+        descCount.className = dLen > 160 ? 'text-danger fw-bold' : 'text-success';
+
+        let code = "";
+        
+        // --- Core Tags ---
+        code += `<span class="tag-bracket">&lt;!-- Primary Meta Tags --&gt;</span>\n`;
+        code += formatTitle(siteTitle.value || "Document");
+        code += formatTag("meta", "name", "title", "content", siteTitle.value);
+        if (siteDesc.value) code += formatTag("meta", "name", "description", "content", siteDesc.value);
+        if (siteKeywords.value) code += formatTag("meta", "name", "keywords", "content", siteKeywords.value);
+        if (siteAuthor.value) code += formatTag("meta", "name", "author", "content", siteAuthor.value);
+        code += formatTag("meta", "name", "viewport", "content", "width=device-width, initial-scale=1.0");
+        code += formatTag("meta", "name", "robots", "content", siteRobots.value);
+        code += `\n`;
+
+        // --- Open Graph (Facebook, LinkedIn, etc) ---
+        code += `<span class="tag-bracket">&lt;!-- Open Graph / Facebook --&gt;</span>\n`;
+        code += formatTag("meta", "property", "og:type", "content", ogType.value);
+        if (siteUrl.value) code += formatTag("meta", "property", "og:url", "content", siteUrl.value);
+        if (siteTitle.value) code += formatTag("meta", "property", "og:title", "content", siteTitle.value);
+        if (siteDesc.value) code += formatTag("meta", "property", "og:description", "content", siteDesc.value);
+        if (socialImage.value) code += formatTag("meta", "property", "og:image", "content", socialImage.value);
+        code += `\n`;
+
+        // --- Twitter ---
+        code += `<span class="tag-bracket">&lt;!-- Twitter --&gt;</span>\n`;
+        code += formatTag("meta", "property", "twitter:card", "content", socialImage.value ? "summary_large_image" : "summary");
+        if (siteUrl.value) code += formatTag("meta", "property", "twitter:url", "content", siteUrl.value);
+        if (siteTitle.value) code += formatTag("meta", "property", "twitter:title", "content", siteTitle.value);
+        if (siteDesc.value) code += formatTag("meta", "property", "twitter:description", "content", siteDesc.value);
+        if (socialImage.value) code += formatTag("meta", "property", "twitter:image", "content", socialImage.value);
+        if (twitterHandle.value) {
+            let handle = twitterHandle.value;
+            if(!handle.startsWith('@')) handle = '@' + handle;
+            code += formatTag("meta", "property", "twitter:site", "content", handle);
+        }
+
+        codeArea.innerHTML = code;
+    }
+
+    function clearForm() {
+        document.querySelectorAll('.form-control').forEach(el => el.value = '');
+        siteRobots.value = "index, follow";
+        ogType.value = "website";
+        generateTags();
+    }
+
+    function copyCode() {
+        const text = codeArea.innerText; // Gets the raw text minus HTML span tags
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('HTML tags copied to clipboard!', 'success');
+        });
+    }
+
+    function showToast(message, type) {
+        const toastBox = document.getElementById('toastBox');
+        toastBox.innerText = message;
+        toastBox.className = `alert shadow-lg border-0 alert-${type}`;
+        toastBox.style.display = 'block';
+        setTimeout(() => toastBox.style.display = 'none', 3000);
+    }
+
+    // Init
+    generateTags();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

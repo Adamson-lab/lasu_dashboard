@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debt Elimination Matrix | L.I.S.A. Utilities</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --brand-main: #0f172a;       /* Obsidian */
+            --brand-accent: #8b5cf6;     /* Debt Purple */
+            --brand-accent-light: rgba(139, 92, 246, 0.1);
+            --brand-success: #10b981;    /* Wealth Green */
+            --brand-warning: #f59e0b;    /* Amber */
+            --brand-danger: #ef4444;     /* Red */
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --glass-border: #e2e8f0;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--brand-main);
+            padding: 40px 20px;
+        }
+
+        .tool-container {
+            max-width: 1450px;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            border: 1px solid var(--glass-border);
+        }
+        
+        /* Input Panel */
+        .input-panel {
+            background: #f1f5f9;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            height: 100%;
+        }
+        
+        .form-label {
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-control, .form-select {
+            border-color: #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-accent);
+            box-shadow: 0 0 0 3px var(--brand-accent-light);
+        }
+        
+        .section-title {
+            background: var(--brand-main);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 25px 0 15px 0;
+            display: inline-block;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .dash-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Hero Card */
+        .dash-card.hero {
+            grid-column: span 2;
+            background: linear-gradient(135deg, var(--brand-main) 0%, #1e293b 100%);
+            color: white;
+            text-align: center;
+            padding: 35px;
+            transition: all 0.4s ease;
+        }
+        .dash-card.hero.error { background: linear-gradient(135deg, var(--brand-danger) 0%, #b91c1c 100%); }
+        .dash-card.hero.success { background: linear-gradient(135deg, var(--brand-accent) 0%, #5b21b6 100%); }
+        
+        .hero-val {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin: 10px 0;
+            letter-spacing: -1px;
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            background: #f8fafc;
+            border-left: 4px solid var(--brand-accent);
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #334155;
+            margin-top: 15px;
+        }
+        .insights-panel.warning { border-left-color: var(--brand-warning); }
+        .insights-panel.danger { border-left-color: var(--brand-danger); background: rgba(239, 68, 68, 0.05); }
+        .insights-panel.success { border-left-color: var(--brand-success); }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-weight: 700;
+            color: #334155;
+            font-size: 1rem;
+        }
+        
+        .summary-row.total {
+            border-top: 2px solid #cbd5e1;
+            border-bottom: none;
+            font-size: 1.2rem;
+            color: var(--brand-main);
+            padding-top: 15px;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .export-btn {
+            background: var(--brand-main);
+            color: white;
+            font-weight: 800;
+            padding: 15px 24px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            transition: 0.2s;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        .export-btn:hover { background: #1e293b; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h2 class="fw-bold m-0"><i class="fas fa-credit-card me-2" style="color: var(--brand-accent);"></i> Debt Elimination Matrix</h2>
+            <a href="{{ url_for('student_portal') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="input-panel">
+                    
+                    <div class="d-flex justify-content-between align-items-end mb-3">
+                        <div class="flex-grow-1 me-2">
+                            <label class="form-label text-primary">Calculation Target</label>
+                            <select id="calcMode" class="form-select fw-bold" style="color: var(--brand-accent);" onchange="toggleCalculationMode()">
+                                <option value="time" selected>Solve for Time (Fixed Payment)</option>
+                                <option value="payment">Solve for Payment (Fixed Timeline)</option>
+                            </select>
+                        </div>
+                        <div style="width: 90px;">
+                            <label class="form-label">Currency</label>
+                            <select id="currencySelect" class="form-select fw-bold" onchange="runAmortizationEngine()">
+                                <option value="$" selected>USD</option>
+                                <option value="₦">NGN</option>
+                                <option value="€">EUR</option>
+                                <option value="£">GBP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="section-title mt-2"><i class="fas fa-file-invoice-dollar me-1"></i> The Liability</div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Current Debt Balance</label>
+                        <div class="input-group">
+                            <span class="input-group-text cur-sym">$</span>
+                            <input type="number" id="debtBalance" class="form-control" value="8500" min="1" step="100" oninput="runAmortizationEngine()">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Interest Rate (Annual Percentage Rate)</label>
+                        <div class="input-group">
+                            <input type="number" id="aprRate" class="form-control" value="22.5" min="0" step="0.1" oninput="runAmortizationEngine()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <div class="section-title mt-2"><i class="fas fa-fire me-1"></i> The Attack Vector</div>
+
+                    <div id="modeFixedPayment">
+                        <div class="mb-4">
+                            <label class="form-label">Monthly Payment You Can Afford</label>
+                            <div class="input-group">
+                                <span class="input-group-text cur-sym">$</span>
+                                <input type="number" id="monthlyPayment" class="form-control" value="350" min="0" step="50" oninput="runAmortizationEngine()">
+                            </div>
+                            <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Must be higher than the monthly interest charge.</small>
+                        </div>
+                    </div>
+
+                    <div id="modeFixedTimeline" style="display: none;">
+                        <div class="mb-4">
+                            <label class="form-label">Target Payoff Timeline (Months)</label>
+                            <div class="input-group">
+                                <input type="number" id="targetMonths" class="form-control" value="12" min="1" step="1" oninput="runAmortizationEngine()">
+                                <span class="input-group-text">Months</span>
+                            </div>
+                            <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">How fast do you want to be debt-free?</small>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline-secondary w-100 fw-bold" onclick="resetEngine()"><i class="fas fa-redo-alt me-1"></i> Reset Architecture</button>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="dashboard-grid">
+                    
+                    <div class="dash-card hero" id="heroCard">
+                        <div class="text-uppercase fw-bold" style="font-size: 0.9rem; letter-spacing: 2px; opacity: 0.8;" id="heroTitle">Time to Debt Freedom</div>
+                        <div class="hero-val" id="heroValueDisplay">Calculating...</div>
+                        <div style="font-size: 1.1rem; opacity: 0.9; font-weight: 700;" id="heroSubtitleDisplay">Target Reached By: ---</div>
+                    </div>
+
+                    <div class="dash-card">
+                        <div class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px;"><i class="fas fa-search-dollar me-1"></i> Capital Destroyed</div>
+                        
+                        <div class="summary-row pt-0">
+                            <span class="text-muted">Principal Debt</span>
+                            <span class="fw-bold text-dark" id="sumPrincipal">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="text-muted">Cumulative Interest Paid</span>
+                            <span class="fw-bold" style="color: var(--brand-danger);" id="sumInterest">+$0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total Money Sent to Bank</span>
+                            <span id="sumTotalPaid">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="dash-card">
+                        <div class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px;"><i class="fas fa-chart-pie me-1"></i> Efficiency Metrics</div>
+                        
+                        <div class="summary-row pt-0 border-0">
+                            <span class="text-muted">Interest-to-Principal Ratio</span>
+                            <span class="fw-bold text-dark" id="metricRatio">0%</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-top: -5px; margin-bottom: 15px;">For every $100 in debt, you pay an extra <span id="metricRatioDollar">$0.00</span> in interest.</div>
+                        
+                        <div class="summary-row border-0 pt-0">
+                            <span class="text-muted">Required Monthly Payment</span>
+                            <span class="fw-bold fs-4" style="color: var(--brand-accent);" id="metricMonthly">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="dash-card" style="grid-column: span 2;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="text-muted text-uppercase fw-bold" style="font-size: 0.8rem; letter-spacing: 1px;">Amortization Trajectory</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="amortizationChart"></canvas>
+                        </div>
+                        
+                        <div class="insights-panel" id="aiInsightsBox">
+                            <i class="fas fa-robot me-2" style="color: var(--brand-accent);"></i> 
+                            <span id="aiInsightsText">Analyzing debt vectors...</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <button class="export-btn" onclick="exportAmortizationToCSV()"><i class="fas fa-file-csv me-2"></i> Export Full Amortization Schedule (CSV)</button>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global State Architecture
+        let amortizationChartInstance = null;
+        let scheduleData = []; // Array for CSV generation
+
+        document.addEventListener("DOMContentLoaded", () => {
+            runAmortizationEngine();
+        });
+
+        // ==========================================
+        // UI CONTROLLERS & FORMATTERS
+        // ==========================================
+        function toggleCalculationMode() {
+            const mode = document.getElementById('calcMode').value;
+            const modeFixed = document.getElementById('modeFixedPayment');
+            const modeTime = document.getElementById('modeFixedTimeline');
+
+            if (mode === 'time') {
+                modeFixed.style.display = 'block';
+                modeTime.style.display = 'none';
+            } else {
+                modeFixed.style.display = 'none';
+                modeTime.style.display = 'block';
+            }
+            runAmortizationEngine();
+        }
+
+        function getCurrencySymbol() {
+            return document.getElementById('currencySelect').value;
+        }
+
+        function formatMoney(amount) {
+            const sym = getCurrencySymbol();
+            return sym + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+        }
+
+        function addMonthsToDate(months) {
+            const date = new Date();
+            date.setMonth(date.getMonth() + months);
+            return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+
+        function formatTimeSpan(totalMonths) {
+            const y = Math.floor(totalMonths / 12);
+            const m = totalMonths % 12;
+            let str = "";
+            if (y > 0) str += `${y} Yr${y > 1 ? 's' : ''}`;
+            if (m > 0) str += `${y > 0 ? ', ' : ''}${m} Mo${m > 1 ? 's' : ''}`;
+            return str || "0 Mos";
+        }
+
+        // ==========================================
+        // THE INSTITUTIONAL ENGINE
+        // ==========================================
+        function runAmortizationEngine() {
+            // 1. Ingest Base Data
+            const mode = document.getElementById('calcMode').value;
+            const balance = parseFloat(document.getElementById('debtBalance').value) || 0;
+            const apr = parseFloat(document.getElementById('aprRate').value) || 0;
+            
+            // Sync UI Symbols
+            document.querySelectorAll('.cur-sym').forEach(el => el.innerText = getCurrencySymbol());
+
+            // Define engine targets based on mode
+            let payment = 0;
+            let targetMonths = 0;
+            
+            if (mode === 'time') {
+                payment = parseFloat(document.getElementById('monthlyPayment').value) || 0;
+            } else {
+                targetMonths = parseInt(document.getElementById('targetMonths').value) || 1;
+            }
+
+            // 2. Base Mathematical Guardrails
+            const hero = document.getElementById('heroCard');
+            if (balance <= 0) {
+                hero.className = "dash-card hero success";
+                document.getElementById('heroTitle').innerText = "Status";
+                document.getElementById('heroValueDisplay').innerText = "Debt Free!";
+                document.getElementById('heroSubtitleDisplay').innerText = "No balance to calculate.";
+                clearUI(); return;
+            }
+
+            const monthlyRate = (apr / 100) / 12;
+            const firstMonthInterest = balance * monthlyRate;
+
+            // 3. Bi-Directional Solver Logic
+            if (mode === 'payment') {
+                // Goal: Solve for Required Payment given N months
+                // Formula: PMT = P * (r(1+r)^n) / ((1+r)^n - 1)
+                if (monthlyRate === 0) {
+                    payment = balance / targetMonths; // 0% APR edge case
+                } else {
+                    const compoundFactor = Math.pow(1 + monthlyRate, targetMonths);
+                    payment = balance * ((monthlyRate * compoundFactor) / (compoundFactor - 1));
+                }
+            } else {
+                // Goal: Solve for N months given Fixed Payment
+                // The "Terminal Debt" Trap Detection: Does the payment even cover the interest?
+                if (payment <= firstMonthInterest && apr > 0) {
+                    hero.className = "dash-card hero error";
+                    document.getElementById('heroTitle').innerText = "Terminal Debt Trap";
+                    document.getElementById('heroValueDisplay').innerText = "Infinite";
+                    document.getElementById('heroSubtitleDisplay').innerHTML = `Your payment doesn't cover the ${formatMoney(firstMonthInterest)} monthly interest.<br>This debt will grow forever.`;
+                    clearUI(); return;
+                }
+            }
+
+            // 4. Amortization Iteration Matrix
+            // We run a month-by-month loop to map the exact schedule, accommodating float precision
+            let currentBalance = balance;
+            let totalInterestPaid = 0;
+            let monthsElapsed = 0;
+            const MAX_MONTHS = 1200; // 100 Year Circuit Breaker
+
+            // Chart Arrays
+            let labels = ['Start'];
+            let dataBalance = [balance];
+            let dataInterest = [0];
+
+            scheduleData = []; // Clear CSV memory
+
+            while (currentBalance > 0 && monthsElapsed < MAX_MONTHS) {
+                monthsElapsed++;
+                
+                // Calculate Interest for this month
+                let interestCharge = currentBalance * monthlyRate;
+                
+                // Final month edge case (payment might be less than regular fixed payment)
+                let actualPayment = payment;
+                if (currentBalance + interestCharge < payment) {
+                    actualPayment = currentBalance + interestCharge;
+                }
+
+                let principalPaid = actualPayment - interestCharge;
+                
+                // Mutate totals
+                totalInterestPaid += interestCharge;
+                currentBalance -= principalPaid;
+                
+                // Floor to zero to prevent microscopic negative floats
+                if (currentBalance < 0.01) currentBalance = 0;
+
+                // Logging for UI and Chart
+                if (monthsElapsed % Math.max(1, Math.floor((mode === 'time' ? monthsElapsed : targetMonths) / 20)) === 0 || currentBalance === 0) {
+                    labels.push(`Mo ${monthsElapsed}`);
+                    dataBalance.push(currentBalance);
+                    dataInterest.push(totalInterestPaid);
+                }
+
+                // Log for CSV Export
+                scheduleData.push({
+                    month: monthsElapsed,
+                    payment: actualPayment,
+                    principalPaid: principalPaid,
+                    interestPaid: interestCharge,
+                    totalInterest: totalInterestPaid,
+                    remainingBalance: currentBalance
+                });
+            }
+
+            // 5. Output Handling
+            if (monthsElapsed >= MAX_MONTHS) {
+                hero.className = "dash-card hero error";
+                document.getElementById('heroValueDisplay').innerText = "100+ Years";
+                document.getElementById('heroSubtitleDisplay').innerText = "Increase your payment immediately.";
+                return;
+            }
+
+            // UI Success State
+            hero.className = "dash-card hero";
+            if (mode === 'time') {
+                document.getElementById('heroTitle').innerText = "Time to Debt Freedom";
+                document.getElementById('heroValueDisplay').innerText = formatTimeSpan(monthsElapsed);
+                document.getElementById('heroSubtitleDisplay').innerHTML = `Debt Free By: <span style="color: var(--brand-accent);">${addMonthsToDate(monthsElapsed)}</span>`;
+                document.getElementById('metricMonthly').innerText = formatMoney(payment);
+            } else {
+                document.getElementById('heroTitle').innerText = "Required Monthly Payment";
+                document.getElementById('heroValueDisplay').innerText = formatMoney(payment);
+                document.getElementById('heroSubtitleDisplay').innerHTML = `To be debt free by <span style="color: var(--brand-accent);">${addMonthsToDate(targetMonths)}</span>`;
+                document.getElementById('metricMonthly').innerText = formatMoney(payment);
+            }
+
+            // Capital Destroyed UI
+            const totalPaid = balance + totalInterestPaid;
+            document.getElementById('sumPrincipal').innerText = formatMoney(balance);
+            document.getElementById('sumInterest').innerText = `+${formatMoney(totalInterestPaid)}`;
+            document.getElementById('sumTotalPaid').innerText = formatMoney(totalPaid);
+
+            // Efficiency Metrics UI
+            const intRatio = (totalInterestPaid / balance) * 100;
+            document.getElementById('metricRatio').innerText = `${intRatio.toFixed(1)}%`;
+            document.getElementById('metricRatioDollar').innerText = formatMoney((totalInterestPaid / balance) * 100);
+
+            // 6. Execute L.I.S.A. AI Insights
+            generateAIInsights(apr, intRatio, monthsElapsed, firstMonthInterest, payment);
+
+            // 7. Execute Dual-Curve Render
+            renderChart(labels, dataBalance, dataInterest);
+        }
+
+        function clearUI() {
+            document.getElementById('sumPrincipal').innerText = "$0.00";
+            document.getElementById('sumInterest').innerText = "$0.00";
+            document.getElementById('sumTotalPaid').innerText = "$0.00";
+            document.getElementById('metricRatio').innerText = "0%";
+            document.getElementById('metricRatioDollar').innerText = "$0.00";
+            document.getElementById('metricMonthly').innerText = "$0.00";
+            if(amortizationChartInstance) amortizationChartInstance.destroy();
+        }
+
+        // ==========================================
+        // L.I.S.A. KINETIC INSIGHTS
+        // ==========================================
+        function generateAIInsights(apr, intRatio, months, firstMonthInterest, payment) {
+            const box = document.getElementById('aiInsightsBox');
+            const text = document.getElementById('aiInsightsText');
+            
+            let insight = "";
+            let statusClass = "";
+
+            if (apr > 18 && intRatio > 30) {
+                insight = `Critical Bleed: Your APR (${apr}%) is severely toxic. You are paying over ${intRatio.toFixed(0)}% in pure interest. Explore a 0% Balance Transfer Card or a low-interest personal consolidation loan immediately.`;
+                statusClass = "danger";
+            } else if (payment < firstMonthInterest * 1.5) {
+                insight = `Danger Zone: You are barely covering the interest. Most of your money is enriching the bank, not paying down principal. Increase payments to accelerate escape velocity.`;
+                statusClass = "warning";
+            } else if (months <= 12) {
+                insight = `High-Velocity Attack: You are aggressively crushing this debt in under a year. The interest damage is minimal. Stay disciplined and hold the line.`;
+                statusClass = "success";
+            } else {
+                insight = `Stable Amortization: Debt will be eliminated in ${formatTimeSpan(months)}. If you receive unexpected windfalls (tax refunds, bonuses), inject them here to kill the compounding curve early.`;
+                statusClass = "";
+            }
+
+            text.innerText = insight;
+            box.className = `insights-panel ${statusClass}`;
+        }
+
+        // ==========================================
+        // CHART.JS VISUALIZER (Dual Axis)
+        // ==========================================
+        function renderChart(labels, dataBalance, dataInterest) {
+            const ctx = document.getElementById('amortizationChart').getContext('2d');
+            if (amortizationChartInstance) amortizationChartInstance.destroy();
+
+            // Gradient for the depreciating balance
+            const gradientBal = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientBal.addColorStop(0, 'rgba(139, 92, 246, 0.4)'); // Purple
+            gradientBal.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
+
+            amortizationChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Remaining Principal Balance',
+                            data: dataBalance,
+                            borderColor: '#8b5cf6', // Brand Purple
+                            backgroundColor: gradientBal,
+                            fill: true,
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Cumulative Interest Bank Extracts',
+                            data: dataInterest,
+                            borderColor: '#ef4444', // Danger Red
+                            borderDash: [5, 5],
+                            fill: false,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            position: 'left',
+                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000) return `${getCurrencySymbol()}${(value/1000).toFixed(1)}k`;
+                                    return `${getCurrencySymbol()}${value}`;
+                                }
+                            }
+                        },
+                        x: { grid: { display: false, drawBorder: false } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+                        tooltip: { 
+                            mode: 'index', 
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${formatMoney(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: { mode: 'index', intersect: false }
+                }
+            });
+        }
+
+        // ==========================================
+        // CSV EXPORT ENGINE
+        // ==========================================
+        function exportAmortizationToCSV() {
+            if (scheduleData.length === 0) {
+                alert("Please calculate a valid projection first.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Month,Payment,Principal Paid,Interest Paid,Cumulative Interest,Remaining Balance\r\n";
+            
+            scheduleData.forEach(row => {
+                csvContent += `${row.month},${row.payment.toFixed(2)},${row.principalPaid.toFixed(2)},${row.interestPaid.toFixed(2)},${row.totalInterest.toFixed(2)},${row.remainingBalance.toFixed(2)}\r\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "LISA_Debt_Amortization_Schedule.csv");
+            document.body.appendChild(link); 
+            link.click(); 
+            document.body.removeChild(link);
+        }
+
+        function resetEngine() {
+            document.getElementById('calcMode').value = "time";
+            document.getElementById('debtBalance').value = 8500;
+            document.getElementById('aprRate').value = 22.5;
+            document.getElementById('monthlyPayment').value = 350;
+            document.getElementById('targetMonths').value = 12;
+            toggleCalculationMode();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Visualizer | Tool</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #fd7e14;
+            --accent-hover: #e86e04;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header { margin-bottom: 2rem; }
+        .back-link { color: #2563eb; text-decoration: none; font-weight: 600; display: inline-block; margin-bottom: 0.5rem; }
+        
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--background);
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent);
+            background: #fff3cd;
+        }
+
+        input[type="file"] { display: none; }
+
+        .visualizer-container {
+            width: 100%;
+            background: #1e293b;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+            height: 300px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .audio-player-wrapper {
+            background: #0f172a;
+            padding: 1rem;
+            border-radius: 0 0 8px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        audio {
+            width: 100%;
+            height: 40px;
+            outline: none;
+        }
+
+        .track-info {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+
+        .color-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .theme-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .theme-btn:hover { background: var(--background); }
+        .theme-btn.active { border-color: var(--accent); color: var(--accent); }
+
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <a href="{{ url_for('student_portal') }}" class="back-link">← Back To Dashboard</a>
+        <h1>Audio Spectrum Visualizer</h1>
+        <p style="color: var(--text-muted);">Local MP3 frequency analysis and graphical rendering.</p>
+    </div>
+
+    <div class="card">
+        
+        <div class="upload-zone" id="dropZone">
+            <i class="fas fa-music fa-2x mb-2" style="color: var(--text-muted);"></i>
+            <h4>Load Audio File (MP3/WAV)</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Files are processed locally and never uploaded.</p>
+            <input type="file" id="fileInput" accept="audio/*">
+        </div>
+
+        <div class="track-info" id="trackName">No track loaded</div>
+
+        <div class="visualizer-container">
+            <canvas id="visualizerCanvas"></canvas>
+        </div>
+        
+        <div class="audio-player-wrapper">
+            <audio id="audioPlayer" controls></audio>
+        </div>
+
+        <div class="color-controls">
+            <span style="font-size: 0.85rem; color: var(--text-muted); align-self: center;">Visual Theme:</span>
+            <button class="theme-btn active" data-theme="fire">Fire</button>
+            <button class="theme-btn" data-theme="ocean">Ocean</button>
+            <button class="theme-btn" data-theme="matrix">Matrix</button>
+            <button class="theme-btn" data-theme="neon">Neon Pink</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    class AudioVisualizer {
+        constructor() {
+            this.dropZone = document.getElementById('dropZone');
+            this.fileInput = document.getElementById('fileInput');
+            this.audioPlayer = document.getElementById('audioPlayer');
+            this.trackName = document.getElementById('trackName');
+            this.canvas = document.getElementById('visualizerCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.themeBtns = document.querySelectorAll('.theme-btn');
+
+            this.audioCtx = null;
+            this.analyser = null;
+            this.source = null;
+            this.animationId = null;
+            this.currentTheme = 'fire';
+            this.isInitialized = false;
+
+            this.initBindings();
+            this.resizeCanvas();
+            window.addEventListener('resize', () => this.resizeCanvas());
+        }
+
+        initBindings() {
+            this.dropZone.addEventListener('click', () => this.fileInput.click());
+            this.fileInput.addEventListener('change', (e) => this.handleFile(e.target.files[0]));
+            
+            this.dropZone.addEventListener('dragover', (e) => { e.preventDefault(); this.dropZone.classList.add('dragover'); });
+            this.dropZone.addEventListener('dragleave', () => this.dropZone.classList.remove('dragover'));
+            this.dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                this.dropZone.classList.remove('dragover');
+                this.handleFile(e.dataTransfer.files[0]);
+            });
+
+            this.themeBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    this.themeBtns.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    this.currentTheme = e.target.dataset.theme;
+                });
+            });
+
+            // Handle audio routing on play to comply with browser autoplay policies
+            this.audioPlayer.addEventListener('play', () => this.initAudioContext());
+        }
+
+        resizeCanvas() {
+            this.canvas.width = this.canvas.parentElement.clientWidth;
+            this.canvas.height = this.canvas.parentElement.clientHeight;
+        }
+
+        handleFile(file) {
+            if (!file || !file.type.startsWith('audio/')) {
+                alert("Please upload a valid audio file.");
+                return;
+            }
+
+            this.trackName.textContent = file.name;
+            const objectURL = URL.createObjectURL(file);
+            this.audioPlayer.src = objectURL;
+            this.audioPlayer.load();
+            
+            // Clear previous canvas
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        initAudioContext() {
+            if (this.isInitialized) {
+                // If context is suspended by browser, wake it up
+                if(this.audioCtx.state === 'suspended') {
+                    this.audioCtx.resume();
+                }
+                return;
+            }
+
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            this.analyser = this.audioCtx.createAnalyser();
+            
+            // Route HTML5 Audio -> Analyser -> Speakers
+            this.source = this.audioCtx.createMediaElementSource(this.audioPlayer);
+            this.source.connect(this.analyser);
+            this.analyser.connect(this.audioCtx.destination);
+
+            this.analyser.fftSize = 256; // 128 frequency bins
+            this.analyser.smoothingTimeConstant = 0.85;
+
+            this.isInitialized = true;
+            this.drawVisualizer();
+        }
+
+        getColor(value, index, total) {
+            const ratio = index / total;
+            switch(this.currentTheme) {
+                case 'fire':
+                    return `rgb(255, ${value - 50}, 0)`;
+                case 'ocean':
+                    return `rgb(0, ${value}, ${255 - (ratio * 100)})`;
+                case 'matrix':
+                    return `rgb(0, ${value + 50}, 0)`;
+                case 'neon':
+                    return `rgb(255, 0, ${value})`;
+                default:
+                    return `rgb(${value}, ${value}, ${value})`;
+            }
+        }
+
+        drawVisualizer() {
+            this.animationId = requestAnimationFrame(() => this.drawVisualizer());
+
+            const bufferLength = this.analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            this.analyser.getByteFrequencyData(dataArray);
+
+            // Clear canvas with a slight fade effect for smooth trails
+            this.ctx.fillStyle = 'rgba(30, 41, 59, 0.4)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+            const barWidth = (this.canvas.width / bufferLength) * 2;
+            let barHeight;
+            let x = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+                // Scale bar height to look better on canvas
+                barHeight = (dataArray[i] / 255) * this.canvas.height;
+
+                this.ctx.fillStyle = this.getColor(dataArray[i], i, bufferLength);
+                
+                // Draw from bottom up
+                this.ctx.fillRect(x, this.canvas.height - barHeight, barWidth, barHeight);
+
+                x += barWidth + 2; // 2px gap between bars
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => new AudioVisualizer());
+</script>
+
+</body>
+</html>

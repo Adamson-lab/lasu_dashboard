@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendulum Simulator | Student Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lasu-green: #004d40;
+            --lasu-accent: #198754;
+            --bg-light: #f4f7f6;
+            --math-blue: #0d6efd;
+            --math-red: #dc3545;
+            --math-purple: #6f42c1;
+            --math-orange: #fd7e14;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        .navbar-custom { 
+            background-color: var(--lasu-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        .back-btn {
+            color: white; text-decoration: none; font-weight: 600;
+            display: flex; align-items: center; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.8; color: white; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* --- Left Pane: Input --- */
+        .input-pane {
+            flex: 0 0 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            font-weight: 800;
+            color: var(--lasu-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 10px;
+        }
+
+        .input-group-custom {
+            display: flex;
+            align-items: stretch;
+            background: white;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-group-custom:focus-within { border-color: var(--math-blue); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+
+        .input-label {
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            padding: 15px;
+            background: #f8f9fa;
+            border-right: 1px solid #ced4da;
+            font-size: 1.1rem;
+            color: #495057;
+            width: 170px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        .input-label small { font-size: 0.75rem; color: #adb5bd; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; margin-top: 2px;}
+
+        .num-input {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #212529;
+            outline: none;
+            text-align: center;
+            -moz-appearance: textfield;
+            width: 100%;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .unit-label {
+            background: #f8f9fa;
+            border-left: 1px solid #ced4da;
+            padding: 0 15px;
+            font-weight: 800;
+            color: var(--math-blue);
+            display: flex;
+            align-items: center;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .planet-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-planet {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 10px 5px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-planet:hover { background: #f8f9fa; border-color: #ced4da; }
+        .btn-planet.active {
+            background: rgba(13, 110, 253, 0.1);
+            color: var(--math-blue);
+            border-color: var(--math-blue);
+        }
+
+        .alert-error {
+            display: none;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Right Pane: Output --- */
+        .output-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stat-card.highlight {
+            background: rgba(13, 110, 253, 0.05);
+            border-color: rgba(13, 110, 253, 0.2);
+        }
+
+        .stat-label {
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #212529;
+            word-break: break-all;
+        }
+        
+        .highlight .stat-val { color: var(--math-blue); }
+        .res-unit { font-size: 1.1rem; color: #adb5bd; }
+
+        /* Animation & Canvas Area */
+        .simulation-box {
+            flex: 1;
+            background: #121212;
+            border-radius: 12px;
+            border: 4px solid #343a40;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            background-image: 
+                radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        #pendulumCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .telemetry-bar {
+            background: #212529;
+            padding: 15px 25px;
+            border-top: 1px solid #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: var(--lasu-accent);
+            color: white;
+            border: none;
+            font-weight: 800;
+            padding: 10px 25px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .control-btn:hover { background: #146c43; transform: scale(1.05); }
+        .control-btn.paused { background: var(--math-orange); }
+        .control-btn.paused:hover { background: #e06c00; }
+
+        .live-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            flex: 1;
+            margin-left: 30px;
+        }
+        .live-stat-item {
+            font-family: 'Fira Code', monospace;
+            color: #00ff00;
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+        }
+        .live-stat-item span { color: #adb5bd; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .input-pane { flex: none; width: 100%; }
+            .top-stats-grid { grid-template-columns: 1fr; }
+            .telemetry-bar { flex-direction: column; gap: 15px; align-items: stretch; }
+            .live-stats { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="back-btn" href="{{ url_for('student_portal') }}">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <span class="navbar-text text-white small fw-bold d-none d-md-block opacity-75">ENGINEERING & PHYSICS</span>
+    </div>
+</nav>
+
+<div class="main-container">
+    
+    <div class="input-pane">
+        <div class="card-box" style="flex: 1;">
+            <div class="pane-header">
+                <i class="fas fa-arrows-alt-v"></i> Pendulum Params
+            </div>
+
+            <div class="alert-error" id="errorBanner">
+                Please enter valid numerical values.
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-primary">String Length <small>(L)</small></div>
+                <input type="number" class="num-input" id="valL" value="1.0" step="any" oninput="updatePhysics()">
+                <div class="unit-label">m</div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-label text-danger">Initial Angle <small>(&theta;<sub>0</sub>)</small></div>
+                <input type="number" class="num-input" id="valAngle" value="45" step="any" oninput="updatePhysics()">
+                <div class="unit-label">&deg;</div>
+            </div>
+
+            <label class="fw-bold text-muted small text-uppercase mb-2 d-block mt-4">Gravity Constant (g)</label>
+            <div class="planet-selector">
+                <button class="btn-planet active" id="btnEarth" onclick="setGravity(9.81, 'Earth')">Earth (9.81)</button>
+                <button class="btn-planet" id="btnMoon" onclick="setGravity(1.62, 'Moon')">Moon (1.62)</button>
+                <button class="btn-planet" id="btnMars" onclick="setGravity(3.71, 'Mars')">Mars (3.71)</button>
+                <button class="btn-planet" id="btnJup" onclick="setGravity(24.79, 'Jup')">Jupiter (24.7)</button>
+            </div>
+
+            <div class="input-group-custom mb-0">
+                <div class="input-label text-warning">Custom Gravity <small>(g)</small></div>
+                <input type="number" class="num-input" id="valG" value="9.81" step="any" oninput="customGravity()">
+                <div class="unit-label">m/s&sup2;</div>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="output-pane">
+        
+        <div class="top-stats-grid">
+            <div class="stat-card highlight">
+                <div class="res-label text-primary">Time Period (T)</div>
+                <div class="res-val" id="resPeriod">2.01 <span class="res-unit">s</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="res-label text-success">Frequency (f)</div>
+                <div class="res-val" id="resFreq">0.50 <span class="res-unit">Hz</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="res-label text-danger">Max Velocity (v<sub>max</sub>)</div>
+                <div class="res-val" id="resVmax">2.40 <span class="res-unit">m/s</span></div>
+            </div>
+        </div>
+
+        <div class="simulation-box">
+            
+            <div class="canvas-container" id="graphContainer">
+                <canvas id="pendulumCanvas"></canvas>
+            </div>
+
+            <div class="telemetry-bar">
+                <button class="control-btn" id="playBtn" onclick="togglePlay()">
+                    <i class="fas fa-pause"></i> Pause
+                </button>
+
+                <div class="live-stats">
+                    <div class="live-stat-item"><span>Current Angle (&theta;)</span><div id="teleAngle">45.00&deg;</div></div>
+                    <div class="live-stat-item"><span>Tangential Vel. (v)</span><div id="teleVel">0.00 m/s</div></div>
+                    <div class="live-stat-item"><span>Elapsed Time (t)</span><div id="teleTime">0.00 s</div></div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const valL = document.getElementById('valL');
+    const valAngle = document.getElementById('valAngle');
+    const valG = document.getElementById('valG');
+    const errorBanner = document.getElementById('errorBanner');
+    
+    const resPeriod = document.getElementById('resPeriod');
+    const resFreq = document.getElementById('resFreq');
+    const resVmax = document.getElementById('resVmax');
+    
+    const teleAngle = document.getElementById('teleAngle');
+    const teleVel = document.getElementById('teleVel');
+    const teleTime = document.getElementById('teleTime');
+    const playBtn = document.getElementById('playBtn');
+
+    const canvas = document.getElementById('pendulumCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('graphContainer');
+
+    // Physics Engine State
+    let P = { L: 1, theta0: 0, g: 9.81, omega: 0, vmax: 0 };
+    let simTime = 0;
+    let lastRenderTime = 0;
+    let animationFrameId = null;
+    let isPlaying = true;
+
+    function setGravity(g, planet) {
+        document.querySelectorAll('.btn-planet').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn${planet}`).classList.add('active');
+        valG.value = g;
+        updatePhysics();
+    }
+
+    function customGravity() {
+        document.querySelectorAll('.btn-planet').forEach(btn => btn.classList.remove('active'));
+        updatePhysics();
+    }
+
+    function resizeCanvas() {
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        if(cw === 0 || ch === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = cw * dpr;
+        canvas.height = ch * dpr;
+        canvas.style.width = `${cw}px`;
+        canvas.style.height = `${ch}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        if (!isPlaying) renderFrame(simTime); // Force render if paused
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function roundSafe(num) { return (Math.round(num * 100) / 100).toFixed(2); }
+
+    // --- MATH ENGINE ---
+    function updatePhysics() {
+        const L = parseFloat(valL.value);
+        const angleDeg = parseFloat(valAngle.value);
+        const g = parseFloat(valG.value);
+
+        if (isNaN(L) || isNaN(angleDeg) || isNaN(g) || L <= 0 || g <= 0) {
+            errorBanner.style.display = 'block';
+            return;
+        }
+        errorBanner.style.display = 'none';
+
+        // Limit angle for UI sanity, though math handles any
+        let clampedAngle = angleDeg;
+        if (clampedAngle > 179) clampedAngle = 179;
+        if (clampedAngle < -179) clampedAngle = -179;
+
+        const theta0Rad = clampedAngle * (Math.PI / 180);
+
+        P.L = L;
+        P.theta0 = theta0Rad;
+        P.g = g;
+        P.omega = Math.sqrt(g / L); // Angular frequency
+
+        // T = 2 * PI * sqrt(L/g)
+        const period = 2 * Math.PI * Math.sqrt(L / g);
+        const freq = 1 / period;
+
+        // Conservation of Energy: v_max = sqrt(2 * g * L * (1 - cos(theta0)))
+        P.vmax = Math.sqrt(2 * g * L * (1 - Math.cos(theta0Rad)));
+
+        // UI Updates
+        resPeriod.innerHTML = `${roundSafe(period)} <span class="res-unit">s</span>`;
+        resFreq.innerHTML = `${roundSafe(freq)} <span class="res-unit">Hz</span>`;
+        resVmax.innerHTML = `${roundSafe(P.vmax)} <span class="res-unit">m/s</span>`;
+
+        // Reset simulation to start position
+        simTime = 0;
+        if (!isPlaying) renderFrame(simTime);
+    }
+
+    function togglePlay() {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            playBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+            playBtn.className = 'control-btn';
+            lastRenderTime = performance.now();
+            animate(lastRenderTime);
+        } else {
+            playBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+            playBtn.className = 'control-btn paused';
+            cancelAnimationFrame(animationFrameId);
+        }
+    }
+
+    // Kinematic equation for Simple Harmonic Motion
+    // theta(t) = theta0 * cos(omega * t)
+    function getStateAtTime(t) {
+        const currentTheta = P.theta0 * Math.cos(P.omega * t);
+        // Derivative of theta for velocity: v = -theta0 * omega * L * sin(omega * t)
+        const currentVel = -P.theta0 * P.omega * P.L * Math.sin(P.omega * t);
+        
+        return { theta: currentTheta, v: currentVel };
+    }
+
+    // --- CANVAS RENDERING ENGINE ---
+    function renderFrame(t) {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const state = getStateAtTime(t);
+
+        // Update Telemetry Dashboard
+        const thetaDeg = state.theta * (180 / Math.PI);
+        teleAngle.innerText = `${thetaDeg.toFixed(2)}\u00B0`;
+        teleVel.innerText = `${state.v.toFixed(2)} m/s`;
+        teleTime.innerText = `${t.toFixed(2)} s`;
+
+        // Auto-Scale Drawing
+        const pivotX = cw / 2;
+        const pivotY = 40;
+        
+        // Draw string length relative to frame so it fits perfectly
+        const maxDrawLen = ch - 100; 
+
+        const bobX = pivotX + maxDrawLen * Math.sin(state.theta);
+        const bobY = pivotY + maxDrawLen * Math.cos(state.theta);
+
+        // 1. Draw Pivot Bracket
+        ctx.fillStyle = '#495057';
+        ctx.fillRect(pivotX - 30, pivotY - 10, 60, 10);
+        ctx.beginPath();
+        ctx.arc(pivotX, pivotY, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#adb5bd';
+        ctx.fill();
+
+        // 2. Draw Equilibrium Ghost Line
+        ctx.beginPath();
+        ctx.moveTo(pivotX, pivotY);
+        ctx.lineTo(pivotX, pivotY + maxDrawLen + 30);
+        ctx.strokeStyle = '#343a40';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 3. Draw Arc (Ghost Path)
+        ctx.beginPath();
+        ctx.arc(pivotX, pivotY, maxDrawLen, Math.PI/2 - Math.abs(P.theta0), Math.PI/2 + Math.abs(P.theta0));
+        ctx.strokeStyle = 'rgba(108, 117, 125, 0.2)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // 4. Draw String
+        ctx.beginPath();
+        ctx.moveTo(pivotX, pivotY);
+        ctx.lineTo(bobX, bobY);
+        ctx.strokeStyle = '#ced4da';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // 5. Draw Bob
+        let grad = ctx.createRadialGradient(bobX - 5, bobY - 5, 2, bobX, bobY, 20);
+        grad.addColorStop(0, '#0d6efd');
+        grad.addColorStop(1, '#002766');
+
+        ctx.beginPath();
+        ctx.arc(bobX, bobY, 20, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.shadowColor = '#0d6efd';
+        ctx.shadowBlur = 15;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+    }
+
+    function animate(now) {
+        if (!isPlaying) return;
+
+        // Calculate delta time in seconds
+        const dt = (now - lastRenderTime) / 1000;
+        lastRenderTime = now;
+        simTime += dt;
+
+        renderFrame(simTime);
+
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // SAFE INIT
+    setTimeout(() => {
+        resizeCanvas();
+        updatePhysics();
+        lastRenderTime = performance.now();
+        animate(lastRenderTime);
+    }, 100);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

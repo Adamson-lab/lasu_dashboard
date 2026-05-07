@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hostel Receipt</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Courier New', Courier, monospace; }
+        .receipt-card { max-width: 600px; margin: 50px auto; background: white; padding: 40px; border: 2px dashed #198754; }
+        .logo { font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; color: #198754; }
+    </style>
+</head>
+<body>
+
+<div class="receipt-card shadow">
+    <div class="logo">🏠 LASU ACCOMMODATION</div>
+    <h4 class="text-center mb-4">HOSTEL ALLOCATION RECEIPT</h4>
+    
+    <table class="table table-borderless">
+        <tr><td><strong>Date Allocated:</strong></td> <td>{{ allocation.date_allocated.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+        <tr><td><strong>Reference:</strong></td> <td>HOSTEL-{{ student.matric_no|replace('/','') }}-{{ allocation.id }}</td></tr>
+        <tr><td><strong>Student Name:</strong></td> <td>{{ student.name }}</td></tr>
+        <tr><td><strong>Matric No:</strong></td> <td>{{ student.matric_no }}</td></tr>
+        <tr><td><strong>Allocated Hall:</strong></td> <td>{{ allocation.hostel.name }}</td></tr>
+        <tr><td><strong>Category:</strong></td> <td>Student Accommodation</td></tr>
+        <tr class="border-top border-bottom border-success">
+            <td><strong>AMOUNT PAID:</strong></td> 
+            <td class="fs-4 fw-bold text-success">₦{{ "{:,.2f}".format(allocation.hostel.price) }}</td>
+        </tr>
+    </table>
+    
+    <div class="text-center mt-5">
+        <p class="small text-muted">Present this receipt to the Hall Warden for key collection.</p>
+        <button onclick="window.print()" class="btn btn-success no-print">🖨️ Print Receipt</button>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .no-print { display: none; }
+        body { background: white; }
+        .receipt-card { border: 2px solid #198754; margin: 0; box-shadow: none; }
+    }
+</style>
+
+</body>
+</html>
