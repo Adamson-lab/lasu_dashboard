@@ -143,9 +143,7 @@ for folder in [
 
 db.init_app(app)
 
-# --- CHANGE THESE LINES ---
-RECAPTCHA_SITE_KEY = '6Lf20q8sAAAAACSH9fhMpSy9dO9fwWNEPMyN5QaM'
-RECAPTCHA_SECRET_KEY = '6Lf20q8sAAAAAOF69y_lhkH_mE_MLedvF_AGcJPK'
+
 
 
 # --- NEW MODELS (DEFINED HERE FOR STABILITY) ---
@@ -674,17 +672,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        # 1. ROBOT VERIFICATION
-        if RECAPTCHA_SECRET_KEY:
-            try:
-                verify_url = 'https://www.google.com/recaptcha/api/siteverify'
-                payload = {'secret': RECAPTCHA_SECRET_KEY, 'response': request.form.get('g-recaptcha-response')}
-                response = requests.post(verify_url, data=payload)
-                if not response.json().get('success'):
-                    flash('❌ Robot verification failed!')
-                    return redirect(url_for('login'))
-            except:
-                pass
+        
         
         # 2. CHECK IF USER IS ADMIN (User Model)
         user = User.query.filter_by(username=username).first()
@@ -731,7 +719,7 @@ def login():
         # If neither found
         flash('❌ Invalid Username or Password')
         
-    return render_template('lecturer_login.html', site_key=RECAPTCHA_SITE_KEY)
+    return render_template('lecturer_login.html')
 
 
 # ==========================================
