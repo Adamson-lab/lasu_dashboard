@@ -7363,7 +7363,7 @@ def force_create_lecturer():
         db.create_all()
         
         # 2. Check if the account exists
-        email = "prof@lasu.edu.ng"
+        email = "favouradamson803@gmail.com"
         prof = Lecturer.query.filter_by(email=email).first()
         
         if prof:
