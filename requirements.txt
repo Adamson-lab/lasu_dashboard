@@ -7,3 +7,4 @@ qrcode[pil]==7.4.2
 feedparser==6.0.10
 httpx==0.25.1
 gunicorn==21.2.0
+legacy-cgi
