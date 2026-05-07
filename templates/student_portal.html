@@ -3176,5 +3176,93 @@ function submitTransfer() {
     setInterval(fetchSecureMessages, 5000);
     document.addEventListener("DOMContentLoaded", fetchSecureMessages);
 </script>
+
+
+<div class="modal fade" id="dctModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content dct-modal border-0 shadow-lg">
+            <div class="modal-header dct-header">
+                <h5 class="modal-title fw-bold"><i class="fas fa-fingerprint me-2"></i>DCT: NEURAL PROJECTION</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="dct-avatar-container mb-3">
+                            <i class="fas fa-user-astronaut dct-hologram"></i>
+                        </div>
+                        <div class="dct-controls p-3 bg-dark bg-opacity-25 rounded">
+                            <label class="d-block mb-2">Sleep Optimization</label>
+                            <input type="range" class="dct-slider mb-3" min="0" max="12" value="7" oninput="updateDCT(this.value, 'sleep')">
+                            
+                            <label class="d-block mb-2">Deep Work Hours</label>
+                            <input type="range" class="dct-slider mb-3" min="0" max="15" value="4" oninput="updateDCT(this.value, 'study')">
+                            
+                            <label class="d-block mb-2">Cortisol (Stress) Level</label>
+                            <input type="range" class="dct-slider" min="1" max="10" value="3" oninput="updateDCT(this.value, 'stress')">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-info fw-bold border-bottom border-secondary pb-2">SIMULATED BIOMETRICS</h6>
+                        <div class="mb-4">
+                            <div class="dct-stat-label"><span>NEURAL RETENTION</span><span id="outRetention">72%</span></div>
+                            <div class="dct-stat-bar"><div id="barRetention" class="dct-fill bg-info" style="width: 72%"></div></div>
+                            
+                            <div class="dct-stat-label"><span>BURNOUT PROBABILITY</span><span id="outBurnout">12%</span></div>
+                            <div class="dct-stat-bar"><div id="barBurnout" class="dct-fill bg-warning" style="width: 12%"></div></div>
+                            
+                            <div class="dct-stat-label"><span>PROJECTED GPA IMPACT</span><span id="outGPA">+0.15</span></div>
+                            <div class="dct-stat-bar"><div id="barGPA" class="dct-fill bg-success" style="width: 40%"></div></div>
+                        </div>
+                        <div class="alert bg-info bg-opacity-10 border border-info text-info small">
+                            <i class="fas fa-lightbulb me-2"></i> <b>AI ADVICE:</b> Increasing sleep to 8h will boost retention by 15%.
+                        </div>
+                        <div class="d-none">
+                            <span id="valSleep">7h</span><span id="valStudy">4h</span><span id="valStress">Low</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="degreeGenModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content adg-modal">
+            <div class="modal-header adg-header">
+                <h5 class="modal-title fw-bold text-success"><i class="fas fa-atom me-2"></i>DEGREE EVOLUTION ENGINE</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="market-scanner mb-3">
+                    <div class="market-ticker">
+                        [SCANNING GLOBAL JOB MARKET...] <br>
+                        [DEMAND: AI ARCHITECTS +400%] <br>
+                        [DEMAND: QUANTUM CRYPTO +250%] <br>
+                        [UPDATING CURRICULUM NODES...]
+                    </div>
+                </div>
+                
+                <div class="degree-card shadow-lg">
+                    <div id="degreeMorph" class="degree-morphing">
+                        <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" width="50" class="mb-2">
+                        <h4 class="fw-bold" id="degreeTitle">B.Sc Computer Science</h4>
+                        <p class="text-muted small">Lagos State University</p>
+                        <hr>
+                        <div id="dynamicModules" class="mb-3">
+                            <span class="skill-badge">Core Java</span>
+                            <span class="skill-badge">Data Structures</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-outline-success w-100 mt-4 fw-bold py-3" onclick="startDegreeEvolution()">
+                    <i class="fas fa-sync-alt me-2"></i> EVOLVE MY DEGREE (2026-2030)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
