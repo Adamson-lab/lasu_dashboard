@@ -746,13 +746,11 @@ def verify_otp():
 
 
 # ==========================================
-# 🛡️ LECTURER REGISTRATION MATRIX (OTP ENABLED)
+# 🛡️ LECTURER REGISTRATION (OTP SCRAPPED - DIRECT ENTRY)
 # ==========================================
 @app.route('/register_lecturer', methods=['POST'])
 def register_lecturer():
     import re
-    import random
-    from datetime import datetime, timedelta
     
     # 1. Capture Form Data
     title = request.form.get('title')
@@ -762,10 +760,10 @@ def register_lecturer():
     password = request.form.get('password')
     confirm = request.form.get('confirm_password')
 
-    # 2. Strict Backend Gatekeeper (Blocks Students, Allows Personal Emails)
+    # 2. Strict Backend Gatekeeper
     if '@st.lasu.edu.ng' in email:
         flash("❌ Security Violation: Student domains (@st.lasu.edu.ng) are strictly prohibited.", "danger")
-        session['show_register'] = True  # Keeps the user on the Register tab after refresh
+        session['show_register'] = True
         return redirect(url_for('login'))
         
     if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
@@ -785,99 +783,31 @@ def register_lecturer():
         session['show_register'] = True
         return redirect(url_for('login'))
 
-    # 4. Generate OTP & Store Pending Data in Session
-    otp_code = str(random.randint(100000, 999999))
-    expiry_time = datetime.utcnow() + timedelta(minutes=10)
-    
-    session['pending_lecturer'] = {
-        'title': title,
-        'name': name,
-        'email': email,
-        'dept': dept,
-        'password': password 
-    }
-    session['lecturer_reg_otp'] = otp_code
-    session['lecturer_reg_expiry'] = expiry_time.timestamp()
-
-    # 5. Fire the Email
-    email_body = f"""Hello {title} {name},
-
-You have initiated a registration request for the LASU Analytics Dashboard.
-Your verification code is: {otp_code}
-
-This code expires in 10 minutes.
-
-If you did not request this, please ignore this email."""
-
-    send_email_notification(email, "LASU Matrix - Lecturer Verification", email_body)
-    
-    flash(f"✉️ Verification code sent to {email}. Please check your inbox.", "info")
-    return redirect(url_for('verify_lecturer_otp'))
-
-
-# ==========================================
-# 🔐 VERIFY NEW LECTURER OTP ROUTE
-# ==========================================
-@app.route('/verify-lecturer-otp', methods=['GET', 'POST'])
-def verify_lecturer_otp():
-    # Ensure there is actually a pending registration in memory
-    if 'pending_lecturer' not in session:
-        flash("⚠️ Session expired or invalid request. Please register again.", "warning")
-        session['show_register'] = True
+    # 4. DIRECT DATABASE COMMIT (No OTP verification required)
+    try:
+        new_lecturer = Lecturer(
+            title=title,
+            name=name,
+            email=email,
+            department=dept
+        )
+        new_lecturer.set_password(password)
+        db.session.add(new_lecturer)
+        db.session.commit()
+        
+        # Success message
+        flash(f"✅ Access Granted. Welcome to the Matrix, {title} {name}. You may now log in.", "success")
         return redirect(url_for('login'))
         
-    if request.method == 'POST':
-        user_code = request.form.get('otp', '').strip()
-        generated_code = session.get('lecturer_reg_otp')
-        expiry_timestamp = session.get('lecturer_reg_expiry', 0)
-        
-        from datetime import datetime
-        
-        # Check Expiration
-        if datetime.utcnow().timestamp() > expiry_timestamp:
-            session.pop('pending_lecturer', None)
-            session.pop('lecturer_reg_otp', None)
-            session.pop('lecturer_reg_expiry', None)
-            flash("❌ OTP has expired. Please initiate registration again.", "danger")
-            session['show_register'] = True
-            return redirect(url_for('login'))
-            
-        # Verify Code
-        if user_code == generated_code:
-            # Code matches! Commit the user to the database.
-            data = session['pending_lecturer']
-            
-            try:
-                new_lecturer = Lecturer(
-                    title=data['title'],
-                    name=data['name'],
-                    email=data['email'],
-                    department=data['dept']
-                )
-                new_lecturer.set_password(data['password'])
-                db.session.add(new_lecturer)
-                db.session.commit()
-                
-                # Clean up session memory
-                session.pop('pending_lecturer', None)
-                session.pop('lecturer_reg_otp', None)
-                session.pop('lecturer_reg_expiry', None)
-                
-                flash("✅ Access Granted. Lecturer profile verified and created. You may now log in.", "success")
-                return redirect(url_for('login'))
-                
-            except Exception as e:
-                db.session.rollback()
-                flash(f"❌ Database Error during creation: {str(e)}", "danger")
-                session['show_register'] = True
-                return redirect(url_for('login'))
-        else:
-            flash("❌ Incorrect Verification Code. Try again.", "danger")
-            
-    # GET request renders the verification page
-    email = session.get('pending_lecturer', {}).get('email', 'your email')
-    # 🟢 Pass role='lecturer' so the UI knows to switch text
-    return render_template('verify_lecturer_otp.html', email=email, role='lecturer')
+    except Exception as e:
+        db.session.rollback()
+        flash(f"❌ Database Error: {str(e)}", "danger")
+        session['show_register'] = True
+        return redirect(url_for('login'))
+
+
+
+
 
 
 
