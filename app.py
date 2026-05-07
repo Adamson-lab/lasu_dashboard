@@ -1614,10 +1614,30 @@ def department_data():
     if not session.get('logged_in'):
         return jsonify({})
 
-    results = db.session.query(
-        Student.department,
-        func.count(Student.id)
-    ).group_by(Student.department).all()
+    role = session.get('role')
+    user_id = session.get('user_id')
+
+    # 🟢 ARCHITECT FIX: Only count departments for students LINKED to this lecturer
+    if role == 'lecturer':
+        # Find this lecturer's courses
+        my_courses = Course.query.filter_by(lecturer_id=user_id).all()
+        my_course_ids = [c.id for c in my_courses]
+        
+        if not my_course_ids:
+            return jsonify({}) # Return empty if no courses assigned
+            
+        # Count students by department who are registered in THIS lecturer's courses
+        results = db.session.query(
+            Student.department,
+            func.count(Student.id)
+        ).filter(Student.registered_courses.any(Course.id.in_(my_course_ids)))\
+         .group_by(Student.department).all()
+    else:
+        # Admin sees everything (Global)
+        results = db.session.query(
+            Student.department,
+            func.count(Student.id)
+        ).group_by(Student.department).all()
 
     data = {row[0]: row[1] for row in results}
     return jsonify(data)

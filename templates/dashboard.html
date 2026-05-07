@@ -2278,28 +2278,31 @@
         }
     }).catch(e => console.error(e));
 
-            v8Fetch('/api/departments', 'v8_cache_departments')
-                .then(data => {
-                    if (Object.keys(data).length === 0) {
-                        document.getElementById('deptChart').style.display = 'none';
-                        document.getElementById('deptChartWrapper').innerHTML = `
-                            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; border: 1px dashed var(--v8-primary); border-radius: 12px; background: rgba(14, 165, 233, 0.05);">
-                                <i class="fas fa-users-slash fa-3x mb-3" style="color: var(--v8-primary); animation: pulse 2s infinite;"></i>
-                                <h5 style="margin:0; font-weight:900; color:var(--v8-primary); letter-spacing:1px;">NO REGISTRATIONS</h5>
-                                <p style="margin:5px 0 0 0; font-size:0.8rem; color:var(--v8-muted);">Student department data is empty.</p>
-                            </div>
-                        `;
-                    } else {
-                        new Chart(document.getElementById('deptChart').getContext('2d'), {
-                            type: 'bar',
-                            data: { 
-                                labels: Object.keys(data), 
-                                datasets: [{ label: 'Students', data: Object.values(data), backgroundColor: '#0ea5e9', borderRadius: 4 }] 
-                            },
-                            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
-                        });
-                    }
-                }).catch(e => console.error(e));
+            v8Fetch('/api/departments?role={{ session.role }}&cache_bust=' + Date.now(), 'v8_cache_departments')
+    .then(data => {
+        const wrapper = document.getElementById('deptChartWrapper');
+        const canvas = document.getElementById('deptChart');
+
+        if (Object.keys(data).length === 0) {
+            canvas.style.display = 'none';
+            wrapper.innerHTML = `
+                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; border: 1px dashed var(--v8-primary); border-radius: 12px; background: rgba(14, 165, 233, 0.05);">
+                    <i class="fas fa-users-slash fa-3x mb-3" style="color: var(--v8-primary); animation: pulse 2s infinite;"></i>
+                    <h5 style="margin:0; font-weight:900; color:var(--v8-primary); letter-spacing:1px;">NO REGISTRATIONS</h5>
+                    <p style="margin:5px 0 0 0; font-size:0.8rem; color:var(--v8-muted);">No student data available for your courses yet.</p>
+                </div>`;
+        } else {
+            canvas.style.display = 'block';
+            new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: { 
+                    labels: Object.keys(data), 
+                    datasets: [{ label: 'Students', data: Object.values(data), backgroundColor: '#0ea5e9', borderRadius: 4 }] 
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+            });
+        }
+    }).catch(e => console.error(e));
 
             new Chart(document.getElementById('growthChart').getContext('2d'), {
                 type: 'line',
