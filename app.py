@@ -665,58 +665,30 @@ def send_vtu_topup(network, phone, amount, type='airtime'):
         return False
 
 
-# --- AUTH ROUTES ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         
-        
-        
-        # 2. CHECK IF USER IS ADMIN (User Model)
+        # 1. ADMIN BYPASS
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
-            otp_code = str(random.randint(100000, 999999))
-            expiry_time = datetime.utcnow() + timedelta(minutes=10)
-            
-            session['pre_2fa_user_id'] = user.id
-            session['pre_2fa_role'] = 'admin' # 🟢 Mark as Admin
-            session['pre_2fa_email'] = user.email # 🟢 STORE EMAIL FOR UI
-            session['2fa_code'] = otp_code
-            session['2fa_expiry'] = expiry_time.timestamp()
+            session['logged_in'] = True
+            session['user_id'] = user.id
+            session['user_name'] = "Dr. Adebayo"
+            session['role'] = 'admin'
+            return redirect(url_for('dashboard'))
 
-            if user.email:
-                email_body = f"Hello admin,\n\nYour login verification code is: {otp_code}\nThis code expires in 10 minutes."
-                send_email_notification(user.email, "LASU Admin Login OTP", email_body)
-                return redirect(url_for('verify_otp'))
-            else:
-                # Fallback if admin has no email
-                session['logged_in'] = True
-                session['user_id'] = user.id
-                session['user_name'] = "Dr. Adebayo"
-                session['role'] = 'admin'
-                return redirect(url_for('dashboard'))
-
-        # 3. CHECK IF USER IS A LECTURER
+        # 2. LECTURER BYPASS 
         lecturer = Lecturer.query.filter_by(email=username).first()
         if lecturer and lecturer.check_password(password):
-            # 🟢 THE FIX: Lecturers now get the exact same 2FA Treatment!
-            otp_code = str(random.randint(100000, 999999))
-            expiry_time = datetime.utcnow() + timedelta(minutes=10)
-            
-            session['pre_2fa_user_id'] = lecturer.id
-            session['pre_2fa_role'] = 'lecturer' # 🟢 Mark as Lecturer
-            session['pre_2fa_email'] = lecturer.email # 🟢 STORE EMAIL FOR UI
-            session['2fa_code'] = otp_code
-            session['2fa_expiry'] = expiry_time.timestamp()
-            
-            email_body = f"Hello {lecturer.title} {lecturer.name},\n\nYour login verification code is: {otp_code}\nThis code expires in 10 minutes."
-            send_email_notification(lecturer.email, "LASU Matrix - Login OTP", email_body)
-            
-            return redirect(url_for('verify_otp'))
+            session['logged_in'] = True
+            session['user_id'] = lecturer.id
+            session['user_name'] = f"{lecturer.title} {lecturer.name}"
+            session['role'] = 'lecturer'
+            return redirect(url_for('dashboard'))
 
-        # If neither found
         flash('❌ Invalid Username or Password')
         
     return render_template('lecturer_login.html')
