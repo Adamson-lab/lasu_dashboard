@@ -574,25 +574,35 @@ def calculate_cgpa(student):
 def send_email_notification(to_email, subject, body):
     if not ENABLE_EMAIL:
         return
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = f"LASU Matrix Admin <{EMAIL_ADDRESS}>"
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
+    
+    msg = MIMEMultipart()
+    msg['From'] = f"LASU Matrix Admin <{EMAIL_ADDRESS}>"
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
 
-        # 🟢 ARCHITECT FIX: SSL Port 465 + 10s Timeout
-        # This prevents the "forever loading" hang on Railway
-        import smtplib
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) 
+    # 🟢 ARCHITECT FIX: Attempt Port 465 (SSL) First
+    try:
+        print(f"📡 ATTEMPTING DISPATCH VIA PORT 465...")
+        server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15)
         server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         server.send_message(msg)
         server.quit()
-        print(f"🚀 SUCCESS: Email dispatched to {to_email}")
-        
+        print(f"🚀 SUCCESS: Email sent via Port 465 to {to_email}")
+        return # Exit if successful
     except Exception as e:
-        print(f"🔥 SMTP CRITICAL FAILURE: {str(e)}")
-        # Note: We don't raise here so the UI can still finish loading
+        print(f"⚠️ PORT 465 BLOCKED: {e}. Trying Port 587...")
+
+    # 🟡 FALLBACK: Attempt Port 587 (TLS) if 465 is unreachable
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
+        server.starttls() # Secure the connection
+        server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        print(f"🚀 SUCCESS: Email sent via Port 587 fallback to {to_email}")
+    except Exception as e:
+        print(f"🔥 SMTP TOTAL BLACKOUT: All ports unreachable. Error: {e}")
 
 
 # --- S.O.S HELPER FUNCTIONS (REAL) ---
