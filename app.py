@@ -684,10 +684,10 @@ def login():
             session['user_name'] = "Dr. Adebayo"
             session['role'] = 'admin'
             
-            # 🟢 AUDIT LOG TRIGGER: Capture Admin Access
+            # 🟢 AUDIT LOG TRIGGER: Capture Admin Access in WAT
             try:
                 wat_now = datetime.utcnow() + timedelta(hours=1)
-db.session.add(AuditLog(user="Dr. Adebayo", action="Admin logged in successfully via Standard Auth", timestamp=wat_now))
+                db.session.add(AuditLog(user="Dr. Adebayo", action="Admin logged in successfully via Standard Auth", timestamp=wat_now))
                 db.session.commit()
             except: db.session.rollback()
             
@@ -701,11 +701,10 @@ db.session.add(AuditLog(user="Dr. Adebayo", action="Admin logged in successfully
             session['user_name'] = f"{lecturer.title} {lecturer.name}"
             session['role'] = 'lecturer'
             
-            # 🟢 AUDIT LOG TRIGGER: Capture Lecturer Access
+            # 🟢 AUDIT LOG TRIGGER: Capture Lecturer Access in WAT
             try:
-                # 🟢 FOR LECTURER (Paste this inside the Lecturer success path)
-wat_now = datetime.utcnow() + timedelta(hours=1)
-db.session.add(AuditLog(user=f"{lecturer.title} {lecturer.name}", action="Lecturer logged in successfully via Standard Auth", timestamp=wat_now))
+                wat_now = datetime.utcnow() + timedelta(hours=1)
+                db.session.add(AuditLog(user=f"{lecturer.title} {lecturer.name}", action="Lecturer logged in successfully via Standard Auth", timestamp=wat_now))
                 db.session.commit()
             except: db.session.rollback()
             
@@ -912,27 +911,6 @@ def dashboard():
         active_orbital_data=active_orbital_data # 👈 MAKE SURE THIS IS HERE
     )
 
-    # (Keep your Admin logic below this...)
-
-    # 🟢 If it's the Master Admin, show Global Campus Data
-    total_students = my_data(Student).count()
-    at_risk_count = my_data(Student).filter(Student.attendance_pct < 70).count()
-    announcements = Announcement.query.order_by(Announcement.date_posted.desc()).all()
-    pending_count = Complaint.query.filter_by(status='Pending').count()
-    
-    # 🟢 REAL DATA: Admin sees global schedules and logs
-    upcoming_schedules = ClassSchedule.query.order_by(ClassSchedule.day, ClassSchedule.start_time).limit(3).all()
-    recent_activities = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(4).all()
-    
-    return render_template(
-        'dashboard.html',
-        total=total_students,
-        risk=at_risk_count,
-        announcements=announcements,
-        pending_count=pending_count,
-        upcoming_schedules=upcoming_schedules, # 👈 ADDED HERE
-        recent_activities=recent_activities    # 👈 ADDED HERE
-    )
 
 @app.route('/students')
 def student_list():
