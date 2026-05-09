@@ -679,38 +679,42 @@ def login():
         # 1. ADMIN BYPASS
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
+            session.clear()
             session['logged_in'] = True
             session['user_id'] = user.id
             session['user_name'] = "Dr. Adebayo"
             session['role'] = 'admin'
             
-            # 🟢 NON-BLOCKING AUDIT LOG (Prevents 500 Error)
+            # 🟢 NON-BLOCKING AUDIT LOG
             try:
                 wat_now = datetime.utcnow() + timedelta(hours=1)
                 db.session.add(AuditLog(user="Dr. Adebayo", action="Admin logged in successfully", timestamp=wat_now))
                 db.session.commit()
-            except Exception as e:
+            except: 
                 db.session.rollback()
-                print(f"⚠️ AUDIT DELAYED: {e}")
             
             return redirect(url_for('dashboard'))
 
         # 2. LECTURER BYPASS 
         lecturer = Lecturer.query.filter_by(email=username).first()
         if lecturer and lecturer.check_password(password):
+            session.clear()
             session['logged_in'] = True
             session['user_id'] = lecturer.id
-            session['user_name'] = f"{lecturer.title} {lecturer.name}"
+            
+            # 🛡️ SAFETY CHECK: Handle brand new accounts with missing fields
+            l_title = getattr(lecturer, 'title', 'Lecturer')
+            l_name = getattr(lecturer, 'name', 'Account')
+            session['user_name'] = f"{l_title} {l_name}"
             session['role'] = 'lecturer'
             
-            # 🟢 NON-BLOCKING AUDIT LOG (Prevents 500 Error)
+            # 🟢 NON-BLOCKING AUDIT LOG
             try:
                 wat_now = datetime.utcnow() + timedelta(hours=1)
-                db.session.add(AuditLog(user=f"{lecturer.title} {lecturer.name}", action="Lecturer logged in successfully", timestamp=wat_now))
+                db.session.add(AuditLog(user=session['user_name'], action="Lecturer logged in successfully", timestamp=wat_now))
                 db.session.commit()
-            except Exception as e:
+            except: 
                 db.session.rollback()
-                print(f"⚠️ AUDIT DELAYED: {e}")
             
             return redirect(url_for('dashboard'))
 
