@@ -874,6 +874,10 @@ def dashboard():
             
         recent_activities = AuditLog.query.filter_by(user=session.get('user_name')).order_by(AuditLog.timestamp.desc()).limit(4).all()
 
+
+        # 🟢 ADD THIS LINE FOR LECTURER ORBITAL SYNC
+        active_orbital_data = AuditLog.query.filter(AuditLog.action.like('%logged in successfully%')).order_by(AuditLog.timestamp.desc()).limit(3).all()
+
     else:
         # 👑 Admin Logic
         total_students = Student.query.count()
@@ -883,6 +887,8 @@ def dashboard():
         attendance_rate = round(global_avg, 1) if global_avg else 0
         upcoming_schedules = ClassSchedule.query.limit(3).all()
         recent_activities = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(4).all()
+        # 🟢 ADD THIS LINE FOR ADMIN ORBITAL SYNC
+        active_orbital_data = AuditLog.query.filter(AuditLog.action.like('%logged in successfully%')).order_by(AuditLog.timestamp.desc()).limit(3).all()
 
     announcements = Announcement.query.order_by(Announcement.date_posted.desc()).all()
     pending_count = Complaint.query.filter_by(status='Pending').count()
@@ -898,7 +904,8 @@ def dashboard():
         announcements=announcements,
         pending_count=pending_count,
         upcoming_schedules=upcoming_schedules,
-        recent_activities=recent_activities
+        recent_activities=recent_activities,
+        active_orbital_data=active_orbital_data # 👈 MAKE SURE THIS IS HERE
     )
 
     # (Keep your Admin logic below this...)
