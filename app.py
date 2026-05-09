@@ -221,7 +221,8 @@ class Vote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('election_position.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    # 🟢 NEW ENTERPRISE DEFAULT: Automatically sets WAT (UTC+1)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.utcnow() + timedelta(hours=1))
 
 
 # ==========================================
@@ -685,7 +686,8 @@ def login():
             
             # 🟢 AUDIT LOG TRIGGER: Capture Admin Access
             try:
-                db.session.add(AuditLog(user="Dr. Adebayo", action="Admin logged in successfully via Standard Auth"))
+                wat_now = datetime.utcnow() + timedelta(hours=1)
+db.session.add(AuditLog(user="Dr. Adebayo", action="Admin logged in successfully via Standard Auth", timestamp=wat_now))
                 db.session.commit()
             except: db.session.rollback()
             
@@ -701,7 +703,9 @@ def login():
             
             # 🟢 AUDIT LOG TRIGGER: Capture Lecturer Access
             try:
-                db.session.add(AuditLog(user=f"{lecturer.title} {lecturer.name}", action=f"Lecturer logged in successfully via Standard Auth"))
+                # 🟢 FOR LECTURER (Paste this inside the Lecturer success path)
+wat_now = datetime.utcnow() + timedelta(hours=1)
+db.session.add(AuditLog(user=f"{lecturer.title} {lecturer.name}", action="Lecturer logged in successfully via Standard Auth", timestamp=wat_now))
                 db.session.commit()
             except: db.session.rollback()
             
