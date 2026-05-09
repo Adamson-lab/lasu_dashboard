@@ -122,7 +122,8 @@ GROQ_API_KEY = "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"
 # EMAIL & FOLDER CONFIG
 ENABLE_EMAIL = True
 EMAIL_ADDRESS = "favouradamson803@gmail.com"
-EMAIL_PASSWORD = "nivtfctmdjclunha"
+# Change this near the top of your app.py
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "nivtfctmdjclunha")
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
