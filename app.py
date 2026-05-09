@@ -1333,16 +1333,17 @@ def settings():
 
     if request.method == 'POST':
         
-        # 🟢 FEATURE 1: UPDATE PROFILE (NAME/TITLE)
+        # 🟢 FEATURE 1: UPDATE PROFILE (NAME/TITLE/DEPT)
         if 'update_profile' in request.form:
             if role == 'lecturer':
                 account.title = request.form.get('title')
                 account.name = request.form.get('name')
+                account.department = request.form.get('department') # 🛡️ Save Dept
                 db.session.commit()
                 
-                # 🔥 CRITICAL FIX: Update the live session cookie so the Navbar changes instantly!
+                # 🔥 CRITICAL FIX: Update the live session cookie
                 session['user_name'] = f"{account.title} {account.name}"
-                flash('✅ Profile Name Updated Successfully!', 'success')
+                flash('✅ Profile and Department Updated Successfully!', 'success')
             return redirect(url_for('settings'))
 
         # 🔒 FEATURE 2: UPDATE PASSWORD
