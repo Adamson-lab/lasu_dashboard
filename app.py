@@ -685,13 +685,12 @@ def login():
             session['user_name'] = "Dr. Adebayo"
             session['role'] = 'admin'
             
-            # 🟢 NON-BLOCKING AUDIT LOG
+            # Non-blocking log
             try:
                 wat_now = datetime.utcnow() + timedelta(hours=1)
-                db.session.add(AuditLog(user="Dr. Adebayo", action="Admin logged in successfully", timestamp=wat_now))
+                db.session.add(AuditLog(user="Dr. Adebayo", action="Admin login", timestamp=wat_now))
                 db.session.commit()
-            except: 
-                db.session.rollback()
+            except: db.session.rollback()
             
             return redirect(url_for('dashboard'))
 
@@ -701,20 +700,14 @@ def login():
             session.clear()
             session['logged_in'] = True
             session['user_id'] = lecturer.id
-            
-            # 🛡️ SAFETY CHECK: Handle brand new accounts with missing fields
-            l_title = getattr(lecturer, 'title', 'Lecturer')
-            l_name = getattr(lecturer, 'name', 'Account')
-            session['user_name'] = f"{l_title} {l_name}"
+            session['user_name'] = f"{getattr(lecturer, 'title', 'Lecturer')} {getattr(lecturer, 'name', 'Staff')}"
             session['role'] = 'lecturer'
             
-            # 🟢 NON-BLOCKING AUDIT LOG
             try:
                 wat_now = datetime.utcnow() + timedelta(hours=1)
-                db.session.add(AuditLog(user=session['user_name'], action="Lecturer logged in successfully", timestamp=wat_now))
+                db.session.add(AuditLog(user=session['user_name'], action="Lecturer login", timestamp=wat_now))
                 db.session.commit()
-            except: 
-                db.session.rollback()
+            except: db.session.rollback()
             
             return redirect(url_for('dashboard'))
 
@@ -872,57 +865,47 @@ def dashboard():
         my_courses = Course.query.filter_by(lecturer_id=lecturer.id).all()
         my_course_ids = [c.id for c in my_courses]
         
+        # 🟢 THE RECOVERY ENGINE: If no courses, show blank slate instead of crashing
         if my_course_ids:
             my_students = Student.query.filter(Student.registered_courses.any(Course.id.in_(my_course_ids))).all()
             total_students = len(my_students)
             at_risk_count = Student.query.filter(Student.registered_courses.any(Course.id.in_(my_course_ids)), Student.attendance_pct < 70).count()
-            # 🟢 Lecturer Math
             attendance_rate = round(sum([s.attendance_pct for s in my_students]) / total_students, 1) if total_students > 0 else 0
             upcoming_schedules = ClassSchedule.query.filter(ClassSchedule.course_id.in_(my_course_ids)).limit(3).all()
+            announcements = Announcement.query.filter((Announcement.title == "General Notice") | (Announcement.id == lecturer.id)).all()
         else:
             total_students = at_risk_count = attendance_rate = 0
             upcoming_schedules = []
+            announcements = Announcement.query.filter_by(title="General Notice").all()
             
         recent_activities = AuditLog.query.filter_by(user=session.get('user_name')).order_by(AuditLog.timestamp.desc()).limit(4).all()
-
-
-        # 🟢 ADD THIS LINE FOR LECTURER ORBITAL SYNC
-        active_orbital_data = AuditLog.query.filter(AuditLog.action.like('%logged in successfully%')).order_by(AuditLog.timestamp.desc()).limit(3).all()
+        active_orbital_data = AuditLog.query.filter(AuditLog.action.like('%login%')).order_by(AuditLog.timestamp.desc()).limit(3).all()
 
     else:
-        # 👑 Admin Logic
+        # Admin Logic
         total_students = Student.query.count()
         at_risk_count = Student.query.filter(Student.attendance_pct < 70).count()
-        # 🟢 Admin Math: Global Average across all students
         global_avg = db.session.query(func.avg(Student.attendance_pct)).scalar()
         attendance_rate = round(global_avg, 1) if global_avg else 0
         upcoming_schedules = ClassSchedule.query.limit(3).all()
         recent_activities = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(4).all()
-        # 🟢 ADD THIS LINE FOR ADMIN ORBITAL SYNC
-        active_orbital_data = AuditLog.query.filter(AuditLog.action.like('%logged in successfully%')).order_by(AuditLog.timestamp.desc()).limit(3).all()
-
-    # 🟢 ARCHITECT FIX: Only show Global or Personal Announcements
-    if role == 'admin':
+        active_orbital_data = AuditLog.query.filter(AuditLog.action.like('%login%')).order_by(AuditLog.timestamp.desc()).limit(3).all()
         announcements = Announcement.query.order_by(Announcement.date_posted.desc()).all()
-    else:
-        # Lecturers ONLY see announcements they made (prevents seeing other people's student comments)
-        # Note: If you want them to see Admin notices, we use a filter for that.
-        announcements = Announcement.query.filter_by(lecturer_id=user_id).order_by(Announcement.date_posted.desc()).all()
+
     pending_count = Complaint.query.filter_by(status='Pending').count()
-    # 🟢 Add this logic right before the return statement
     attendance_status = "danger" if attendance_rate < 70 else "success"
     
     return render_template(
         'dashboard.html',
         total=total_students,
         risk=at_risk_count,
-        attendance_rate=attendance_rate, # 👈 THE KEY
-        attendance_status=attendance_status, # 👈 Pass this to the HTML
+        attendance_rate=attendance_rate,
+        attendance_status=attendance_status,
         announcements=announcements,
         pending_count=pending_count,
         upcoming_schedules=upcoming_schedules,
         recent_activities=recent_activities,
-        active_orbital_data=active_orbital_data # 👈 MAKE SURE THIS IS HERE
+        active_orbital_data=active_orbital_data
     )
 
 
@@ -943,39 +926,24 @@ def student_detail(id):
     role = session.get('role')
     user_id = session.get('user_id')
 
-    # 🛡️ TITANIUM GATEKEEPER: Prevent Lecturers from "Hopping" into unauthorized profiles
     if role == 'lecturer':
-        # 1. Fetch all course IDs owned by this lecturer
         my_courses = Course.query.filter_by(lecturer_id=user_id).all()
         my_course_ids = [c.id for c in my_courses]
-        
-        # 2. Check if the student is registered in ANY of those courses
-        is_mine = any(c.id in my_course_ids for c in student.registered_courses)
+        # 🟢 FIX: If the lecturer has NO courses, they shouldn't see ANY student details
+        is_mine = any(c.id in my_course_ids for c in student.registered_courses) if my_course_ids else False
         
         if not is_mine:
-            flash("⛔ SECURITY VIOLATION: Access Denied. This student is not in your roster.", "danger")
+            flash("⛔ SECURITY: Student not in your roster.", "danger")
             return redirect(url_for('dashboard'))
             
-    # 📊 ACADEMIC ANALYTICS ENGINE
     cgpa, remark = calculate_cgpa(student)
-    
-    # 🟢 FIXED PREDICTION MATH (Capped at 100%)
     raw_score = (student.attendance_pct * 0.3) + ((cgpa / 5.0) * 100 * 0.7)
     prediction_score = min(100, round(raw_score, 1))
 
-    # 🔗 DATA SYNC
     courses = my_data(Course).order_by(Course.code.asc()).all()
     image_file = url_for('static', filename='profile_pics/' + student.image_file)
     
-    return render_template(
-        'student_detail.html',
-        student=student,
-        cgpa=cgpa,
-        remark=remark,
-        prediction=prediction_score,
-        courses=courses,
-        image_file=image_file
-    )
+    return render_template('student_detail.html', student=student, cgpa=cgpa, remark=remark, prediction=prediction_score, courses=courses, image_file=image_file)
 
 @app.route('/student/<int:id>/upload_image', methods=['POST'])
 def upload_image(id):
