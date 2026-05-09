@@ -684,12 +684,14 @@ def login():
             session['user_name'] = "Dr. Adebayo"
             session['role'] = 'admin'
             
-            # 🟢 AUDIT LOG TRIGGER: Capture Admin Access in WAT
+            # 🟢 NON-BLOCKING AUDIT LOG (Prevents 500 Error)
             try:
                 wat_now = datetime.utcnow() + timedelta(hours=1)
-                db.session.add(AuditLog(user="Dr. Adebayo", action="Admin logged in successfully via Standard Auth", timestamp=wat_now))
+                db.session.add(AuditLog(user="Dr. Adebayo", action="Admin logged in successfully", timestamp=wat_now))
                 db.session.commit()
-            except: db.session.rollback()
+            except Exception as e:
+                db.session.rollback()
+                print(f"⚠️ AUDIT DELAYED: {e}")
             
             return redirect(url_for('dashboard'))
 
@@ -701,12 +703,14 @@ def login():
             session['user_name'] = f"{lecturer.title} {lecturer.name}"
             session['role'] = 'lecturer'
             
-            # 🟢 AUDIT LOG TRIGGER: Capture Lecturer Access in WAT
+            # 🟢 NON-BLOCKING AUDIT LOG (Prevents 500 Error)
             try:
                 wat_now = datetime.utcnow() + timedelta(hours=1)
-                db.session.add(AuditLog(user=f"{lecturer.title} {lecturer.name}", action="Lecturer logged in successfully via Standard Auth", timestamp=wat_now))
+                db.session.add(AuditLog(user=f"{lecturer.title} {lecturer.name}", action="Lecturer logged in successfully", timestamp=wat_now))
                 db.session.commit()
-            except: db.session.rollback()
+            except Exception as e:
+                db.session.rollback()
+                print(f"⚠️ AUDIT DELAYED: {e}")
             
             return redirect(url_for('dashboard'))
 
