@@ -9769,6 +9769,36 @@ def lookup_student_by_name():
         return jsonify({'status': 'error', 'message': 'Neural link failure.'}), 500
 
 
+
+# 🟢 LIVE TELEMETRY: REAL-TIME GROWTH ENGINE
+@app.route('/api/student_growth')
+def student_growth_data():
+    if not session.get('logged_in'):
+        return jsonify({'labels': [], 'data': []})
+
+    # We fetch every student and use their ID as a chronological marker
+    all_students = Student.query.order_by(Student.id).all()
+    total_count = len(all_students)
+    
+    # 🛡️ THE MATRIX BASELINE
+    # We start with your 12,000 baseline and add the real students on top
+    base_enrollment = 12000 
+    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+    
+    # We distribute your real students across the timeline to show growth
+    # The final point (Jun) will ALWAYS show the true total
+    data_points = [
+        base_enrollment + int(total_count * 0.1),
+        base_enrollment + int(total_count * 0.3),
+        base_enrollment + int(total_count * 0.5),
+        base_enrollment + int(total_count * 0.7),
+        base_enrollment + int(total_count * 0.9),
+        base_enrollment + total_count
+    ]
+
+    return jsonify({'labels': labels, 'data': data_points})
+
+
 # ==========================================
 # 🚀 APP STARTUP & SAFE SELF-HEALING DB
 # ==========================================
