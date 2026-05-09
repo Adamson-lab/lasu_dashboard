@@ -108,8 +108,7 @@ app = Flask(__name__)
 CORS(app)  # <--- ADD THIS LINE (This allows all devices to connect)
 
 session_pool = requests.Session()
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'lasu_data.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///lasu_data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'lasu_final_year_project_secret_key'
 
@@ -9802,61 +9801,81 @@ def lookup_student_by_name():
 
 
 # ==========================================
-# 🚀 APP STARTUP & NUCLEAR SCHEMA SYNC (ABSOLUTE)
+# 🚀 APP STARTUP & SAFE SELF-HEALING DB
 # ==========================================
 if __name__ == '__main__':
     with app.app_context():
         import sqlite3
         import os
         
-        # 🛡️ THE ABSOLUTE PATH FINDER
-        # This ensures Railway always finds the same file regardless of boot context
-        basedir = os.path.abspath(os.path.dirname(__file__))
-        db_path = os.path.join(basedir, 'lasu_data.db')
+        # 1. Determine the EXACT database file Flask is using
+        db_path = 'lasu_data.db'
+        # If Flask is using an 'instance' folder, check there too
+        if not os.path.exists(db_path) and os.path.exists(os.path.join('instance', 'lasu_data.db')):
+            db_path = os.path.join('instance', 'lasu_data.db')
             
-        print(f"🔧 Synchronizing Infrastructure at: {db_path}")
+        print(f"🔧 Connecting to database at: {db_path}")
 
         try:
-            # 1. Standard SQLAlchemy Init
-            db.create_all()
-
-            # 2. Manual Column Injection (Absolute Path Connection)
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
 
-            # Comprehensive Repair List
-            required_columns = [
-                ('student', 'password_hash', 'VARCHAR(200)'),
-                ('course', 'exam_date', 'DATE'),
-                ('course', 'exam_time', 'VARCHAR(20)'),
-                ('course', 'exam_venue', 'VARCHAR(100)'),
-                ('course', 'lecturer_id', 'INTEGER'),
-                ('daily_attendance', 'time_logged', 'VARCHAR(50)'),
-                ('audit_log', 'timestamp', 'DATETIME'),
-                ('clearance', 'department_status', 'VARCHAR(20)'),
-                ('clearance', 'sports_status', 'VARCHAR(20)'),
-                ('clearance', 'health_center_status', 'VARCHAR(20)')
-            ]
-
-            for table, col, col_type in required_columns:
+            # 2. SAFE COLUMN INJECTION
+            for col, col_type in [
+                ('password_hash', 'VARCHAR(200)'),
+                ('exam_date', 'DATE'),
+                ('exam_time', 'VARCHAR(20)')
+            ]:
                 try:
-                    cursor.execute(f'ALTER TABLE {table} ADD COLUMN {col} {col_type}')
-                    print(f"✅ Repaired: {table}.{col}")
+                    cursor.execute(f'ALTER TABLE { "student" if col=="password_hash" else "course" } ADD COLUMN {col} {col_type}')
+                    conn.commit()
+                    print(f"✅ Database updated: {col} column added.")
                 except sqlite3.OperationalError:
-                    pass  # Column already exists
-            
+                    pass  # Column exists
+
+            # 3. 🟢 CRITICAL FIX: FORCE CREATE 'complaint_message'
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS complaint_message (
+                    id INTEGER PRIMARY KEY,
+                    complaint_id INTEGER NOT NULL,
+                    sender VARCHAR(20),
+                    text TEXT NOT NULL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(complaint_id) REFERENCES complaint(id)
+                )
+            ''')
+            print("✅ Verified/Created 'complaint_message' table.")
+
+            # 4. Create other tables if missing
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS clearance (
+                    id INTEGER PRIMARY KEY,
+                    student_id INTEGER NOT NULL,
+                    dept_status TEXT DEFAULT 'Pending',
+                    library_status TEXT DEFAULT 'Pending',
+                    bursary_status TEXT DEFAULT 'Pending',
+                    sports_status TEXT DEFAULT 'Pending',
+                    date_initiated DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(student_id) REFERENCES student(id)
+                )
+            ''')
+
             conn.commit()
             conn.close()
 
-            # 3. Final Identity Validation
-            admin_user = User.query.filter_by(username='admin').first()
-            if admin_user:
-                admin_user.email = "favouradamson803@gmail.com"
-                db.session.commit()
-            
-            print("🚀 Matrix synchronized successfully.")
+            # 5. Ensure Admin Email
+            try:
+                admin_user = User.query.filter_by(username='admin').first()
+                if admin_user:
+                    admin_user.email = "favouradamson803@gmail.com"
+                    db.session.commit()
+            except:
+                pass
 
+            # 6. Final SQLAlchemy Check
+            db.create_all()
+            
         except Exception as e:
-            print(f"❌ Nuclear Sync Failed: {e}")
+            print(f"❌ Initialization Error: {e}")
 
     app.run(debug=True, host='0.0.0.0', port=5000)
