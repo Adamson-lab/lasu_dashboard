@@ -1126,9 +1126,10 @@
                 </div>
             </div>
 
+            <!-- 🟢 CLICKABLE ANALYTICS HUB -->
             <div class="col-xl-6">
-                <div class="card-v8">
-                    <div class="stat-label mb-3">Student Growth Trend (2025 - 2026)</div>
+                <div class="card-v8" style="cursor: pointer;" onclick="openGrowthMatrix()">
+                    <div class="stat-label mb-3">Student Growth Trend (2025 - 2026) <i class="fas fa-expand-alt ms-2 opacity-50"></i></div>
                     <div style="height: 300px; width: 100%;">
                         <canvas id="growthChart"></canvas>
                     </div>
@@ -1653,6 +1654,31 @@
                 </div>
             </div>
         </div>
+
+        <!-- 💠 THE GROWTH ANALYTICS MODAL (DUAL-SCROLL MATRIX) -->
+    <div class="modal fade" id="growthModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content" style="background: var(--v8-bg); color: var(--v8-text);">
+                <div class="modal-header border-bottom border-secondary px-4">
+                    <h5 class="modal-title fw-900"><i class="fas fa-chart-line me-2 text-primary"></i>ADVANCED GROWTH ANALYTICS</h5>
+                    <div class="d-flex gap-2 align-items-center">
+                        <select id="modalChartType" class="lisa-select" onchange="updateModalChart()" style="background: #000; color: #fff; border: 1px solid #444; padding: 5px 10px; border-radius: 5px;">
+                            <option value="line">Quantum Line</option>
+                            <option value="bar">Cyber Bar</option>
+                            <option value="radar">Neural Radar</option>
+                        </select>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body p-0" style="overflow: auto;">
+                    <!-- 🟢 THE DUAL-SCROLL ENGINE: Forces scrollbars if window is small -->
+                    <div style="min-width: 1200px; min-height: 800px; padding: 40px; position: relative;">
+                        <canvas id="modalGrowthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
         
     </main>
 
@@ -2321,52 +2347,99 @@
         }
     }).catch(e => console.error(e));
 
-            // 🟢 DYNAMIC NEURAL GROWTH SYNC
-            function refreshGrowthChart() {
-                v8Fetch('/api/student_growth?cache_bust=' + Date.now(), 'v8_cache_growth')
-                .then(res => {
-                    const ctx = document.getElementById('growthChart').getContext('2d');
-                    
-                    // Kill previous instance to prevent ghosting/memory leaks
-                    if (window.v8GrowthChart) window.v8GrowthChart.destroy();
+            let growthDataBuffer = { labels: [], data: [] };
+        let v8ModalChart = null;
 
-                    window.v8GrowthChart = new Chart(ctx, {
-                        type: 'line',
-                        data: { 
-                            labels: res.labels, 
-                            datasets: [{ 
-                                label: 'Total Enrollments', 
-                                data: res.data, 
-                                borderColor: '#8b5cf6', 
-                                backgroundColor: 'rgba(139, 92, 246, 0.2)', 
-                                borderWidth: 3, 
-                                tension: 0.4, 
-                                fill: true,
-                                pointBackgroundColor: '#8b5cf6',
-                                pointRadius: 5,
-                                pointHoverRadius: 8
-                            }] 
+        // 🟢 OPEN FULLSCREEN MATRIX
+        function openGrowthMatrix() {
+            const modalEl = document.getElementById('growthModal');
+            const myModal = new bootstrap.Modal(modalEl);
+            myModal.show();
+            // Critical delay to allow DOM rendering before drawing
+            setTimeout(updateModalChart, 400); 
+        }
+
+        // 🟢 TOGGLE CHART TYPES INSIDE MODAL
+        function updateModalChart() {
+            const type = document.getElementById('modalChartType').value;
+            const canvas = document.getElementById('modalGrowthChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            if (v8ModalChart) v8ModalChart.destroy();
+
+            v8ModalChart = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: growthDataBuffer.labels,
+                    datasets: [{
+                        label: 'Real-Time Student Population',
+                        data: growthDataBuffer.data,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: type === 'line' ? 'rgba(139, 92, 246, 0.2)' : (type === 'radar' ? 'rgba(14, 165, 233, 0.2)' : '#0ea5e9'),
+                        borderWidth: 4,
+                        fill: true,
+                        pointRadius: 6,
+                        pointHoverRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: true, labels: { color: '#888', font: { size: 16 } } } 
+                    },
+                    scales: type !== 'radar' ? {
+                        y: { 
+                            grid: { color: 'rgba(0,0,0,0.05)' }, 
+                            ticks: { color: '#94a3b8', font: { size: 14 } } 
                         },
-                        options: { 
-                            responsive: true, 
-                            maintainAspectRatio: false, 
-                            plugins: { legend: { display: false } }, 
-                            scales: { 
-                                y: { 
-                                    grid: { color: 'rgba(255,255,255,0.05)' },
-                                    ticks: { callback: (val) => val.toLocaleString() }
-                                }, 
-                                x: { grid: { display: false } } 
-                            } 
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { color: '#94a3b8', font: { size: 14 } } 
                         }
-                    });
-                })
-                .catch(err => console.warn("Growth Telemetry Offline"));
-            }
+                    } : {}
+                }
+            });
+        }
 
-            // Initial Sync and Polling (every 60 seconds)
-            refreshGrowthChart();
-            setInterval(refreshGrowthChart, 60000);
+        // 🟢 DYNAMIC SYNC ENGINE
+        function refreshGrowthChart() {
+            v8Fetch('/api/student_growth?cache_bust=' + Date.now(), 'v8_cache_growth')
+            .then(res => {
+                growthDataBuffer = res; // Sync global buffer for modal
+                const chartCanvas = document.getElementById('growthChart');
+                if (!chartCanvas) return;
+                
+                const ctx = chartCanvas.getContext('2d');
+                if (window.v8GrowthChart) window.v8GrowthChart.destroy();
+
+                window.v8GrowthChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { 
+                        labels: res.labels, 
+                        datasets: [{ 
+                            data: res.data, 
+                            borderColor: '#8b5cf6', 
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)', 
+                            borderWidth: 3, 
+                            tension: 0.4, 
+                            fill: true,
+                            pointRadius: 0 
+                        }] 
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } }, 
+                        scales: { y: { display: false }, x: { display: false } } 
+                    }
+                });
+            });
+        }
+
+        refreshGrowthChart();
+        setInterval(refreshGrowthChart, 60000);
 
             var memoPad = document.getElementById('adminMemo');
             if(memoPad) {
