@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,14 +48,7 @@
             --v8-primary: #0284c7;
         }
 
-        [data-theme="cyber"] {
-            --v8-bg: #000000; 
-            --v8-surface: #0a0a0a;
-            --v8-border: #00ff00;
-            --v8-text: #00ff00;
-            --v8-muted: #008800;
-            --v8-primary: #00ff00;
-        }
+        
 
         body {
             font-family: 'Inter', sans-serif;
@@ -1879,20 +1872,30 @@
         }
 
         var currentThemeIndex = 0;
-        var themes = ["dark", "light", "cyber"];
+        var themes = ["light", "dark"];
         
         function applySavedTheme() {
             try {
                 var savedTheme = localStorage.getItem('v8_infinity_theme');
-                if (savedTheme !== null) {
-                    document.documentElement.setAttribute('data-theme', savedTheme);
-                    for (var i = 0; i < themes.length; i = i + 1) {
-                        if (themes[i] === savedTheme) { 
-                            currentThemeIndex = i; 
-                        }
-                    }
+                
+                // 🛡️ PRECISION GATEKEEPER: 
+                // If first time visit (null) OR if they had the old 'cyber' theme saved
+                // Force them to the new 'light' default.
+                if (savedTheme === null || savedTheme === 'cyber') {
+                    savedTheme = 'light';
                 }
-            } catch (e) { console.warn("Local storage access restricted"); }
+                
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                
+                // Sync the index with the new 2-theme array: ["light", "dark"]
+                currentThemeIndex = themes.indexOf(savedTheme);
+                if (currentThemeIndex === -1) currentThemeIndex = 0;
+
+            } catch (e) { 
+                // Failsafe for restricted environments
+                document.documentElement.setAttribute('data-theme', 'light');
+                console.warn("Local storage access restricted. Defaulting to Light.");
+            }
         }
         
         applySavedTheme();
