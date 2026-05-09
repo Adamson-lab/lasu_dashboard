@@ -2321,18 +2321,52 @@
         }
     }).catch(e => console.error(e));
 
-            new Chart(document.getElementById('growthChart').getContext('2d'), {
-                type: 'line',
-                data: { 
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], 
-                    {% if session.role == 'admin' %}
-    datasets: [{ label: 'Total Enrollments', data: [12000, 12500, 12800, 13100, 13900, 14250], borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.2)', borderWidth: 3, tension: 0.4, fill: true }] 
-{% else %}
-    datasets: [{ label: 'Total Enrollments', data: [0, 0, 0, 0, 0, 0], borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.2)', borderWidth: 3, tension: 0.4, fill: true }] 
-{% endif %} 
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
-            });
+            // 🟢 DYNAMIC NEURAL GROWTH SYNC
+            function refreshGrowthChart() {
+                v8Fetch('/api/student_growth?cache_bust=' + Date.now(), 'v8_cache_growth')
+                .then(res => {
+                    const ctx = document.getElementById('growthChart').getContext('2d');
+                    
+                    // Kill previous instance to prevent ghosting/memory leaks
+                    if (window.v8GrowthChart) window.v8GrowthChart.destroy();
+
+                    window.v8GrowthChart = new Chart(ctx, {
+                        type: 'line',
+                        data: { 
+                            labels: res.labels, 
+                            datasets: [{ 
+                                label: 'Total Enrollments', 
+                                data: res.data, 
+                                borderColor: '#8b5cf6', 
+                                backgroundColor: 'rgba(139, 92, 246, 0.2)', 
+                                borderWidth: 3, 
+                                tension: 0.4, 
+                                fill: true,
+                                pointBackgroundColor: '#8b5cf6',
+                                pointRadius: 5,
+                                pointHoverRadius: 8
+                            }] 
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            plugins: { legend: { display: false } }, 
+                            scales: { 
+                                y: { 
+                                    grid: { color: 'rgba(255,255,255,0.05)' },
+                                    ticks: { callback: (val) => val.toLocaleString() }
+                                }, 
+                                x: { grid: { display: false } } 
+                            } 
+                        }
+                    });
+                })
+                .catch(err => console.warn("Growth Telemetry Offline"));
+            }
+
+            // Initial Sync and Polling (every 60 seconds)
+            refreshGrowthChart();
+            setInterval(refreshGrowthChart, 60000);
 
             var memoPad = document.getElementById('adminMemo');
             if(memoPad) {
