@@ -125,7 +125,7 @@ EMAIL_ADDRESS = "favouradamson803@gmail.com"
 # Change this near the top of your app.py
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "mztbxhxkqnbqvvdy")
 SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+SMTP_PORT = 465
 
 app.config['UPLOAD_FOLDER'] = 'static/profile_pics'
 app.config['UPLOAD_MATERIALS_FOLDER'] = 'static/materials'
