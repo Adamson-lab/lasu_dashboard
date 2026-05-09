@@ -119,13 +119,11 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 GOOGLE_API_KEY = "AIzaSyB7Xq2icVax30inMewitJvPet_BU5-E5aQ"
 GROQ_API_KEY = "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"
 
-# EMAIL & FOLDER CONFIG
+# --- 📨 ENTERPRISE EMAIL OVERRIDE (HTTP RELAY) ---
 ENABLE_EMAIL = True
 EMAIL_ADDRESS = "favouradamson803@gmail.com"
-# Change this near the top of your app.py
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "iwmmgivuibibejmd")
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 465
+# 🟢 Professional Fix: Read the key from Railway/System variables ONLY
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 
 app.config['UPLOAD_FOLDER'] = 'static/profile_pics'
 app.config['UPLOAD_MATERIALS_FOLDER'] = 'static/materials'
@@ -575,34 +573,23 @@ def send_email_notification(to_email, subject, body):
     if not ENABLE_EMAIL:
         return
     
-    msg = MIMEMultipart()
-    msg['From'] = f"LASU Matrix Admin <{EMAIL_ADDRESS}>"
-    msg['To'] = to_email
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
+    url = "https://api.sendgrid.com/v3/mail/send"
+    headers = {
+        "Authorization": f"Bearer {SENDGRID_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {"email": EMAIL_ADDRESS, "name": "LASU Matrix Admin"},
+        "subject": subject,
+        "content": [{"type": "text/plain", "value": body}]
+    }
 
-    # 🟢 ARCHITECT FIX: Attempt Port 465 (SSL) First
     try:
-        print(f"📡 ATTEMPTING DISPATCH VIA PORT 465...")
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15)
-        server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        print(f"🚀 SUCCESS: Email sent via Port 465 to {to_email}")
-        return # Exit if successful
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        print(f"📡 SendGrid Status: {response.status_code}")
     except Exception as e:
-        print(f"⚠️ PORT 465 BLOCKED: {e}. Trying Port 587...")
-
-    # 🟡 FALLBACK: Attempt Port 587 (TLS) if 465 is unreachable
-    try:
-        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
-        server.starttls() # Secure the connection
-        server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        print(f"🚀 SUCCESS: Email sent via Port 587 fallback to {to_email}")
-    except Exception as e:
-        print(f"🔥 SMTP TOTAL BLACKOUT: All ports unreachable. Error: {e}")
+        print(f"❌ Relay Error: {str(e)}")
 
 
 # --- S.O.S HELPER FUNCTIONS (REAL) ---
