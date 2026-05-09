@@ -108,7 +108,8 @@ app = Flask(__name__)
 CORS(app)  # <--- ADD THIS LINE (This allows all devices to connect)
 
 session_pool = requests.Session()
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///lasu_data.db'
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'lasu_data.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'lasu_final_year_project_secret_key'
 
@@ -9801,29 +9802,29 @@ def lookup_student_by_name():
 
 
 # ==========================================
-# 🚀 APP STARTUP & NUCLEAR SCHEMA SYNC
+# 🚀 APP STARTUP & NUCLEAR SCHEMA SYNC (ABSOLUTE)
 # ==========================================
 if __name__ == '__main__':
     with app.app_context():
         import sqlite3
         import os
         
-        # 1. Determine the EXACT database file path
-        db_path = 'lasu_data.db'
-        if not os.path.exists(db_path) and os.path.exists(os.path.join('instance', 'lasu_data.db')):
-            db_path = os.path.join('instance', 'lasu_data.db')
+        # 🛡️ THE ABSOLUTE PATH FINDER
+        # This ensures Railway always finds the same file regardless of boot context
+        basedir = os.path.abspath(os.path.dirname(__file__))
+        db_path = os.path.join(basedir, 'lasu_data.db')
             
         print(f"🔧 Synchronizing Infrastructure at: {db_path}")
 
         try:
-            # 2. Force SQLAlchemy to build new tables first
+            # 1. Standard SQLAlchemy Init
             db.create_all()
 
-            # 3. Manual Column Injection (The Repair Kit)
+            # 2. Manual Column Injection (Absolute Path Connection)
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
 
-            # List of every essential column required by your new logic
+            # Comprehensive Repair List
             required_columns = [
                 ('student', 'password_hash', 'VARCHAR(200)'),
                 ('course', 'exam_date', 'DATE'),
@@ -9840,14 +9841,14 @@ if __name__ == '__main__':
             for table, col, col_type in required_columns:
                 try:
                     cursor.execute(f'ALTER TABLE {table} ADD COLUMN {col} {col_type}')
-                    print(f"✅ Repaired: {table}.{col} added.")
+                    print(f"✅ Repaired: {table}.{col}")
                 except sqlite3.OperationalError:
                     pass  # Column already exists
             
             conn.commit()
             conn.close()
 
-            # 4. Final Admin Identity Check
+            # 3. Final Identity Validation
             admin_user = User.query.filter_by(username='admin').first()
             if admin_user:
                 admin_user.email = "favouradamson803@gmail.com"
