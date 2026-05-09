@@ -682,6 +682,13 @@ def login():
             session['user_id'] = user.id
             session['user_name'] = "Dr. Adebayo"
             session['role'] = 'admin'
+            
+            # 🟢 AUDIT LOG TRIGGER: Capture Admin Access
+            try:
+                db.session.add(AuditLog(user="Dr. Adebayo", action="Admin logged in successfully via Standard Auth"))
+                db.session.commit()
+            except: db.session.rollback()
+            
             return redirect(url_for('dashboard'))
 
         # 2. LECTURER BYPASS 
@@ -691,6 +698,13 @@ def login():
             session['user_id'] = lecturer.id
             session['user_name'] = f"{lecturer.title} {lecturer.name}"
             session['role'] = 'lecturer'
+            
+            # 🟢 AUDIT LOG TRIGGER: Capture Lecturer Access
+            try:
+                db.session.add(AuditLog(user=f"{lecturer.title} {lecturer.name}", action=f"Lecturer logged in successfully via Standard Auth"))
+                db.session.commit()
+            except: db.session.rollback()
+            
             return redirect(url_for('dashboard'))
 
         flash('❌ Invalid Username or Password')
@@ -872,12 +886,15 @@ def dashboard():
 
     announcements = Announcement.query.order_by(Announcement.date_posted.desc()).all()
     pending_count = Complaint.query.filter_by(status='Pending').count()
+    # 🟢 Add this logic right before the return statement
+    attendance_status = "danger" if attendance_rate < 70 else "success"
     
     return render_template(
         'dashboard.html',
         total=total_students,
         risk=at_risk_count,
         attendance_rate=attendance_rate, # 👈 THE KEY
+        attendance_status=attendance_status, # 👈 Pass this to the HTML
         announcements=announcements,
         pending_count=pending_count,
         upcoming_schedules=upcoming_schedules,
