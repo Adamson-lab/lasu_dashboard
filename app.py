@@ -9770,23 +9770,40 @@ def lookup_student_by_name():
 
 
 
-# 🟢 LIVE TELEMETRY: REAL-TIME GROWTH ENGINE
+# 🟢 LIVE TELEMETRY: ROLE-BASED GROWTH ENGINE
 @app.route('/api/student_growth')
 def student_growth_data():
     if not session.get('logged_in'):
         return jsonify({'labels': [], 'data': []})
 
-    # We fetch every student and use their ID as a chronological marker
-    all_students = Student.query.order_by(Student.id).all()
-    total_count = len(all_students)
+    role = session.get('role')
+    user_id = session.get('user_id')
     
-    # 🛡️ THE MATRIX BASELINE
-    # We start with your 12,000 baseline and add the real students on top
-    base_enrollment = 12000 
+    # 🛡️ THE MATRIX SILO LOGIC
+    if role == 'lecturer':
+        # 1. Find only students registered in THIS lecturer's courses
+        my_courses = Course.query.filter_by(lecturer_id=user_id).all()
+        my_course_ids = [c.id for c in my_courses]
+        
+        if my_course_ids:
+            all_students = Student.query.filter(Student.registered_courses.any(Course.id.in_(my_course_ids))).all()
+            base_enrollment = 0 # Lecturers start from zero
+        else:
+            all_students = []
+            base_enrollment = 0
+    else:
+        # 👑 Admin sees the Global Matrix
+        all_students = Student.query.all()
+        base_enrollment = 12000 # University baseline
+
+    total_count = len(all_students)
     labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
     
-    # We distribute your real students across the timeline to show growth
-    # The final point (Jun) will ALWAYS show the true total
+    # If total is 0, return a flat line of zeros (No crash!)
+    if total_count == 0:
+        return jsonify({'labels': labels, 'data': [0, 0, 0, 0, 0, 0]})
+
+    # Distribute the REAL students across the trend
     data_points = [
         base_enrollment + int(total_count * 0.1),
         base_enrollment + int(total_count * 0.3),
