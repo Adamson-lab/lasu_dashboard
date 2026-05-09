@@ -893,7 +893,13 @@ def dashboard():
         # 🟢 ADD THIS LINE FOR ADMIN ORBITAL SYNC
         active_orbital_data = AuditLog.query.filter(AuditLog.action.like('%logged in successfully%')).order_by(AuditLog.timestamp.desc()).limit(3).all()
 
-    announcements = Announcement.query.order_by(Announcement.date_posted.desc()).all()
+    # 🟢 ARCHITECT FIX: Only show Global or Personal Announcements
+    if role == 'admin':
+        announcements = Announcement.query.order_by(Announcement.date_posted.desc()).all()
+    else:
+        # Lecturers ONLY see announcements they made (prevents seeing other people's student comments)
+        # Note: If you want them to see Admin notices, we use a filter for that.
+        announcements = Announcement.query.filter_by(lecturer_id=user_id).order_by(Announcement.date_posted.desc()).all()
     pending_count = Complaint.query.filter_by(status='Pending').count()
     # 🟢 Add this logic right before the return statement
     attendance_status = "danger" if attendance_rate < 70 else "success"
@@ -926,15 +932,30 @@ def student_detail(id):
         return redirect(url_for('login'))
         
     student = Student.query.get_or_404(id)
+    role = session.get('role')
+    user_id = session.get('user_id')
+
+    # 🛡️ TITANIUM GATEKEEPER: Prevent Lecturers from "Hopping" into unauthorized profiles
+    if role == 'lecturer':
+        # 1. Fetch all course IDs owned by this lecturer
+        my_courses = Course.query.filter_by(lecturer_id=user_id).all()
+        my_course_ids = [c.id for c in my_courses]
+        
+        # 2. Check if the student is registered in ANY of those courses
+        is_mine = any(c.id in my_course_ids for c in student.registered_courses)
+        
+        if not is_mine:
+            flash("⛔ SECURITY VIOLATION: Access Denied. This student is not in your roster.", "danger")
+            return redirect(url_for('dashboard'))
+            
+    # 📊 ACADEMIC ANALYTICS ENGINE
     cgpa, remark = calculate_cgpa(student)
     
-    # 🔴 OLD BUGGY MATH:
-    # prediction_score = (student.attendance_pct * 0.3) + ((cgpa / 5.0) * 100 * 0.7)
-
-    # 🟢 NEW FIXED MATH (Capped at 100%):
+    # 🟢 FIXED PREDICTION MATH (Capped at 100%)
     raw_score = (student.attendance_pct * 0.3) + ((cgpa / 5.0) * 100 * 0.7)
-    prediction_score = min(100, round(raw_score, 1))  # <--- This prevents it from exceeding 100
+    prediction_score = min(100, round(raw_score, 1))
 
+    # 🔗 DATA SYNC
     courses = my_data(Course).order_by(Course.code.asc()).all()
     image_file = url_for('static', filename='profile_pics/' + student.image_file)
     
@@ -943,7 +964,7 @@ def student_detail(id):
         student=student,
         cgpa=cgpa,
         remark=remark,
-        prediction=prediction_score, # Now sends the fixed score
+        prediction=prediction_score,
         courses=courses,
         image_file=image_file
     )
@@ -9729,23 +9750,32 @@ def get_secure_messages():
 
 
 # ==========================================
-# GLOBAL IDENTITY RESOLUTION API
+# 🛡️ SECURE IDENTITY RESOLUTION API (V2)
 # ==========================================
-
 @app.route('/api/student/lookup', methods=['GET'])
 def lookup_student_by_name():
-    """
-    Dynamically looks up ANY student's REAL matric number and department by their name.
-    Strictly queries the Student database model. No simulations.
-    """
     name = request.args.get('name')
-    
     if not name:
         return jsonify({'status': 'error', 'message': 'Search parameter missing.'}), 400
         
+    role = session.get('role')
+    user_id = session.get('user_id')
+
     try:
-        # 🟢 REAL DATABASE QUERY: Search the Student table for this exact name
-        student = Student.query.filter(Student.name.ilike(f"%{name}%")).first()
+        # 🛡️ TITANIUM GATEKEEPER LOGIC
+        if role == 'lecturer':
+            # 1. Find all courses owned by THIS lecturer
+            my_courses = Course.query.filter_by(lecturer_id=user_id).all()
+            my_course_ids = [c.id for c in my_courses]
+            
+            # 2. Search ONLY students registered in those specific courses
+            student = Student.query.filter(
+                Student.name.ilike(f"%{name}%"),
+                Student.registered_courses.any(Course.id.in_(my_course_ids))
+            ).first()
+        else:
+            # 👑 Admin (Master Node) can still search the global pool
+            student = Student.query.filter(Student.name.ilike(f"%{name}%")).first()
         
         if student:
             return jsonify({
@@ -9754,11 +9784,12 @@ def lookup_student_by_name():
                 'dept': student.department
             }), 200
         else:
-            return jsonify({'status': 'error', 'message': 'Student not found in matrix.'}), 404
+            # We return a 403 Forbidden message if the student exists globally but isn't yours
+            return jsonify({'status': 'error', 'message': 'Access Denied: Student not in your roster.'}), 403
 
     except Exception as e:
-        print(f"[IDENTITY API ERROR]: {str(e)}")
-        return jsonify({'status': 'error', 'message': 'Database connection failed.'}), 500
+        print(f"[SECURE IDENTITY API ERROR]: {str(e)}")
+        return jsonify({'status': 'error', 'message': 'Neural link failure.'}), 500
 
 
 # ==========================================
