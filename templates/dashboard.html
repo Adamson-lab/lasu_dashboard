@@ -1165,23 +1165,25 @@
             <div class="col-xl-4">
                 <div class="card-v8" style="background: linear-gradient(135deg, #0f172a, #1e1b4b); border-color: #8b5cf6;">
                     <div class="stat-label mb-3 text-white">Active Orbital Sessions</div>
-                    <ul class="activity-list mt-2" style="max-height: 150px; overflow-y: auto;">
-                        {% if active_orbital_data %}
-                            {% for session_log in active_orbital_data %}
-                            <li class="fade-in-up">
-                                <div class="pulse-dot" style="background: var(--v8-primary); box-shadow: 0 0 10px var(--v8-primary); margin-top: 5px;"></div>
-                                <div style="flex-grow: 1;">
-                                    <div style="font-weight: bold; color: white;">{{ session_log.user }}</div>
-                                    <div style="font-size: 0.75rem; color: #a5b4fc;">Connected to Matrix</div>
-                                </div>
-                                <div style="font-family: 'JetBrains Mono', monospace; color: #10b981; font-size: 0.8rem;">Live</div>
-                            </li>
-                            {% endfor %}
-                        {% else %}
-                            <li><div style="color: var(--v8-muted); padding: 10px;">No active sessions detected.</div></li>
-                        {% endif %}
-                    </ul>
-                </div>
+                    <!-- 🟢 PRECISION FIX: Horizontal Scroll Matrix enabled -->
+                    <div style="overflow-x: auto; white-space: nowrap; padding-bottom: 10px; scrollbar-width: thin;">
+                        <ul class="activity-list mt-2" style="display: inline-block; min-width: 100%; max-height: 150px;">
+                            {% if active_orbital_data %}
+                                {% for session_log in active_orbital_data %}
+                                <li class="fade-in-up" style="display: flex; align-items: center; gap: 15px; padding-right: 20px;">
+                                    <div class="pulse-dot" style="background: var(--v8-primary); box-shadow: 0 0 10px var(--v8-primary); flex-shrink: 0;"></div>
+                                    <div style="flex-grow: 1;">
+                                        <div style="font-weight: bold; color: white;">{{ session_log.user }}</div>
+                                        <div style="font-size: 0.75rem; color: #a5b4fc;">Connected to Matrix</div>
+                                    </div>
+                                    <div style="font-family: 'JetBrains Mono', monospace; color: #10b981; font-size: 0.8rem; flex-shrink: 0;">Live</div>
+                                </li>
+                                {% endfor %}
+                            {% else %}
+                                <li><div style="color: var(--v8-muted); padding: 10px;">No active sessions detected.</div></li>
+                            {% endif %}
+                        </ul>
+                    </div>
             </div>
 
             <div class="col-xl-4">
