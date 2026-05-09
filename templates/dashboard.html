@@ -1659,15 +1659,18 @@
     <div class="modal fade" id="growthModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-fullscreen">
             <div class="modal-content" style="background: var(--v8-bg); color: var(--v8-text);">
-                <div class="modal-header border-bottom border-secondary px-4">
-                    <h5 class="modal-title fw-900"><i class="fas fa-chart-line me-2 text-primary"></i>ADVANCED GROWTH ANALYTICS MATRIX</h5>
-                    <div class="d-flex gap-2 align-items-center">
-                        <select id="modalChartType" class="lisa-select" onchange="updateModalCharts()" style="background: #000; color: #fff; border: 1px solid #444; padding: 5px 10px; border-radius: 5px;">
-                            <option value="line">Quantum Line</option>
-                            <option value="bar">Cyber Bar</option>
-                            <option value="radar">Neural Radar</option>
+                <div class="modal-header border-bottom border-secondary px-4" style="background: var(--v8-surface);">
+                    <h5 class="modal-title fw-900" style="letter-spacing: 2px;"><i class="fas fa-satellite-dish me-2 text-success" style="animation: pulse 2s infinite;"></i>LIVE ORBITAL TELEMETRY</h5>
+                    <div class="d-flex gap-3 align-items-center">
+                        <select id="modalChartType" class="lisa-select fw-bold" onchange="updateModalCharts()" style="background: #0f172a; color: #0ea5e9; border: 1px solid #0ea5e9; padding: 8px 15px; border-radius: 8px; outline: none;">
+                            <option value="line">Line Matrix</option>
+                            <option value="bar">Bar Matrix</option>
+                            <option value="radar">Radar Matrix</option>
                         </select>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <!-- 🟢 CREATIVE EXIT BUTTON -->
+                        <button type="button" class="btn btn-danger fw-bold d-flex align-items-center" data-bs-dismiss="modal" style="border-radius: 8px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); border: 1px solid #ef4444; transition: 0.3s;">
+                            <i class="fas fa-power-off me-2"></i> TERMINATE LINK
+                        </button>
                     </div>
                 </div>
                 <!-- 🟢 THE DUAL-SCROLL ENGINE: Forces X and Y scrollbars -->
@@ -2381,32 +2384,24 @@
         }
     }).catch(e => console.error(e));
 
-            let growthDataBuffer = { labels: [], data: [] };
-        let v8ModalCharts = []; // Changed to an array to hold multiple chart instances
+            let growthDataBuffer = { labels: [], data: [], science: [], arts: [], risk: [], sys: [] };
+        let v8ModalCharts = []; 
 
-        // 🟢 OPEN FULLSCREEN MATRIX
         window.openGrowthMatrix = function() {
             const modalEl = document.getElementById('growthModal');
             const myModal = new bootstrap.Modal(modalEl);
             myModal.show();
-            // Critical delay to allow DOM rendering before drawing
             setTimeout(updateModalCharts, 400); 
         }
 
-        // 🟢 RENDER MULTIPLE CHARTS INSIDE MODAL
         window.updateModalCharts = function() {
             const type = document.getElementById('modalChartType').value;
             
-            // Destroy all existing charts in the array to prevent overlaps
-            v8ModalCharts.forEach(chart => {
-                if (chart) chart.destroy();
-            });
+            v8ModalCharts.forEach(chart => { if (chart) chart.destroy(); });
             v8ModalCharts = [];
 
-            // Common Theme Options
             const commonOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: true, labels: { color: '#888', font: { size: 14 } } } },
                 scales: type !== 'radar' ? {
                     y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 12 } } },
@@ -2414,7 +2409,7 @@
                 } : {}
             };
 
-            // CHART 1: Primary Growth
+            // CHART 1: REAL Global Population
             const ctx1 = document.getElementById('modalGrowthChart1');
             if (ctx1) {
                 v8ModalCharts.push(new Chart(ctx1.getContext('2d'), {
@@ -2422,7 +2417,7 @@
                     data: {
                         labels: growthDataBuffer.labels,
                         datasets: [{
-                            label: 'Total Registered Students',
+                            label: 'Total Active Students',
                             data: growthDataBuffer.data,
                             borderColor: '#0ea5e9',
                             backgroundColor: type === 'line' ? 'rgba(14, 165, 233, 0.2)' : (type === 'radar' ? 'rgba(14, 165, 233, 0.2)' : '#0ea5e9'),
@@ -2433,7 +2428,7 @@
                 }));
             }
 
-            // CHART 2: Faculty Velocity (Mock comparative data based on buffer)
+            // CHART 2: REAL Faculty Registration (Science vs Arts from DB)
             const ctx2 = document.getElementById('modalGrowthChart2');
             if (ctx2) {
                 v8ModalCharts.push(new Chart(ctx2.getContext('2d'), {
@@ -2442,14 +2437,14 @@
                         labels: growthDataBuffer.labels,
                         datasets: [
                             {
-                                label: 'Science & Tech',
-                                data: growthDataBuffer.data.map(d => Math.floor(d * 0.45)),
+                                label: 'Science & Engineering',
+                                data: growthDataBuffer.science || [],
                                 borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)',
                                 borderWidth: 3, fill: true, tension: 0.4
                             },
                             {
                                 label: 'Arts & Humanities',
-                                data: growthDataBuffer.data.map(d => Math.floor(d * 0.35)),
+                                data: growthDataBuffer.arts || [],
                                 borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.2)',
                                 borderWidth: 3, fill: true, tension: 0.4
                             }
@@ -2459,7 +2454,7 @@
                 }));
             }
 
-            // CHART 3: At-Risk Density (Always a Bar Chart for clarity)
+            // CHART 3: REAL At-Risk Density (<70% Attendance from DB)
             const ctx3 = document.getElementById('modalGrowthChart3');
             if (ctx3) {
                 v8ModalCharts.push(new Chart(ctx3.getContext('2d'), {
@@ -2467,8 +2462,8 @@
                     data: {
                         labels: growthDataBuffer.labels,
                         datasets: [{
-                            label: 'Critical Warning Students',
-                            data: growthDataBuffer.data.map(d => Math.floor(d * 0.12)), // Simulated 12% risk rate
+                            label: 'Critical Warning Students (<70% Attendance)',
+                            data: growthDataBuffer.risk || [], 
                             backgroundColor: '#ef4444',
                             borderRadius: 6
                         }]
@@ -2477,24 +2472,21 @@
                 }));
             }
 
-            // CHART 4: System Resource Allocation (Doughnut)
+            // CHART 4: REAL System Resource Allocation (Database queries)
             const ctx4 = document.getElementById('modalGrowthChart4');
             if (ctx4) {
                 v8ModalCharts.push(new Chart(ctx4.getContext('2d'), {
                     type: 'doughnut',
                     data: {
-                        labels: ['Active Sessions', 'Idle Connections', 'Database Sync', 'Background Tasks'],
+                        labels: ['Active Logins', 'Pending Tickets', 'Total Courses', 'Total Students'],
                         datasets: [{
-                            data: [45, 20, 25, 10],
-                            backgroundColor: ['#f59e0b', '#64748b', '#0ea5e9', '#10b981'],
-                            borderWidth: 0,
-                            hoverOffset: 10
+                            data: growthDataBuffer.sys && growthDataBuffer.sys.length ? growthDataBuffer.sys : [0, 0, 0, 0],
+                            backgroundColor: ['#f59e0b', '#ef4444', '#0ea5e9', '#10b981'],
+                            borderWidth: 0, hoverOffset: 10
                         }]
                     },
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '65%',
+                        responsive: true, maintainAspectRatio: false, cutout: '65%',
                         plugins: { legend: { position: 'right', labels: { color: '#fff', padding: 20 } } }
                     }
                 }));
@@ -2505,7 +2497,7 @@
         function refreshGrowthChart() {
             v8Fetch('/api/student_growth?cache_bust=' + Date.now(), 'v8_cache_growth')
             .then(res => {
-                growthDataBuffer = res; // Sync global buffer for modal
+                growthDataBuffer = res; // Sync global buffer for all modals
                 const chartCanvas = document.getElementById('growthChart');
                 if (!chartCanvas) return;
                 
@@ -2518,17 +2510,12 @@
                         labels: res.labels, 
                         datasets: [{ 
                             data: res.data, 
-                            borderColor: '#8b5cf6', 
-                            backgroundColor: 'rgba(139, 92, 246, 0.2)', 
-                            borderWidth: 3, 
-                            tension: 0.4, 
-                            fill: true,
-                            pointRadius: 0 
+                            borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.2)', 
+                            borderWidth: 3, tension: 0.4, fill: true, pointRadius: 0 
                         }] 
                     },
                     options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
+                        responsive: true, maintainAspectRatio: false, 
                         plugins: { legend: { display: false } }, 
                         scales: { y: { display: false }, x: { display: false } } 
                     }
