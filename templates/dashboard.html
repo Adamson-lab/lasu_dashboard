@@ -317,29 +317,36 @@
             align-items: center;
         }
 
-        /* CSS Circular Gauge */
+        /* 🟢 DYNAMIC GAUGE SYSTEM - START */
         .circular-gauge {
+            position: relative;
             width: 80px; 
             height: 80px; 
             border-radius: 50%;
-            background: conic-gradient(var(--v8-success) 82%, var(--v8-bg) 0deg);
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            margin-top: 10px;
+            transition: all 0.5s ease;
         }
-        
+
+        .gauge-danger { --gauge-color: var(--v8-danger); }
+        .gauge-warning { --gauge-color: var(--v8-warning); }
+        .gauge-success { --gauge-color: var(--v8-success); }
+
         .gauge-inner {
-            width: 60px; 
-            height: 60px; 
+            width: 65px; 
+            height: 65px; 
             border-radius: 50%; 
             background: var(--v8-surface);
             display: flex; 
+            flex-direction: column;
             align-items: center; 
             justify-content: center; 
             font-weight: 900; 
-            font-size: 1.2rem;
+            font-size: 1.1rem;
+            z-index: 2;
         }
+        /* 🟢 DYNAMIC GAUGE SYSTEM - END */
 
         /* Lists & Feeds */
         .activity-list { 
@@ -1078,17 +1085,29 @@
             </div>
 
             <div class="col-xl-3 col-md-6">
-                <div class="card-v8 border-start border-5" style="border-left-color: var(--v8-success) !important;">
-    <div class="stat-label">Attendance Rate</div>
-    <div style="display: flex; gap: 20px; align-items: center;">
-        <div class="circular-gauge">
-            <div class="gauge-inner text-success">{{ attendance_rate | default(0) }}%</div>
-        </div>
-        <div style="color: var(--v8-muted); font-size: 0.8rem; line-height: 1.5;">
-            Average attendance across all registered courses this semester.
-        </div>
-    </div>
-</div>
+                <div class="card-v8 border-start border-5" style="border-left-color: {% if attendance_rate < 50 %}var(--v8-danger){% elif attendance_rate < 75 %}var(--v8-warning){% else %}var(--v8-success){% endif %} !important;">
+                    <div class="stat-label">Attendance Rate</div>
+                    <div style="display: flex; gap: 20px; align-items: center; margin-top: 10px;">
+                        
+                        <!-- 🟢 THE CONIC GRADIENT FIX: This makes 0% actually look empty and red -->
+                        <div class="circular-gauge {% if attendance_rate < 50 %}gauge-danger{% elif attendance_rate < 75 %}gauge-warning{% else %}gauge-success{% endif %}" 
+                             style="background: conic-gradient(var(--gauge-color) {{ attendance_rate }}%, var(--v8-bg) 0deg);">
+                            
+                            <div class="gauge-inner">
+                                <span style="color: var(--gauge-color)">{{ attendance_rate }}%</span>
+                                <small style="font-size: 0.5rem; color: var(--v8-muted); text-transform: uppercase;">Live</small>
+                            </div>
+                        </div>
+                        
+                        <div style="color: var(--v8-muted); font-size: 0.8rem; line-height: 1.4;">
+                            {% if attendance_rate == 0 %}
+                                <span class="text-danger fw-bold"><i class="fas fa-exclamation-triangle me-1"></i> EMPTY:</span> No logs found.
+                            {% else %}
+                                Avg. across all registered courses.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="col-xl-3 col-md-6">
