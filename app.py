@@ -575,17 +575,23 @@ def send_email_notification(to_email, subject, body):
         return
     try:
         msg = MIMEMultipart()
-        msg['From'] = f"LASU Admin <{EMAIL_ADDRESS}>"
+        msg['From'] = f"LASU Matrix Admin <{EMAIL_ADDRESS}>"
         msg['To'] = to_email
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
+
+        # 🟢 ARCHITECT FIX: SSL Port 465 + 10s Timeout
+        # This prevents the "forever loading" hang on Railway
+        import smtplib
+        server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) 
         server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         server.send_message(msg)
         server.quit()
+        print(f"🚀 SUCCESS: Email dispatched to {to_email}")
+        
     except Exception as e:
-        print(f"⚠️ Email Failed: {str(e)}")
+        print(f"🔥 SMTP CRITICAL FAILURE: {str(e)}")
+        # Note: We don't raise here so the UI can still finish loading
 
 
 # --- S.O.S HELPER FUNCTIONS (REAL) ---
@@ -1472,7 +1478,12 @@ def forgot_password():
             token = s.dumps(payload, salt='password-reset-salt')
             
             # 3. Create the Real Clickable Reset Link
-            reset_link = url_for('reset_password', token=token, _external=True)
+            # 🟢 ARCHITECT FIX: Force HTTPS and use the Railway hostname
+            reset_link = url_for('reset_password', token=token, _external=True, _scheme='https')
+            
+            # If for some reason Railway still sends 127.0.0.1, we use this hardcoded backup:
+            if "127.0.0.1" in reset_link or "localhost" in reset_link:
+                reset_link = f"https://lasudashboard-productions.up.railway.app/reset-password/{token}"
             
             # 4. Fire the actual Email!
             user_name = getattr(user_obj, 'name', 'Admin')
