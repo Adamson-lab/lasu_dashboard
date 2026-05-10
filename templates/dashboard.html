@@ -2507,9 +2507,17 @@
                         labels: res.labels, 
                         datasets: [{ 
                             data: res.data, 
-                            borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.2)', 
-                            borderWidth: 3, tension: 0.4, fill: true, pointRadius: 0 
-                        }] 
+                            borderColor: '#8b5cf6', 
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)', 
+                            borderWidth: 3, 
+                            tension: 0.4, 
+                            fill: true, 
+                            pointRadius: 4,           // 🟢 ADDS VISIBLE DATA POINTS
+                            pointHoverRadius: 6,      // 🟢 MAKES THEM INTERACTIVE
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#8b5cf6',
+                            pointBorderWidth: 2
+                        }]
                     },
                     options: { 
                         responsive: true, maintainAspectRatio: false, 
