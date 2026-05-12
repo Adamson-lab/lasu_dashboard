@@ -115,13 +115,13 @@ app.secret_key = 'lasu_final_year_project_secret_key'
 # This makes sure the "session.permanent" actually lasts for 30 days
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
-# --- 🧠 AI CONFIGURATION (SECURE RAILWAY SYNC) ---
-# We now pull keys directly from Railway's environment variables to prevent 401 errors.
-# If the variables aren't found (like on local dev), it falls back to the hardcoded keys.
+# --- 🧠 AI CONFIGURATION ---
 import os
 
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyB7Xq2icVax30inMewitJvPet_BU5-E5aQ")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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")
+# DO NOT PUT REAL KEYS IN THIS FILE EVER AGAIN.
+# The app will fetch them silently from Railway's Variables.
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 # --- 📨 ENTERPRISE EMAIL OVERRIDE (HTTP RELAY) ---
 ENABLE_EMAIL = True
