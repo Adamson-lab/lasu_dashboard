@@ -142,11 +142,13 @@
             width: calc(100% - 260px);
         }
         
-        .fullscreen-active .v8-sidebar { 
+        .fullscreen-active .v8-sidebar,
+        .sidebar-collapsed .v8-sidebar { 
             transform: translateX(-100%); 
         }
         
-        .fullscreen-active .v8-main { 
+        .fullscreen-active .v8-main,
+        .sidebar-collapsed .v8-main { 
             margin-left: 0; 
             width: 100%; 
         }
@@ -992,6 +994,9 @@
         
         <div class="top-telemetry">
             <div class="api-status">
+                <button class="icon-btn" onclick="toggleSidebar()" title="Toggle Sidebar" aria-label="Toggle Sidebar" style="margin-right: 10px; width: 35px; height: 35px; border-color: var(--v8-primary);">
+                    <i class="fas fa-bars text-primary"></i>
+                </button>
                 <div class="pulse-dot"></div>
                 <span>DATA STREAM: SECURE</span>
             </div>
@@ -2027,6 +2032,11 @@
                     document.body.classList.remove('fullscreen-active');
                 }
             }
+        }
+
+        // 🟢 DEDICATED SIDEBAR TOGGLE
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-collapsed');
         }
 
         document.addEventListener('keydown', function(e) {
