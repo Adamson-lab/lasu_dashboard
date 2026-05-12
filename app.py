@@ -6799,7 +6799,14 @@ def auto_quiz_generator():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    courses = Course.query.order_by(Course.code).all()
+    # 🟢 SILO ENGINE: Strictly filter courses by who is logged in!
+    role = session.get('role')
+    user_id = session.get('user_id')
+    
+    if role == 'lecturer':
+        courses = Course.query.filter_by(lecturer_id=user_id).order_by(Course.code.asc()).all()
+    else:
+        courses = Course.query.order_by(Course.code.asc()).all()
     
     if request.method == 'POST':
         course_id = request.form.get('course_id')
