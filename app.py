@@ -981,37 +981,57 @@ def toggle_fees(id):
 def add_student():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
-    try:
-        matric = request.form['matric_no']
-        name = request.form['name']
-        dept = request.form['department']
-        new_student = Student(matric_no=matric, name=name, department=dept, attendance_pct=100.0)
         
-        # 🟢 THE FIX: Auto-link the new student to the Lecturer's course!
-        my_course = None
-        if session.get('role') == 'lecturer':
-            lecturer_id = session.get('user_id')
-            # Find the first course this lecturer teaches
-            my_course = Course.query.filter_by(lecturer_id=lecturer_id).first()
-            
-            if my_course:
-                # Automatically put the student in their class!
-                new_student.registered_courses.append(my_course)
-            else:
-                flash('⚠️ Student created, but you must add a Course to your profile first to see them!', 'warning')
+    matric = request.form['matric_no'].strip().upper()
+    name = request.form['name'].strip()
+    dept = request.form['department']
 
-        db.session.add(new_student)
-        db.session.commit()
-        
-        if session.get('role') == 'lecturer' and my_course:
-            flash(f'✅ Successfully registered {name} and enrolled them in {my_course.code}!', 'success')
+    # 1. Check if the student already exists globally (The Ghost Check)
+    existing_student = Student.query.filter_by(matric_no=matric).first()
+
+    # 2. Identify the Lecturer's Course
+    my_course = None
+    if session.get('role') == 'lecturer':
+        lecturer_id = session.get('user_id')
+        my_course = Course.query.filter_by(lecturer_id=lecturer_id).first()
+
+    if existing_student:
+        # 🟢 GHOST RESCUE PROTOCOL
+        if session.get('role') == 'lecturer':
+            if not my_course:
+                flash('⚠️ Student exists in the database, but you need to create a Course first to view them!', 'warning')
+            elif my_course not in existing_student.registered_courses:
+                existing_student.registered_courses.append(my_course)
+                db.session.commit()
+                flash(f'✅ RESCUED: {name} was already in the system and has now been linked to your {my_course.code} roster!', 'success')
+            else:
+                flash(f'⚠️ {name} is already in your roster.', 'info')
         else:
-            flash(f'✅ Successfully registered {name}!', 'success')
+            flash('❌ A student with that Matric Number already exists!', 'danger')
             
-    except IntegrityError:
-        db.session.rollback()
-        flash('❌ Error: A student with that Matric Number already exists!', 'danger')
-        
+    else:
+        # 🟢 NORMAL CREATION PROTOCOL
+        try:
+            new_student = Student(matric_no=matric, name=name, department=dept, attendance_pct=100.0)
+            
+            if session.get('role') == 'lecturer':
+                if my_course:
+                    new_student.registered_courses.append(my_course)
+                else:
+                    flash('⚠️ Student created globally, but you must add a Course to your profile first to see them!', 'warning')
+                    
+            db.session.add(new_student)
+            db.session.commit()
+            
+            if session.get('role') == 'lecturer' and my_course:
+                flash(f'✅ Successfully registered {name} and enrolled them in {my_course.code}!', 'success')
+            else:
+                flash(f'✅ Successfully registered {name}!', 'success')
+                
+        except IntegrityError:
+            db.session.rollback()
+            flash('❌ Error: Database constraint failed!', 'danger')
+
     return redirect(url_for('student_list'))
 
 
