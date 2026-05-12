@@ -1056,7 +1056,7 @@ def import_csv_students():
                                     matric_no=matric,
                                     name=name,
                                     department=dept,
-                                    attendance_pct=100.0
+                                    attendance_pct=0.0  # 🟢 THE FIX: No free marks for bulk imports either!
                                 )
                             )
                             count += 1
