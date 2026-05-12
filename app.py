@@ -1897,6 +1897,42 @@ def student_portal():
     # 1. Fetch Student
     student = Student.query.get(session['student_id'])
     
+    # 🟢 TIME-MATRIX LEVEL CALIBRATOR (THE BULLETPROOF METHOD)
+    import re
+    from datetime import datetime
+    
+    # Extract year from Matric No (e.g., CSC/2021/001 -> 2021)
+    year_match = re.search(r'(?:/|^)(\d{4})(?:/|$)', student.matric_no)
+    
+    if year_match:
+        admission_year = int(year_match.group(1))
+        current_year = datetime.now().year
+        
+        # Calculate years spent. (e.g. 2026 - 2021 = 5 years)
+        years_spent = current_year - admission_year
+        if years_spent < 0: years_spent = 0
+        
+        # Convert to level (0 years = 100L, 1 year = 200L, etc.)
+        calculated_level = (years_spent * 100) + 100
+        
+        # Cap at 500L max (so old students don't become 800L)
+        student.level = min(500, calculated_level)
+    else:
+        # FALLBACK: If matric number format is weird, use the highest course code
+        if student.registered_courses:
+            max_level = 100
+            for course in student.registered_courses:
+                code_match = re.search(r'\d', course.code)
+                if code_match:
+                    lvl_digit = int(code_match.group())
+                    if 1 <= lvl_digit <= 5:
+                        course_level = lvl_digit * 100
+                        if course_level > max_level:
+                            max_level = course_level
+            student.level = max_level
+
+    db.session.commit()
+
     # 🟢 NEW: Auto-Recalibrate Global Attendance Percentage (15-Class Rule)
     TOTAL_SEMESTER_CLASSES = 15
     reg_count = len(student.registered_courses)
@@ -1918,14 +1954,12 @@ def student_portal():
     # 3. 🟢 SMART NOTIFICATION SPLITTER (STRICT LOGIC)
     
     # List A: PURE SUMMARIES (Only AI Notes)
-    # 🟢 FIX: Changed 'date_posted' to 'timestamp'
     lecture_summaries = Notification.query.filter(
         Notification.student_id == student.id,
         Notification.message.like("%Topic Summary%") 
     ).order_by(Notification.timestamp.desc()).limit(5).all()
 
     # List B: GENERAL INBOX (Transfers, System Msgs, Alerts)
-    # 🟢 FIX: Changed 'date_posted' to 'timestamp'
     general_inbox = Notification.query.filter(
         Notification.student_id == student.id,
         ~Notification.message.like("%Topic Summary%") 
@@ -1960,7 +1994,6 @@ def student_portal():
     image_file = url_for('static', filename='profile_pics/' + student.image_file)
     
     # 6. NOTICES & MATERIALS
-    # Note: Announcement likely uses 'date_posted', but Notification uses 'timestamp'
     notices = Announcement.query.order_by(Announcement.date_posted.desc()).limit(3).all()
 
     available_materials = []
@@ -1988,7 +2021,6 @@ def student_portal():
         cbt_alerts=cbt_alerts,        
         summary_alerts=summary_alerts,
         pending_transfer=pending_transfer,
-        # 👇 THESE ARE THE NEW LISTS
         lecture_summaries=lecture_summaries, 
         general_inbox=general_inbox
     )
