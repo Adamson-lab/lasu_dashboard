@@ -2736,10 +2736,36 @@ def manage_quizzes():
         flash('✅ New Quiz Created! Now add questions.')
         return redirect(url_for('add_questions', quiz_id=new_quiz.id))
 
-    quizzes = my_data(Quiz).order_by(Quiz.date_created.desc()).all()
-    courses = Course.query.all()
+    # 1. 🛡️ SILO COURSES: Lecturers only see their own courses. Admin sees all.
+    role = session.get('role')
+    user_id = session.get('user_id')
+    
+    if role == 'lecturer':
+        courses = Course.query.filter_by(lecturer_id=user_id).order_by(Course.code.asc()).all()
+    else:
+        courses = Course.query.order_by(Course.code.asc()).all()
+        
+    my_course_ids = [c.id for c in courses]
 
-    notifications = Notification.query.group_by(Notification.message).order_by(Notification.timestamp.desc()).all()
+    # 2. 🛡️ SILO QUIZZES: Only fetch quizzes belonging to those specific courses
+    if my_course_ids:
+        quizzes = Quiz.query.filter(Quiz.course_id.in_(my_course_ids)).order_by(Quiz.date_created.desc()).all()
+    else:
+        quizzes = [] # Blank slate if no courses exist
+
+    # 3. 🛡️ SILO SUMMARIES: Only fetch notifications pushed to students in your courses
+    if my_course_ids:
+        # Find students in your courses
+        my_students = Student.query.filter(Student.registered_courses.any(Course.id.in_(my_course_ids))).all()
+        my_student_ids = [s.id for s in my_students]
+        
+        if my_student_ids:
+            # Get notifications only for your students, grouped by message
+            notifications = Notification.query.filter(Notification.student_id.in_(my_student_ids)).group_by(Notification.message).order_by(Notification.timestamp.desc()).all()
+        else:
+            notifications = []
+    else:
+        notifications = []
 
     return render_template(
         'manage_quizzes.html',
