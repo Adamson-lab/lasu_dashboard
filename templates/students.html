@@ -77,14 +77,18 @@
                     <td>{{ student.name }}</td>
                     <td>{{ student.department }}</td>
                     <td>
-                        {% if student.attendance_pct < 70 %}
+                        {% if student.attendance_pct == 0.0 %}
+                            <span class="text-muted fw-bold">N/A</span>
+                        {% elif student.attendance_pct < 70 %}
                             <span class="text-danger fw-bold">{{ "%.1f"|format(student.attendance_pct) }}%</span>
                         {% else %}
                             <span class="text-success">{{ "%.1f"|format(student.attendance_pct) }}%</span>
                         {% endif %}
                     </td>
                     <td>
-                        {% if student.attendance_pct < 70 %}
+                        {% if student.attendance_pct == 0.0 %}
+                            <span class="badge bg-secondary">New Student</span>
+                        {% elif student.attendance_pct < 70 %}
                             <span class="badge bg-danger">At Risk</span>
                         {% else %}
                             <span class="badge bg-success">Good Standing</span>

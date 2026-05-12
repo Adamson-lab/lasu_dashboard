@@ -1012,7 +1012,7 @@ def add_student():
     else:
         # 🟢 NORMAL CREATION PROTOCOL
         try:
-            new_student = Student(matric_no=matric, name=name, department=dept, attendance_pct=100.0)
+            new_student = Student(matric_no=matric, name=name, department=dept, attendance_pct=0.0)
             
             if session.get('role') == 'lecturer':
                 if my_course:
