@@ -59,11 +59,6 @@
             display: flex;
             min-height: 100vh;
             transition: background-color 0.3s, color 0.3s;
-            /* 🟢 FORCE 50% ZOOM ON DESKTOP */
-            zoom: 0.5; 
-            -moz-transform: scale(0.5); 
-            -moz-transform-origin: 0 0;
-            width: 200%; /* Compensate for Firefox scaling */
         }
 
         ::-webkit-scrollbar { 
@@ -1970,16 +1965,6 @@
         
         applySavedTheme();
 
-        // 🟢 PERSISTENT SIDEBAR MEMORY ENGINE
-        function applySavedSidebar() {
-            try {
-                if (localStorage.getItem('v8_sidebar') === 'collapsed') {
-                    document.body.classList.add('sidebar-collapsed');
-                }
-            } catch(e) {}
-        }
-        applySavedSidebar();
-
         function toggleTheme() {
             currentThemeIndex = currentThemeIndex + 1;
             if (currentThemeIndex >= themes.length) { 
@@ -2049,16 +2034,9 @@
             }
         }
 
-        // 🟢 DEDICATED SIDEBAR TOGGLE (WITH INFINITE MEMORY)
+        // 🟢 DEDICATED SIDEBAR TOGGLE
         function toggleSidebar() {
             document.body.classList.toggle('sidebar-collapsed');
-            try {
-                if (document.body.classList.contains('sidebar-collapsed')) {
-                    localStorage.setItem('v8_sidebar', 'collapsed');
-                } else {
-                    localStorage.setItem('v8_sidebar', 'expanded');
-                }
-            } catch(e) {}
         }
 
         document.addEventListener('keydown', function(e) {
