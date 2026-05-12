@@ -719,11 +719,12 @@
             setStatus("OPTICAL ARRAY ACTIVE", "Align target inside the crosshairs.", "scanning");
             scannerHud.classList.add('scanning-active');
 
+            // 🟢 STABILITY FIX: Lower FPS prevents JS thread overload and allows camera auto-focus.
+            // Removed 'experimentalFeatures' and 'aspectRatio' which silently crash on Production HTTPS.
             const turboConfig = { 
-                fps: 30,
-                qrbox: { width: 280, height: 280 }, 
-                aspectRatio: 1.0,
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                disableFlip: false
             };
             
             try {
