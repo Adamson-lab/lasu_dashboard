@@ -147,7 +147,10 @@
 <script>
     let current = 1;
     const total = {{ questions|length }};
-    let timeLeft = 20 * 60; 
+    
+    // 🟢 DYNAMIC TIMER FIX: Pulls the exact time limit from the database (Defaults to 30 if somehow empty)
+    let timeLeft = {{ quiz.time_limit | default(30) }} * 60; 
+    
     let violationCount = 0; // 🟢 Tracker Variable
 
     // ⏰ TIMER
