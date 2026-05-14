@@ -1,26 +1,18 @@
-import sqlite3
+from app import app, db
+from sqlalchemy import text
 
-# Connect to your database
-conn = sqlite3.connect('lasu_data.db')
-cursor = conn.cursor()
+def patch_database():
+    print("Initiating Database Patch Protocol...")
+    with app.app_context():
+        try:
+            # Injecting the time_limit column into the existing quiz table
+            db.session.execute(text('ALTER TABLE quiz ADD COLUMN time_limit INTEGER DEFAULT 30;'))
+            db.session.commit()
+            print("✅ SUCCESS: 'time_limit' column successfully added to the Quiz table!")
+        except Exception as e:
+            db.session.rollback()
+            print(f"⚠️ Notice: {str(e)}")
+            print("If the error says 'duplicate column name', it means the patch already ran successfully!")
 
-print("🔧 Attempting to patch database schema...")
-
-# 1. Add exam_date column
-try:
-    cursor.execute("ALTER TABLE course ADD COLUMN exam_date DATE")
-    print("✅ Successfully added 'exam_date' column.")
-except sqlite3.OperationalError:
-    print("ℹ️ 'exam_date' column already exists.")
-
-# 2. Add exam_time column
-try:
-    cursor.execute("ALTER TABLE course ADD COLUMN exam_time VARCHAR(20)")
-    print("✅ Successfully added 'exam_time' column.")
-except sqlite3.OperationalError:
-    print("ℹ️ 'exam_time' column already exists.")
-
-conn.commit()
-conn.close()
-
-print("🎉 Database patch complete! You can now restart app.py.")
+if __name__ == '__main__':
+    patch_database()
