@@ -6927,9 +6927,21 @@ def auto_quiz_generator():
                     
                     target_quiz = Quiz.query.filter_by(course_id=course.id, title=master_title).first()
                     
+                    # 🟢 GRAB THE TIME LIMIT FROM THE UI
+                    quiz_time = int(request.form.get('time_limit', 30))
+
                     if not target_quiz:
-                        target_quiz = Quiz(course_id=course.id, title=master_title, description="Generated Bank")
+                        target_quiz = Quiz(
+                            course_id=course.id, 
+                            title=master_title, 
+                            description="Generated Bank",
+                            time_limit=quiz_time  # <--- INJECTED HERE
+                        )
                         db.session.add(target_quiz)
+                        db.session.commit()
+                    else:
+                        # Ensure existing banks get their time updated if the lecturer runs the AI again!
+                        target_quiz.time_limit = quiz_time
                         db.session.commit()
 
                     added_count = 0
