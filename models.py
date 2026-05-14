@@ -226,6 +226,8 @@ class Quiz(db.Model):
     description = db.Column(db.Text)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     questions = db.relationship('Question', backref='quiz', lazy=True, cascade="all, delete-orphan")
+    # 🟢 ADD THIS LINE:
+    time_limit = db.Column(db.Integer, default=30) # Default to 30 minutes
 
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
