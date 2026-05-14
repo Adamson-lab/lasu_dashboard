@@ -146,8 +146,15 @@ for folder in [
 
 db.init_app(app)
 
-
-
+# 🟢 THE RAILWAY AUTO-PATCHER: Prevents Database Amnesia on Deployment
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text("ALTER TABLE quiz ADD COLUMN time_limit INTEGER DEFAULT 30;"))
+        db.session.commit()
+        print("✅ MATRIX AUTO-PATCH: 'time_limit' column restored successfully!")
+    except Exception:
+        db.session.rollback() # Safely ignore if the column already exists
 
 # --- NEW MODELS (DEFINED HERE FOR STABILITY) ---
 
