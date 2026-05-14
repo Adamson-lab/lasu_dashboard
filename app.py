@@ -2761,7 +2761,8 @@ def manage_quizzes():
         new_quiz = Quiz(
             course_id=request.form['course_id'],
             title=request.form['title'],
-            description=request.form['description']
+            description=request.form.get('description', ''),
+            time_limit=int(request.form.get('time_limit', 30)) # 🟢 CAPTURE TIME LIMIT
         )
         db.session.add(new_quiz)
         db.session.commit()
@@ -9929,6 +9930,29 @@ def student_growth_data():
         'sys': [active_logins, pending_tickets, total_courses, total_count]
     })
 
+
+
+# ==========================================
+# 🚑 BACKDOOR FIX: ADD CBT TIME LIMIT COLUMN
+# ==========================================
+@app.route('/patch_time_limit')
+def patch_time_limit():
+    from sqlalchemy import text
+    try:
+        with app.app_context():
+            # Injecting the time_limit column directly into the live production database
+            db.session.execute(text("ALTER TABLE quiz ADD COLUMN time_limit INTEGER DEFAULT 30;"))
+            db.session.commit()
+            return """
+            <div style='text-align: center; padding: 50px; font-family: sans-serif;'>
+                <h1 style='color: green;'>✅ SUCCESS!</h1>
+                <p>The column <b>time_limit</b> has been permanently fused into the live database.</p>
+                <br>
+                <a href='/cbt/manage' style='padding: 15px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Go to CBT Management</a>
+            </div>
+            """
+    except Exception as e:
+        return f"<h1>ℹ️ Info: {e}</h1><p>If it says 'duplicate column name', the patch already worked!</p><br><a href='/cbt/manage'>Go back to CBT Management</a>"
 
 # ==========================================
 # 🚀 APP STARTUP & SAFE SELF-HEALING DB
