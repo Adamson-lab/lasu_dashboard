@@ -36,9 +36,15 @@
                                    placeholder="e.g. Chapter 1: Electric Charge" required>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="fw-bold">Quiz Title (If Creating Test)</label>
-                            <input type="text" name="title" class="form-control" placeholder="e.g. Mid-Semester Test">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="fw-bold">Quiz Title (If Creating Test)</label>
+                                <input type="text" name="title" class="form-control" placeholder="e.g. Mid-Semester Test">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="fw-bold">Time (Min)</label>
+                                <input type="number" name="time_limit" class="form-control" value="30" min="5" required>
+                            </div>
                         </div>
                         
                         <div class="mb-3">
@@ -148,6 +154,7 @@
                                 <th>Course</th>
                                 <th>Title</th>
                                 <th>Questions</th>
+                                <th>Time</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -159,6 +166,7 @@
                                     {{ quiz.title|replace("AI Question Bank", "Question Bank") }}
                                 </td>
                                 <td>{{ quiz.questions|length }} Qs</td>
+                                <td><span class="badge bg-dark">{{ quiz.time_limit | default(30) }} Min</span></td>
                                 <td>
                                     <a href="{{ url_for('add_questions', quiz_id=quiz.id) }}" class="btn btn-sm btn-success" title="Add Qs">➕</a>
                                     
