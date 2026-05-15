@@ -6942,13 +6942,17 @@ def auto_quiz_generator():
                             course_id=course.id, 
                             title=master_title, 
                             description="Generated Bank",
-                            time_limit=quiz_time  # <--- INJECTED HERE
+                            time_limit=quiz_time
                         )
                         db.session.add(target_quiz)
                         db.session.commit()
                     else:
-                        # Ensure existing banks get their time updated if the lecturer runs the AI again!
-                        target_quiz.time_limit = quiz_time
+                        # 🧠 INTELLIGENT BATCH SENSOR: Automatically calculate the average!
+                        # If a time already exists, add the new time and divide by 2.
+                        if target_quiz.time_limit:
+                            target_quiz.time_limit = int((target_quiz.time_limit + quiz_time) / 2)
+                        else:
+                            target_quiz.time_limit = quiz_time
                         db.session.commit()
 
                     added_count = 0
@@ -7682,24 +7686,22 @@ def print_quiz(quiz_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     
-    # Check if user wants 'student' or 'lecturer' mode (default to student)
     mode = request.args.get('mode', 'student')
-    
     quiz = Quiz.query.get_or_404(quiz_id)
     questions = Question.query.filter_by(quiz_id=quiz.id).all()
     
-    # 🟢 NEW DYNAMIC AVERAGE ENGINE
-    all_course_quizzes = Quiz.query.filter_by(course_id=quiz.course_id).all()
+    # 🟢 BULLETPROOF AVERAGE ENGINE
+    all_quizzes = Quiz.query.filter_by(course_id=quiz.course_id).all()
     
-    if all_course_quizzes:
-        # Sum all the time limits and divide by the number of quizzes
-        total_time = sum([q.time_limit for q in all_course_quizzes if q.time_limit])
-        avg_time = int(total_time / len(all_course_quizzes))
+    # Safely extract all time limits that actually exist and are greater than 0
+    valid_times = [q.time_limit for q in all_quizzes if q.time_limit is not None and q.time_limit > 0]
+    
+    if valid_times:
+        # Mathematically perfect average
+        avg_time = int(sum(valid_times) / len(valid_times))
     else:
-        # Failsafe
         avg_time = quiz.time_limit or 30
-    
-    # Pass 'avg_time' to the HTML
+        
     return render_template('print_quiz_template.html', quiz=quiz, questions=questions, date=datetime.now(), mode=mode, avg_time=avg_time)
 
 
