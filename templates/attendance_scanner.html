@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,15 +10,9 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
-        /* ==========================================
-           V-INFINITY THEME ENGINE (SCANNER MODULE)
-           FULLY EXPANDED AND FORMATTED
-           ========================================== */
-        
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700;800;900&display=swap');
 
-        /* LIGHT MODE */
-        [data-theme="light"] {
+        :root {
             --bg-master: #f8fafc; 
             --bg-surface: rgba(255, 255, 255, 0.9); 
             --term-bg: rgba(241, 245, 249, 0.9);
@@ -32,57 +26,6 @@
             --warn: #f59e0b; 
             --info: #0ea5e9; 
             --success: #10b981;
-        }
-
-        /* DARK MODE */
-        [data-theme="dark"] {
-            --bg-master: #020617; 
-            --bg-surface: rgba(15, 23, 42, 0.8); 
-            --term-bg: rgba(5, 10, 20, 0.9);
-            --border-core: rgba(51, 65, 85, 0.5); 
-            --border-neon: #10b981; 
-            --text-main: #f8fafc; 
-            --text-mute: #94a3b8; 
-            --text-cyber: #34d399;
-            --shadow-core: 0 10px 30px rgba(16, 185, 129, 0.15);
-            --alert: #ef4444; 
-            --warn: #f59e0b; 
-            --info: #0ea5e9; 
-            --success: #10b981;
-        }
-
-        /* HIGH CONTRAST MODE */
-        [data-theme="god"] {
-            --bg-master: #0a0500; 
-            --bg-surface: rgba(25, 10, 35, 0.85); 
-            --term-bg: rgba(10, 0, 15, 0.9);
-            --border-core: rgba(217, 70, 239, 0.5); 
-            --border-neon: #fbbf24; 
-            --text-main: #fffbeb; 
-            --text-mute: #f472b6; 
-            --text-cyber: #ffd700;
-            --shadow-core: 0 0 40px rgba(217, 70, 239, 0.3);
-            --alert: #ff0000; 
-            --warn: #f59e0b; 
-            --info: #38bdf8; 
-            --success: #34d399;
-        }
-
-        /* DEEP VOID MODE */
-        [data-theme="singularity"] {
-            --bg-master: #000000; 
-            --bg-surface: rgba(0, 5, 15, 0.9); 
-            --term-bg: #000000;
-            --border-core: rgba(0, 255, 204, 0.3); 
-            --border-neon: #00ffcc; 
-            --text-main: #e0ffff; 
-            --text-mute: #8a2be2; 
-            --text-cyber: #00ffcc;
-            --shadow-core: 0 0 50px rgba(0, 255, 204, 0.2), inset 0 0 20px rgba(138, 43, 226, 0.2);
-            --alert: #ff003c; 
-            --warn: #ffea00; 
-            --info: #00f0ff; 
-            --success: #00ffcc;
         }
 
         body { 
@@ -99,28 +42,7 @@
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Scanlines & Void Noise */
-        [data-theme="dark"] body::before, 
-        [data-theme="god"] body::before, 
-        [data-theme="singularity"] body::before {
-            content: " "; 
-            display: block; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            bottom: 0; 
-            right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%); 
-            z-index: 9999; 
-            background-size: 100% 3px; 
-            pointer-events: none; 
-            opacity: 0.7;
-        }
-
-        [data-theme="singularity"] body::before { 
-            background-size: 100% 2px; 
-            opacity: 0.9; 
-        }
+        
 
         /* Glassmorphism Panels */
         .cyber-panel { 
@@ -213,13 +135,7 @@
             position: relative;
         }
 
-        [data-theme="god"] .btn-cyber { 
-            background: linear-gradient(135deg, var(--border-neon), var(--warn)); color: #000;
-        }
-
-        [data-theme="singularity"] .btn-cyber { 
-            background: linear-gradient(135deg, #00ffcc, #0ea5e9); color: #000; 
-        }
+        
 
         .btn-cyber:hover { 
             transform: translateY(-3px) scale(1.02); 
@@ -406,8 +322,7 @@
             box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
         }
 
-        [data-theme="god"] .log-avatar { background: var(--warn); color: #000; }
-        [data-theme="singularity"] .log-avatar { background: var(--info); color: #000; }
+        
 
         .log-details {
             flex-grow: 1;
@@ -476,9 +391,6 @@
             </a>
             
             <div class="d-flex gap-3 align-items-center">
-                <button class="btn-theme" onclick="cycleTheme()" title="Shift Environmental Display">
-                    <i class="fas fa-adjust" id="themeIcon"></i>
-                </button>
                 <a href="{{ url_for('dashboard') }}" class="btn btn-outline-danger fw-bold px-4" style="border-radius: 8px;">
                     <i class="fas fa-times me-2"></i> CLOSE LINK
                 </a>
@@ -584,28 +496,7 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🌌 THEME ENGINE LOGIC
-        // ==========================================
-        const themes = ['light', 'dark', 'god', 'singularity'];
-        let currentThemeIndex = 0;
-
-        function cycleTheme() {
-            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-            const newTheme = themes[currentThemeIndex];
-            
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('lisa_scanner_theme', newTheme);
-            updateThemeIcon(newTheme);
-        }
-
-        function updateThemeIcon(theme) {
-            const icon = document.getElementById('themeIcon');
-            if (theme === 'light') { icon.className = 'fas fa-sun text-warning'; } 
-            else if (theme === 'dark') { icon.className = 'fas fa-moon text-info'; } 
-            else if (theme === 'god') { icon.className = 'fas fa-radiation text-danger'; } 
-            else if (theme === 'singularity') { icon.className = 'fas fa-meteor text-cyber'; }
-        }
+        
 
         // ==========================================
         // 🧠 STATE MANAGEMENT (DATABASE DRIVEN)
@@ -636,11 +527,6 @@
         {% endif %}
 
         document.addEventListener("DOMContentLoaded", () => {
-            const savedTheme = localStorage.getItem('lisa_scanner_theme') || 'dark';
-            currentThemeIndex = themes.indexOf(savedTheme) > -1 ? themes.indexOf(savedTheme) : 1;
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeIcon(savedTheme);
-
             document.getElementById('scanCount').innerText = count + " CAPTURED";
         });
 
