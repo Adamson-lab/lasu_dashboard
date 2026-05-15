@@ -264,7 +264,11 @@
     </style>
 
     
-    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    
+
+    <link rel="icon" type="image/jpeg" sizes="32x32" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    <link rel="icon" type="image/jpeg" sizes="16x16" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
 </head>
 <body>
 
@@ -634,7 +638,11 @@ def show():
     <title>LASU Student Command Center</title>
 
     
-    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    
+
+    <link rel="icon" type="image/jpeg" sizes="32x32" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    <link rel="icon" type="image/jpeg" sizes="16x16" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
 </head>
 <body>
     <div id="login-screen" class="visible">
@@ -1760,10 +1768,18 @@ import types
                 const styleTag = `<style>${cssContent}</style>`;
                 html = html.replace('
     
-    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    
+
+    <link rel="icon" type="image/jpeg" sizes="32x32" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    <link rel="icon" type="image/jpeg" sizes="16x16" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
 </head>', `${styleTag}
     
-    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    
+
+    <link rel="icon" type="image/jpeg" sizes="32x32" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    <link rel="icon" type="image/jpeg" sizes="16x16" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
 </head>`);
             }
 
