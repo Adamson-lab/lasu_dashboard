@@ -133,17 +133,17 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Department</label>
-                        <select name="department" class="form-select" required>
-                            <option value="" disabled selected>-- Select Department --</option>
-                            <option value="Biology">Biology</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Economics">Economics</option>
-                            <option value="Engineering">Engineering</option>
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="Physics">Physics</option>
-                            <option value="Statistics">Statistics</option>
-                        </select>
+                        <input class="form-control" list="deptOptions" name="department" placeholder="-- Select or Type Department --" required autocomplete="off">
+                        <datalist id="deptOptions">
+                            <option value="Biology">
+                            <option value="Chemistry">
+                            <option value="Computer Science">
+                            <option value="Economics">
+                            <option value="Engineering">
+                            <option value="Mathematics">
+                            <option value="Physics">
+                            <option value="Statistics">
+                        </datalist>
                     </div>
                 </div>
                 <div class="modal-footer">
