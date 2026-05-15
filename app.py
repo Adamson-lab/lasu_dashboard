@@ -7688,7 +7688,19 @@ def print_quiz(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
     questions = Question.query.filter_by(quiz_id=quiz.id).all()
     
-    return render_template('print_quiz_template.html', quiz=quiz, questions=questions, date=datetime.now(), mode=mode)
+    # 🟢 NEW DYNAMIC AVERAGE ENGINE
+    all_course_quizzes = Quiz.query.filter_by(course_id=quiz.course_id).all()
+    
+    if all_course_quizzes:
+        # Sum all the time limits and divide by the number of quizzes
+        total_time = sum([q.time_limit for q in all_course_quizzes if q.time_limit])
+        avg_time = int(total_time / len(all_course_quizzes))
+    else:
+        # Failsafe
+        avg_time = quiz.time_limit or 30
+    
+    # Pass 'avg_time' to the HTML
+    return render_template('print_quiz_template.html', quiz=quiz, questions=questions, date=datetime.now(), mode=mode, avg_time=avg_time)
 
 
 @app.route('/student/take_quiz/<int:quiz_id>', methods=['GET', 'POST'])
