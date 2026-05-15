@@ -262,6 +262,9 @@
         @keyframes blink { 50% { opacity: 0.5; } }
 
     </style>
+
+    
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
 </head>
 <body>
 
@@ -629,6 +632,9 @@ def show():
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LASU Student Command Center</title>
+
+    
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
 </head>
 <body>
     <div id="login-screen" class="visible">
@@ -1752,7 +1758,13 @@ import types
 
             if (cssContent) {
                 const styleTag = `<style>${cssContent}</style>`;
-                html = html.replace('</head>', `${styleTag}</head>`);
+                html = html.replace('
+    
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+</head>', `${styleTag}
+    
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+</head>`);
             }
 
             // --- FIX 1: INJECT RICH MOCK DATA ---

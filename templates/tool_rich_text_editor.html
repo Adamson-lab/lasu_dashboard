@@ -385,6 +385,9 @@
         @keyframes rippleAnim { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 150px; height: 150px; opacity: 0; } }
 
     </style>
+
+    
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
 </head>
 <body>
 
@@ -1801,7 +1804,10 @@ End Sub
         const fullHTML = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head><meta charset='utf-8'><title>${docName}</title>
             <style> body { font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; } h1 { font-size: 24pt; color: #2F5496; } h2 { font-size: 16pt; color: #2F5496; } h3 { font-size: 14pt; color: #1F3763; } table { border-collapse: collapse; width: 100%; border: 1pt solid #a6a6a6; } th, td { border: 1pt solid #a6a6a6; padding: 4pt; } </style>
-        </head><body>${editor.innerHTML}</body></html>`;
+        
+    
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+</head><body>${editor.innerHTML}</body></html>`;
         const blob = new Blob(['\ufeff', fullHTML], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = `${docName}.doc`;
@@ -1850,7 +1856,10 @@ End Sub
 
     function printDocument() {
         const printWindow = window.open('', '', 'height=800,width=800');
-        printWindow.document.write(`<html><head><title>Print Document</title><style> body { font-family: 'Calibri', sans-serif; font-size: 11pt; padding:0; margin:0;} h1 { font-size: 24pt; color: #2F5496; } h2 { font-size: 16pt; color: #2F5496; } table { border-collapse: collapse; width: 100%; } th, td { border: 1pt solid #a6a6a6; padding: 4pt; } img { max-width: 100%; height: auto; } @page { size: Letter; margin: 1in; } </style></head><body>${editor.innerHTML}</body></html>`);
+        printWindow.document.write(`<html><head><title>Print Document</title><style> body { font-family: 'Calibri', sans-serif; font-size: 11pt; padding:0; margin:0;} h1 { font-size: 24pt; color: #2F5496; } h2 { font-size: 16pt; color: #2F5496; } table { border-collapse: collapse; width: 100%; } th, td { border: 1pt solid #a6a6a6; padding: 4pt; } img { max-width: 100%; height: auto; } @page { size: Letter; margin: 1in; } </style>
+    
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
+</head><body>${editor.innerHTML}</body></html>`);
         printWindow.document.close();
         setTimeout(() => { printWindow.print(); }, 250);
     }

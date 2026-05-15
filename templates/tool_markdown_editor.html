@@ -73,6 +73,9 @@
 
         @media (max-width: 992px) { .main-container { flex-direction: column; } .editor-pane, .preview-pane { height: 50vh; } }
     </style>
+
+    
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
 </head>
 <body>
 
@@ -250,6 +253,9 @@ This editor translates what you write into beautiful HTML on the right side.
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
     </style>
+
+    
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
 </head>
 <body>
 ${mdOutput.innerHTML}
