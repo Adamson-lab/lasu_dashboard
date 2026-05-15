@@ -6947,10 +6947,11 @@ def auto_quiz_generator():
                         db.session.add(target_quiz)
                         db.session.commit()
                     else:
+                        import math # 🟢 IMPORT MATH LIBRARY
                         # 🧠 INTELLIGENT BATCH SENSOR: Automatically calculate the average!
-                        # If a time already exists, add the new time and divide by 2.
                         if target_quiz.time_limit:
-                            target_quiz.time_limit = int((target_quiz.time_limit + quiz_time) / 2)
+                            # 🟢 ROUND UP to the nearest whole number so students never lose time
+                            target_quiz.time_limit = math.ceil((target_quiz.time_limit + quiz_time) / 2)
                         else:
                             target_quiz.time_limit = quiz_time
                         db.session.commit()
@@ -7696,9 +7697,11 @@ def print_quiz(quiz_id):
     # Safely extract all time limits that actually exist and are greater than 0
     valid_times = [q.time_limit for q in all_quizzes if q.time_limit is not None and q.time_limit > 0]
     
+    import math # 🟢 IMPORT MATH LIBRARY
+    
     if valid_times:
-        # Mathematically perfect average
-        avg_time = int(sum(valid_times) / len(valid_times))
+        # 🟢 Mathematically perfect average, rounded UP to the nearest whole minute
+        avg_time = math.ceil(sum(valid_times) / len(valid_times))
     else:
         avg_time = quiz.time_limit or 30
         
