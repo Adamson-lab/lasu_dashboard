@@ -40,7 +40,7 @@
 <body>
     
     {% if session.get('logged_in') %}
-    <nav class="navbar navbar-expand-xl navbar-dark bg-dark shadow-sm mb-4">
+    <nav class="navbar navbar-expand-xl navbar-dark bg-dark shadow-sm px-0 w-100 mb-4">
         <div class="container-fluid px-4">
             <a class="navbar-brand text-uppercase text-white" href="{{ url_for('dashboard') }}">LASU {{ session.role | default('ADMIN') }}</a>
             
@@ -99,7 +99,7 @@
                         <a class="nav-link text-secondary" href="{{ url_for('settings') }}">Settings</a>
                     </li>
                     
-                    <li class="nav-item border-start ms-2 ps-3 d-none d-xl-block">
+                    <li class="nav-item border-start ms-2 ps-3 me-4 d-none d-xl-block">
                         <span class="text-light small me-2">{{ session.user_name }}</span>
                         <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
                     </li>
