@@ -7941,35 +7941,43 @@ def mark_notification_read(alert_id):
 
 
 @app.route('/cbt/appeal/<int:appeal_id>/approve', methods=['POST'])
-@login_required # Use your existing decorator
+@login_required
 def approve_appeal(appeal_id):
     appeal = Appeal.query.get_or_404(appeal_id)
-    result = QuizResult.query.get(appeal.result_id)
+    
+    # 🟢 BUG FIX 1: Corrected the column name to 'quiz_result_id'
+    result = QuizResult.query.get(appeal.quiz_result_id)
     
     if result:
         student_id = result.student_id
         quiz_title = result.quiz.title
+        
+        # 🟢 BUG FIX 2: Safely store the quiz_id BEFORE we delete the result!
+        safe_quiz_id = result.quiz_id
         
         # 1. Create a "Good News" Notification for the student
         new_note = Notification(
             student_id=student_id,
             message=f"✅ APPEAL GRANTED: Your defense for '{quiz_title}' was accepted. You can now retake the assessment.",
             is_read=False,
-            timestamp=datetime.now()
+            timestamp=datetime.utcnow() # Always use utcnow for stability
         )
         db.session.add(new_note)
         
         # 2. DELETE the voided result so it disappears from the Lecturer's list
-        # This effectively "un-takes" the quiz for that student
         db.session.delete(result)
         
-        # 3. Mark the appeal as approved (optional if you want to keep logs)
+        # 3. Mark the appeal as approved
         appeal.status = 'Approved'
         
         db.session.commit()
-        flash('Appeal approved. Student has been granted a retake.', 'success')
-    
-    return redirect(url_for('view_quiz_results', quiz_id=result.quiz_id))
+        flash('✅ Appeal approved. Student has been granted a retake.', 'success')
+        
+        # 🟢 Use the safely stored ID for the redirect, OR go back to the appeals console
+        return redirect(url_for('lecturer_appeals'))
+        
+    flash('❌ Error: Result could not be found.', 'danger')
+    return redirect(url_for('lecturer_appeals'))
 
 
 # 🟢 ROUTE TO REVERSE A VOID (GRANT RETAKE)
