@@ -9699,14 +9699,28 @@ def lecturer_attendance_scanner():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    courses = Course.query.all()
-    
-    # 🟢 FETCH ABSOLUTE HISTORY FROM DATABASE (All Time)
-    history = db.session.query(DailyAttendance, Student, Course).filter(DailyAttendance.course_id.in_([c.id for c in my_data(Course).all()]))\
-        .join(Student, DailyAttendance.student_id == Student.id)\
-        .join(Course, DailyAttendance.course_id == Course.id)\
-        .order_by(DailyAttendance.id.desc()).all()
-        
+    role = session.get('role')
+    user_id = session.get('user_id')
+
+    # 🔐 SECURE MULTI-TENANCY: Silo courses and logs based on the user's role
+    if role == 'admin':
+        courses = Course.query.all()
+        my_course_ids = [c.id for c in courses]
+    else:
+        courses = Course.query.filter_by(lecturer_id=user_id).order_by(Course.code.asc()).all()
+        my_course_ids = [c.id for c in courses]
+
+    # If a regular lecturer has no courses assigned yet, return a clean blank slate history
+    if not my_course_ids:
+        history = []
+    else:
+        # 🔐 SECURE HISTORY POOL: Only queries attendance entries matching the user's silos
+        history = db.session.query(DailyAttendance, Student, Course)\
+            .join(Student, DailyAttendance.student_id == Student.id)\
+            .join(Course, DailyAttendance.course_id == Course.id)\
+            .filter(DailyAttendance.course_id.in_(my_course_ids))\
+            .order_by(DailyAttendance.id.desc()).all()
+            
     today_str = date.today().strftime('%Y-%m-%d')
 
     return render_template('attendance_scanner.html', courses=courses, history=history, today_str=today_str)
