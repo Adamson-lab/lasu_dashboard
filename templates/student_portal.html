@@ -944,8 +944,8 @@
                 <div class="card-body p-4 text-center">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="text-start">
-                            <h5 class="fw-bold mb-0 text-white"><i class="fas fa-broadcast-tower me-2"></i>LASU FM</h5>
-                            <small class="text-white-50">95.7 MHz</small>
+                            <h5 class="fw-bold mb-0 text-white" id="radio-station-name"><i class="fas fa-broadcast-tower me-2"></i>S Music FM</h5>
+                            <small class="text-white-50" id="radio-frequency">Lagos Live</small>
                         </div>
                         <span class="live-badge">LIVE ON AIR</span>
                     </div>
@@ -958,13 +958,21 @@
                     </div>
 
                     <audio id="campus-radio" preload="none">
-                        <source src="https://stream.zeno.fm/353hzx2cprhvv" type="audio/mpeg">
+                        <source src="https://stream.zeno.fm/353hzx2cprhvv" type="audio/mpeg" id="radio-source">
                         Your browser does not support audio.
                     </audio>
 
-                    <div class="d-flex align-items-center justify-content-center mt-4 gap-4">
-                        <button class="radio-control-btn" id="radio-play-btn" onclick="toggleRadio()">
+                    <div class="d-flex align-items-center justify-content-center mt-4 gap-3">
+                        <button class="btn btn-link text-white opacity-75" onclick="prevChannel()" style="font-size: 1.5rem; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        
+                        <button class="radio-control-btn mx-2" id="radio-play-btn" onclick="toggleRadio()">
                             <i class="fas fa-play" id="radio-icon"></i>
+                        </button>
+                        
+                        <button class="btn btn-link text-white opacity-75" onclick="nextChannel()" style="font-size: 1.5rem; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">
+                            <i class="fas fa-step-forward"></i>
                         </button>
                     </div>
 
@@ -2184,33 +2192,70 @@ function submitTransfer() {
         });
     });
 
-    // 📻 ROBUST RADIO PLAYER LOGIC
+    // 📻 MULTI-CHANNEL RADIO PLAYER LOGIC
+    const radioStations = [
+        { name: "S Music FM", freq: "Lagos Live", url: "https://stream.zeno.fm/353hzx2cprhvv" },
+        { name: "Naija Vibes", freq: "Afrobeats 24/7", url: "https://stream.zeno.fm/0r0xa792kwzuv" },
+        { name: "Gospel Rhythm", freq: "Inspirational", url: "https://stream.zeno.fm/f3yv4b8g52zuv" }
+    ];
+    let currentChannelIdx = 0;
+
     const radioAudio = document.getElementById('campus-radio');
+    const radioSource = document.getElementById('radio-source');
     const radioBtn = document.getElementById('radio-play-btn');
     const radioIcon = document.getElementById('radio-icon');
     const eqBars = document.querySelectorAll('.eq-bar');
+    const stationNameEl = document.getElementById('radio-station-name');
+    const stationFreqEl = document.getElementById('radio-frequency');
+
+    function loadChannel(index) {
+        const wasPlaying = !radioAudio.paused;
+        radioSource.src = radioStations[index].url;
+        stationNameEl.innerHTML = `<i class="fas fa-broadcast-tower me-2"></i>${radioStations[index].name}`;
+        stationFreqEl.innerText = radioStations[index].freq;
+        
+        radioAudio.load(); // Reload the audio engine with the new station
+        if (wasPlaying) {
+            playRadio();
+        }
+    }
+
+    window.nextChannel = function() {
+        currentChannelIdx = (currentChannelIdx + 1) % radioStations.length;
+        loadChannel(currentChannelIdx);
+    };
+
+    window.prevChannel = function() {
+        currentChannelIdx = (currentChannelIdx - 1 + radioStations.length) % radioStations.length;
+        loadChannel(currentChannelIdx);
+    };
+
+    function playRadio() {
+        radioAudio.play().then(() => {
+            radioIcon.className = "fas fa-pause";
+            radioBtn.style.background = "#00f260";
+            radioBtn.style.color = "#000";
+            eqBars.forEach(bar => bar.style.animationPlayState = "running");
+        }).catch(e => {
+            console.error("Stream Error:", e);
+            alert("This frequency is currently unreachable. Skip to the next channel!");
+            pauseRadio();
+        });
+    }
+
+    function pauseRadio() {
+        radioAudio.pause();
+        radioIcon.className = "fas fa-play";
+        radioBtn.style.background = "rgba(255,255,255,0.1)";
+        radioBtn.style.color = "#00f260";
+        eqBars.forEach(bar => bar.style.animationPlayState = "paused");
+    }
 
     window.toggleRadio = function() {
         if (radioAudio.paused) {
-            // Play
-            radioAudio.play().then(() => {
-                radioIcon.className = "fas fa-pause";
-                radioBtn.style.background = "#00f260";
-                radioBtn.style.color = "#000";
-                // Start Visualizer Animation
-                eqBars.forEach(bar => bar.style.animationPlayState = "running");
-            }).catch(e => {
-                console.error("Stream Error:", e);
-                alert("LASU FM Stream is currently offline or unreachable.");
-            });
+            playRadio();
         } else {
-            // Pause
-            radioAudio.pause();
-            radioIcon.className = "fas fa-play";
-            radioBtn.style.background = "rgba(255,255,255,0.1)";
-            radioBtn.style.color = "#00f260";
-            // Stop Visualizer Animation
-            eqBars.forEach(bar => bar.style.animationPlayState = "paused");
+            pauseRadio();
         }
     };
 
