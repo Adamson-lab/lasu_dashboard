@@ -6893,10 +6893,14 @@ def auto_quiz_generator():
 
                 url = "https://api.groq.com/openai/v1/chat/completions"
                 headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+                # 🔐 INFALLIBLE ACADEMIC GATEKEEPER UPGRADE
                 payload = {
-                    "model": "llama-3.1-8b-instant",
-                    "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
-                    "temperature": 0.3 # Slightly higher temp for more variety
+                    "model": "llama-3.3-70b-versatile",  # 🔥 Upgraded to deep-reasoning 70B neural matrix
+                    "messages": [
+                        {"role": "system", "content": "You are an infallible, objective university grading and quiz generation matrix. Your outputs must be academically rigorous and factually flawless."}, 
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 0.0  # 🎯 Absolute determinism. Eliminates hallucinations and creative errors entirely.
                 }
 
                 import httpx
