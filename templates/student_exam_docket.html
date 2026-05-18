@@ -36,9 +36,6 @@
         }
     </style>
 
-    
-    
-
     <link rel="icon" type="image/jpeg" sizes="32x32" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
     <link rel="icon" type="image/jpeg" sizes="16x16" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
@@ -50,7 +47,7 @@
 
     <div class="border-bottom pb-3 mb-4 d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-            <i class="fas fa-university fa-3x text-success me-3"></i>
+            <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" class="me-3" style="width: 65px; height: 65px; object-fit: contain;" alt="LASU Logo">
             <div>
                 <h2 class="fw-bold mb-0 text-dark">LASU</h2>
                 <h5 class="text-muted text-uppercase">Examination Docket</h5>
