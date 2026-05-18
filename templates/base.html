@@ -22,8 +22,8 @@
             overflow-x: hidden;
         }
 
-        /* Custom Nav Tweaks */
-        .navbar-nav .nav-link { font-size: 0.95rem; font-weight: 500; padding-left: 12px !important; padding-right: 12px !important; }
+        /* 🟢 FIXED: Shrunk font-size to 0.9rem and padding to 8px to create breathing room for the logout button! */
+        .navbar-nav .nav-link { font-size: 0.9rem; font-weight: 500; padding-left: 8px !important; padding-right: 8px !important; }
         .navbar-brand { font-size: 1.2rem; font-weight: bold; }
         
         /* Make colors pop on hover */
@@ -40,7 +40,7 @@
 <body>
     
     {% if session.get('logged_in') %}
-    <nav class="navbar navbar-expand-xl navbar-dark bg-dark shadow-sm px-0 w-100 mb-4">
+    <nav class="navbar navbar-expand-xl navbar-dark bg-dark shadow-sm px-0 mb-4">
         <div class="container-fluid px-4">
             <a class="navbar-brand text-uppercase text-white" href="{{ url_for('dashboard') }}">LASU {{ session.role | default('ADMIN') }}</a>
             
@@ -99,12 +99,12 @@
                         <a class="nav-link text-secondary" href="{{ url_for('settings') }}">Settings</a>
                     </li>
                     
-                    <li class="nav-item border-start ms-2 ps-3 me-4 d-none d-xl-block">
+                    <li class="nav-item border-start ms-2 ps-3 me-2 d-none d-xl-block">
                         <span class="text-light small me-2">{{ session.user_name }}</span>
-                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger text-white fw-bold shadow-sm">Logout</a>
                     </li>
                     <li class="nav-item d-xl-none mt-2">
-                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger w-100">Logout</a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger text-white fw-bold w-100 shadow-sm">Logout</a>
                     </li>
                 </ul>
             </div>
