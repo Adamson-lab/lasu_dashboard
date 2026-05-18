@@ -6,14 +6,13 @@
     <title>LASU Analytics</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile_fix.css') }}">
 
     <style>
-        /* Global CSS Reset to kill default browser margins */
+        /* Global CSS Reset */
         html, body {
             margin: 0 !important;
             padding: 0 !important;
@@ -22,16 +21,17 @@
             overflow-x: hidden;
         }
 
-        /* 🟢 FIXED: Shrunk font-size to 0.9rem and padding to 8px to create breathing room for the logout button! */
-        .navbar-nav .nav-link { font-size: 0.9rem; font-weight: 500; padding-left: 8px !important; padding-right: 8px !important; }
-        .navbar-brand { font-size: 1.2rem; font-weight: bold; }
-        
-        /* Make colors pop on hover */
+        /* 🟢 BULLETPROOF FIX: Forced white-space: nowrap on ALL links to prevent "₦ Finance" and names from wrapping and breaking the height */
+        .navbar-nav .nav-link { 
+            font-size: 0.85rem; 
+            font-weight: 500; 
+            padding-left: 7px !important; 
+            padding-right: 7px !important; 
+            white-space: nowrap !important; 
+        }
+        .navbar-brand { font-size: 1.1rem; font-weight: bold; white-space: nowrap !important; }
         .nav-link:hover { opacity: 0.8; transform: scale(1.05); transition: all 0.2s; }
     </style>
-
-    
-    
 
     <link rel="icon" type="image/jpeg" sizes="32x32" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
     <link rel="icon" type="image/jpeg" sizes="16x16" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
@@ -49,62 +49,26 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center text-nowrap">
+                <ul class="navbar-nav ms-auto align-items-center">
                     
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ url_for('dashboard') }}">Overview</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('dashboard') }}">Overview</a></li>
+                    <li class="nav-item"><a class="nav-link text-primary" href="{{ url_for('student_list') }}">Students</a></li>
+                    <li class="nav-item"><a class="nav-link text-success" href="{{ url_for('manage_courses') }}">Courses</a></li>
+                    <li class="nav-item"><a class="nav-link text-warning" href="{{ url_for('manage_timetable') }}">📅 Time-Table</a></li>
+                    <li class="nav-item"><a class="nav-link text-info" href="{{ url_for('manage_quizzes') }}">🖥️ CBT / Tests</a></li>
+                    <li class="nav-item"><a class="nav-link text-warning" href="{{ url_for('lecturer_appeals') }}"><i class="fas fa-gavel"></i> Appeals</a></li>
+                    <li class="nav-item"><a class="nav-link text-light" href="{{ url_for('lecturer_transfers') }}"><i class="fas fa-random text-primary"></i> Transfers</a></li>
+                    <li class="nav-item"><a class="nav-link text-danger" href="{{ url_for('course_analysis') }}">Analysis</a></li>
+                    <li class="nav-item"><a class="nav-link text-success fw-bold" href="{{ url_for('bursary_dashboard') }}">₦&nbsp;Finance</a></li>
+                    <li class="nav-item"><a class="nav-link text-light" href="{{ url_for('activity_log') }}">Logs</a></li>
+                    <li class="nav-item"><a class="nav-link text-secondary" href="{{ url_for('settings') }}">Settings</a></li>
                     
-                    <li class="nav-item">
-                        <a class="nav-link text-primary" href="{{ url_for('student_list') }}">Students</a>
+                    <li class="nav-item border-start border-secondary ms-2 ps-3 d-none d-xl-block" style="white-space: nowrap;">
+                        <span class="text-light small me-2" style="display: inline-block; vertical-align: middle;">{{ session.user_name }}</span>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger" style="display: inline-block; vertical-align: middle;">Logout</a>
                     </li>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link text-success" href="{{ url_for('manage_courses') }}">Courses</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link text-warning" href="{{ url_for('manage_timetable') }}">📅 Time-Table</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link text-info" href="{{ url_for('manage_quizzes') }}">🖥️ CBT / Tests</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link text-warning" href="{{ url_for('lecturer_appeals') }}">
-                            <i class="fas fa-gavel"></i> Appeals
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('lecturer_transfers') }}">
-                            <i class="fas fa-random text-primary"></i> Transfers
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link text-danger" href="{{ url_for('course_analysis') }}">Analysis</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link text-success fw-bold" href="{{ url_for('bursary_dashboard') }}">₦ Finance</a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('activity_log') }}">Logs</a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link text-secondary" href="{{ url_for('settings') }}">Settings</a>
-                    </li>
-                    
-                    <li class="nav-item border-start border-secondary ms-2 ps-3 me-3 d-none d-xl-flex align-items-center">
-                        <span class="text-light small me-3 text-nowrap fw-semibold">{{ session.user_name }}</span>
-                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger text-white fw-bold shadow-sm px-3">Logout</a>
-                    </li>
-                    <li class="nav-item d-xl-none mt-2">
-                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger text-white fw-bold w-100 shadow-sm">Logout</a>
+                    <li class="nav-item d-xl-none mt-2 w-100">
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger w-100">Logout</a>
                     </li>
                 </ul>
             </div>
