@@ -163,7 +163,9 @@
                                     
                                     <td class="course-title">
                                         {{ course.title }}<br>
-                                        <small class="text-muted">{{ course.students|length }} Students</small>
+                                        <small class="text-muted">
+                                            {{ course.students|length }} {% if course.students|length == 1 %}Student{% else %}Students{% endif %}
+                                        </small>
                                     </td>
                                     <td>{{ course.units }}</td>
                                     
