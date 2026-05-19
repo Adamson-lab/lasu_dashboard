@@ -31,26 +31,37 @@
             text-transform: uppercase;
         }
 
-        /* 🟢 FIXED: High-contrast security watermark fusing text with an ultra-visible multiply blend mode logo */
-        .watermark {
+        /* 🟢 FIXED BULLETPROOF LAYERING: Centered structural wrapper for high-visibility blending */
+        .watermark-wrapper {
             position: absolute;
-            top: 55%; left: 50%;
+            top: 55%;
+            left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
+            width: 100%;
+            text-align: center;
+            pointer-events: none;
+            z-index: 0; /* Ensures it sits beneath table text but above empty card backgrounds */
+        }
+
+        .watermark-text {
             font-size: 8rem;
             color: rgba(0, 0, 0, 0.03);
             font-weight: 900;
-            pointer-events: none;
-            z-index: -1;
-            text-align: center;
+            display: block;
+            line-height: 1;
             white-space: nowrap;
-            background-image: url("{{ url_for('static', filename='lasu_logo.jpg') }}");
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: 320px;
-            /* 🟢 The Savior Rule: Multiplies pixels to drop white backgrounds and render colors sharply */
+        }
+
+        .watermark-img {
+            width: 320px;
+            height: 320px;
+            object-fit: contain;
             mix-blend-mode: multiply !important;
-            opacity: 0.22 !important; /* 🟢 Bumped up opacity for absolute visibility */
-            padding: 40px;
+            opacity: 0.25 !important; /* Enhanced opacity visibility footprint */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
         
         /* 🏢 UNIFORM SYSTEM TYPOGRAPHY RULES */
@@ -75,6 +86,8 @@
             border-bottom: 2px solid #000;
             padding: 8px 5px;
             font-size: 0.95rem;
+            position: relative;
+            z-index: 2;
         }
         .info-row-item {
             margin-bottom: 4px;
@@ -85,6 +98,8 @@
             border: 2px solid #000 !important;
             font-size: 0.85rem !important;
             margin-bottom: 0px !important;
+            position: relative;
+            z-index: 2; /* Forces table text to stay legible over the background image layer */
         }
         .table-docket-core th { 
             background-color: #e2f0d9 !important; 
@@ -99,6 +114,7 @@
             padding: 5px 8px !important;
             color: #000 !important;
             line-height: 1.2 !important;
+            background-color: transparent !important; /* Prevents Bootstrap from bleaching the background image */
         }
         
         .passport-photo-frame {
@@ -114,22 +130,26 @@
             .docket-paper { box-shadow: none; width: 100%; max-width: 100%; padding: 15px 30px 55px 30px; border: none; }
             .no-print { display: none !important; }
             .btn { display: none !important; }
-            .watermark { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .watermark-img { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
 <body>
 
 <div class="docket-paper">
-    <div class="watermark">OFFICIAL</div>
+    
+    <div class="watermark-wrapper">
+        <span class="watermark-text">OFFICIAL</span>
+        <img src="{{ url_for('static', filename='lasu_logo.jpg') }}" class="watermark-img" alt="LASU Background Emblem">
+    </div>
 
-    <div class="row mb-1">
+    <div class="row mb-1" style="position: relative; z-index: 2;">
         <div class="col-12 text-start">
             <span class="watermark-top-left">OFFICIAL</span>
         </div>
     </div>
 
-    <div class="row align-items-center mb-3 pt-1">
+    <div class="row align-items-center mb-3 pt-1" style="position: relative; z-index: 2;">
         <div class="col-3 text-start">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data={{ student.matric_no }}" style="width: 90px; height: 90px;" class="p-1" alt="Verification QR">
         </div>
@@ -173,7 +193,7 @@
         </div>
     </div>
 
-    <div class="mb-3">
+    <div class="mb-3" style="position: relative; z-index: 2;">
         <div class="fw-bold text-dark text-uppercase small border-bottom pb-1 mb-1 font-monospace text-center" style="font-size: 0.85rem; letter-spacing: 0.5px;">
             {{ student.level }}L Registered Courses
         </div>
@@ -210,7 +230,7 @@
         </div>
     </div>
 
-    <div class="mb-4">
+    <div class="mb-4" style="position: relative; z-index: 2;">
         <div class="fw-bold text-dark text-uppercase small border-bottom pb-1 mb-1 font-monospace text-center" style="font-size: 0.85rem; letter-spacing: 0.5px;">
             CBT Examination Schedule
         </div>
@@ -249,7 +269,7 @@
         </table>
     </div>
 
-    <div class="row mt-4 pt-2 align-items-end">
+    <div class="row mt-4 pt-2 align-items-end" style="position: relative; z-index: 2;">
         <div class="col-5 text-center">
             <div class="border-bottom border-dark w-100 mx-auto mb-1" style="border-width: 1.5px !important;"></div>
             <small class="fw-bold text-uppercase text-dark font-monospace" style="font-size: 0.75rem;">Student Signature</small>
@@ -261,14 +281,14 @@
         </div>
     </div>
     
-    <div class="w-100 border-top border-secondary mt-5 pt-2 d-flex justify-content-between text-muted font-monospace" style="font-size: 0.65rem; position: absolute; bottom: 10px; left: 0; padding: 0 45px;">
+    <div class="w-100 border-top border-secondary mt-5 pt-2 d-flex justify-content-between text-muted font-monospace" style="font-size: 0.65rem; position: absolute; bottom: 10px; left: 0; padding: 0 45px; z-index: 2;">
         <div>© 2026 Lagos State University DICT</div>
         <div>System Verified Operational Slip</div>
         <div>Page 1 of 1</div>
     </div>
 </div>
 
-<div class="text-center mt-4 mb-5 no-print d-flex gap-2 justify-content-center">
+<div class="text-center mt-4 mb-5 no-print d-flex gap-2 justify-content-center" style="position: relative; z-index: 2;">
     <a href="{{ url_for('student_portal') }}" class="btn btn-secondary px-4 rounded-pill"><i class="fas fa-arrow-left me-2"></i>Back to Portal</a>
     <button onclick="window.print()" class="btn btn-success px-4 rounded-pill"><i class="fas fa-print me-2"></i>Print Docket</button>
 </div>
