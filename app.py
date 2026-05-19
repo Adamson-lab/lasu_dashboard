@@ -4679,25 +4679,25 @@ def fix_exam_venue_column():
 
 
 # ==========================================
-# 🎓 PERSONALIZED EXAM DOCKET (REAL-TIME SYNC)
+# 🎓 PERSONALIZED EXAM DOCKET (REAL-TIME DATABASE STATE SYNC)
 # ==========================================
 @app.route('/student/exam_docket')
 def student_exam_docket():
     if not session.get('student_logged_in'):
         return redirect(url_for('student_login'))
 
-    student = Student.query.get(session['student_id'])
+    # 🟢 THE CRITICAL BACKEND FIX: Query the absolute live database record directly
+    # This completely bypasses any static year-recalculators, ensuring Admin/Lecturer/Portal settings changes sync instantly!
+    student_id = session.get('student_id')
+    student_data = Student.query.get_or_404(student_id)
 
-    # 1. Get all courses this student is registered for
-    my_courses = student.registered_courses
-
-    # 2. Filter: Keep only courses where the Lecturer has set an Exam Date
+    # Gather registered courses and pull active exam timetables chronologically
+    my_courses = student_data.registered_courses
     upcoming_exams = [c for c in my_courses if c.exam_date]
-
-    # 3. Sort chronologically (earliest exam first)
     upcoming_exams.sort(key=lambda x: x.exam_date)
 
-    return render_template('student_exam_docket.html', student=student, exams=upcoming_exams)
+    # Pass the fresh, un-mutated 'student_data' object straight to the docket template
+    return render_template('student_exam_docket.html', student=student_data, exams=upcoming_exams)
 
 
 
