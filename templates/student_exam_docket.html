@@ -295,20 +295,25 @@
 </div>
 
 <script>
-    // 🟢 SECURE AUTOMATED FILE CONVERSION FLOW
     function downloadOfficialPDF() {
         const targetElement = document.getElementById('docket-canvas-target');
         
-        // Target explicit structural configuration setups
+        // 🟢 FIXED CALIBRATION: Overhauled engine params to preserve perfect width coordinates on rendering
         const compileOptions = {
-            margin:       [10, 10, 10, 10],
-            filename:     '{{ student.matric_no }}_e-docket.pdf', // Forces explicit string name tracking matching user matric number
+            margin:       [8, 8, 8, 8],
+            filename:     '{{ student.matric_no }}_e-docket.pdf',
             image:        { type: 'jpeg', quality: 1.0 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
+            // 🟢 CRITICAL FIX: Locked container bounding viewport sizes explicitly to prevent mobile text-break wrap distortion
+            html2canvas:  { 
+                scale: 2, 
+                useCORS: true, 
+                logging: false,
+                width: 900,
+                windowWidth: 900
+            },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // Execute asynchronous binary compiling process instantly
         html2pdf().set(compileOptions).from(targetElement).save();
     }
 </script>
