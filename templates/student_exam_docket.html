@@ -31,13 +31,13 @@
             text-transform: uppercase;
         }
 
-        /* 🟢 FIXED: High-fidelity hybrid security background watermark system containing BOTH text and logo emblem */
+        /* 🟢 FIXED: High-contrast security watermark fusing text with an ultra-visible multiply blend mode logo */
         .watermark {
             position: absolute;
             top: 55%; left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
             font-size: 8rem;
-            color: rgba(0,0,0,0.025);
+            color: rgba(0, 0, 0, 0.03);
             font-weight: 900;
             pointer-events: none;
             z-index: -1;
@@ -47,8 +47,9 @@
             background-repeat: no-repeat;
             background-position: center;
             background-size: 320px;
-            opacity: 0.15;
-            background-blend-mode: multiply;
+            /* 🟢 The Savior Rule: Multiplies pixels to drop white backgrounds and render colors sharply */
+            mix-blend-mode: multiply !important;
+            opacity: 0.22 !important; /* 🟢 Bumped up opacity for absolute visibility */
             padding: 40px;
         }
         
@@ -113,7 +114,7 @@
             .docket-paper { box-shadow: none; width: 100%; max-width: 100%; padding: 15px 30px 55px 30px; border: none; }
             .no-print { display: none !important; }
             .btn { display: none !important; }
-            .watermark { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .watermark { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
