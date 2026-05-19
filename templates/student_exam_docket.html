@@ -19,6 +19,7 @@
             min-height: 1000px;
             position: relative;
             border: 2px solid #000;
+            z-index: 1;
         }
         
         /* 🟢 BOLDED SECURITY IDENTIFIER DESIGNATION */
@@ -30,14 +31,25 @@
             text-transform: uppercase;
         }
 
+        /* 🟢 FIXED: High-fidelity hybrid security background watermark system containing BOTH text and logo emblem */
         .watermark {
             position: absolute;
-            top: 50%; left: 50%;
+            top: 55%; left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
             font-size: 8rem;
-            color: rgba(0,0,0,0.03);
-            font-weight: bold;
+            color: rgba(0,0,0,0.025);
+            font-weight: 900;
             pointer-events: none;
+            z-index: -1;
+            text-align: center;
+            white-space: nowrap;
+            background-image: url("{{ url_for('static', filename='lasu_logo.jpg') }}");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 320px;
+            opacity: 0.15;
+            background-blend-mode: multiply;
+            padding: 40px;
         }
         
         /* 🏢 UNIFORM SYSTEM TYPOGRAPHY RULES */
@@ -101,6 +113,7 @@
             .docket-paper { box-shadow: none; width: 100%; max-width: 100%; padding: 15px 30px 55px 30px; border: none; }
             .no-print { display: none !important; }
             .btn { display: none !important; }
+            .watermark { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
