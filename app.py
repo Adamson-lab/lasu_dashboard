@@ -905,6 +905,9 @@ def dashboard():
 
     pending_count = Complaint.query.filter_by(status='Pending').count()
     attendance_status = "danger" if attendance_rate < 70 else "success"
+    # 🟢 DYNAMIC FACULTY FETCH
+    faculties = [d[0] for d in db.session.query(Student.department).distinct().all() if d[0]]
+    
     
     return render_template(
         'dashboard.html',
@@ -916,6 +919,7 @@ def dashboard():
         pending_count=pending_count,
         upcoming_schedules=upcoming_schedules,
         recent_activities=recent_activities,
+        faculties=faculties, # 🟢 PASS THIS TO HTML
         active_orbital_data=active_orbital_data
     )
 

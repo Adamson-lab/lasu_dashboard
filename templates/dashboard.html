@@ -1156,22 +1156,14 @@
                     <div class="stat-label mb-3">Active Faculty Nodes</div>
                     <div style="display: flex; justify-content: space-around; align-items: center; height: 100%;">
                         <!-- 🟢 NEW: Interactive Faculty Click Events -->
-                        <div class="text-center">
-                            <div class="faculty-node" style="animation-delay: 0s;" onclick="showFacultyStats('Science')"></div>
-                            <small class="text-muted mt-2 d-block">Science</small>
-                        </div>
-                        <div class="text-center">
-                            <div class="faculty-node" style="animation-delay: 0.5s;" onclick="showFacultyStats('Engineering')"></div>
-                            <small class="text-muted mt-2 d-block">Engineering</small>
-                        </div>
-                        <div class="text-center">
-                            <div class="faculty-node" style="animation-delay: 1s;" onclick="showFacultyStats('Arts')"></div>
-                            <small class="text-muted mt-2 d-block">Arts</small>
-                        </div>
-                        <div class="text-center">
-                            <div class="faculty-node" style="animation-delay: 1.5s;" onclick="showFacultyStats('Law')"></div>
-                            <small class="text-muted mt-2 d-block">Law</small>
-                        </div>
+                        {% for faculty in faculties %}
+<div class="text-center">
+    <div class="faculty-node" onclick="showFacultyStats('{{ faculty }}')"></div>
+    <small class="text-muted mt-2 d-block">{{ faculty }}</small>
+</div>
+{% else %}
+<small class="text-muted text-center w-100">No departments found in database.</small>
+{% endfor %}
                     </div>
                 </div>
             </div>
