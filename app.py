@@ -4804,8 +4804,37 @@ def student_exam_docket():
 
     # 🛑 DEFCON GATEKEEPER: Absolute block if fees are unpaid
     if not student_data.has_paid_fees:
-        flash('⛔ ACCESS DENIED: Your exam docket has been revoked due to outstanding bursary fees. Please clear your debt to restore access.', 'danger')
-        return redirect(url_for('student_portal'))
+        # Instead of a flash message, we render a dedicated lockdown screen instantly
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Access Denied - {student_data.matric_no}</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        </head>
+        <body style="background: #0a0a0a; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif;">
+            <div class="text-center p-5 bg-white" style="border: 4px solid #dc3545; border-radius: 16px; box-shadow: 0 0 50px rgba(220, 53, 69, 0.4); max-width: 600px; position: relative; overflow: hidden;">
+                <div style="background: #dc3545; color: white; position: absolute; top: 0; left: 0; width: 100%; padding: 12px; font-weight: 900; letter-spacing: 3px;">SECURITY PROTOCOL ACTIVE</div>
+                <i class="fas fa-radiation-alt fa-5x text-danger mt-5 mb-4" style="animation: pulse 1.5s infinite;"></i>
+                <h1 class="fw-bold text-danger mb-2" style="letter-spacing: 1px;">ACCESS DENIED</h1>
+                <h4 class="text-dark mb-4 fw-bold">EXAM DOCKET REVOKED</h4>
+                <p class="text-muted mb-5" style="font-size: 1.1rem; line-height: 1.6;">
+                    Dear <b class="text-dark">{student_data.name}</b>,<br>
+                    Your access to the official LASU Examination Docket has been suspended due to outstanding bursary fees. Please clear your debt via the Student Portal to restore access.
+                </p>
+                <a href="/portal" class="btn btn-danger px-5 py-3 fw-bold rounded-pill" style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;"><i class="fas fa-arrow-left me-2"></i> Return to Portal</a>
+            </div>
+            <style>
+                @keyframes pulse {{
+                    0% {{ transform: scale(1); opacity: 1; }}
+                    50% {{ transform: scale(1.1); opacity: 0.7; }}
+                    100% {{ transform: scale(1); opacity: 1; }}
+                }}
+            </style>
+        </body>
+        </html>
+        """, 403
 
     # Gather registered courses and pull active exam timetables chronologically
     my_courses = student_data.registered_courses
