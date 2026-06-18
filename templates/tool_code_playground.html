@@ -1766,21 +1766,7 @@ import types
 
             if (cssContent) {
                 const styleTag = `<style>${cssContent}</style>`;
-                html = html.replace('
-    
-    
-
-    <link rel="icon" type="image/jpeg" sizes="32x32" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
-    <link rel="icon" type="image/jpeg" sizes="16x16" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
-</head>', `${styleTag}
-    
-    
-
-    <link rel="icon" type="image/jpeg" sizes="32x32" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
-    <link rel="icon" type="image/jpeg" sizes="16x16" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
-</head>`);
+                html = html.replace('</head>', `${styleTag}\n</head>`);
             }
 
             // --- FIX 1: INJECT RICH MOCK DATA ---
