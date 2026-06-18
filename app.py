@@ -908,6 +908,33 @@ def dashboard():
     # 🟢 DYNAMIC FACULTY FETCH
     faculties = [d[0] for d in db.session.query(Student.department).distinct().all() if d[0]]
     
+    # 🟢 INTELLIGENT LASU ACADEMIC TIMELINE SYNC
+    now = datetime.now()
+    # Matrix heuristic for LASU Ojo standard calendar (16 weeks total)
+    if 1 <= now.month <= 5:
+        sem_name = "Harmattan (1st) Semester"
+        start_date = datetime(now.year, 1, 15)
+    elif 6 <= now.month <= 11:
+        sem_name = "Rain (2nd) Semester"
+        start_date = datetime(now.year, 6, 10)
+    else:
+        sem_name = "Session Break"
+        start_date = now
+
+    days_elapsed = (now - start_date).days
+    current_week = max(1, (days_elapsed // 7) + 1)
+    total_weeks = 16
+
+    if current_week > total_weeks:
+        current_week = total_weeks
+        timeline_status = "Exams & Grading Phase"
+    elif sem_name == "Session Break":
+        timeline_status = "University on Break"
+        current_week = 0
+    else:
+        timeline_status = f"Week {current_week} of {total_weeks}"
+
+    timeline_progress = min(100, int((current_week / total_weeks) * 100)) if total_weeks else 0
     
     return render_template(
         'dashboard.html',
@@ -919,8 +946,11 @@ def dashboard():
         pending_count=pending_count,
         upcoming_schedules=upcoming_schedules,
         recent_activities=recent_activities,
-        faculties=faculties, # 🟢 PASS THIS TO HTML
-        active_orbital_data=active_orbital_data
+        faculties=faculties, 
+        active_orbital_data=active_orbital_data,
+        timeline_name=sem_name,              # 🟢 PASS TO HTML
+        timeline_status=timeline_status,     # 🟢 PASS TO HTML
+        timeline_progress=timeline_progress  # 🟢 PASS TO HTML
     )
 
 
