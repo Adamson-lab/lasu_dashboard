@@ -3306,6 +3306,54 @@ def debtors_list():
 
     return render_template('debtors_list.html', debtors=debtors)
 
+# 🟢 DEFCON 1 BURSARY SWEEPER
+@app.route('/bursary/defcon_sweep', methods=['POST'])
+@admin_only
+def trigger_defcon_sweep():
+    # 1. Gather all debtors
+    debtors = Student.query.filter_by(has_paid_fees=False).all()
+    
+    if not debtors:
+        flash("✅ Zero debtors found. The matrix is clean.", "success")
+        return redirect(url_for('bursary_dashboard'))
+
+    success_count = 0
+    skipped_count = 0
+
+    # 2. Fire the emails
+    for student in debtors:
+        # Check if they have set their personal email
+        if student.personal_email:
+            subject = "🚨 URGENT: Exam Docket Revoked (Outstanding Fees)"
+            body = f"""Dear {student.name},
+
+Our records indicate that you have outstanding bursary fees for the current academic session. 
+
+Your access to the LASU Examination Docket has been temporarily SUSPENDED. 
+
+To restore your access and prevent further academic restrictions, please log in to your Student Portal immediately and complete your payment via Paystack.
+
+Student ID: {student.matric_no}
+Status: DEBTOR
+
+Thank you,
+LASU Bursary Department
+"""
+            try:
+                # Send the actual email using your existing SendGrid function
+                send_email_notification(student.personal_email, subject, body)
+                success_count += 1
+            except Exception as e:
+                print(f"Failed to email {student.name}: {e}")
+                skipped_count += 1
+        else:
+            skipped_count += 1
+
+    # 3. Report back to Admin
+    flash(f"☢️ DEFCON SWEEP COMPLETE: {success_count} warning emails successfully transmitted. ({skipped_count} skipped due to missing email addresses).", "warning")
+    
+    return redirect(url_for('bursary_dashboard'))
+
 
 @app.route('/bursary/verify', methods=['POST'])
 def verify_payment():

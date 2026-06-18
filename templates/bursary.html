@@ -5,6 +5,13 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>₦ Bursary Department</h2>
         <div class="d-flex gap-2">
+            <!-- 🟢 DEFCON 1 TRIGGER BUTTON -->
+            <form action="{{ url_for('trigger_defcon_sweep') }}" method="POST" onsubmit="return confirm('WARNING: You are about to initiate DEFCON 1. This will instantly send a real warning email to EVERY student who owes fees, revoking their exam access. Are you sure you want to deploy this protocol?');">
+                <button type="submit" class="btn btn-dark border-danger fw-bold text-danger" style="box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">
+                    <i class="fas fa-radiation fa-spin me-2"></i> INITIATE DEFCON SWEEP
+                </button>
+            </form>
+
             <a href="{{ url_for('debtors_list') }}" class="btn btn-danger">📋 View Debtors List</a>
             <button onclick="window.print()" class="btn btn-outline-dark">🖨️ Print Report</button>
         </div>
