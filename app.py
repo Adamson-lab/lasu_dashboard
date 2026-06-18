@@ -4799,17 +4799,19 @@ def student_exam_docket():
     if not session.get('student_logged_in'):
         return redirect(url_for('student_login'))
 
-    # 🟢 THE CRITICAL BACKEND FIX: Query the absolute live database record directly
-    # This completely bypasses any static year-recalculators, ensuring Admin/Lecturer/Portal settings changes sync instantly!
     student_id = session.get('student_id')
     student_data = Student.query.get_or_404(student_id)
+
+    # 🛑 DEFCON GATEKEEPER: Absolute block if fees are unpaid
+    if not student_data.has_paid_fees:
+        flash('⛔ ACCESS DENIED: Your exam docket has been revoked due to outstanding bursary fees. Please clear your debt to restore access.', 'danger')
+        return redirect(url_for('student_portal'))
 
     # Gather registered courses and pull active exam timetables chronologically
     my_courses = student_data.registered_courses
     upcoming_exams = [c for c in my_courses if c.exam_date]
     upcoming_exams.sort(key=lambda x: x.exam_date)
 
-    # Pass the fresh, un-mutated 'student_data' object straight to the docket template
     return render_template('student_exam_docket.html', student=student_data, exams=upcoming_exams)
 
 
