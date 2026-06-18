@@ -908,34 +908,64 @@ def dashboard():
     # 🟢 DYNAMIC FACULTY FETCH
     faculties = [d[0] for d in db.session.query(Student.department).distinct().all() if d[0]]
     
-    # 🟢 INTELLIGENT LASU ACADEMIC TIMELINE SYNC
+    # 🟢 OMNISCIENT LASU CALENDAR ENGINE (2025/2026 MAPPING)
+    from datetime import datetime
     now = datetime.now()
-    # Matrix heuristic for LASU Ojo standard calendar (16 weeks total)
-    if 1 <= now.month <= 5:
-        sem_name = "Harmattan (1st) Semester"
-        start_date = datetime(now.year, 1, 15)
-    elif 6 <= now.month <= 11:
-        sem_name = "Rain (2nd) Semester"
-        start_date = datetime(now.year, 6, 10)
-    else:
-        sem_name = "Session Break"
-        start_date = now
-
-    days_elapsed = (now - start_date).days
-    current_week = max(1, (days_elapsed // 7) + 1)
-    total_weeks = 16
-
-    if current_week > total_weeks:
-        current_week = total_weeks
-        timeline_status = "Exams & Grading Phase"
-    elif sem_name == "Session Break":
-        timeline_status = "University on Break"
-        current_week = 0
-    else:
-        timeline_status = f"Week {current_week} of {total_weeks}"
-
-    timeline_progress = min(100, int((current_week / total_weeks) * 100)) if total_weeks else 0
     
+    # LASU Official Anchor Dates for 2025/2026 Session
+    sem1_start = datetime(2025, 10, 6)   # 1st Semester Lectures Begin
+    sem1_exams = datetime(2026, 1, 12)   # 1st Semester Exams Begin
+    sem1_end = datetime(2026, 2, 6)      # 1st Semester Exams End
+    
+    sem2_start = datetime(2026, 3, 2)    # 2nd Semester Lectures Begin
+    sem2_exams = datetime(2026, 5, 25)   # 2nd Semester Exams Begin
+    sem2_end = datetime(2026, 6, 19)     # 2nd Semester Exams End
+    session_break = datetime(2026, 7, 20) # Senate Approval & Break
+    
+    total_lecture_weeks = 12
+    total_exam_weeks = 4
+    total_semester_weeks = total_lecture_weeks + total_exam_weeks # 16 weeks total
+    
+    timeline_name = "Session Break"
+    timeline_status = "University on Break"
+    timeline_progress = 100
+    timeline_color = "secondary"
+
+    # Engine Logic
+    if sem1_start <= now <= sem1_end:
+        timeline_name = "Harmattan (1st) Semester"
+        if now < sem1_exams:
+            days_elapsed = (now - sem1_start).days
+            current_week = (days_elapsed // 7) + 1
+            timeline_status = f"Week {current_week} of {total_semester_weeks} (Lectures)"
+            timeline_progress = int((current_week / total_semester_weeks) * 100)
+            timeline_color = "primary"
+        else:
+            days_elapsed = (now - sem1_exams).days
+            exam_week = (days_elapsed // 7) + 1
+            timeline_status = f"Week {total_lecture_weeks + exam_week} of {total_semester_weeks} (Examinations)"
+            timeline_progress = int(((total_lecture_weeks + exam_week) / total_semester_weeks) * 100)
+            timeline_color = "danger"
+            
+    elif sem2_start <= now <= session_break:
+        timeline_name = "Rain (2nd) Semester"
+        if now < sem2_exams:
+            days_elapsed = (now - sem2_start).days
+            current_week = (days_elapsed // 7) + 1
+            timeline_status = f"Week {current_week} of {total_semester_weeks} (Lectures)"
+            timeline_progress = int((current_week / total_semester_weeks) * 100)
+            timeline_color = "primary" if current_week < 10 else "warning"
+        elif now <= sem2_end:
+            days_elapsed = (now - sem2_exams).days
+            exam_week = (days_elapsed // 7) + 1
+            timeline_status = f"Week {total_lecture_weeks + exam_week} of {total_semester_weeks} (Examinations)"
+            timeline_progress = int(((total_lecture_weeks + exam_week) / total_semester_weeks) * 100)
+            timeline_color = "danger"
+        else:
+            timeline_status = "Grading & Result Processing"
+            timeline_progress = 100
+            timeline_color = "success"
+
     return render_template(
         'dashboard.html',
         total=total_students,
@@ -946,11 +976,12 @@ def dashboard():
         pending_count=pending_count,
         upcoming_schedules=upcoming_schedules,
         recent_activities=recent_activities,
-        faculties=faculties, 
+        faculties=faculties,
         active_orbital_data=active_orbital_data,
-        timeline_name=sem_name,              # 🟢 PASS TO HTML
-        timeline_status=timeline_status,     # 🟢 PASS TO HTML
-        timeline_progress=timeline_progress  # 🟢 PASS TO HTML
+        timeline_name=timeline_name,
+        timeline_status=timeline_status,
+        timeline_progress=timeline_progress,
+        timeline_color=timeline_color
     )
 
 
