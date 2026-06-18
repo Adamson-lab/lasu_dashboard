@@ -1151,22 +1151,28 @@
 
         <div class="row g-4 mb-4">
             
-            <div class="col-xl-4">
-                <div class="card-v8">
+            <div class="col-xl-4 col-lg-6 col-md-12">
+                <div class="card-v8 mb-4">
                     <div class="stat-label mb-3">Active Departmental Nodes</div>
-                    <div style="display: flex; justify-content: space-around; align-items: center; height: 100%;">
-                        <!-- 🟢 NEW: Interactive Faculty Click Events -->
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 15px; width: 100%;">
                         {% for faculty in faculties %}
-<div class="text-center">
-    <div class="faculty-node" onclick="showFacultyStats('{{ faculty }}')"></div>
-    <small class="text-muted mt-2 d-block">{{ faculty }}</small>
-</div>
-{% else %}
-<small class="text-muted text-center w-100">No departments found in database.</small>
-{% endfor %}
+                        <div class="text-center" style="cursor: pointer;" onclick="saveAndGo('{{ faculty }}')">
+                            <div class="faculty-node" style="margin: 0 auto;"></div>
+                            <small class="text-muted mt-2 d-block" style="font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ faculty }}</small>
+                        </div>
+                        {% else %}
+                        <small class="text-muted text-center w-100">No departments found in database.</small>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
+
+            <script>
+                function saveAndGo(deptName) {
+                    localStorage.setItem('selectedDept', deptName);
+                    window.location.href = "{{ url_for('student_list') }}";
+                }
+            </script>
 
             <!-- 🟢 ARCHITECT FIX: REAL WEATHER SYNC FOR LAGOS/OJO -->
             <div class="col-xl-4">
