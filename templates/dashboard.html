@@ -1154,7 +1154,7 @@
             <div class="col-xl-4 col-lg-6 col-md-12">
                 <div class="card-v8 mb-4">
                     <div class="stat-label mb-3">Active Departmental Nodes</div>
-                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 15px; width: 100%;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 15px; width: 100%;">
                         {% for faculty in faculties %}
                         <div class="text-center" style="cursor: pointer;" onclick="saveAndGo('{{ faculty }}')">
                             <div class="faculty-node" style="margin: 0 auto;"></div>
@@ -1169,8 +1169,8 @@
 
             <script>
                 function saveAndGo(deptName) {
-                    localStorage.setItem('selectedDept', deptName);
-                    window.location.href = "{{ url_for('student_list') }}";
+                    // 🟢 THE FIX: Send the department securely via the URL instead of localStorage
+                    window.location.href = "/students?highlight=" + encodeURIComponent(deptName);
                 }
             </script>
 
