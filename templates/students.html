@@ -228,44 +228,59 @@
     btnTop.addEventListener("click", function(e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
     btnBottom.addEventListener("click", function(e) { e.preventDefault(); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); });
 
-    // 🟢 INTELLIGENT HIGHLIGHT & SCROLL LOGIC
+    // 🟢 SENSOR-DRIVEN HIGHLIGHT LOGIC
     document.addEventListener("DOMContentLoaded", function() {
-        // Read the target department from the URL
         const params = new URLSearchParams(window.location.search);
         const targetDept = params.get('highlight');
         
         if (targetDept) {
-            let firstMatch = null;
+            let matches = [];
             
+            // 1. Find all matching students and highlight them
             document.querySelectorAll('#tableBody tr').forEach(row => {
                 const deptCell = row.cells[2]; 
                 
                 if (deptCell && deptCell.innerText.trim().toLowerCase() === targetDept.trim().toLowerCase()) {
-                    if (!firstMatch) firstMatch = row;
-                    
-                    // 🟢 THE FIX: Bootstrap blocks row backgrounds, so we color the <td> cells directly!
+                    matches.push(row);
                     Array.from(row.children).forEach(td => {
-                        td.style.transition = "background-color 0.5s ease";
+                        td.style.transition = "background-color 0.8s ease";
                         td.style.backgroundColor = "rgba(239, 68, 68, 0.4)";
                     });
-                    
-                    // Remove flash after 5 seconds
-                    setTimeout(() => { 
-                        Array.from(row.children).forEach(td => {
-                            td.style.backgroundColor = ""; 
-                        });
-                    }, 5000);
                 }
             });
             
-            // Intelligent Auto-Scroll
-            if (firstMatch) {
+            if (matches.length > 0) {
+                // 2. Jump to the first student
                 setTimeout(() => {
-                    firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    matches[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 500);
+
+                // 3. Deploy the Viewport Tripwire on the LAST student
+                const lastMatch = matches[matches.length - 1];
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        // Once the last highlighted student is visible on the screen
+                        if (entry.isIntersecting) {
+                            // Wait exactly 3 seconds, then wipe the highlights from all rows
+                            setTimeout(() => {
+                                matches.forEach(row => {
+                                    Array.from(row.children).forEach(td => {
+                                        td.style.backgroundColor = ""; 
+                                    });
+                                });
+                            }, 3000);
+                            
+                            // Disengage the sensor so it only happens once
+                            observer.disconnect();
+                        }
+                    });
+                }, { threshold: 0.1 }); // Triggers as soon as 10% of the last row is visible
+                
+                observer.observe(lastMatch);
             }
             
-            // Clean the URL silently so the flash doesn't repeat if they refresh the page
+            // 4. Clean the URL silently
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     });
