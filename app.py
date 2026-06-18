@@ -7020,7 +7020,7 @@ def auto_quiz_generator():
     return render_template('lecturer_auto_quiz.html', courses=courses)
 
 # ==========================================
-# 🗑️ DELETE QUIZ ROUTE
+# 🗑️ DELETE QUIZ ROUTE (FIXED)
 # ==========================================
 @app.route('/cbt/delete_quiz/<int:quiz_id>', methods=['POST'])
 def delete_quiz(quiz_id):
@@ -7031,14 +7031,15 @@ def delete_quiz(quiz_id):
         # 1. Get the Quiz
         quiz = Quiz.query.get_or_404(quiz_id)
         
-        # 2. Delete all Questions linked to this Quiz first
+        # 2. 🟢 FIX: Clear all results and questions first to satisfy DB constraints
+        QuizResult.query.filter_by(quiz_id=quiz.id).delete()
         Question.query.filter_by(quiz_id=quiz.id).delete()
         
         # 3. Delete the Quiz itself
         db.session.delete(quiz)
         db.session.commit()
         
-        flash(f'✅ Quiz "{quiz.title}" deleted successfully.', 'success')
+        flash(f'✅ Quiz "{quiz.title}" and all related results deleted successfully.', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'❌ Error deleting quiz: {str(e)}', 'danger')
