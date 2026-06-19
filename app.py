@@ -3323,7 +3323,7 @@ def send_sms_notification(phone_number, message):
     url = "https://api.ng.termii.com/api/sms/send"
     payload = {
         "to": phone_number,
-        "from": "LASU Admin",  # 🟢 LOCKED IN TO YOUR REQUESTED SENDER ID
+        "from": "AdamsonHQ",  # 🟢 LOCKED IN TO YOUR REQUESTED SENDER ID
         "sms": message,
         "type": "plain",
         "channel": "generic",
