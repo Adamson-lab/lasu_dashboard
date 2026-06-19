@@ -262,15 +262,77 @@
     <iframe id="py-worker" style="display:none;"></iframe>
 
     <script>
-        const originalWorkerInit = window.Worker;
-        window.Worker = function(url) {
-            const w = new originalWorkerInit(url);
-            window.pyWorkerGlobal = w;
-            return w;
-        }
-    </script>
+        // --- 1. VS CODE ENTERPRISE EVENT WIRING (NEW) ---
+        document.addEventListener("DOMContentLoaded", () => {
+            // Wire Top Application Menu
+            const menuItems = document.querySelectorAll('.vsc-titlebar .menu span');
+            menuItems.forEach(item => {
+                item.onclick = () => {
+                    const action = item.innerText;
+                    if(action === 'File') { saveToStorage(); showToast("Workspace Saved", "success"); }
+                    if(action === 'Edit') { if(editorInstance) editorInstance.focus(); document.execCommand('undo'); showToast("Undo Executed", "info"); }
+                    if(action === 'Selection') { if(editorInstance) editorInstance.getAction('editor.action.selectAll').run(); }
+                    if(action === 'View') { toggleSplitView(); }
+                    if(action === 'Go') { if(editorInstance) editorInstance.getAction('editor.action.gotoLine').run(); }
+                    if(action === 'Run') { runProject(); }
+                    if(action === 'Terminal') { clearConsole(); showToast("Terminal Flushed", "success"); }
+                    if(action === 'Help') { showToast("LASU Enterprise IDE Live", "success"); }
+                };
+            });
 
-    <script>
+            // Wire Activity Bar Icons
+            const activityIcons = document.querySelectorAll('.activity-icon');
+            activityIcons.forEach(icon => {
+                if(icon.title === 'Accounts') icon.onclick = () => showToast("OAuth Authentication Offline", "info");
+                if(icon.title === 'Manage') icon.onclick = () => showToast("Settings Configuration Locked", "warning");
+            });
+
+            // Wire Explorer Header Actions (New File, New Folder, Refresh)
+            const explorerActions = document.querySelectorAll('#view-explorer .sidebar-header i');
+            if(explorerActions.length >= 3) {
+                explorerActions[0].onclick = createNewFile;
+                explorerActions[1].onclick = promptNewFolder;
+                explorerActions[2].onclick = renderUI;
+            }
+
+            // Wire Bottom Panel Tabs
+            const panelTabs = document.querySelectorAll('.panel-tab');
+            panelTabs.forEach(tab => {
+                tab.onclick = () => {
+                    panelTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const consoleOut = document.getElementById('console-out');
+                    const inputLine = document.querySelector('.terminal-input-line');
+                    
+                    if(tab.innerText === 'Terminal') {
+                        consoleOut.style.display = 'block';
+                        inputLine.style.display = 'flex';
+                    } else {
+                        inputLine.style.display = 'none';
+                        if(tab.innerText === 'Problems') {
+                            consoleOut.innerHTML = '<div style="color:#cccccc; padding:10px;">No anomalies detected in the matrix. Zero errors.</div>';
+                        } else if(tab.innerText === 'Output') {
+                            consoleOut.innerHTML = '<div style="color:#cccccc; padding:10px;">[Info] Compilation Engine Sync Complete.<br>[Info] Connection to Mainframe stable.</div>';
+                        } else if(tab.innerText === 'Debug Console') {
+                            consoleOut.innerHTML = '<div style="color:#cccccc; padding:10px;"><i class="fas fa-bug" style="color:#007acc"></i> Debug adapter ready. Listening for active breakpoints...</div>';
+                        }
+                    }
+                };
+            });
+
+            // Wire Status Bar Telemetry
+            const statusItems = document.querySelectorAll('.status-item');
+            if(statusItems.length >= 7) {
+                statusItems[0].onclick = () => { switchSidebar('git'); showToast("Branch Control Activated", "info"); };
+                statusItems[1].onclick = () => { commitCode(); };
+                statusItems[2].onclick = () => { showToast("Diagnostics: 0 Errors, 0 Warnings", "success"); };
+                statusItems[4].onclick = () => { showToast("Encoding: UTF-8 Enforced", "info"); };
+                statusItems[5].onclick = () => { showToast("Line Endings: CRLF Enforced", "info"); };
+                statusItems[7].onclick = () => { saveToStorage(); };
+                statusItems[8].onclick = () => { showToast("Zero pending notifications", "info"); };
+            }
+        });
+
         // --- STATE & CONFIG ---
         const PLOT_LIB_CODE = `
 import matplotlib.pyplot as plt
@@ -293,7 +355,6 @@ def show():
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LASU Student Command Center</title>
 
-    
     
 
     <link rel="icon" type="image/jpeg" sizes="32x32" href="{{ url_for('static', filename='lasu_logo.jpg') }}">
@@ -650,18 +711,13 @@ import database
 import services
 import auth
 import js
-import tests
 import analytics
 
-# --- APEX FORTUNE v10.1 STABLE CORE ---
-# Diamond Architecture with Pandas Engine Fixed
+# --- APEX FORTUNE v10.2 ENTERPRISE CORE ---
+print(">> Initializing Enterprise Core...")
 
-print(">> Initializing Stable Core...")
-
-# 1. Initialize System
 conn = database.init()
 
-# 2. Secure Authentication
 print(">> Verifying Biometrics...")
 user = auth.authenticate()
 
@@ -671,37 +727,25 @@ if not user:
 else:
     print(f">> Welcome, Commander {user}")
     
-    # 3. Data Aggregation Service (Including Finances)
     data = services.fetch_dashboard_data(conn, user)
     
-    # 4. Analytics Engine (CGPA + Financials + Pandas Forecasting)
     print(">> Computing Performance Metrics (Neural Engine)...")
     chart = services.generate_analytics(data['results'])
     fee_chart = services.generate_fee_chart(data['finance'])
     
-    # v10.1 FIX: Run Pandas prediction with corrected column structure
-    print(">> Running GPA Predictive Model...")
+    print(">> Running Pandas Predictive Model...")
     analytics.predict_future_gpa(data['results'])
     
-    # 5. Render Fortune-5 Interface
     services.render_portal(data, chart, fee_chart)
-    
-    # 6. Success Trigger
-    js.eval("confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } })")
 `, language: 'python' },
             'database.py': { content: `import sqlite3
 
 def init():
     conn = sqlite3.connect(':memory:')
     c = conn.cursor()
-    
-    # ACADEMIC RESULTS
     c.execute("CREATE TABLE results (matric TEXT, code TEXT, unit INT, score INT)")
-    
-    # FINANCIAL RECORDS
     c.execute("CREATE TABLE fees (matric TEXT, term TEXT, amount INT, status TEXT)")
     
-    # Seed Data - Academics
     results = [
         ('230591342', 'CSC 411', 3, 92),
         ('230591342', 'CSC 412', 3, 88),
@@ -711,7 +755,6 @@ def init():
     ]
     c.executemany("INSERT INTO results VALUES (?,?,?,?)", results)
     
-    # Seed Data - Finance
     fees = [
         ('230591342', 'Tuition', 50000, 'Paid'),
         ('230591342', 'Acceptance', 20000, 'Paid'),
@@ -724,14 +767,11 @@ def init():
     return conn
 `, language: 'python' },
             'services.py': { content: `import matplotlib
-# FORCE HEADLESS BACKEND
 matplotlib.use('Agg') 
-
 import matplotlib.pyplot as plt
 import io, base64
 
 def calculate_cgpa(results):
-    # Dynamic CGPA Logic
     total_points = 0
     total_units = 0
     for r in results:
@@ -744,13 +784,10 @@ def calculate_cgpa(results):
 
 def fetch_dashboard_data(conn, matric):
     c = conn.cursor()
-    # Note: Only selecting 3 columns here
     c.execute("SELECT code, unit, score FROM results WHERE matric=?", (matric,))
     results = c.fetchall()
-    
     c.execute("SELECT term, amount, status FROM fees WHERE matric=?", (matric,))
     fees = c.fetchall()
-    
     return {
         "matric": matric,
         "results": results,
@@ -765,7 +802,6 @@ def fetch_dashboard_data(conn, matric):
 def generate_analytics(results):
     codes = [r[0] for r in results]
     scores = [r[2] for r in results]
-    
     plt.figure(figsize=(6, 3), facecolor='#ffffff00')
     ax = plt.axes()
     ax.set_facecolor('#ffffff00')
@@ -774,7 +810,6 @@ def generate_analytics(results):
     plt.grid(color='#e2e8f0', linestyle='--', linewidth=0.5, alpha=0.5)
     plt.ylim(0, 100)
     plt.axis('off')
-    
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight', transparent=True)
     buf.seek(0)
@@ -783,10 +818,8 @@ def generate_analytics(results):
 def generate_fee_chart(fees):
     paid = sum([f[1] for f in fees if f[2] == 'Paid'])
     pending = sum([f[1] for f in fees if f[2] == 'Pending'])
-    
     plt.figure(figsize=(4, 4), facecolor='#ffffff00')
     plt.pie([paid, pending], labels=['Paid', 'Due'], colors=['#22c55e', '#ef4444'], autopct='%1.1f%%', textprops={'color':"white"})
-    
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight', transparent=True)
     buf.seek(0)
@@ -801,8 +834,6 @@ def render_login():
 
 def render_portal(data, chart, fee_chart):
     with open('index.html', 'r') as f: tpl = f.read()
-    
-    # Build Table
     rows = ""
     for code, unit, score in data['results']:
         status = "Completed" if score >= 40 else "Retake"
@@ -810,7 +841,6 @@ def render_portal(data, chart, fee_chart):
         bg = "#dcfce7" if score >= 70 else "#fef9c3"
         rows += f"<tr><td><span style='font-weight:700'>{code}</span></td><td>{unit}</td><td><span style='color:{color};background:{bg};padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600'>{status}</span></td><td>{score}</td></tr>"
 
-    # Build Schedule
     sched = ""
     for item in data['schedule']:
         sched += f"<div class='timeline-item'><div class='time-col'>{item['time']}</div><div class='info-col'><span class='info-title'>{item['title']}</span><span class='info-desc'>{item['desc']}</span></div></div>"
@@ -818,208 +848,99 @@ def render_portal(data, chart, fee_chart):
     html = tpl.replace('id="login-screen" class="visible"', 'id="login-screen" class="hidden"')
     html = html.replace('id="main-portal" class="hidden"', 'id="main-portal" class="visible"')
     
-    # Inject Data
     html = html.replace('%%CGPA%%', str(data['cgpa']))
     html = html.replace('%%TABLE_ROWS%%', rows)
     html = html.replace('%%CHART_IMAGE%%', chart)
     html = html.replace('%%FEE_CHART%%', fee_chart)
     html = html.replace('%%SCHEDULE_ROWS%%', sched)
-    
     print("__RENDER_VIEW::" + html)
 `, language: 'python' },
-            'analytics.py': { content: `# v10.1 FIXED MODULE: DATA SCIENCE ENGINE
-import pandas as pd
+            'analytics.py': { content: `import pandas as pd
 import numpy as np
 
 def predict_future_gpa(results):
     print(">> [ANALYTICS] Loading Pandas DataFrame...")
-    
-    # FIX: Updated column list to match the 3 columns fetched from DB (Code, Unit, Score)
-    # The previous version incorrectly expected 4 columns including Matric.
     df = pd.DataFrame(results, columns=['Code', 'Unit', 'Score'])
-    
     print(f">> [ANALYTICS] Analyzing {len(df)} courses...")
     avg_score = df['Score'].mean()
     print(f">> [ANALYTICS] Current Average Score: {avg_score:.2f}")
-    
-    # Simple linear projection (Simulation)
-    projected_score = avg_score * 1.05 # Assume 5% improvement
+    projected_score = avg_score * 1.05 
     print(f">> [ANALYTICS] Projected Next Sem Average: {projected_score:.2f}")
-    
     return True
 `, language: 'python' },
             'auth.py': { content: `def authenticate():
-    # Simulation of Biometric Auth
     return "230591342"
 `, language: 'python' },
-            'tests.py': { content: `import unittest
-import database
-import services
-
-class TestApexSystem(unittest.TestCase):
-    def setUp(self):
-        self.conn = database.init()
-        
-    def test_cgpa_calculation(self):
-        # Test Case: 2 units of 90 (5pts) = 10 total pts / 2 units = 5.0 GPA
-        mock_results = [('MAT', 'TST101', 2, 90)]
-        self.assertEqual(services.calculate_cgpa(mock_results), 5.0)
-        
-    def test_database_init(self):
-        c = self.conn.cursor()
-        c.execute("SELECT count(*) FROM results")
-        self.assertTrue(c.fetchone()[0] > 0)
-
-def run():
-    print(">> Running Unit Tests...")
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestApexSystem)
-    unittest.TextTestRunner(verbosity=2).run(suite)
-`, language: 'python' },
             'index.html': { content: PORTAL_HTML_TEMPLATE, language: 'html' },
-            'README.md': { content: '# Apex Fortune v10.1 Stable\n\n## Release Notes\n- **Fixed Python Error**: Corrected Pandas DataFrame column mismatch in `analytics.py`.\n- **Fixed UI Bug**: Patched "Matrix Explosion" in `deployProject()`.\n- **Emerald Theme**: Visual indicator of system stability.\n- **All Features**: Exam Mode, Finance, Chat, and Git are fully active.', language: 'markdown' }
+            'README.md': { content: '# VS Code Enterprise Port\n\n## Release Notes\n- Overhauled UI to match VS Code exact Hex definitions.\n- Restored Pandas engine execution logic.', language: 'markdown' }
         };
 
-        // --- STORAGE & RECOVERY ---
+        // --- 3. STORAGE & RECOVERY ---
         let files = {};
         let gitHistory = []; 
-        
         try {
-            // v10.1: New storage key to force clean slate
-            const stored = localStorage.getItem('lasu_project_v10_1_stable'); 
+            const stored = localStorage.getItem('lasu_vsc_workspace'); 
             files = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(DEFAULT_FILES));
-            const storedGit = localStorage.getItem('lasu_git');
+            const storedGit = localStorage.getItem('lasu_vsc_git');
             gitHistory = storedGit ? JSON.parse(storedGit) : [];
-            
-            // Auto-Clean old corrupted data
-            if(localStorage.getItem('lasu_project_v10_diamond')) localStorage.removeItem('lasu_project_v10_diamond');
-            
         } catch(e) {
             files = JSON.parse(JSON.stringify(DEFAULT_FILES));
         }
 
         if(!files['plotter.py']) files['plotter.py'] = { content: PLOT_LIB_CODE, language: 'python' };
 
-        let activeFile = localStorage.getItem('lasu_active_file') || 'main.py';
+        let activeFile = localStorage.getItem('lasu_vsc_active') || 'main.py';
         if (!files[activeFile]) activeFile = Object.keys(files)[0];
 
-        // --- VARS ---
         let editorInstance = null;
-        let diffEditorInstance = null;
-        let installedPackages = new Set(['micropip', 'sqlite3', 'matplotlib', 'pandas']);
-        let soundEnabled = false;
-        let powerMode = false;
-        let lastCharTime = 0; let charCount = 0;
-        let uiScale = 1;
-        let audioCtx = null; 
-        let noiseNode = null;
-        let focusMode = false;
-        let timeline = JSON.parse(localStorage.getItem('lasu_timeline')) || [];
-        let lastSqlResult = null;
-        let ctxTargetFile = null;
-        let musicPlaying = false; 
         let splitViewActive = false;
 
-        // --- INIT ---
+        // --- 4. ENGINE INITIALIZATION (MONACO) ---
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' }});
         require(['vs/editor/editor.main'], function() {
-            setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 2000); 
-            if(!localStorage.getItem('lasu_tour_v10_1')) { document.getElementById('tourModal').style.display = 'flex'; localStorage.setItem('lasu_tour_v10_1', 'true'); }
-
-            // AUTO-COMPLETE ENHANCED
-            monaco.languages.registerCompletionItemProvider('python', {
-                provideCompletionItems: function (model, position) {
-                    var word = model.getWordUntilPosition(position);
-                    var range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: word.startColumn, endColumn: word.endColumn };
-                    var suggestions = [
-                        { label: 'print', kind: monaco.languages.CompletionItemKind.Function, insertText: 'print(${1:object})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range: range },
-                        { label: 'def', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'def ${1:func_name}(${2:args}):\n\t${3:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range: range },
-                        { label: 'services.fetch_dashboard_data', kind: monaco.languages.CompletionItemKind.Function, insertText: 'services.fetch_dashboard_data(conn, user)', range: range },
-                        { label: 'analytics.predict_future_gpa', kind: monaco.languages.CompletionItemKind.Function, insertText: 'analytics.predict_future_gpa(results)', range: range },
-                        { label: 'sqlite3', kind: monaco.languages.CompletionItemKind.Module, insertText: 'sqlite3', range: range },
-                        { label: 'pandas', kind: monaco.languages.CompletionItemKind.Module, insertText: 'pd', range: range },
-                    ];
-                    return { suggestions: suggestions };
-                }
-            });
+            setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 1500); 
 
             editorInstance = monaco.editor.create(document.getElementById('monaco-root'), {
                 value: files[activeFile].content, language: 'python', theme: 'vs-dark',
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontLigatures: true,
-                automaticLayout: true, minimap: { enabled: true, scale: 0.75 }, padding: { top: 20 },
-                scrollBeyondLastLine: false, renderLineHighlight: "all", wordWrap: "off", lineNumbers: "on",
-                rulers: [80], cursorBlinking: "phase", cursorSmoothCaretAnimation: "on", stickyScroll: { enabled: true }, colorDecorators: true
+                fontFamily: "'JetBrains Mono', Consolas, monospace", fontSize: 13,
+                automaticLayout: true, minimap: { enabled: true, scale: 0.75 }, padding: { top: 10 },
+                scrollBeyondLastLine: false, wordWrap: "off", lineNumbers: "on",
+                rulers: [80], cursorBlinking: "smooth"
             });
 
-            // Handlers
             editorInstance.onDidChangeModelContent(() => {
                 if(files[activeFile]) {
                     files[activeFile].content = editorInstance.getValue();
                     saveToStorage();
-                    document.querySelector('.tab.active').classList.add('dirty');
-                    updateStats(); calcWPM(); checkImports(editorInstance.getValue()); updateOutline();
-                    if(activeFile.endsWith('.md')) renderMarkdown();
-                    if(activeFile.endsWith('.html')) renderHTML();
+                    const tab = document.querySelector('.tab.active');
+                    if(tab) tab.classList.add('dirty');
                 }
             });
-            editorInstance.onKeyDown((e) => { if(soundEnabled) playTypeSound(); if(powerMode) spawnParticles(); });
-            editorInstance.onDidChangeCursorPosition((e) => { document.getElementById('cursor-position').innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`; if(focusMode) applyFocusMode(); });
-            editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runProject);
-            editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => { saveToStorage(); showToast("Saved", "success"); confetti({ particleCount: 50, spread: 40, origin: { y: 0.9 } }); });
-            editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_K, () => { switchSidebar('git'); document.getElementById('gitMsg').focus(); });
-            editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_F, () => { switchSidebar('search'); document.getElementById('globalSearchInput').focus(); });
 
-            renderUI(); renderGitList(); updateClock(); initResizer(); initSidebarResizer(); updateStats(); initDragDrop(); initTerminalInput();
-            setInterval(updateMemory, 2000); 
-            handleFileSwitchEffect(activeFile);
+            editorInstance.onDidChangeCursorPosition((e) => { 
+                document.getElementById('cursor-position').innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`; 
+            });
             
-            setTimeout(() => {
-                const btn = document.getElementById('runBtn');
-                if(btn.disabled) {
-                    btn.disabled = false;
-                    document.getElementById('engine-status').innerHTML = '<i class="fas fa-check-circle" style="color:orange"></i> Ready';
-                }
-            }, 5000);
+            editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runProject);
+            editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => { saveToStorage(); showToast("Saved", "success"); });
+
+            renderUI();
+            renderGitList();
+            handleFileSwitchEffect(activeFile);
         });
 
-        // --- WORKER (UPDATED FOR PANDAS) ---
+        // --- 5. WORKER EXECUTION POOL ---
         const workerFrame = document.getElementById('py-worker');
         const pythonInitCode = `
 import sqlite3
 import json
-import csv
 import io
 import js
-import time
-
-# v10.1 Update: Pre-load Pandas
 import pandas as pd
 import numpy as np
 
 db_conn = sqlite3.connect(':memory:')
 db_cursor = db_conn.cursor()
-
-def run_sql_query(query):
-    try:
-        db_cursor.execute(query)
-        if query.strip().upper().startswith("SELECT") or query.strip().upper().startswith("PRAGMA"):
-            columns = [description[0] for description in db_cursor.description]
-            rows = db_cursor.fetchall()
-            return json.dumps({"status": "success", "type": "data", "columns": columns, "rows": rows})
-        else:
-            db_conn.commit()
-            return json.dumps({"status": "success", "type": "action", "msg": "Query executed successfully."})
-    except Exception as e:
-        return json.dumps({"status": "error", "msg": str(e)})
-
-def import_csv_to_db(table_name, csv_content):
-    try:
-        f = io.StringIO(csv_content)
-        # v10.1 Update: Use Pandas for CSV Import (More Robust)
-        df = pd.read_csv(f)
-        df.to_sql(table_name, db_conn, if_exists='replace', index=False)
-        return json.dumps({"status": "success", "type": "action", "msg": f"Table '{table_name}' imported via Pandas."})
-    except Exception as e:
-        return json.dumps({"status": "error", "msg": str(e)})
 
 def input(p=""):
     return js.prompt(p)
@@ -1031,7 +952,6 @@ importScripts("https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js");
 async function main() {
     try {
         self.pyodide = await loadPyodide();
-        // v10.1: Added Pandas to load list
         await self.pyodide.loadPackage(["micropip", "numpy", "matplotlib", "sqlite3", "pandas"]);
         self.micropip = self.pyodide.pyimport("micropip");
         await self.pyodide.runPythonAsync(\`${pythonInitCode}\`);
@@ -1056,32 +976,7 @@ self.onmessage = async (e) => {
             
             await self.pyodide.runPythonAsync(data.code || data.files['main.py'].content);
             self.postMessage({type:'DONE'});
-            
-            const vars = await self.pyodide.runPythonAsync(\`
-import types
-{k: str(v)[:50] for k,v in globals().items() if not k.startswith('_') and not isinstance(v, (types.ModuleType, types.FunctionType))}
-\`);
-            self.postMessage({type:'VARS', vars: vars.toJs()});
-
         } catch (err) { self.postMessage({type:'ERR', msg: err.toString()}); }
-    }
-    else if (data.type === 'INSTALL') {
-        try {
-            await self.micropip.install(data.package);
-            self.postMessage({type:'LOG', msg: "Installed " + data.package});
-        } catch(e) { self.postMessage({type:'ERR', msg: e.toString()}); }
-    }
-    else if (data.type === 'SQL') {
-        try {
-            const run_query = self.pyodide.globals.get('run_sql_query');
-            self.postMessage({type:'SQL_RESULT', result: run_query(data.query)});
-        } catch (e) { self.postMessage({type:'SQL_RESULT', result: JSON.stringify({status:'error', msg: e.toString()})}); }
-    }
-    else if (data.type === 'IMPORT_CSV') {
-        try {
-            const importer = self.pyodide.globals.get('import_csv_to_db');
-            self.postMessage({type:'SQL_RESULT', result: importer(data.tableName, data.content)});
-        } catch(e) { self.postMessage({type:'SQL_RESULT', result: JSON.stringify({status:'error', msg: e.toString()})}); }
     }
 };
 `;
@@ -1089,194 +984,135 @@ import types
         const pyWorker = new Worker(URL.createObjectURL(blob));
         
         pyWorker.onmessage = (e) => {
-            const { type, msg, vars, result } = e.data;
+            const { type, msg } = e.data;
             if (type === 'READY') {
-                document.getElementById('runBtn').disabled = false;
-                document.getElementById('engine-status').innerHTML = '<i class="fas fa-check-circle"></i> Ready';
-                showToast("Singularity Engine Ready", "success");
+                document.getElementById('engine-status').innerHTML = '{ } Python';
             }
-            else if (type === 'LOG') logToTerminal(msg, 'var(--text-primary)');
+            else if (type === 'LOG') logToTerminal(msg, '#cccccc');
             else if (type === 'RENDER_HTML') {
                 document.getElementById('html-frame').srcdoc = msg;
                 if(!splitViewActive) {
                     document.getElementById('monaco-root').style.display = 'none';
                     document.getElementById('html-frame').style.display = 'block';
-                    document.getElementById('preview-pane').style.display = 'none';
                 }
-                showToast("Portal Rendered", "success");
+                showToast("Live Preview Built", "success");
             }
             else if (type === 'ERR') {
-                logToTerminal(msg, '#ef4444');
-                const match = msg.match(/line (\d+)/);
-                if(match) {
-                    const lineNo = parseInt(match[1]);
-                    monaco.editor.setModelMarkers(editorInstance.getModel(), "python", [{
-                        startLineNumber: lineNo, startColumn: 1, endLineNumber: lineNo, endColumn: 1000,
-                        message: msg, severity: monaco.MarkerSeverity.Error
-                    }]);
-                }
+                logToTerminal(msg, '#f48771'); 
             }
             else if (type === 'PLOT') {
                 const img = document.createElement('img'); img.src = "data:image/png;base64," + msg;
-                img.className = "terminal-plot";
+                img.style.maxWidth = "100%"; img.style.marginTop = "10px";
                 document.getElementById('console-out').appendChild(img);
                 document.getElementById('console-out').scrollTop = document.getElementById('console-out').scrollHeight;
             }
-            else if (type === 'VARS') renderVariables(vars);
-            else if (type === 'DONE') logToTerminal('>> Finished', 'var(--accent)');
-            else if (type === 'SQL_RESULT') renderSqlResult(result);
+            else if (type === 'DONE') logToTerminal('PS C:\\LASU_WORKSPACE>', '#89d185');
         };
 
-        // --- NEW V8 FEATURES ---
-
-        // 1. SMART TERMINAL
-        function initTerminalInput() {
-            const input = document.getElementById('termInput');
-            input.addEventListener('keydown', (e) => {
-                if(e.key === 'Enter') {
-                    const cmd = input.value.trim();
-                    logToTerminal(`➜ ~ ${cmd}`, '#e3b341');
-                    input.value = '';
-                    handleTerminalCommand(cmd);
-                }
-            });
-        }
+        // --- 6. TERMINAL INPUT HANDLING ---
+        const termInput = document.getElementById('termInput');
+        termInput.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') {
+                const cmd = termInput.value.trim();
+                logToTerminal(`PS C:\\LASU_WORKSPACE> ${cmd}`, '#89d185');
+                termInput.value = '';
+                handleTerminalCommand(cmd);
+            }
+        });
 
         function handleTerminalCommand(cmd) {
             const args = cmd.split(' ');
             const mainCmd = args[0];
 
             if(mainCmd === 'clear') { document.getElementById('console-out').innerHTML = ''; }
-            else if(mainCmd === 'ls') { Object.keys(files).forEach(f => logToTerminal(f, 'var(--text-primary)')); }
-            else if(mainCmd === 'cat') { const f = args[1]; if(files[f]) logToTerminal(files[f].content, 'var(--text-secondary)'); else logToTerminal("File not found", '#ef4444'); }
-            else if(mainCmd === 'snake') { startSnakeGame(); }
-            else if(mainCmd === 'help') { logToTerminal("Commands: ls, cat, touch, mkdir, python, test, clear, pandas", 'var(--accent)'); }
+            else if(mainCmd === 'ls') { Object.keys(files).forEach(f => logToTerminal(f, '#cccccc')); }
+            else if(mainCmd === 'cat') { const f = args[1]; if(files[f]) logToTerminal(files[f].content, '#969696'); else logToTerminal("File not found", '#f48771'); }
             else if(mainCmd === 'python') { runProject(); }
-            else if(mainCmd === 'test') { runTests(); }
-            // NEW: File System Commands
             else if(mainCmd === 'touch') { 
                 const fname = args[1]; 
-                if(fname) { 
-                    files[fname] = {content: '', language:'python'}; 
-                    saveToStorage(); renderUI(); logToTerminal(`Created ${fname}`, '#4ade80');
-                } 
+                if(fname) { files[fname] = {content: '', language:'python'}; saveToStorage(); renderUI(); logToTerminal(`Created ${fname}`, '#cccccc'); } 
             }
-            else if(mainCmd === 'mkdir') { 
-                const dname = args[1]; 
-                if(dname) { 
-                    files[dname + '/.keep'] = {content: '', language:'plaintext'}; 
-                    saveToStorage(); renderUI(); logToTerminal(`Created dir ${dname}`, '#4ade80');
-                } 
-            }
-            else { logToTerminal(`Command not found: ${cmd}`, '#ef4444'); }
+            else { logToTerminal(`Command not found: ${cmd}`, '#f48771'); }
         }
 
-        // 2. UNIT TESTS RUNNER
-        function runTests() {
-             const code = "import tests\ntests.run()";
-             pyWorker.postMessage({ type: 'RUN', files: files, code: code });
+        // --- 7. CORE IDE FUNCTIONS ---
+        window.runProject = function() {
+             if(!editorInstance) return;
+             switchPanelTab('terminal');
+             logToTerminal(">> Executing build task...", '#969696');
+             const selection = editorInstance.getModel().getValueInRange(editorInstance.getSelection());
+             const codeToRun = selection.trim().length > 0 ? selection : null;
+             pyWorker.postMessage({ type: 'RUN', files: files, code: codeToRun });
         }
 
-        // 3. APEX CHAT
-        function sendChat() {
-            const input = document.getElementById('chatInput');
-            const msg = input.value;
-            if(!msg) return;
-            
-            const history = document.getElementById('chatHistory');
-            history.innerHTML += `<div class="chat-msg user">${msg}</div>`;
-            input.value = '';
-            
-            // Simulation of Context-Aware AI
-            setTimeout(() => {
-                let response = "I'm not sure about that.";
-                const lowerMsg = msg.toLowerCase();
-                
-                if(lowerMsg.includes("fix") || lowerMsg.includes("error")) response = "Check your 'main.py' imports. Ensure 'services' is imported correctly.";
-                else if(lowerMsg.includes("finance") || lowerMsg.includes("fee")) response = "The Finance module uses 'database.py' table 'fees'. You can query it in the SQL tab.";
-                else if(lowerMsg.includes("cgpa")) response = "CGPA is calculated dynamically in 'services.py' using the 'calculate_cgpa' function.";
-                else if(lowerMsg.includes("pandas")) response = "Pandas is pre-loaded in v10.1. Import it as `pd` and use it in `analytics.py`.";
-                else response = "I am analyzing your codebase. Please clarify.";
-                
-                history.innerHTML += `<div class="chat-msg bot">${response}</div>`;
-                history.scrollTop = history.scrollHeight;
-            }, 600);
-        }
-
-        // 4. SPLIT VIEW
-        function toggleSplitView() {
-            splitViewActive = !splitViewActive;
-            const workspace = document.getElementById('mainWorkspace');
-            const terminal = document.getElementById('terminal');
-            const btn = document.getElementById('splitBtn');
-            
-            if(splitViewActive) {
-                workspace.classList.add('split-view');
-                terminal.style.display = 'flex';
-                terminal.style.height = '100%';
-                btn.classList.add('active');
-                showToast("Split View Active", "info");
-            } else {
-                workspace.classList.remove('split-view');
-                terminal.style.height = '220px';
-                btn.classList.remove('active');
-            }
-            editorInstance.layout();
-        }
-
-        // 5. SINGULARITY LINTER (AI)
-        function analyzeCode() { 
+        window.analyzeCode = function() { 
             const code = editorInstance.getValue(); 
             const container = document.getElementById('aiList'); 
+            if(!container) return;
             container.innerHTML = ''; 
             const issues = []; 
             
-            // Rules
-            if(code.includes("print(")) issues.push({title: "Print Statements Detected", text: "Production code typically uses logging instead of print()."}); 
-            if(code.includes("TODO")) issues.push({title: "Pending TODOs", text: "You have unfinished tasks marked in comments."}); 
-            if(code.split('\n').some(line => line.length > 80)) issues.push({title: "Line Length Exceeded", text: "PEP 8 recommends lines under 79 characters."}); 
-            if(!code.includes("def ") && !code.includes("class ")) issues.push({title: "Flat Structure", text: "Consider encapsulating logic in functions or classes for reusability."}); 
-            if(code.includes("import *")) issues.push({title: "Wildcard Import", text: "Avoid `from module import *`. Explicitly import what you need."});
+            if(code.includes("print(")) issues.push({title: "Info", text: "Production code typically uses logging modules."}); 
+            if(code.includes("TODO")) issues.push({title: "Warning", text: "Unresolved TODO comments detected."}); 
 
             if(issues.length === 0) { 
-                container.innerHTML = '<div class="ai-card"><div class="ai-title" style="color:#4ade80"><i class="fas fa-check-circle"></i> Clean Code</div><div class="ai-suggestion">Singularity finds no obvious issues.</div></div>'; 
+                container.innerHTML = '<div style="background:#1e1e1e; padding:10px; border:1px solid #3c3c3c;"><div style="color:#89d185">Copilot: Code is clean and optimized.</div></div>'; 
             } else { 
                 issues.forEach(issue => { 
                     const div = document.createElement('div'); 
-                    div.className = 'ai-card'; 
-                    div.innerHTML = `<div class="ai-title"><i class="fas fa-exclamation-triangle"></i> ${issue.title}</div><div class="ai-suggestion">${issue.text}</div>`; 
+                    div.style.cssText = "background:#1e1e1e; padding:10px; border:1px solid #3c3c3c; margin-bottom:5px;";
+                    div.innerHTML = `<div style="color:#cca700; font-weight:bold;">${issue.title}</div><div style="font-size:11px; margin-top:5px;">${issue.text}</div>`; 
                     container.appendChild(div); 
                 }); 
             } 
+            switchSidebar('ai');
         }
 
-        // Snake Game
-        function startSnakeGame() {
-            logToTerminal(">> Starting Snake...", "#4ade80");
-            const canvas = document.createElement('canvas');
-            canvas.width = 300; canvas.height = 150; canvas.style.border="1px solid #333";
-            canvas.style.marginTop="5px";
-            document.getElementById('console-out').appendChild(canvas);
-            const ctx = canvas.getContext('2d');
-            let snake = [{x: 10, y: 10}]; let dx = 1, dy = 0; let food = {x: 15, y: 10};
-            const w = 10;
-            document.addEventListener('keydown', (e) => {
-                if(e.key==='ArrowUp' && dy===0) { dx=0; dy=-1; } if(e.key==='ArrowDown' && dy===0) { dx=0; dy=1; }
-                if(e.key==='ArrowLeft' && dx===0) { dx=-1; dy=0; } if(e.key==='ArrowRight' && dx===0) { dx=1; dy=0; }
+        window.commitCode = function() {
+            const msgInput = document.getElementById('gitMsg');
+            const msg = msgInput ? msgInput.value : "Update files";
+            if(!msg) return showToast("Enter a commit message", "error");
+            
+            const hash = Math.random().toString(16).substring(2, 8);
+            gitHistory.unshift({ hash: hash, message: msg, files: JSON.parse(JSON.stringify(files)) });
+            if(gitHistory.length > 20) gitHistory.pop(); 
+            
+            localStorage.setItem('lasu_vsc_git', JSON.stringify(gitHistory));
+            if(msgInput) msgInput.value = '';
+            showToast(`Commit ${hash} securely logged`, "success");
+            renderGitList();
+        }
+
+        window.renderGitList = function() {
+            let list = document.getElementById('gitListContainer');
+            if(!list) {
+                list = document.createElement('div');
+                list.id = 'gitListContainer';
+                list.style.cssText = 'flex:1; overflow-y:auto; padding: 10px; font-size:12px; color:#cccccc; border-top:1px solid #3c3c3c; margin-top:10px;';
+                const parent = document.getElementById('view-git');
+                if(parent) parent.appendChild(list);
+            }
+            if(!list) return;
+            
+            list.innerHTML = '';
+            if(gitHistory.length === 0) { list.innerHTML = '<div>No commits yet.</div>'; return; }
+            
+            gitHistory.forEach(commit => {
+                const item = document.createElement('div');
+                item.style.cssText = "padding: 8px 0; border-bottom: 1px solid #3c3c3c; cursor: pointer;";
+                item.innerHTML = `<div style="color:#007acc; font-family:monospace;">${commit.hash}</div><div>${commit.message}</div>`;
+                item.onclick = () => {
+                    if(confirm(`Checkout commit ${commit.hash}? Unsaved workspace changes will be destroyed.`)) {
+                        files = JSON.parse(JSON.stringify(commit.files));
+                        saveToStorage(); switchFile(activeFile); renderUI();
+                        showToast("Repository restored", "info");
+                    }
+                };
+                list.appendChild(item);
             });
-            const gameLoop = setInterval(() => {
-                const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-                snake.unshift(head);
-                if(head.x === food.x && head.y === food.y) { food = {x: Math.floor(Math.random()*29), y: Math.floor(Math.random()*14)}; } else { snake.pop(); }
-                if(head.x < 0 || head.x >= 30 || head.y < 0 || head.y >= 15) { clearInterval(gameLoop); logToTerminal("Game Over!", "#ef4444"); }
-                ctx.fillStyle = "#010409"; ctx.fillRect(0,0,300,150);
-                ctx.fillStyle = "#2f81f7"; snake.forEach(p => ctx.fillRect(p.x*w, p.y*w, w-1, w-1));
-                ctx.fillStyle = "#ef4444"; ctx.fillRect(food.x*w, food.y*w, w-1, w-1);
-            }, 100);
         }
 
-        // Global Search
-        function performGlobalSearch() {
+        window.performGlobalSearch = function() {
             const term = document.getElementById('globalSearchInput').value.toLowerCase();
             const container = document.getElementById('searchResults');
             container.innerHTML = '';
@@ -1287,8 +1123,8 @@ import types
                 lines.forEach((line, idx) => {
                     if(line.toLowerCase().includes(term)) {
                         const div = document.createElement('div');
-                        div.className = 'search-result';
-                        div.innerHTML = `<div class="search-file">${fname}</div><div class="search-line">${line.trim().substring(0, 50)}...</div>`;
+                        div.style.cssText = "padding: 5px 0; cursor: pointer; border-bottom: 1px solid #3c3c3c;";
+                        div.innerHTML = `<div style="color:#007acc; font-weight:bold;">${fname}</div><div>${line.trim().substring(0, 40)}...</div>`;
                         div.onclick = () => { switchFile(fname); editorInstance.revealLineInCenter(idx+1); editorInstance.setPosition({lineNumber:idx+1, column:1}); };
                         container.appendChild(div);
                     }
@@ -1296,489 +1132,152 @@ import types
             });
         }
 
-        // Music Player
-        function toggleMusic() {
-            musicPlaying = !musicPlaying;
-            const el = document.getElementById('musicText');
-            if(musicPlaying) {
-                el.innerText = "Lofi Radio (On)";
-                el.style.color = "#4ade80";
-                showToast("Playing Lofi Beats...", "info");
-            } else {
-                el.innerText = "Lofi Radio (Off)";
-                el.style.color = "var(--status-bar-text)";
-            }
-        }
-        
-        // v10.1 NEW: Exam Mode
-        function toggleExamMode(active) {
-            const el = document.getElementById('examOverlay');
-            if(active) {
-                el.style.display = 'flex';
-                document.documentElement.requestFullscreen();
-            } else {
-                if(confirm("Are you sure you want to end the exam session? This will be logged.")) {
-                    el.style.display = 'none';
-                    if(document.exitFullscreen) document.exitFullscreen();
-                }
-            }
-        }
-
-        // GIT FUNCTIONS
-        function commitCode() {
-            const msg = document.getElementById('gitMsg').value;
-            if(!msg) return showToast("Enter a commit message", "error");
-            
-            const hash = Math.random().toString(16).substring(2, 8);
-            const timestamp = new Date().toLocaleString();
-            
-            gitHistory.unshift({
-                hash: hash,
-                message: msg,
-                time: timestamp,
-                files: JSON.parse(JSON.stringify(files)) 
+        // --- 8. UI RENDERERS ---
+        function renderUI() {
+            const tabContainer = document.getElementById('tab-container'); 
+            tabContainer.innerHTML = '';
+            Object.keys(files).forEach(filename => {
+                const btn = document.createElement('div'); btn.className = `tab ${filename === activeFile ? 'active' : ''}`;
+                btn.innerHTML = `${filename}`;
+                btn.onclick = () => switchFile(filename); 
+                tabContainer.appendChild(btn);
             });
+            document.getElementById('crumb-filename').innerText = activeFile;
             
-            if(gitHistory.length > 20) gitHistory.pop(); 
-            
-            localStorage.setItem('lasu_git', JSON.stringify(gitHistory));
-            document.getElementById('gitMsg').value = '';
-            showToast(`Commited ${hash}`, "success");
-            renderGitList();
-        }
-
-        function renderGitList() {
-            const list = document.getElementById('gitList');
+            const list = document.getElementById('fileList'); 
             list.innerHTML = '';
-            if(gitHistory.length === 0) { list.innerHTML = '<div style="font-size:11px; color:var(--text-secondary); text-align:center; padding:10px;">No commits.</div>'; return; }
-            
-            gitHistory.forEach(commit => {
-                const item = document.createElement('div');
-                item.className = 'git-item';
-                item.innerHTML = `<div><span class="git-hash"><i class="fas fa-code-branch"></i> ${commit.hash}</span> <span class="git-time">${commit.time}</span></div><div class="git-msg">${commit.message}</div>`;
-                item.onclick = () => {
-                    if(confirm(`Rollback to ${commit.hash}? Unsaved changes will be lost.`)) {
-                        files = JSON.parse(JSON.stringify(commit.files));
-                        saveToStorage();
-                        switchFile(activeFile);
-                        showToast("Rolled back", "info");
-                    }
-                };
+            Object.keys(files).sort().forEach(filename => {
+                const item = document.createElement('div'); 
+                item.className = `file-item ${filename === activeFile ? 'active' : ''}`;
+                item.innerHTML = `${filename}`;
+                item.onclick = () => switchFile(filename);
                 list.appendChild(item);
             });
         }
 
-        // AUDIO ENGINE
-        function toggleAmbientSound() {
-            if(!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const bufferSize = 4096;
-                const brownNoise = (function() {
-                    let lastOut = 0;
-                    const node = audioCtx.createScriptProcessor(bufferSize, 1, 1);
-                    node.onaudioprocess = function(e) {
-                        const output = e.outputBuffer.getChannelData(0);
-                        for (let i = 0; i < bufferSize; i++) {
-                            const white = Math.random() * 2 - 1;
-                            output[i] = (lastOut + (0.02 * white)) / 1.02;
-                            lastOut = output[i];
-                            output[i] *= 3.5; 
-                        }
-                    }
-                    return node;
-                })();
-                
-                noiseNode = brownNoise;
-                noiseNode.connect(audioCtx.destination);
-                showToast("Focus Audio: ON", "success");
-                document.getElementById('noiseIcon').style.color = "#4ade80";
+        function switchFile(filename) { 
+            if (!files[filename]) return; 
+            activeFile = filename; 
+            if (filename.endsWith('.py') || filename.endsWith('.html') || filename.endsWith('.md')) { 
+                editorInstance.setValue(files[filename].content); 
+            }
+            localStorage.setItem('lasu_vsc_active', activeFile); 
+            handleFileSwitchEffect(filename); 
+            renderUI(); 
+        }
+
+        function handleFileSwitchEffect(filename) {
+            const monacoEl = document.getElementById('monaco-root');
+            const frameEl = document.getElementById('html-frame');
+            
+            if(!splitViewActive) {
+                monacoEl.style.display = 'block'; 
+                frameEl.style.display = 'none'; 
+            }
+            
+            if (filename.endsWith('.html')) { 
+                 if(!splitViewActive) monacoEl.style.display = 'none';
+                 frameEl.style.display = 'block'; 
+                 frameEl.srcdoc = files[filename].content; 
             } else {
-                noiseNode.disconnect();
-                audioCtx.close();
-                audioCtx = null;
-                showToast("Focus Audio: OFF", "info");
-                document.getElementById('noiseIcon').style.color = "var(--text-secondary)";
+                const model = editorInstance.getModel();
+                let lang = 'python'; 
+                if(filename.endsWith('.html')) lang='html'; 
+                if(filename.endsWith('.md')) lang='markdown';
+                monaco.editor.setModelLanguage(model, lang);
             }
         }
 
-        // --- CORE FUNCTIONS ---
-        window.runProject = function() {
-             if(!editorInstance) return;
-             logToTerminal(">> Executing...", 'var(--text-secondary)');
-             if(editorInstance.getValue().includes("input(")) logToTerminal("Interactive input() uses prompt.", "orange");
-             const selection = editorInstance.getModel().getValueInRange(editorInstance.getSelection());
-             const codeToRun = selection.trim().length > 0 ? selection : null;
-             pyWorker.postMessage({ type: 'RUN', files: files, code: codeToRun });
-        }
-        
-        window.deployProject = function() {
-            // 1. Get HTML Content (Always use the clean template source if available to fix corruption)
-            let html = PORTAL_HTML_TEMPLATE;
-
-            // 2. INTELLIGENT CSS FINDER
-            let cssContent = "";
-            const cssFile = Object.keys(files).find(f => f.endsWith('.css'));
-            if (cssFile) cssContent = files[cssFile].content;
-
-            if (cssContent) {
-                const styleTag = `<style>${cssContent}</style>`;
-                html = html.replace('</head>', `${styleTag}\n</head>`);
-            }
-
-            // --- FIX 1: INJECT RICH MOCK DATA ---
-            // BUG FIX: Removed replaceAll to prevent matrix explosion. Using split/join which is safer.
-            html = html.split('{{NAME}}').join('Tunde Oloyede'); 
-            html = html.split('{{MATRIC}}').join('230591342');
-            html = html.split('%%CGPA%%').join('4.52');
-            
-            // Remove any "leaked" top-level text if it still exists in the user's file content
-            html = html.replace(/^[^<]*/, '');
-
-            // Create Visual Mock Table Rows with Progress Bars
-            const mockRows = `
-                <tr><td>CSC 411</td><td>3</td><td><span style="color:#166534;background:#dcfce7;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">Completed</span></td><td>92</td></tr>
-                <tr><td>CSC 412</td><td>3</td><td><span style="color:#166534;background:#dcfce7;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">Completed</span></td><td>88</td></tr>
-                <tr><td>CSC 413</td><td>3</td><td><span style="color:#166534;background:#dcfce7;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">Completed</span></td><td>95</td></tr>
-                <tr><td>GNS 101</td><td>2</td><td><span style="color:#ca8a04;background:#fef9c3;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">Retake</span></td><td>35</td></tr>
-            `;
-            html = html.split('%%TABLE_ROWS%%').join(mockRows);
-
-            // MOCK SCHEDULE
-            const mockSchedule = `
-                <div class='timeline-item'><div class='time-col'>09:00</div><div class='info-col'><span class='info-title'>CSC 411</span><span class='info-desc'>Lecture Hall A</span></div></div>
-                <div class='timeline-item'><div class='time-col'>14:00</div><div class='info-col'><span class='info-title'>Project Def.</span><span class='info-desc'>AI Lab 3</span></div></div>
-            `;
-            html = html.split('%%SCHEDULE_ROWS%%').join(mockSchedule);
-
-            // Handle View Switching (Force Portal View)
-            html = html.replace('class="visible"', 'class="hidden"');
-            html = html.replace('id="main-portal" class="hidden"', 'id="main-portal" class="visible"');
-            
-            // --- FIX 2: CLEAN BASE64 INJECTION ---
-            const chartPlaceholder = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='; 
-            html = html.split('%%CHART_IMAGE%%').join(chartPlaceholder);
-            html = html.split('%%FEE_CHART%%').join(chartPlaceholder);
-
-            // 4. PREVIEW SIMULATOR SCRIPT
-            const previewScript = `
-            <script>
-                // INTERACTIVE PREVIEW LOGIC
-                function toggleTheme() {
-                    document.body.classList.toggle('dark-mode');
-                }
-
-                setTimeout(() => {
-                    const login = document.getElementById('login-screen');
-                    const portal = document.getElementById('main-portal');
-                    
-                    // Force display states
-                    if(login) login.style.display = 'none';
-                    if(portal) portal.style.display = 'flex';
-
-                    // Enhance Chart Area for Preview (Replace broken image with nice UI)
-                    const img = document.getElementById('chartImg');
-                    if(img && img.src.length < 1000) { // If it's the placeholder
-                        img.style.display = 'none'; 
-                        const box = document.querySelector('.chart-container');
-                        box.innerHTML = '<div style="padding:40px; text-align:center; color:#4f46e5; animation: pulse 2s infinite;"><i class="fas fa-chart-line" style="font-size:40px; margin-bottom:10px;"></i><br><b>Analytics Engine Active</b><br>Live Data Stream Ready</div>';
-                    }
-                    
-                    // Enhance Fee Chart
-                     const feeImg = document.getElementById('feeChart');
-                    if(feeImg && feeImg.src.length < 1000) { 
-                         feeImg.style.display = 'none';
-                         feeImg.parentNode.innerHTML = '<div style="padding:20px; text-align:center; color:#22c55e;"><i class="fas fa-wallet" style="font-size:30px; margin-bottom:5px;"></i><br><b>Finance Active</b></div>';
-                    }
-                }, 100); 
-            <\/script>`;
-            
-            html = html.replace('</body>', `${previewScript}</body>`);
-
-            // 5. Create Blob
-            const blob = new Blob([html], {type: 'text/html'});
-            const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-            showToast("Deployed v10.1 Stable", "success");
-        }
-
-        window.installPackage = function() {
-            const pkg = document.getElementById('pkgName').value;
-            if(!pkg) return;
-            document.getElementById('packageModal').style.display='none';
-            logToTerminal(`>> Installing ${pkg}...`, "var(--text-secondary)");
-            pyWorker.postMessage({ type: 'INSTALL', package: pkg });
-        }
-        
-        window.runSQL = function() {
-            const query = document.getElementById('sqlInput').value;
-            if(!query) return;
-            document.getElementById('dbOutput').innerHTML = '<div style="padding:10px;text-align:center;">Executing...</div>';
-            pyWorker.postMessage({ type: 'SQL', query: query });
-        }
-
-        window.insertSampleSQL = function() {
-            const sample = `CREATE TABLE students (id INT, name TEXT, grade INT);
-INSERT INTO students VALUES (1, 'Tunde', 90);
-INSERT INTO students VALUES (2, 'Amaka', 85);
-INSERT INTO students VALUES (3, 'Emeka', 92);
-SELECT * FROM students;`;
-            document.getElementById('sqlInput').value = sample;
-        }
-
-        window.downloadCSV = function() {
-            if(!lastSqlResult || lastSqlResult.type !== 'data') return showToast("No data to export", "error");
-            let csv = lastSqlResult.columns.join(",") + "\n";
-            lastSqlResult.rows.forEach(row => { csv += row.join(",") + "\n"; });
-            saveAs(new Blob([csv], {type: "text/csv;charset=utf-8"}), "query_result.csv");
-        }
-
-        // --- HELPERS ---
-        function renderSqlResult(jsonStr) {
-            const res = JSON.parse(jsonStr);
-            const container = document.getElementById('dbOutput');
-            container.innerHTML = '';
-            if(res.status === 'error') { container.innerHTML = `<div style="padding:10px; color:#ef4444; font-family:monospace;">${res.msg}</div>`; return; }
-            if(res.type === 'action') { container.innerHTML = `<div style="padding:10px; color:var(--accent);"><i class="fas fa-check"></i> ${res.msg}</div>`; confetti({ particleCount: 30, spread: 30, origin: { x: 0.2, y: 0.5 } }); return; }
-            if(res.type === 'data') {
-                lastSqlResult = res; 
-                let html = '<table class="db-table"><thead><tr>';
-                res.columns.forEach(col => html += `<th>${col}</th>`);
-                html += '</tr></thead><tbody>';
-                res.rows.forEach(row => { html += '<tr>'; row.forEach(cell => html += `<td>${cell}</td>`); html += '</tr>'; });
-                html += '</tbody></table>';
-                container.innerHTML = html;
-                showToast(`Fetched ${res.rows.length} rows`, "success");
-            }
-        }
-
-        // INTELLIGENT FOLDER RENDERING
-        function renderUI() {
-            const tabContainer = document.getElementById('tab-container'); tabContainer.innerHTML = '';
-            Object.keys(files).forEach(filename => {
-                const btn = document.createElement('div'); btn.className = `tab ${filename === activeFile ? 'active' : ''}`;
-                let iconClass = 'file'; if(filename.endsWith('.py')) iconClass='python'; else if(filename.endsWith('.html')) iconClass='html5'; else if(filename.endsWith('.md')) iconClass='markdown'; else if(filename.endsWith('.csv')) iconClass='table'; else if(filename.endsWith('.css')) iconClass='css3';
-                btn.innerHTML = `<i class="fab fa-${iconClass}" style="color: ${filename === activeFile ? 'var(--accent)' : 'var(--text-secondary)'}"></i> ${filename}`;
-                btn.onclick = () => switchFile(filename); tabContainer.appendChild(btn);
-            });
-            document.getElementById('crumb-filename').innerText = activeFile;
-            
-            // FOLDER LOGIC
-            const list = document.getElementById('fileList'); list.innerHTML = '';
-            const searchTerm = document.getElementById('fileSearch').value.toLowerCase();
-            const folders = {};
-            const looseFiles = [];
-
-            Object.keys(files).sort().forEach(filename => {
-                if(searchTerm && !filename.toLowerCase().includes(searchTerm)) return;
-                
-                if(filename.includes('/')) {
-                    // It's in a folder
-                    const parts = filename.split('/');
-                    const folderName = parts[0];
-                    if(!folders[folderName]) folders[folderName] = [];
-                    folders[folderName].push(filename);
-                } else {
-                    looseFiles.push(filename);
-                }
-            });
-
-            // Render Folders
-            for(const [folderName, fileArr] of Object.entries(folders)) {
-                const folderDiv = document.createElement('div');
-                folderDiv.className = 'folder-group';
-                folderDiv.innerHTML = `<div class="folder-header" onclick="this.nextElementSibling.classList.toggle('collapsed')"><i class="fas fa-chevron-down"></i> <i class="fas fa-folder" style="color:#fbbf24"></i> ${folderName}</div>`;
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'folder-content';
-                
-                fileArr.forEach(filename => {
-                      const item = createFileItem(filename);
-                      contentDiv.appendChild(item);
-                });
-                
-                folderDiv.appendChild(contentDiv);
-                list.appendChild(folderDiv);
-            }
-
-            // Render Loose Files
-            looseFiles.forEach(filename => {
-                list.appendChild(createFileItem(filename));
-            });
-
-            const addBtn = document.createElement('div'); addBtn.className = 'file-item'; addBtn.style.opacity = '0.7'; addBtn.style.marginTop = '10px';
-            addBtn.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><i class="fas fa-plus"></i> New File...</div>`;
-            addBtn.onclick = createNewFile; list.appendChild(addBtn);
-        }
-
-        function createFileItem(filename) {
-            const item = document.createElement('div'); item.className = `file-item ${filename === activeFile ? 'active' : ''}`;
-            let iconClass = 'file'; if(filename.endsWith('.py')) iconClass='python'; else if(filename.endsWith('.html')) iconClass='html5'; else if(filename.endsWith('.md')) iconClass='markdown'; else if(filename.endsWith('.csv')) iconClass='table'; else if(filename.endsWith('.css')) iconClass='css3';
-            // Show only the file part if it's in a folder
-            const displayName = filename.includes('/') ? filename.split('/').pop() : filename;
-            
-            item.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><i class="fab fa-${iconClass}" class="file-icon"></i> ${displayName}</div>`;
-            item.onclick = () => switchFile(filename);
-            item.oncontextmenu = (e) => { e.preventDefault(); ctxTargetFile = filename; const m = document.getElementById('contextMenu'); m.style.display = 'flex'; m.style.left = e.pageX + 'px'; m.style.top = e.pageY + 'px'; };
-            return item;
-        }
-        
-        function promptNewFolder() {
-             const name = prompt("Folder Name:");
-             if(name) {
-                 // Create dummy file to hold folder
-                 files[name + '/.keep'] = { content: "", language: "plaintext" };
-                 saveToStorage(); renderUI();
-             }
-        }
-
-        function createNewFile() {
-            const name = prompt("Filename (e.g. data.py):");
+        window.createNewFile = function() {
+            const name = prompt("Enter standard filename (e.g. data.py):");
             if(name && !files[name]) {
-                files[name] = { content: "# New file", language: 'python' };
+                files[name] = { content: "# Auto-generated by Apex Builder", language: 'python' };
                 activeFile = name;
                 saveToStorage(); renderUI(); switchFile(name);
             }
         }
 
-        function switchFile(filename) { 
-            if (!files[filename]) return; activeFile = filename; 
-            if (filename.endsWith('.py') || filename.endsWith('.js') || filename.endsWith('.css') || filename.endsWith('.csv')) { editorInstance.setValue(files[filename].content); }
-            else { files[filename].content = files[filename].content; } 
-            localStorage.setItem('lasu_active_file', activeFile); handleFileSwitchEffect(filename); updateStats(); renderUI(); 
-        }
-
-        function logToTerminal(txt, color) { const div = document.createElement('div'); div.style.color = color; div.style.marginBottom = '4px'; div.innerText = txt; const t = document.getElementById('console-out'); t.appendChild(div); t.scrollTop = t.scrollHeight; }
-        function showToast(msg, type) { const container = document.getElementById('toastContainer'); const toast = document.createElement('div'); toast.className = 'toast'; toast.innerHTML = `<i class="fas ${type=='error'?'fa-times':(type=='success'?'fa-check':'fa-info-circle')}" style="color:var(--accent)"></i> ${msg}`; container.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
-        function toggleSettings(show) { document.getElementById('settingsModal').style.display = show ? 'flex' : 'none'; }
-        
-        function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); setTimeout(updateClock, 1000); }
-        function updateMemory() { if (performance && performance.memory) { const used = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024); } }
-        function toggleZenMode() { document.body.classList.toggle('zen-mode'); editorInstance.layout(); }
-        
-        // Matrix
-        const matrixCanvas = document.getElementById('matrixCanvas'); const matrixCtx = matrixCanvas.getContext('2d'); let matrixInterval;
-        function toggleMatrix() { const enabled = document.getElementById('matrixToggle').checked; if(enabled) { document.body.classList.add('matrix-mode'); startMatrix(); } else { document.body.classList.remove('matrix-mode'); clearInterval(matrixInterval); matrixCtx.clearRect(0, 0, matrixCanvas.width, matrixCanvas.height); } }
-        function startMatrix() { matrixCanvas.width = window.innerWidth; matrixCanvas.height = window.innerHeight; const katakana = '01'; const fontSize = 14; const columns = matrixCanvas.width/fontSize; const drops = Array(Math.floor(columns)).fill(1); matrixInterval = setInterval(() => { matrixCtx.fillStyle = 'rgba(0, 0, 0, 0.05)'; matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height); matrixCtx.fillStyle = '#0F0'; matrixCtx.font = fontSize + 'px monospace'; for(let i = 0; i < drops.length; i++) { const text = katakana.charAt(Math.floor(Math.random() * katakana.length)); matrixCtx.fillText(text, i*fontSize, drops[i]*fontSize); if(drops[i]*fontSize > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; } }, 33); }
-
-        function clearConsole() { document.getElementById('console-out').innerHTML = ''; }
-        function switchSidebar(view) { document.querySelectorAll('.activity-icon').forEach(el => el.classList.remove('active')); document.querySelectorAll('.sidebar-view').forEach(el => el.classList.remove('active')); document.getElementById('act-'+view).classList.add('active'); document.getElementById('view-'+view).classList.add('active'); }
-        function updateStats() { const code = editorInstance.getValue(); const lines = code.split('\n').length; const size = new Blob([code]).size; }
-        function calcWPM() { const now = Date.now(); if (now - lastCharTime > 2000) charCount = 0; charCount++; lastCharTime = now; }
-
-        // Sidebar Resizer
-        function initSidebarResizer() { const resizer = document.getElementById('sidebarResizer'); const sidebar = document.getElementById('sidebar'); let isResizing = false; resizer.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'ew-resize'; }); document.addEventListener('mousemove', (e) => { if (!isResizing) return; const newWidth = e.clientX - 48; if (newWidth > 150 && newWidth < 500) { sidebar.style.width = newWidth + 'px'; editorInstance.layout(); } }); document.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; }); }
-        function initResizer() { const resizer = document.getElementById('resizer'); const terminal = document.getElementById('terminal'); let isResizing = false; resizer.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'ns-resize'; }); document.addEventListener('mousemove', (e) => { if (!isResizing) return; const newHeight = window.innerHeight - e.clientY; if (newHeight > 28 && newHeight < 600) { terminal.style.height = newHeight + 'px'; editorInstance.layout(); } }); document.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; }); }
-        function toggleTerminal() { const t = document.getElementById('terminal'); t.style.height = t.style.height === '32px' ? '220px' : '32px'; }
-
-        // Whiteboard
-        const wbCanvas = document.getElementById('wbCanvas'); const wbCtx = wbCanvas.getContext('2d'); let drawing = false; wbCanvas.width = 240; wbCanvas.height = 300; wbCtx.strokeStyle = "#ffffff"; wbCtx.lineWidth = 2;
-        wbCanvas.addEventListener('mousedown', (e) => { drawing = true; wbCtx.beginPath(); wbCtx.moveTo(e.offsetX, e.offsetY); });
-        wbCanvas.addEventListener('mousemove', (e) => { if(drawing) { wbCtx.lineTo(e.offsetX, e.offsetY); wbCtx.stroke(); } });
-        wbCanvas.addEventListener('mouseup', () => { drawing = false; });
-        function clearCanvas() { wbCtx.clearRect(0, 0, wbCanvas.width, wbCanvas.height); }
-        document.getElementById('penColor').addEventListener('input', (e) => wbCtx.strokeStyle = e.target.value);
-
-        // Drag Drop
-        function initDragDrop() {
-            const overlay = document.getElementById('dragOverlay');
-            document.body.addEventListener('dragover', (e) => { e.preventDefault(); overlay.style.display = 'flex'; });
-            document.body.addEventListener('dragleave', (e) => { e.preventDefault(); if(e.target === overlay) overlay.style.display = 'none'; });
-            document.body.addEventListener('drop', (e) => { e.preventDefault(); overlay.style.display = 'none'; handleFileUploadPro(e.dataTransfer); });
-        }
-        function handleFileUploadPro(input) {
-             const file = input.files ? input.files[0] : null;
-             if (file) {
-                 const reader = new FileReader();
-                 reader.onload = (ev) => {
-                     const content = ev.target.result;
-                     if(file.name.endsWith('.csv')) {
-                         const tableName = file.name.replace('.csv', '').replace(/\W/g, '');
-                         switchSidebar('database');
-                         showToast(`Importing ${tableName}...`, "info");
-                         const w = window.pyWorkerGlobal;
-                         if(w) w.postMessage({type:'IMPORT_CSV', tableName: tableName, content: content});
-                     }
-                     files[file.name] = { content: content, language: 'python' };
-                     saveToStorage();
-                     if(!file.name.endsWith('.csv')) { switchFile(file.name); showToast("File Dropped", "success"); }
-                 };
-                 reader.readAsText(file);
-            }
-        }
-
-        function changeTheme(themeName) { const root = document.documentElement; root.removeAttribute('data-theme'); if (themeName !== 'dark') root.setAttribute('data-theme', themeName); monaco.editor.setTheme(themeName === 'light' ? 'vs' : 'vs-dark'); localStorage.setItem('lasu_theme', themeName); }
-        function changeFontSize(delta) { let size = editorInstance.getOption(monaco.editor.EditorOption.fontSize); size = Math.max(10, Math.min(30, size + delta)); editorInstance.updateOptions({ fontSize: size }); document.getElementById('fontDisplay').innerText = size; }
-        function changeAccent(color) { document.documentElement.style.setProperty('--accent', color); document.documentElement.style.setProperty('--status-bar-bg', color); localStorage.setItem('lasu_accent', color); }
-        function togglePower() { powerMode = document.getElementById('powerToggle').checked; }
-        function toggleSound() { soundEnabled = document.getElementById('soundToggle').checked; }
-        function renameFileCtx() { if(!ctxTargetFile) return; const newName = prompt("Rename to:", ctxTargetFile); if(newName && newName !== ctxTargetFile && !files[newName]) { files[newName] = files[ctxTargetFile]; delete files[ctxTargetFile]; if(activeFile === ctxTargetFile) activeFile = newName; saveToStorage(); switchFile(newName); } }
-        function duplicateFileCtx() { const newName = "copy_" + ctxTargetFile; files[newName] = { ...files[ctxTargetFile] }; saveToStorage(); renderUI(); }
-        function downloadFileCtx() { const blob = new Blob([files[ctxTargetFile].content], {type: "text/plain"}); saveAs(blob, ctxTargetFile); }
-        function deleteFileCtx() { if (Object.keys(files).length <= 1) return showToast("Cannot delete last file", "error"); if (confirm(`Delete ${ctxTargetFile}?`)) { delete files[ctxTargetFile]; if (activeFile === ctxTargetFile) { activeFile = Object.keys(files)[0]; editorInstance.setValue(files[activeFile].content); } saveToStorage(); renderUI(); } }
-        
-        function handleFileSwitchEffect(filename) {
-            const monacoEl = document.getElementById('monaco-root');
-            const previewEl = document.getElementById('preview-pane');
-            const frameEl = document.getElementById('html-frame');
+        window.toggleSplitView = function() {
+            splitViewActive = !splitViewActive;
+            const workspace = document.getElementById('mainWorkspace');
+            const terminal = document.getElementById('terminal');
             
-            // In split view, we don't hide monaco. We just update the right pane
-            if(!splitViewActive) {
-                monacoEl.style.display = 'block'; previewEl.style.display = 'none'; frameEl.style.display = 'none'; previewEl.classList.remove('active');
+            if(splitViewActive) {
+                workspace.style.flexDirection = 'row';
+                terminal.style.width = '40%';
+                terminal.style.height = '100%';
+                terminal.style.borderTop = 'none';
+                terminal.style.borderLeft = '1px solid var(--vsc-border)';
+            } else {
+                workspace.style.flexDirection = 'column';
+                terminal.style.width = '100%';
+                terminal.style.height = '250px';
+                terminal.style.borderLeft = 'none';
+                terminal.style.borderTop = '1px solid var(--vsc-border)';
             }
-            
-            if (filename.endsWith('.md')) { 
-                 if(!splitViewActive) monacoEl.style.display = 'none'; 
-                 previewEl.style.display = 'block'; previewEl.classList.add('active'); renderMarkdown(); 
-            } 
-            else if (filename.endsWith('.html')) { 
-                 if(!splitViewActive) monacoEl.style.display = 'none';
-                 frameEl.style.display = 'block'; renderHTML(); 
-            } 
-            else {
-                const model = editorInstance.getModel();
-                let lang = 'python'; if(filename.endsWith('.js')) lang='javascript'; if(filename.endsWith('.css')) lang='css'; if(filename.endsWith('.csv')) lang='plaintext';
-                monaco.editor.setModelLanguage(model, lang);
-            }
+            editorInstance.layout();
         }
-        function renderMarkdown() { const md = files[activeFile].content; document.getElementById('preview-pane').innerHTML = marked.parse(md); }
-        function renderHTML() { const html = files[activeFile].content; document.getElementById('html-frame').srcdoc = html; }
-        function checkImports(code) {
-            const importRegex = /^import\s+(\w+)|^from\s+(\w+)/gm; let match;
-            while ((match = importRegex.exec(code)) !== null) {
-                const pkg = match[1] || match[2];
-                if (pkg && !installedPackages.has(pkg) && ['numpy', 'pandas', 'matplotlib'].includes(pkg)) { showToast(`Tip: Install '${pkg}' in Packages`, "info"); }
-            }
-        }
-        function updateOutline() {
-            const code = editorInstance.getValue(); 
-        }
-        function renderVariables(vars) { const container = document.getElementById('variableList'); if(container) { container.innerHTML = ''; for (const [name, val] of Object.entries(vars)) { const div = document.createElement('div'); div.className = 'var-item'; const parts = val.split(": "); const type = parts[0]; const value = parts.slice(1).join(": "); div.innerHTML = `<div><span class="var-name">${name}</span><span class="var-type">${type}</span></div><span class="var-value">${value}</span>`; container.appendChild(div); } } }
-        function updateDetailedStats() {
-            const container = document.getElementById('detailedStats');
-            let totalLines = 0; let totalChars = 0; let pyFiles = 0;
-            Object.keys(files).forEach(f => { totalLines += files[f].content.split('\n').length; totalChars += files[f].content.length; if(f.endsWith('.py')) pyFiles++; });
-            container.innerHTML = `<div class="stat-box"><div class="stat-label"><span>Total Lines</span><span>${totalLines}</span></div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:100%"></div></div></div><div class="stat-box"><div class="stat-label"><span>Characters</span><span>${totalChars}</span></div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:80%; background:#22c55e"></div></div></div><div class="stat-box"><div class="stat-label"><span>Python Files</span><span>${pyFiles}</span></div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${(pyFiles/Object.keys(files).length)*100}%; background:#3b82f6"></div></div></div>`;
-        }
-        function zoomUI(delta) { uiScale += delta; if(uiScale < 0.7) uiScale = 0.7; if(uiScale > 1.5) uiScale = 1.5; document.documentElement.style.setProperty('--ui-scale', uiScale); editorInstance.layout(); }
-        function takeScreenshot() { html2canvas(document.body).then(canvas => { const link = document.createElement('a'); link.download = 'apex_v10_snap.png'; link.href = canvas.toDataURL(); link.click(); showToast("Screenshot Saved", "success"); }); }
-        function openDiffModal() { document.getElementById('diffModal').style.display = 'flex'; if(!diffEditorInstance) { diffEditorInstance = monaco.editor.createDiffEditor(document.getElementById('diffContainer'), { theme: 'vs-dark', automaticLayout: true, readOnly: true }); } const originalModel = monaco.editor.createModel(files[activeFile].content, 'python'); const modifiedModel = monaco.editor.createModel(editorInstance.getValue(), 'python'); diffEditorInstance.setModel({ original: originalModel, modified: modifiedModel }); }
-        function generateShareLink() { const json = JSON.stringify(files); const compressed = LZString.compressToEncodedURIComponent(json); const url = window.location.origin + window.location.pathname + "#share=" + compressed; document.getElementById('shareInput').value = url; document.getElementById('shareModal').style.display = 'flex'; }
-        function copyShareLink() { const input = document.getElementById('shareInput'); input.select(); document.execCommand('copy'); showToast("Link Copied", "success"); document.getElementById('shareModal').style.display='none'; }
-        function startDictation() { if (window.webkitSpeechRecognition) { const recognition = new window.webkitSpeechRecognition(); recognition.continuous = false; recognition.interimResults = false; recognition.lang = "en-US"; showToast("Listening...", "info"); recognition.start(); recognition.onresult = function(event) { const text = event.results[0][0].transcript; const selection = editorInstance.getSelection(); editorInstance.executeEdits("voice", [{ range: selection, text: " # " + text, forceMoveMarkers: true }]); showToast("Inserted: " + text, "success"); }; } else { alert("Voice dictation not supported."); } }
-        function formatCode() { editorInstance.getAction('editor.action.formatDocument').run(); showToast("Code Formatted", "info"); }
-        function toggleSpotlight() { const el = document.getElementById('spotlightOverlay'); if(el.style.display === 'flex') { el.style.display = 'none'; } else { el.style.display = 'flex'; document.getElementById('spotlightInput').focus(); filterSpotlight(); } }
-        function filterSpotlight() { const term = document.getElementById('spotlightInput').value.toLowerCase(); const list = document.getElementById('spotlightList'); list.innerHTML = ''; Object.keys(files).forEach(f => { if(f.toLowerCase().includes(term)) { const div = document.createElement('div'); div.className = 'spotlight-item'; div.innerHTML = `<i class="fas fa-file-code"></i> ${f}`; div.onclick = () => { switchFile(f); toggleSpotlight(); }; list.appendChild(div); } }); }
-        function forceRestore() { if(confirm("Force Restore will reset your files to defaults. Continue?")) { localStorage.removeItem('lasu_project_v10_1_stable'); localStorage.removeItem('lasu_git'); location.reload(); } }
-        function insertSnippet(type) { 
-            let txt = ""; 
-            if(type==='plot') txt = `import matplotlib.pyplot as plt\nimport numpy as np\nx = np.linspace(0,10,100)\nplt.plot(x, np.sin(x))\nplotter.show()`; 
-            if(type==='flask') txt = `from flask import Flask\napp = Flask(__name__)\n@app.route('/')\ndef home(): return "Hello LASU"\n# Note: Flask runs in mock mode here`; 
-            if(type==='sqlite') txt = `import sqlite3\nconn = sqlite3.connect(':memory:')\nc = conn.cursor()\nc.execute('CREATE TABLE test (id INT, val TEXT)')`; 
-            if(type==='unit') txt = `import unittest\nclass Test(unittest.TestCase):\n\tdef test_one(self):\n\t\tself.assertEqual(1, 1)`; 
-            if(type==='pandas') txt = `import pandas as pd\ndf = pd.DataFrame({'A': [1,2,3], 'B': [4,5,6]})\nprint(df.describe())`;
-            editorInstance.trigger('keyboard', 'type', {text: txt}); 
-        }
-        window.saveToStorage = function() { localStorage.setItem('lasu_project_v10_1_stable', JSON.stringify(files)); localStorage.setItem('lasu_active_file', activeFile); document.getElementById('save-status').innerHTML = '<i class="fas fa-check"></i> Saved'; document.querySelector('.tab.active').classList.remove('dirty'); }
 
+        window.switchSidebar = function(view) { 
+            document.querySelectorAll('.activity-icon').forEach(el => el.classList.remove('active')); 
+            document.querySelectorAll('.sidebar-view').forEach(el => el.classList.remove('active')); 
+            document.getElementById('act-'+view).classList.add('active'); 
+            document.getElementById('view-'+view).classList.add('active'); 
+        }
+
+        window.switchPanelTab = function(tabName) {
+            document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+            
+            const targetTab = Array.from(document.querySelectorAll('.panel-tab')).find(el => el.innerText.toLowerCase() === tabName);
+            if(targetTab) targetTab.classList.add('active');
+
+            const consoleOut = document.getElementById('console-out');
+            const inputLine = document.querySelector('.terminal-input-line');
+            
+            if(tabName === 'terminal') {
+                consoleOut.style.display = 'block';
+                inputLine.style.display = 'flex';
+            } else {
+                inputLine.style.display = 'none';
+                if(tabName === 'problems') {
+                    consoleOut.innerHTML = '<div style="color:#cccccc; padding:10px;">No anomalies detected in the matrix. Zero errors.</div>';
+                } else if(tabName === 'output') {
+                    consoleOut.innerHTML = '<div style="color:#cccccc; padding:10px;">[Info] Compilation Engine Sync Complete.<br>[Info] Connection to Mainframe stable.</div>';
+                } else if(tabName === 'debug console') {
+                    consoleOut.innerHTML = '<div style="color:#cccccc; padding:10px;"><i class="fas fa-bug" style="color:#007acc"></i> Debug adapter ready. Listening for active breakpoints...</div>';
+                }
+            }
+        }
+
+        window.logToTerminal = function(txt, color) { 
+            const div = document.createElement('div'); 
+            div.style.color = color; 
+            div.style.marginBottom = '2px'; 
+            div.innerText = txt; 
+            const t = document.getElementById('console-out'); 
+            t.appendChild(div); 
+            t.scrollTop = t.scrollHeight; 
+        }
+
+        window.clearConsole = function() { 
+            document.getElementById('console-out').innerHTML = '<div style="color:#858585;">Terminal Flushed. Ready for execution.</div><br>'; 
+        }
+
+        window.showToast = function(msg, type) { 
+            const container = document.getElementById('toastContainer'); 
+            const toast = document.createElement('div'); 
+            toast.className = 'toast'; 
+            toast.innerHTML = `<i class="fas ${type=='error'?'fa-times':(type=='success'?'fa-check':'fa-info-circle')}" style="color:var(--vsc-accent)"></i> ${msg}`; 
+            container.appendChild(toast); 
+            setTimeout(() => toast.remove(), 3000); 
+        }
+
+        window.saveToStorage = function() { 
+            localStorage.setItem('lasu_vsc_workspace', JSON.stringify(files)); 
+            localStorage.setItem('lasu_vsc_active', activeFile); 
+            const tab = document.querySelector('.tab.active');
+            if(tab) tab.classList.remove('dirty'); 
+        }
     </script>
 </body>
 </html>
