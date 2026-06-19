@@ -3206,88 +3206,137 @@ function submitTransfer() {
 
     // 🔒 SECURE MESSAGE ROUTING LOGIC (DATA ISOLATION ENFORCED)
     const currentStudentMatric = "{{ student.matric_no | default('CSC/2021/1011') }}";
+    const secureCacheKey = "lasu_dm_" + currentStudentMatric;
 
-    // 🟢 ARCHITECT FIX: PERSISTENT CACHE
     let secureMessageCache = [];
-    let lastRenderedCount = 0;
 
     function openSecureMessages() {
         const modal = new bootstrap.Modal(document.getElementById('secureMessageModal'));
         modal.show();
+        // Immediately render from cache so there is zero delay
+        renderSecureDMs();
+        // Quietly fetch in background to see if anything new arrived
         fetchSecureMessages();
     }
 
-    function fetchSecureMessages() {
+    function renderSecureDMs() {
         const container = document.getElementById('privateMessageContainer');
         
+        // Attempt to load from localStorage first
+        try {
+            const cachedData = localStorage.getItem(secureCacheKey);
+            if (cachedData) {
+                secureMessageCache = JSON.parse(cachedData);
+            }
+        } catch (e) {
+            console.error("Cache load error:", e);
+        }
+
+        if (secureMessageCache && secureMessageCache.length > 0) {
+            // Update badges immediately
+            document.querySelectorAll('.pm-global-badge').forEach(badge => {
+                badge.innerText = secureMessageCache.length;
+                badge.style.display = 'inline-block';
+            });
+
+            // Build HTML
+            let newHTML = '';
+            // Reverse loop to show newest messages at the top (optional, but standard for DMs)
+            for (let i = secureMessageCache.length - 1; i >= 0; i--) {
+                const msg = secureMessageCache[i];
+                newHTML += `
+                    <div class="card border-0 shadow-sm mb-3 animate__animated animate__fadeIn" style="border-left: 4px solid #d32f2f !important;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong class="text-dark"><i class="fas fa-user-shield text-danger me-1"></i> Lecturer / Admin</strong>
+                                <small class="text-muted">${msg.timestamp}</small>
+                            </div>
+                            <p class="mb-0 text-secondary" style="font-size: 0.95rem;">${msg.content}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = newHTML;
+        } else {
+            // Empty State
+            container.innerHTML = `
+                <div class="text-center p-4 text-muted">
+                    <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                    <p class="mb-0 fw-bold">No secure transmissions found.</p>
+                    <small>Your private channel is clear.</small>
+                </div>
+            `;
+            document.querySelectorAll('.pm-global-badge').forEach(badge => badge.style.display = 'none');
+        }
+    }
+
+    function fetchSecureMessages() {
         fetch(`/api/student/messages?matric_number=${encodeURIComponent(currentStudentMatric)}`)
             .then(response => response.json())
             .then(data => {
                 let cacheUpdated = false;
 
-                // 1. Accumulate incoming messages into the persistent cache
                 if (data.status === 'success' && data.messages && data.messages.length > 0) {
                     data.messages.forEach(incomingMsg => {
-                        // Prevent duplicates by checking if it already exists in the cache
-                        const exists = secureMessageCache.find(m => m.timestamp === incomingMsg.timestamp && m.content === incomingMsg.content);
+                        // Prevent duplicates based on content and timestamp
+                        const exists = secureMessageCache.some(m => m.timestamp === incomingMsg.timestamp && m.content === incomingMsg.content);
                         if (!exists) {
                             secureMessageCache.push(incomingMsg);
                             cacheUpdated = true;
                         }
                     });
-                }
 
-                // 2. ALWAYS render from the Cache, never the volatile backend response
-                if (secureMessageCache.length > 0) {
+                    // If we added new messages, save to cache and re-render
+                    if (cacheUpdated) {
+                        try {
+                            localStorage.setItem(secureCacheKey, JSON.stringify(secureMessageCache));
+                        } catch (e) {
+                            console.error("Cache save error:", e);
+                        }
+                        
+                        // Update badges globally even if modal is closed
+                        document.querySelectorAll('.pm-global-badge').forEach(badge => {
+                            badge.innerText = secureMessageCache.length;
+                            badge.style.display = 'inline-block';
+                        });
+
+                        // Re-render modal if it's currently open
+                        const modalEl = document.getElementById('secureMessageModal');
+                        if (modalEl && modalEl.classList.contains('show')) {
+                            renderSecureDMs();
+                        }
+                    }
+                }
+                // CRITICAL: We DO NOT touch the UI or empty the cache if data.messages is empty or missing.
+                // This ensures the messages survive page refreshes permanently.
+            })
+            .catch(error => {
+                console.error("Transmission Error:", error);
+            });
+    }
+
+    // 1. Instantly render whatever is in the cache the millisecond the page loads
+    document.addEventListener("DOMContentLoaded", () => {
+        // Load cache initially to update the notification badge in the header instantly
+        try {
+            const cachedData = localStorage.getItem(secureCacheKey);
+            if (cachedData) {
+                secureMessageCache = JSON.parse(cachedData);
+                if(secureMessageCache.length > 0) {
                     document.querySelectorAll('.pm-global-badge').forEach(badge => {
                         badge.innerText = secureMessageCache.length;
                         badge.style.display = 'inline-block';
                     });
-
-                    // Only update DOM if we have new messages to avoid flashing
-                    if (cacheUpdated || secureMessageCache.length !== lastRenderedCount) {
-                        container.innerHTML = ''; 
-                        secureMessageCache.forEach(msg => {
-                            container.innerHTML += `
-                                <div class="card border-0 shadow-sm mb-3 animate__animated animate__fadeIn" style="border-left: 4px solid #d32f2f !important;">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <strong class="text-dark"><i class="fas fa-user-shield text-danger me-1"></i> Lecturer / Admin</strong>
-                                            <small class="text-muted">${msg.timestamp}</small>
-                                        </div>
-                                        <p class="mb-0 text-secondary" style="font-size: 0.95rem;">${msg.content}</p>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        lastRenderedCount = secureMessageCache.length;
-                    }
-                } else {
-                    // Only show empty state if the CACHE itself is empty
-                    if (secureMessageCache.length === 0) {
-                        container.innerHTML = `
-                            <div class="text-center p-4 text-muted">
-                                <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
-                                <p class="mb-0 fw-bold">No secure transmissions found.</p>
-                                <small>Your private channel is clear.</small>
-                            </div>
-                        `;
-                        document.querySelectorAll('.pm-global-badge').forEach(badge => badge.style.display = 'none');
-                        lastRenderedCount = 0;
-                    }
                 }
-            })
-            .catch(error => {
-                console.error("Transmission Error:", error);
-                if (secureMessageCache.length === 0) {
-                    container.innerHTML = '<p class="text-danger text-center fw-bold mt-3"><i class="fas fa-exclamation-triangle"></i> Secure connection interrupted.</p>';
-                }
-            });
-    }
-
-    // Auto-check for new secure messages every 5 seconds (Enterprise Real-Time Sync)
+            }
+        } catch(e){}
+        
+        // Fetch to see if anything new arrived while offline
+        fetchSecureMessages();
+    });
+    
+    // 2. Poll the server every 5 seconds for *new* messages
     setInterval(fetchSecureMessages, 5000);
-    document.addEventListener("DOMContentLoaded", fetchSecureMessages);
 </script>
 
 
