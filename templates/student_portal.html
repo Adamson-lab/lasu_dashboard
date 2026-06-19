@@ -3207,37 +3207,48 @@ function submitTransfer() {
     // 🔒 SECURE MESSAGE ROUTING LOGIC (DATA ISOLATION ENFORCED)
     const currentStudentMatric = "{{ student.matric_no | default('CSC/2021/1011') }}";
 
+    // 🟢 ARCHITECT FIX: PERSISTENT CACHE
+    let secureMessageCache = [];
+    let lastRenderedCount = 0;
+
     function openSecureMessages() {
         const modal = new bootstrap.Modal(document.getElementById('secureMessageModal'));
         modal.show();
         fetchSecureMessages();
     }
 
-    let lastSecureMessageHash = ""; // Stores the state to prevent UI flashing
-
     function fetchSecureMessages() {
         const container = document.getElementById('privateMessageContainer');
         
-        // STRICT ISOLATION: Passing matric_number specifically
         fetch(`/api/student/messages?matric_number=${encodeURIComponent(currentStudentMatric)}`)
             .then(response => response.json())
             .then(data => {
-                if (data.status === 'success' && data.messages.length > 0) {
-                    
-                    // Update all notification badges
+                let cacheUpdated = false;
+
+                // 1. Accumulate incoming messages into the persistent cache
+                if (data.status === 'success' && data.messages && data.messages.length > 0) {
+                    data.messages.forEach(incomingMsg => {
+                        // Prevent duplicates by checking if it already exists in the cache
+                        const exists = secureMessageCache.find(m => m.timestamp === incomingMsg.timestamp && m.content === incomingMsg.content);
+                        if (!exists) {
+                            secureMessageCache.push(incomingMsg);
+                            cacheUpdated = true;
+                        }
+                    });
+                }
+
+                // 2. ALWAYS render from the Cache, never the volatile backend response
+                if (secureMessageCache.length > 0) {
                     document.querySelectorAll('.pm-global-badge').forEach(badge => {
-                        badge.innerText = data.messages.length;
+                        badge.innerText = secureMessageCache.length;
                         badge.style.display = 'inline-block';
                     });
 
-                    // Create a string hash of the current messages
-                    const currentHash = JSON.stringify(data.messages);
-                    
-                    // ONLY update the DOM if the messages have actually changed
-                    if (currentHash !== lastSecureMessageHash) {
-                        let newHTML = '';
-                        data.messages.forEach(msg => {
-                            newHTML += `
+                    // Only update DOM if we have new messages to avoid flashing
+                    if (cacheUpdated || secureMessageCache.length !== lastRenderedCount) {
+                        container.innerHTML = ''; 
+                        secureMessageCache.forEach(msg => {
+                            container.innerHTML += `
                                 <div class="card border-0 shadow-sm mb-3 animate__animated animate__fadeIn" style="border-left: 4px solid #d32f2f !important;">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between mb-2">
@@ -3249,37 +3260,33 @@ function submitTransfer() {
                                 </div>
                             `;
                         });
-                        container.innerHTML = newHTML;
-                        lastSecureMessageHash = currentHash; // Save new state
+                        lastRenderedCount = secureMessageCache.length;
                     }
-
                 } else {
-                    const emptyStateHTML = `
-                        <div class="text-center p-4 text-muted">
-                            <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
-                            <p class="mb-0 fw-bold">No secure transmissions found.</p>
-                            <small>Your private channel is clear.</small>
-                        </div>
-                    `;
-                    if (container.innerHTML !== emptyStateHTML) {
-                        container.innerHTML = emptyStateHTML;
-                        lastSecureMessageHash = "empty";
+                    // Only show empty state if the CACHE itself is empty
+                    if (secureMessageCache.length === 0) {
+                        container.innerHTML = `
+                            <div class="text-center p-4 text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                                <p class="mb-0 fw-bold">No secure transmissions found.</p>
+                                <small>Your private channel is clear.</small>
+                            </div>
+                        `;
+                        document.querySelectorAll('.pm-global-badge').forEach(badge => badge.style.display = 'none');
+                        lastRenderedCount = 0;
                     }
-                    document.querySelectorAll('.pm-global-badge').forEach(badge => badge.style.display = 'none');
                 }
             })
             .catch(error => {
                 console.error("Transmission Error:", error);
-                const errorHTML = '<p class="text-danger text-center fw-bold mt-3"><i class="fas fa-exclamation-triangle"></i> Secure connection interrupted.</p>';
-                if (container.innerHTML !== errorHTML) {
-                    container.innerHTML = errorHTML;
-                    lastSecureMessageHash = "error";
+                if (secureMessageCache.length === 0) {
+                    container.innerHTML = '<p class="text-danger text-center fw-bold mt-3"><i class="fas fa-exclamation-triangle"></i> Secure connection interrupted.</p>';
                 }
             });
     }
 
     // Auto-check for new secure messages every 5 seconds (Enterprise Real-Time Sync)
-    setInterval(fetchSecureMessages, 5000);
+    setInterval(fetchSecureMessages, 5000);
     document.addEventListener("DOMContentLoaded", fetchSecureMessages);
 </script>
 
