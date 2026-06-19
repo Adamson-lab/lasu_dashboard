@@ -3213,6 +3213,8 @@ function submitTransfer() {
         fetchSecureMessages();
     }
 
+    let lastSecureMessageHash = ""; // Stores the state to prevent UI flashing
+
     function fetchSecureMessages() {
         const container = document.getElementById('privateMessageContainer');
         
@@ -3221,7 +3223,6 @@ function submitTransfer() {
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success' && data.messages.length > 0) {
-                    container.innerHTML = ''; 
                     
                     // Update all notification badges
                     document.querySelectorAll('.pm-global-badge').forEach(badge => {
@@ -3229,33 +3230,51 @@ function submitTransfer() {
                         badge.style.display = 'inline-block';
                     });
 
-                    data.messages.forEach(msg => {
-                        container.innerHTML += `
-                            <div class="card border-0 shadow-sm mb-3" style="border-left: 4px solid #d32f2f !important;">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <strong class="text-dark"><i class="fas fa-user-shield text-danger me-1"></i> Lecturer / Admin</strong>
-                                        <small class="text-muted">${msg.timestamp}</small>
+                    // Create a string hash of the current messages
+                    const currentHash = JSON.stringify(data.messages);
+                    
+                    // ONLY update the DOM if the messages have actually changed
+                    if (currentHash !== lastSecureMessageHash) {
+                        let newHTML = '';
+                        data.messages.forEach(msg => {
+                            newHTML += `
+                                <div class="card border-0 shadow-sm mb-3 animate__animated animate__fadeIn" style="border-left: 4px solid #d32f2f !important;">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <strong class="text-dark"><i class="fas fa-user-shield text-danger me-1"></i> Lecturer / Admin</strong>
+                                            <small class="text-muted">${msg.timestamp}</small>
+                                        </div>
+                                        <p class="mb-0 text-secondary" style="font-size: 0.95rem;">${msg.content}</p>
                                     </div>
-                                    <p class="mb-0 text-secondary" style="font-size: 0.95rem;">${msg.content}</p>
                                 </div>
-                            </div>
-                        `;
-                    });
+                            `;
+                        });
+                        container.innerHTML = newHTML;
+                        lastSecureMessageHash = currentHash; // Save new state
+                    }
+
                 } else {
-                    container.innerHTML = `
+                    const emptyStateHTML = `
                         <div class="text-center p-4 text-muted">
                             <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
                             <p class="mb-0 fw-bold">No secure transmissions found.</p>
                             <small>Your private channel is clear.</small>
                         </div>
                     `;
+                    if (container.innerHTML !== emptyStateHTML) {
+                        container.innerHTML = emptyStateHTML;
+                        lastSecureMessageHash = "empty";
+                    }
                     document.querySelectorAll('.pm-global-badge').forEach(badge => badge.style.display = 'none');
                 }
             })
             .catch(error => {
                 console.error("Transmission Error:", error);
-                container.innerHTML = '<p class="text-danger text-center fw-bold mt-3"><i class="fas fa-exclamation-triangle"></i> Secure connection interrupted.</p>';
+                const errorHTML = '<p class="text-danger text-center fw-bold mt-3"><i class="fas fa-exclamation-triangle"></i> Secure connection interrupted.</p>';
+                if (container.innerHTML !== errorHTML) {
+                    container.innerHTML = errorHTML;
+                    lastSecureMessageHash = "error";
+                }
             });
     }
 
