@@ -884,10 +884,17 @@ def dashboard():
             attendance_rate = round(sum([s.attendance_pct for s in my_students]) / total_students, 1) if total_students > 0 else 0
             upcoming_schedules = ClassSchedule.query.filter(ClassSchedule.course_id.in_(my_course_ids)).limit(3).all()
             announcements = Announcement.query.filter((Announcement.title == "General Notice") | (Announcement.id == lecturer.id)).all()
+            
+            # 🔒 ARCHITECT FIX: STRICT MULTI-TENANCY FOR FACULTY NODES
+            # Only extracts departments from the students assigned to THIS specific lecturer
+            faculties = list(set([s.department for s in my_students if s.department]))
         else:
             total_students = at_risk_count = attendance_rate = 0
             upcoming_schedules = []
             announcements = Announcement.query.filter_by(title="General Notice").all()
+            
+            # 🔒 STRICT BLANK SLATE FOR NEW LECTURERS
+            faculties = []
             
         recent_activities = AuditLog.query.filter_by(user=session.get('user_name')).order_by(AuditLog.timestamp.desc()).limit(4).all()
         active_orbital_data = AuditLog.query.filter(AuditLog.action.like('%login%')).order_by(AuditLog.timestamp.desc()).limit(3).all()
@@ -902,11 +909,12 @@ def dashboard():
         recent_activities = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(4).all()
         active_orbital_data = AuditLog.query.filter(AuditLog.action.like('%login%')).order_by(AuditLog.timestamp.desc()).limit(3).all()
         announcements = Announcement.query.order_by(Announcement.date_posted.desc()).all()
+        
+        # 🔓 Admin retains omniscient global view of all departments
+        faculties = [d[0] for d in db.session.query(Student.department).distinct().all() if d[0]]
 
     pending_count = Complaint.query.filter_by(status='Pending').count()
     attendance_status = "danger" if attendance_rate < 70 else "success"
-    # 🟢 DYNAMIC FACULTY FETCH
-    faculties = [d[0] for d in db.session.query(Student.department).distinct().all() if d[0]]
     
     # 🟢 OMNISCIENT LASU CALENDAR ENGINE (2025/2026 MAPPING)
     from datetime import datetime
